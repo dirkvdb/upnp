@@ -195,6 +195,7 @@
 				LIBRARY_SEARCH_PATHS = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				VERSIONING_SYSTEM = "";
 			};
 			name = Debug;
 		};
@@ -211,6 +212,7 @@
 				LIBRARY_SEARCH_PATHS = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				VERSIONING_SYSTEM = "";
 			};
 			name = Release;
 		};
