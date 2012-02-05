@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "Utils/types.h"
+#include "utils/types.h"
 
 namespace UPnP
 {

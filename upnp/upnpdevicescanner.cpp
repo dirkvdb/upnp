@@ -9,7 +9,7 @@
 #include "upnpdevicescanner.h"
 #include "upnpcontrolpoint.h"
 
-#include <Utils/log.h>
+#include "utils/log.h"
 
 namespace UPnP
 {

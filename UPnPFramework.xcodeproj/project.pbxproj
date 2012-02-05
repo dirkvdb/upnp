@@ -1,0 +1,307 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4341AB3A1387B66600297297 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4341AB391387B66600297297 /* Foundation.framework */; };
+		438FD84414DE84E300617600 /* upnpbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83614DE84E300617600 /* upnpbrowser.cpp */; };
+		438FD84514DE84E300617600 /* upnpbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83714DE84E300617600 /* upnpbrowser.h */; };
+		438FD84614DE84E300617600 /* upnpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83814DE84E300617600 /* upnpclient.cpp */; };
+		438FD84714DE84E300617600 /* upnpclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83914DE84E300617600 /* upnpclient.h */; };
+		438FD84814DE84E300617600 /* upnpcontrolpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */; };
+		438FD84914DE84E300617600 /* upnpcontrolpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83B14DE84E300617600 /* upnpcontrolpoint.h */; };
+		438FD84A14DE84E300617600 /* upnpdevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83C14DE84E300617600 /* upnpdevice.h */; };
+		438FD84B14DE84E300617600 /* upnpdevicescanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */; };
+		438FD84C14DE84E300617600 /* upnpdevicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83E14DE84E300617600 /* upnpdevicescanner.h */; };
+		438FD84D14DE84E300617600 /* UPnPFramework-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83F14DE84E300617600 /* UPnPFramework-Prefix.pch */; };
+		438FD84E14DE84E300617600 /* upnphttpget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD84014DE84E300617600 /* upnphttpget.cpp */; };
+		438FD84F14DE84E300617600 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD84114DE84E300617600 /* upnphttpget.h */; };
+		438FD85014DE84E300617600 /* upnpitem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD84214DE84E300617600 /* upnpitem.cpp */; };
+		438FD85114DE84E300617600 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD84314DE84E300617600 /* upnpitem.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		43B0FD01138D9445002DD709 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 11;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4341AB361387B66600297297 /* libUPnPFramework.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUPnPFramework.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4341AB391387B66600297297 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		4341AB441387B66600297297 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		4341AB471387B66600297297 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		438FD83614DE84E300617600 /* upnpbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpbrowser.cpp; sourceTree = "<group>"; };
+		438FD83714DE84E300617600 /* upnpbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpbrowser.h; sourceTree = "<group>"; };
+		438FD83814DE84E300617600 /* upnpclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpclient.cpp; sourceTree = "<group>"; };
+		438FD83914DE84E300617600 /* upnpclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpclient.h; sourceTree = "<group>"; };
+		438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpcontrolpoint.cpp; sourceTree = "<group>"; };
+		438FD83B14DE84E300617600 /* upnpcontrolpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpcontrolpoint.h; sourceTree = "<group>"; };
+		438FD83C14DE84E300617600 /* upnpdevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdevice.h; sourceTree = "<group>"; };
+		438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpdevicescanner.cpp; sourceTree = "<group>"; };
+		438FD83E14DE84E300617600 /* upnpdevicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdevicescanner.h; sourceTree = "<group>"; };
+		438FD83F14DE84E300617600 /* UPnPFramework-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UPnPFramework-Prefix.pch"; sourceTree = "<group>"; };
+		438FD84014DE84E300617600 /* upnphttpget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnphttpget.cpp; sourceTree = "<group>"; };
+		438FD84114DE84E300617600 /* upnphttpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnphttpget.h; sourceTree = "<group>"; };
+		438FD84214DE84E300617600 /* upnpitem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpitem.cpp; sourceTree = "<group>"; };
+		438FD84314DE84E300617600 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpitem.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4341AB331387B66600297297 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4341AB3A1387B66600297297 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4341AB2B1387B66600297297 = {
+			isa = PBXGroup;
+			children = (
+				438FD83514DE84E300617600 /* upnp */,
+				4341AB381387B66600297297 /* Frameworks */,
+				4341AB371387B66600297297 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4341AB371387B66600297297 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4341AB361387B66600297297 /* libUPnPFramework.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4341AB381387B66600297297 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4341AB391387B66600297297 /* Foundation.framework */,
+				4341AB441387B66600297297 /* UIKit.framework */,
+				4341AB471387B66600297297 /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		438FD83514DE84E300617600 /* upnp */ = {
+			isa = PBXGroup;
+			children = (
+				438FD83614DE84E300617600 /* upnpbrowser.cpp */,
+				438FD83714DE84E300617600 /* upnpbrowser.h */,
+				438FD83814DE84E300617600 /* upnpclient.cpp */,
+				438FD83914DE84E300617600 /* upnpclient.h */,
+				438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */,
+				438FD83B14DE84E300617600 /* upnpcontrolpoint.h */,
+				438FD83C14DE84E300617600 /* upnpdevice.h */,
+				438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */,
+				438FD83E14DE84E300617600 /* upnpdevicescanner.h */,
+				438FD83F14DE84E300617600 /* UPnPFramework-Prefix.pch */,
+				438FD84014DE84E300617600 /* upnphttpget.cpp */,
+				438FD84114DE84E300617600 /* upnphttpget.h */,
+				438FD84214DE84E300617600 /* upnpitem.cpp */,
+				438FD84314DE84E300617600 /* upnpitem.h */,
+			);
+			path = upnp;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		4341AB341387B66600297297 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				438FD84514DE84E300617600 /* upnpbrowser.h in Headers */,
+				438FD84714DE84E300617600 /* upnpclient.h in Headers */,
+				438FD84914DE84E300617600 /* upnpcontrolpoint.h in Headers */,
+				438FD84A14DE84E300617600 /* upnpdevice.h in Headers */,
+				438FD84C14DE84E300617600 /* upnpdevicescanner.h in Headers */,
+				438FD84D14DE84E300617600 /* UPnPFramework-Prefix.pch in Headers */,
+				438FD84F14DE84E300617600 /* upnphttpget.h in Headers */,
+				438FD85114DE84E300617600 /* upnpitem.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		4341AB351387B66600297297 /* UPnPFramework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4341AB591387B66600297297 /* Build configuration list for PBXNativeTarget "UPnPFramework" */;
+			buildPhases = (
+				4341AB321387B66600297297 /* Sources */,
+				4341AB331387B66600297297 /* Frameworks */,
+				4341AB341387B66600297297 /* Headers */,
+				43B0FD01138D9445002DD709 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UPnPFramework;
+			productName = UPnPFramework;
+			productReference = 4341AB361387B66600297297 /* libUPnPFramework.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4341AB2D1387B66600297297 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = None;
+			};
+			buildConfigurationList = 4341AB301387B66600297297 /* Build configuration list for PBXProject "UPnPFramework" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 4341AB2B1387B66600297297;
+			productRefGroup = 4341AB371387B66600297297 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4341AB351387B66600297297 /* UPnPFramework */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4341AB321387B66600297297 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				438FD84414DE84E300617600 /* upnpbrowser.cpp in Sources */,
+				438FD84614DE84E300617600 /* upnpclient.cpp in Sources */,
+				438FD84814DE84E300617600 /* upnpcontrolpoint.cpp in Sources */,
+				438FD84B14DE84E300617600 /* upnpdevicescanner.cpp in Sources */,
+				438FD84E14DE84E300617600 /* upnphttpget.cpp in Sources */,
+				438FD85014DE84E300617600 /* upnpitem.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4341AB571387B66600297297 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HOME)$(SDK_DIR)/include";
+				LIBRARY_SEARCH_PATHS = "$(HOME)$(SDK_DIR)/lib";
+				SDKROOT = iphoneos;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+			};
+			name = Debug;
+		};
+		4341AB581387B66600297297 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(HOME)$(SDK_DIR)/include";
+				LIBRARY_SEARCH_PATHS = "$(HOME)$(SDK_DIR)/lib";
+				SDKROOT = iphoneos;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+			};
+			name = Release;
+		};
+		4341AB5A1387B66600297297 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				DSTROOT = /tmp/UPnPFramework.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "upnp/UPnPFramework-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)$(SDK_DIR)/include",
+					../utils,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4341AB5B1387B66600297297 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				DSTROOT = /tmp/UPnPFramework.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "upnp/UPnPFramework-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)$(SDK_DIR)/include",
+					../utils,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4341AB301387B66600297297 /* Build configuration list for PBXProject "UPnPFramework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4341AB571387B66600297297 /* Debug */,
+				4341AB581387B66600297297 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4341AB591387B66600297297 /* Build configuration list for PBXNativeTarget "UPnPFramework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4341AB5A1387B66600297297 /* Debug */,
+				4341AB5B1387B66600297297 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4341AB2D1387B66600297297 /* Project object */;
+}

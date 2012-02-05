@@ -16,7 +16,7 @@
 
 #include "upnpcontrolpoint.h"
 
-#include "Utils/log.h"
+#include "utils/log.h"
 
 #include <stdexcept>
 #include <algorithm>

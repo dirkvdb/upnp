@@ -12,8 +12,8 @@
 #include <map>
 #include <string>
 #include <mutex>
-#include <Utils/subscriber.h>
 
+#include "utils/subscriber.h"
 #include "upnpdevice.h"
 
 namespace UPnP

@@ -17,9 +17,10 @@
 #include "upnpbrowser.h"
 
 #include "upnpitem.h"
-#include "Utils/log.h"
-#include "Utils/stringoperations.h"
-#include "Utils/numericoperations.h"
+#include "utils/log.h"
+#include "utils/types.h"
+#include "utils/stringoperations.h"
+#include "utils/numericoperations.h"
 
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>

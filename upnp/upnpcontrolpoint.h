@@ -23,7 +23,7 @@
 #include <upnp/upnp.h>
 
 #include "upnpdevice.h"
-#include "Utils/subscriber.h"
+#include "utils/subscriber.h"
 
 
 namespace UPnP
