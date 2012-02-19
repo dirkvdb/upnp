@@ -25,6 +25,8 @@
 static const char* MediaServerType = "urn:schemas-upnp-org:device:MediaServer:1";
 static const char* ContentDirectoryServiceType = "urn:schemas-upnp-org:service:ContentDirectory:1";
 
+using namespace utils;
+
 namespace UPnP
 {
 
@@ -40,32 +42,32 @@ ControlPoint::~ControlPoint()
 
 void ControlPoint::initialize()
 {
-    Log::info("Initializing UPnP SDK");
+    log::info("Initializing UPnP SDK");
 
     int rc = UpnpInit(nullptr, 0);
     if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
     {
         UpnpFinish();
-        Log::error("UpnpInit() Error:", rc);
+        log::error("UpnpInit() Error:", rc);
         throw std::logic_error("Failed to initialise UPnP stack");
     }
     
-    Log::info("UPnP Initialized: ipaddress=", UpnpGetServerIpAddress(), "port=", UpnpGetServerPort());
-    Log::info("Registering Control Point");
+    log::info("UPnP Initialized: ipaddress=", UpnpGetServerIpAddress(), "port=", UpnpGetServerPort());
+    log::info("Registering Control Point");
     
     rc = UpnpRegisterClient(cpCb, this, &m_CtrlPnt);
     if (UPNP_E_SUCCESS == rc)
     {
-        Log::info("Control Point Registered");
+        log::info("Control Point Registered");
         UpnpSetMaxContentLength(128 * 1024);
     }
     if (UPNP_E_ALREADY_REGISTERED == rc)
     {
-        Log::warn("Control Point was already registered");
+        log::warn("Control Point was already registered");
     }
     else if (UPNP_E_SUCCESS != rc )
     {
-        Log::error("Error registering Control Point: ", rc);
+        log::error("Error registering Control Point: ", rc);
         UpnpFinish();
         throw std::logic_error("Error registering Control Point");
     }    
@@ -76,7 +78,7 @@ void ControlPoint::destroy()
     UpnpUnRegisterClient(m_CtrlPnt);
     UpnpFinish();
     
-    Log::info("Destroyed UPnP SDK");
+    log::info("Destroyed UPnP SDK");
 }
 
 void ControlPoint::reset()
@@ -111,12 +113,12 @@ void ControlPoint::stopReceivingServers(IDeviceSubscriber& subscriber)
 
 void ControlPoint::manualDiscovery()
 {
-    Log::debug("Send UPnP discovery");
+    log::debug("Send UPnP discovery");
     
     int rc = UpnpSearchAsync(m_CtrlPnt, 5, MediaServerType, this);
     if (UPNP_E_SUCCESS != rc)
     {
-        Log::error("Error sending search request:", rc);
+        log::error("Error sending search request:", rc);
     }
 }
 
@@ -132,7 +134,7 @@ int ControlPoint::cpCb(Upnp_EventType eventType, void* pEvent, void* pCookie)
         struct Upnp_Discovery* pDiscEvent = (struct Upnp_Discovery*) pEvent;
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
-            Log::error("Error in Discovery Alive Callback:", pDiscEvent->ErrCode);
+            log::error("Error in Discovery Alive Callback:", pDiscEvent->ErrCode);
         }
         else
         {
@@ -141,7 +143,7 @@ int ControlPoint::cpCb(Upnp_EventType eventType, void* pEvent, void* pCookie)
             int ret = UpnpDownloadXmlDoc(pDiscEvent->Location, &pDoc);
             if (ret != UPNP_E_SUCCESS)
             {
-                Log::error("Error obtaining device description from", pDiscEvent->Location, " error =", ret);
+                log::error("Error obtaining device description from", pDiscEvent->Location, " error =", ret);
             }
             else
             {
@@ -160,7 +162,7 @@ int ControlPoint::cpCb(Upnp_EventType eventType, void* pEvent, void* pCookie)
         struct Upnp_Discovery* pDiscEvent = (struct Upnp_Discovery*) pEvent;
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
-            Log::error("Error in Discovery Bye Bye Callback:", pDiscEvent->ErrCode);
+            log::error("Error in Discovery Bye Bye Callback:", pDiscEvent->ErrCode);
         }
         else
         {
@@ -206,14 +208,14 @@ std::string ControlPoint::getFirstElementItem(IXML_Element* pElement, const std:
     IXML_NodeList* pNodeList = ixmlElement_getElementsByTagName(pElement, item.c_str());
     if (pNodeList == nullptr)
     {
-        Log::error("Error finding", item, "in XML Node");
+        log::error("Error finding", item, "in XML Node");
         return result;
     }
 
     IXML_Node* pTmpNode = ixmlNodeList_item(pNodeList, 0);
     if (pTmpNode == nullptr)
     {
-        Log::error("Error finding", item, "value in XML Node");
+        log::error("Error finding", item, "value in XML Node");
         ixmlNodeList_free(pNodeList);
         return result;
     }
@@ -279,7 +281,7 @@ bool ControlPoint::findAndParseService(IXML_Document* pDoc, const std::string se
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
-                Log::error("Error generating controlURL from", base, "and", relControlURL);
+                log::error("Error generating controlURL from", base, "and", relControlURL);
             }
             else
             {
@@ -289,7 +291,7 @@ bool ControlPoint::findAndParseService(IXML_Document* pDoc, const std::string se
             ret = UpnpResolveURL(base.c_str(), relEventURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
-                Log::error("Error generating eventURL from", base, "and", relEventURL);
+                log::error("Error generating eventURL from", base, "and", relEventURL);
             }
             else
             {
@@ -338,7 +340,7 @@ void ControlPoint::onDeviceDiscovered(IXML_Document* pDoc, char* pLocation, int 
         
         if (findAndParseService(pDoc, ContentDirectoryServiceType, device))
         {
-            //Log::info("Device added to the list:", device.m_FriendlyName, "(", device.m_UDN, ")");
+            //log::info("Device added to the list:", device.m_FriendlyName, "(", device.m_UDN, ")");
             std::lock_guard<std::mutex> lock(m_Mutex);
             for (auto subscriber : m_DeviceSubscribers)
             {

@@ -19,6 +19,8 @@
 
 #include "utils/log.h"
 
+using namespace utils;
+
 namespace UPnP
 {
 
@@ -38,14 +40,14 @@ void DeviceScanner::onUPnPDeviceEvent(const Device& device, DeviceEvent event)
     {
         if (event == deviceDiscovered)
         {
-            Log::info("Device discovered:", device.m_FriendlyName, device.m_UDN);
+            log::info("Device discovered:", device.m_FriendlyName, device.m_UDN);
             m_Devices[device.m_UDN] = device;
             if (m_pListener) m_pListener->onUPnPDeviceEvent(device, event);
         }
     }
     else if (event == deviceDissapeared)
     {
-        Log::info("Device dissapeared:", device.m_UDN);
+        log::info("Device dissapeared:", device.m_UDN);
         m_Devices.erase(iter);
         if (m_pListener) m_pListener->onUPnPDeviceEvent(device, event);
     }

@@ -30,6 +30,8 @@
 #include <cstring>
 #include <cassert>
 
+using namespace utils;
+
 namespace UPnP
 {
 
@@ -54,7 +56,7 @@ Browser::~Browser()
 
 void Browser::abortThreads()
 {
-    Log::debug("Abort threads: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
+    log::debug("Abort threads: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
     m_Stop = true;
     
     std::lock_guard<std::mutex> lock(m_ThreadListMutex);
@@ -64,10 +66,10 @@ void Browser::abortThreads()
         {
             iter->get();
         }
-        Log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
+        log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
         
         iter = m_RunningThreads.erase(iter);
-        Log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
+        log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
     }
 
     m_RunningThreads.clear();
@@ -83,7 +85,7 @@ Device Browser::getDevice() const
 
 void Browser::setDevice(const Device& device)
 {
-    Log::info("Set device:", device.m_FriendlyName);
+    log::info("Set device:", device.m_FriendlyName);
     m_Device = device;
 }
 
@@ -91,7 +93,7 @@ void Browser::subscribe()
 {
     unsubscribe();
 
-    Log::debug("Subscribe to device:", m_Device.m_FriendlyName);
+    log::debug("Subscribe to device:", m_Device.m_FriendlyName);
 
     //subscribe to eventURL
     int ret = UpnpSubscribeAsync(m_CtrlPnt, m_Device.m_CDEventSubURL.c_str(), defaultTimeout, Browser::browserCb, this);
@@ -108,7 +110,7 @@ void Browser::unsubscribe()
         int ret = UpnpUnSubscribe(m_CtrlPnt, &(m_Device.m_CDSubscriptionID[0]));
         if (ret != UPNP_E_SUCCESS)
         {
-            Log::warn("Failed to unsubscribe from device:", m_Device.m_FriendlyName);
+            log::warn("Failed to unsubscribe from device:", m_Device.m_FriendlyName);
         }
     }
 }
@@ -136,10 +138,10 @@ void Browser::processThreadQueue()
     }
     catch (std::exception& e)
     {
-        Log::warn("Thread error:", e.what());
+        log::warn("Thread error:", e.what());
     }
     
-    //Log::debug("UPnPBrowser ThreadInfo: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
+    //log::debug("UPnPBrowser ThreadInfo: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
 }
 
 void Browser::getContainersAndItemsAsync(utils::ISubscriber<Item>& subscriber, const Item& container, uint32_t limit, uint32_t offset, void* pExtraData)
@@ -211,7 +213,7 @@ void Browser::getContainers(utils::ISubscriber<Item>& subscriber, Item& containe
 {
 #ifdef ENABLE_DEBUG
     time_t startTime = time(nullptr);
-    Log::debug("Starting contents fetch from UPnP server:", m_Device.m_FriendlyName, containerId);
+    log::debug("Starting contents fetch from UPnP server:", m_Device.m_FriendlyName, containerId);
 #endif
 
     if (container.getChildCount() == 0)
@@ -251,7 +253,7 @@ void Browser::getContainers(utils::ISubscriber<Item>& subscriber, Item& containe
     subscriber.finalItemReceived(pExtraData);
 
 #ifdef ENABLE_DEBUG
-    Log::debug("Fetch took", time(nullptr) - startTime, "seconds.");
+    log::debug("Fetch took", time(nullptr) - startTime, "seconds.");
 #endif
 }
 
@@ -349,7 +351,7 @@ void Browser::getContainerMetaData(Item& container)
     addActionToDocument(&pAction, "Browse", "RequestedCount", "0");
     addActionToDocument(&pAction, "Browse", "SortCriteria", "");
 
-    Log::debug("Get container metadata: ", container.getObjectId());
+    log::debug("Get container metadata: ", container.getObjectId());
     
     IXML_Document* pResult = nullptr;
     int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
@@ -377,16 +379,16 @@ IXML_Document* Browser::browseAction(const std::string& objectId, const std::str
 {
     IXML_Document* pAction = nullptr;
 
-    std::string requestSizeString   = NumericOperations::toString(limit);
+    std::string requestSizeString   = numericops::toString(limit);
 
     addActionToDocument(&pAction, "Browse", "ObjectID", objectId);
     addActionToDocument(&pAction, "Browse", "BrowseFlag", flag);
     addActionToDocument(&pAction, "Browse", "Filter", filter);
-    addActionToDocument(&pAction, "Browse", "StartingIndex", NumericOperations::toString(startIndex));
+    addActionToDocument(&pAction, "Browse", "StartingIndex", numericops::toString(startIndex));
     addActionToDocument(&pAction, "Browse", "RequestedCount", requestSizeString);
     addActionToDocument(&pAction, "Browse", "SortCriteria", sort);
     
-    Log::debug("Browse action (", flag, "): ", objectId);
+    log::debug("Browse action (", flag, "): ", objectId);
 
     IXML_Document* pResult = nullptr;
     int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
@@ -411,27 +413,27 @@ int Browser::browserCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
         Upnp_Event_Subscribe* pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
         if (pSubEvent->ErrCode != UPNP_E_SUCCESS)
         {
-            Log::error("Error in Event Subscribe Callback:", pSubEvent->ErrCode);
+            log::error("Error in Event Subscribe Callback:", pSubEvent->ErrCode);
         }
         else
         {
             if (pSubEvent->Sid)
             {
-                Log::info(pSubEvent->Sid);
+                log::info(pSubEvent->Sid);
                 pUPnP->m_Device.m_CDSubscriptionID = pSubEvent->Sid;
-                Log::info("Successfully subscribed to", pUPnP->m_Device.m_FriendlyName, "id =", pSubEvent->Sid);
+                log::info("Successfully subscribed to", pUPnP->m_Device.m_FriendlyName, "id =", pSubEvent->Sid);
             }
             else
             {
                 pUPnP->m_Device.m_CDSubscriptionID.clear();
-                Log::error("Subscription id for device is empty");
+                log::error("Subscription id for device is empty");
             }
         }
 
         break;
     }
     default:
-        Log::info("Unhandled action:", eventType);
+        log::info("Unhandled action:", eventType);
         break;
     }
 
@@ -491,7 +493,7 @@ std::vector<Item> Browser::parseContainers(IXML_Document* pDoc)
             IXML_Element* pContainerElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(pContainerList, i));
             if (!pContainerElem)
             {
-                Log::error("Failed to get container from container list, skipping");
+                log::error("Failed to get container from container list, skipping");
                 continue;
             }
 
@@ -522,7 +524,7 @@ std::vector<Item> Browser::parseContainers(IXML_Document* pDoc)
 
             containers.push_back(Item(pId, pTitle));
             containers.back().setParentId(pParentId);
-            containers.back().setChildCount(StringOperations::toNumeric<uint32_t>(pChildCount));
+            containers.back().setChildCount(stringops::toNumeric<uint32_t>(pChildCount));
         }
 
         ixmlNodeList_free(pContainerList);
@@ -549,7 +551,7 @@ std::vector<Item> Browser::parseItems(IXML_Document* pDoc)
             IXML_Element* pItemElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(pItemList, i));
             if (!pItemElem)
             {
-                Log::error("Failed to get item from item list, aborting");
+                log::error("Failed to get item from item list, aborting");
                 break;
             }
 
@@ -602,7 +604,7 @@ void Browser::parseContainerMetadata(IXML_Document* pDoc, Item& container)
         IXML_Element* pItemElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(pItemList, 0));
         if (!pItemElem)
         {
-            Log::error("Failed to get root item elem, aborting");
+            log::error("Failed to get root item elem, aborting");
         }
         else
         {
@@ -610,7 +612,7 @@ void Browser::parseContainerMetadata(IXML_Document* pDoc, Item& container)
             const char* pChildcount = ixmlElement_getAttribute(pItemElem, "childCount");
             if (pChildcount)
             {
-                container.setChildCount(StringOperations::toNumeric<uint32_t>(pChildcount));
+                container.setChildCount(stringops::toNumeric<uint32_t>(pChildcount));
             }
         }
 
@@ -642,7 +644,7 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
         const char* pChildcount = ixmlElement_getAttribute(pItemElem, "childCount");
         if (pChildcount)
         {
-            item.setChildCount(StringOperations::toNumeric<uint32_t>(pChildcount));
+            item.setChildCount(stringops::toNumeric<uint32_t>(pChildcount));
         }
 
         IXML_Node* pItemNode = ixmlNodeList_item(pItemList, 0);
@@ -719,7 +721,7 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
                             const char* pValue = ixmlNode_getNodeValue(pItem);
                             if (!pValue) continue;
                             
-                            //Log::debug(pKey, "-", pValue);
+                            //log::debug(pKey, "-", pValue);
                             resource.addMetaData(pKey, pValue);
                         }
 
@@ -730,7 +732,7 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
                 }
                 else
                 {
-                    //Log::debug(pKey, "-", pValue);
+                    //log::debug(pKey, "-", pValue);
                     item.addMetaData(pKey, pValue);
                 }
             }
@@ -751,7 +753,7 @@ void Browser::getContainersAndItemsThread(const Item& container, uint32_t limit,
     }
     catch(std::exception& e)
     {
-        Log::error("Exception getting items and containers:", e.what());
+        log::error("Exception getting items and containers:", e.what());
         subscriber.onError(e.what());
     }
     
@@ -767,7 +769,7 @@ void Browser::getContainersThread(const Item& container, uint32_t limit, uint32_
     }
     catch(std::exception& e)
     {
-        Log::error("Exception getting containers:", e.what());
+        log::error("Exception getting containers:", e.what());
         subscriber.onError(e.what());
     }
     
@@ -783,7 +785,7 @@ void Browser::getItemsThread(const Item& container, uint32_t limit, uint32_t off
     }
     catch(std::exception& e)
     {
-        Log::error("Exception getting items:", e.what());
+        log::error("Exception getting items:", e.what());
         subscriber.onError(e.what());
     }
     
@@ -799,7 +801,7 @@ void Browser::getMetaDataThread(std::shared_ptr<Item> item, const std::string& f
     }
     catch(std::exception& e)
     {
-        Log::error("Exception getting metadata:", e.what());
+        log::error("Exception getting metadata:", e.what());
         subscriber.onError(e.what());
     }
     
