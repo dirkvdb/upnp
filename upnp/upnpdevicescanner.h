@@ -24,7 +24,7 @@
 #include "utils/subscriber.h"
 #include "upnpdevice.h"
 
-namespace UPnP
+namespace upnp
 {
 
 class ControlPoint;

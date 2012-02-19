@@ -21,7 +21,7 @@
 
 using namespace utils;
 
-namespace UPnP
+namespace upnp
 {
 
 DeviceScanner::DeviceScanner(ControlPoint& controlPoint, DeviceType type)

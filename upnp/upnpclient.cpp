@@ -18,7 +18,7 @@
 
 #include "utils/stringoperations.h"
 
-namespace UPnP
+namespace upnp
 {
 
 Client::Client(const ControlPoint& cp, const Device& device)
@@ -42,7 +42,7 @@ void Client::getAllInContainer(Item& container, utils::ISubscriber<Item>& subscr
     m_Browser.getContainersAndItems(subscriber, container);
 }
 
-void Client::getMetaData(UPnP::Item& item)
+void Client::getMetaData(upnp::Item& item)
 {
     m_Browser.getMetaData(item, "");
 }

@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace UPnP
+namespace upnp
 {
 
 UPnPHttpGet::UPnPHttpGet(const std::string& url, int32_t timeout)

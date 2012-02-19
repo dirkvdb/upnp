@@ -32,7 +32,7 @@
 
 using namespace utils;
 
-namespace UPnP
+namespace upnp
 {
 
 static const int32_t defaultTimeout = 1801;

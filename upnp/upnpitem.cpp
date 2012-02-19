@@ -17,7 +17,7 @@
 #include "upnpitem.h"
 
 
-namespace UPnP
+namespace upnp
 {
 
 static const std::string protocolInfo   = "protocolInfo";

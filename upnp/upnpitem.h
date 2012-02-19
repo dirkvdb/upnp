@@ -21,7 +21,7 @@
 #include <vector>
 #include <map>
 
-namespace UPnP
+namespace upnp
 {
 
 typedef std::map<std::string, std::string> MetaMap;

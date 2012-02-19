@@ -22,7 +22,7 @@
 
 #include "utils/types.h"
 
-namespace UPnP
+namespace upnp
 {
 
 class UPnPHttpGet

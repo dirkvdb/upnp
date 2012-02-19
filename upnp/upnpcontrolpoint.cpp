@@ -27,7 +27,7 @@ static const char* ContentDirectoryServiceType = "urn:schemas-upnp-org:service:C
 
 using namespace utils;
 
-namespace UPnP
+namespace upnp
 {
 
 ControlPoint::ControlPoint()

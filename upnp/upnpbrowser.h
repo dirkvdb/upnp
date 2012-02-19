@@ -29,7 +29,7 @@
 #include "upnpitem.h"
 #include "upnpcontrolpoint.h"
 
-namespace UPnP
+namespace upnp
 {
 
 class UPnPControlPoint;

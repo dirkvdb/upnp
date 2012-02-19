@@ -19,7 +19,7 @@
 
 #include "upnpbrowser.h"
 
-namespace UPnP
+namespace upnp
 {
 
 class ControlPoint;
