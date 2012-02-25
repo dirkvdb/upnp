@@ -24,6 +24,7 @@
 
 #include "upnpdevice.h"
 #include "utils/subscriber.h"
+#include "utils/signal.h"
 
 
 namespace upnp
@@ -39,11 +40,12 @@ public:
     void destroy();
 
     operator UpnpClient_Handle() const { return m_CtrlPnt; }
-    void getServersASync(IDeviceSubscriber& subscriber);
-    void stopReceivingServers(IDeviceSubscriber& subscriber);
     void manualDiscovery();
 
     void reset();
+
+    utils::Signal<void(const Device&)> DeviceDiscoveredEvent;
+    utils::Signal<void(const Device&)> DeviceDissapearedEvent;
     
 private:
     
@@ -59,7 +61,6 @@ private:
 
     UpnpClient_Handle                   		m_CtrlPnt;
     std::mutex                                  m_Mutex;
-    std::list<IDeviceSubscriber*>               m_DeviceSubscribers;
 };
 
 }

@@ -25,12 +25,12 @@
 namespace upnp
 {
 
-class UPnPHttpGet
+class HttpGet
 {
 public:
-	UPnPHttpGet(const std::string& url, int32_t timeout);
-	UPnPHttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t timeout);
-	~UPnPHttpGet();
+	HttpGet(const std::string& url, int32_t timeout);
+	HttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t timeout);
+	~HttpGet();
 
 	int32_t getContentLength();
 	void get(std::vector<uint8_t>& data);

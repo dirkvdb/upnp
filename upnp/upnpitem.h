@@ -101,7 +101,6 @@ public:
     
     
 private:
-    
     std::string             m_ObjectId;
     std::string             m_ParentId;
     MetaMap                 m_MetaData;

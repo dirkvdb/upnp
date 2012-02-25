@@ -24,7 +24,7 @@
 namespace upnp
 {
 
-UPnPHttpGet::UPnPHttpGet(const std::string& url, int32_t timeout)
+HttpGet::HttpGet(const std::string& url, int32_t timeout)
 : m_pHandle(nullptr)
 , m_ContentLength(0)
 , m_Timeout(timeout)
@@ -42,7 +42,7 @@ UPnPHttpGet::UPnPHttpGet(const std::string& url, int32_t timeout)
 	}
 }
 
-UPnPHttpGet::UPnPHttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t timeout)
+HttpGet::HttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t timeout)
 : m_pHandle(nullptr)
 , m_ContentLength(0)
 , m_Timeout(timeout)
@@ -58,7 +58,7 @@ UPnPHttpGet::UPnPHttpGet(const std::string& url, uint32_t offset, uint32_t size,
 	}
 }
 
-UPnPHttpGet::~UPnPHttpGet()
+HttpGet::~HttpGet()
 {
 	if (m_pHandle)
 	{
@@ -66,12 +66,12 @@ UPnPHttpGet::~UPnPHttpGet()
 	}
 }
 
-int32_t UPnPHttpGet::getContentLength()
+int32_t HttpGet::getContentLength()
 {
 	return m_ContentLength;
 }
 
-void UPnPHttpGet::get(std::vector<uint8_t>& data)
+void HttpGet::get(std::vector<uint8_t>& data)
 {
 	assert(m_pHandle);
 
@@ -79,7 +79,7 @@ void UPnPHttpGet::get(std::vector<uint8_t>& data)
 	get(&(data[0]));
 }
 
-void UPnPHttpGet::get(uint8_t* pData)
+void HttpGet::get(uint8_t* pData)
 {
 	assert(m_pHandle);
 

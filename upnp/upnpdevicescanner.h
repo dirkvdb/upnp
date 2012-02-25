@@ -21,15 +21,15 @@
 #include <string>
 #include <mutex>
 
-#include "utils/subscriber.h"
 #include "upnpdevice.h"
+#include "utils/signal.h"
 
 namespace upnp
 {
 
 class ControlPoint;
 
-class DeviceScanner : public IDeviceSubscriber
+class DeviceScanner
 {
 public:
     enum DeviceType
@@ -39,8 +39,6 @@ public:
     
     DeviceScanner(ControlPoint& controlPoint, DeviceType type);
     
-    void setListener(IDeviceSubscriber& listener);
-    
     void start();
     void stop();
     void refresh();
@@ -48,15 +46,17 @@ public:
     uint32_t getDeviceCount();
     std::map<std::string, Device> getDevices();
     
-    void onUPnPDeviceEvent(const Device& device, DeviceEvent event);
+    void onUPnPDeviceDiscovered(const Device& device);
+    void onUPnPDeviceDissapeared(const Device& device);
+
+    utils::Signal<void(const Device&)> DeviceDiscoveredEvent;
+    utils::Signal<void(const Device&)> DeviceDissapearedEvent;
     
 private:
     ControlPoint&                   m_ControlPoint;
     DeviceType                      m_Type;
     std::map<std::string, Device>   m_Devices;
     std::mutex                      m_Mutex;
-    
-    IDeviceSubscriber*              m_pListener;
 };
 
 }

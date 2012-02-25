@@ -20,6 +20,7 @@
 #include "utils/log.h"
 
 using namespace utils;
+using namespace std::placeholders;
 
 namespace upnp
 {
@@ -27,50 +28,40 @@ namespace upnp
 DeviceScanner::DeviceScanner(ControlPoint& controlPoint, DeviceType type)
 : m_ControlPoint(controlPoint)
 , m_Type(type)
-, m_pListener(nullptr)
 {
 }
     
-void DeviceScanner::onUPnPDeviceEvent(const Device& device, DeviceEvent event)
+void DeviceScanner::onUPnPDeviceDiscovered(const Device& device)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
     std::map<std::string, Device>::iterator iter = m_Devices.find(device.m_UDN);
     if (iter == m_Devices.end())
     {
-        if (event == deviceDiscovered)
-        {
-            log::info("Device discovered:", device.m_FriendlyName, device.m_UDN);
-            m_Devices[device.m_UDN] = device;
-            if (m_pListener) m_pListener->onUPnPDeviceEvent(device, event);
-        }
-    }
-    else if (event == deviceDissapeared)
-    {
-        log::info("Device dissapeared:", device.m_UDN);
-        m_Devices.erase(iter);
-        if (m_pListener) m_pListener->onUPnPDeviceEvent(device, event);
+        log::info("Device discovered:", device.m_FriendlyName, device.m_UDN);
+        m_Devices[device.m_UDN] = device;
+        DeviceDiscoveredEvent(device);
     }
 }
 
-void DeviceScanner::setListener(IDeviceSubscriber& listener)
+void DeviceScanner::onUPnPDeviceDissapeared(const Device& device)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
-    m_pListener = &listener;
-
-    // make sure the new listeners gets all the devices that are already known
-    for (const auto devicePair : m_Devices)
+    std::map<std::string, Device>::iterator iter = m_Devices.find(device.m_UDN);
+    if (iter != m_Devices.end())
     {
-        m_pListener->onUPnPDeviceEvent(devicePair.second, IDeviceSubscriber::deviceDiscovered);
-    }    
+        log::info("Device dissapeared:", device.m_UDN);
+        m_Devices.erase(iter);
+        DeviceDissapearedEvent(device);
+    }
 }
-    
+
 void DeviceScanner::start()
 {
     if (m_Type == Servers)
     {
-        m_ControlPoint.getServersASync(*this);
+        m_ControlPoint.DeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onUPnPDeviceDiscovered, this, _1), this);
     }
 }
     
@@ -78,7 +69,7 @@ void DeviceScanner::stop()
 {
     if (m_Type == Servers)
     {
-        m_ControlPoint.stopReceivingServers(*this);
+        m_ControlPoint.DeviceDiscoveredEvent.disconnect(this);
     }
 }
 

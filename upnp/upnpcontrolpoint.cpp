@@ -88,29 +88,6 @@ void ControlPoint::reset()
     initialize();
 }
 
-void ControlPoint::getServersASync(IDeviceSubscriber& subscriber)
-{
-    {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_DeviceSubscribers.push_back(&subscriber);
-    }
-
-    manualDiscovery();
-}
-
-void ControlPoint::stopReceivingServers(IDeviceSubscriber& subscriber)
-{
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (std::list<IDeviceSubscriber*>::iterator iter = m_DeviceSubscribers.begin(); iter != m_DeviceSubscribers.end(); ++iter)
-    {
-        if (*iter == &subscriber)
-        {
-            m_DeviceSubscribers.erase(iter);
-            return;
-        }
-    }
-}
-
 void ControlPoint::manualDiscovery()
 {
     log::debug("Send UPnP discovery");
@@ -341,11 +318,7 @@ void ControlPoint::onDeviceDiscovered(IXML_Document* pDoc, char* pLocation, int 
         if (findAndParseService(pDoc, ContentDirectoryServiceType, device))
         {
             //log::info("Device added to the list:", device.m_FriendlyName, "(", device.m_UDN, ")");
-            std::lock_guard<std::mutex> lock(m_Mutex);
-            for (auto subscriber : m_DeviceSubscribers)
-            {
-                subscriber->onUPnPDeviceEvent(device, IDeviceSubscriber::deviceDiscovered);
-            }
+            DeviceDiscoveredEvent(device);
         }
     }
 }
@@ -354,12 +327,8 @@ void ControlPoint::onDeviceDissapeared(const char* deviceId)
 {
     Device device;
     device.m_UDN = deviceId;
-    
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto subscriber : m_DeviceSubscribers)
-    {
-        subscriber->onUPnPDeviceEvent(device, IDeviceSubscriber::deviceDissapeared);
-    }
+
+    DeviceDissapearedEvent(device);
 }
 
 }
