@@ -29,6 +29,8 @@
 #include "upnpitem.h"
 #include "upnpcontrolpoint.h"
 
+#include "utils/threadpool.h"
+
 namespace upnp
 {
 
@@ -60,10 +62,12 @@ public:
     void getMetaData(Item& item, const std::string& filter);
     void getMetaDataAsync(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, std::shared_ptr<Item> item, const std::string& filter, void* pExtraData = nullptr);
 
+    // interrupt running queries as soon as possible
+    void cancel();
+
     static const std::string rootId;
 
 private:
-    void abortThreads();
     void subscribe();
     void unsubscribe();
     void getContainerMetaData(Item& container);
@@ -92,9 +96,7 @@ private:
     const ControlPoint&                 m_CtrlPnt;
     Device                              m_Device;
     std::string                         m_SubscriptionId;
-    std::mutex                          m_ThreadListMutex;
-    std::list<std::future<void>>        m_RunningThreads;
-    std::deque<std::function<void ()>>  m_QueuedThreads;
+    utils::ThreadPool                   m_ThreadPool;
     bool                                m_Stop;
 };
 

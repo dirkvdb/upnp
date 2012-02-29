@@ -43,44 +43,28 @@ const std::string Browser::rootId = "0";
 
 Browser::Browser(const ControlPoint& ctrlPnt)
 : m_CtrlPnt(ctrlPnt)
+, m_ThreadPool(maxNumThreads)
 , m_Stop(false)
 {
     ixmlRelaxParser(1);
+    m_ThreadPool.start();
 }
 
 Browser::~Browser()
 {
     //unsubscribe();
-    abortThreads();
-}
-
-void Browser::abortThreads()
-{
-    log::debug("Abort threads: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
     m_Stop = true;
-    
-    std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-    for (std::list<std::future<void>>::iterator iter = m_RunningThreads.begin(); iter != m_RunningThreads.end(); ++iter)
-    {
-        if (iter->valid())
-        {
-            iter->get();
-        }
-        log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
-        
-        iter = m_RunningThreads.erase(iter);
-        log::debug("Thread aborted: running (", m_RunningThreads.size(), ")");
-    }
-
-    m_RunningThreads.clear();
-    m_QueuedThreads.clear();    
-
-    m_Stop = false;
+    m_ThreadPool.stop();
 }
 
 Device Browser::getDevice() const
 {
     return m_Device;
+}
+
+void Browser::cancel()
+{
+    m_Stop = true;
 }
 
 void Browser::setDevice(const Device& device)
@@ -115,43 +99,9 @@ void Browser::unsubscribe()
     }
 }
 
-void Browser::processThreadQueue()
-{
-    std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-    for (std::list<std::future<void>>::iterator iter = m_RunningThreads.begin(); iter != m_RunningThreads.end(); ++iter)
-    {
-        bool ready = iter->wait_for(std::chrono::microseconds(1));
-        if (ready)
-        {
-            iter->get();
-            iter = m_RunningThreads.erase(iter);
-        }
-    }
-    
-    try
-    {
-        while (m_RunningThreads.size() < maxNumThreads && !m_QueuedThreads.empty())
-        {
-            m_RunningThreads.push_back(std::async(std::launch::async, m_QueuedThreads.front()));
-            m_QueuedThreads.pop_front();
-        }
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Thread error:", e.what());
-    }
-    
-    //log::debug("UPnPBrowser ThreadInfo: running (", m_RunningThreads.size(), ") queued (", m_QueuedThreads.size(), ")");
-}
-
 void Browser::getContainersAndItemsAsync(utils::ISubscriber<Item>& subscriber, const Item& container, uint32_t limit, uint32_t offset, void* pExtraData)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-        m_QueuedThreads.push_back(std::bind(&Browser::getContainersAndItemsThread, this, container, limit, offset, std::ref(subscriber), pExtraData));
-    }
-    
-    processThreadQueue();
+    m_ThreadPool.queueFunction(std::bind(&Browser::getContainersAndItemsThread, this, container, limit, offset, std::ref(subscriber), pExtraData));
 }
 
 void Browser::getContainersAndItems(utils::ISubscriber<Item>& subscriber, Item& container, uint32_t limit, uint32_t offset, void* pExtraData)
@@ -201,21 +151,11 @@ void Browser::getContainersAndItems(utils::ISubscriber<Item>& subscriber, Item& 
 
 void Browser::getContainersAsync(utils::ISubscriber<Item>& subscriber, const Item& container, uint32_t limit, uint32_t offset, void* pExtraData)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-        m_QueuedThreads.push_back(std::bind(&Browser::getContainersThread, this, container, limit, offset, std::ref(subscriber), pExtraData));
-    }
-    
-    processThreadQueue();
+    m_ThreadPool.queueFunction(std::bind(&Browser::getContainersThread, this, container, limit, offset, std::ref(subscriber), pExtraData));
 }
 
 void Browser::getContainers(utils::ISubscriber<Item>& subscriber, Item& container, uint32_t limit, uint32_t offset, void* pExtraData)
 {
-#ifdef ENABLE_DEBUG
-    time_t startTime = time(nullptr);
-    log::debug("Starting contents fetch from UPnP server:", m_Device.m_FriendlyName, containerId);
-#endif
-
     if (container.getChildCount() == 0)
     {
         getContainerMetaData(container);
@@ -251,20 +191,11 @@ void Browser::getContainers(utils::ISubscriber<Item>& subscriber, Item& containe
     }
 
     subscriber.finalItemReceived(pExtraData);
-
-#ifdef ENABLE_DEBUG
-    log::debug("Fetch took", time(nullptr) - startTime, "seconds.");
-#endif
 }
 
 void Browser::getItemsAsync(utils::ISubscriber<Item>& subscriber, const Item& container, uint32_t limit, uint32_t offset, const std::string& sort, void* pExtraData)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-        m_QueuedThreads.push_back(std::bind(&Browser::getItemsThread, this, container, limit, offset, sort, std::ref(subscriber), pExtraData));
-    }
-    
-    processThreadQueue();
+    m_ThreadPool.queueFunction(std::bind(&Browser::getItemsThread, this, container, limit, offset, sort, std::ref(subscriber), pExtraData));
 }
 
 void Browser::getItems(utils::ISubscriber<Item>& subscriber, Item& container, uint32_t limit, uint32_t offset, const std::string& sort, void* pExtraData)
@@ -325,10 +256,7 @@ void Browser::getMetaData(Item& item, const std::string& filter)
 
 void Browser::getMetaDataAsync(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, std::shared_ptr<Item> item, const std::string& filter, void* pExtraData)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_ThreadListMutex);
-        m_QueuedThreads.push_back(std::bind(&Browser::getMetaDataThread, this, item, filter, std::ref(subscriber), pExtraData));
-    }
+    m_ThreadPool.queueFunction(std::bind(&Browser::getMetaDataThread, this, item, filter, std::ref(subscriber), pExtraData));
 }
 
 void Browser::addActionToDocument(IXML_Document** pDoc, const std::string& type, const std::string& action, const std::string& value)
@@ -351,8 +279,6 @@ void Browser::getContainerMetaData(Item& container)
     addActionToDocument(&pAction, "Browse", "RequestedCount", "0");
     addActionToDocument(&pAction, "Browse", "SortCriteria", "");
 
-    log::debug("Get container metadata: ", container.getObjectId());
-    
     IXML_Document* pResult = nullptr;
     int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
     if (ret != UPNP_E_SUCCESS)
@@ -377,6 +303,7 @@ void Browser::getContainerMetaData(Item& container)
 IXML_Document* Browser::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter,
                                      uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
+    m_Stop = false;
     IXML_Document* pAction = nullptr;
 
     std::string requestSizeString   = numericops::toString(limit);
@@ -388,8 +315,6 @@ IXML_Document* Browser::browseAction(const std::string& objectId, const std::str
     addActionToDocument(&pAction, "Browse", "RequestedCount", requestSizeString);
     addActionToDocument(&pAction, "Browse", "SortCriteria", sort);
     
-    log::debug("Browse action (", flag, "): ", objectId);
-
     IXML_Document* pResult = nullptr;
     int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
     if (ret != UPNP_E_SUCCESS)
@@ -756,8 +681,6 @@ void Browser::getContainersAndItemsThread(const Item& container, uint32_t limit,
         log::error("Exception getting items and containers:", e.what());
         subscriber.onError(e.what());
     }
-    
-    processThreadQueue();
 }
 
 void Browser::getContainersThread(const Item& container, uint32_t limit, uint32_t offset, utils::ISubscriber<Item>& subscriber, void* pData)
@@ -772,8 +695,6 @@ void Browser::getContainersThread(const Item& container, uint32_t limit, uint32_
         log::error("Exception getting containers:", e.what());
         subscriber.onError(e.what());
     }
-    
-    processThreadQueue();
 }
 
 void Browser::getItemsThread(const Item& container, uint32_t limit, uint32_t offset, const std::string& sort, utils::ISubscriber<Item>& subscriber, void* pData)
@@ -788,8 +709,6 @@ void Browser::getItemsThread(const Item& container, uint32_t limit, uint32_t off
         log::error("Exception getting items:", e.what());
         subscriber.onError(e.what());
     }
-    
-    processThreadQueue();
 }
 
 void Browser::getMetaDataThread(std::shared_ptr<Item> item, const std::string& filter, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, void* pData)
@@ -804,8 +723,6 @@ void Browser::getMetaDataThread(std::shared_ptr<Item> item, const std::string& f
         log::error("Exception getting metadata:", e.what());
         subscriber.onError(e.what());
     }
-    
-    processThreadQueue();
 }
 
 void Browser::handleUPnPError(int errorCode)

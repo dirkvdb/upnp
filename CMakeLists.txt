@@ -24,5 +24,3 @@ ADD_LIBRARY(upnpframework STATIC
 )
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}")
-SET (CMAKE_CXX_FLAGS "-std=c++0x")
-SET (CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Werror -Wfatal-errors -Wno-deprecated-declarations")

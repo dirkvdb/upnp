@@ -62,6 +62,7 @@ void DeviceScanner::start()
     if (m_Type == Servers)
     {
         m_ControlPoint.DeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onUPnPDeviceDiscovered, this, _1), this);
+        m_ControlPoint.DeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onUPnPDeviceDissapeared, this, _1), this);
     }
 }
     
@@ -70,6 +71,7 @@ void DeviceScanner::stop()
     if (m_Type == Servers)
     {
         m_ControlPoint.DeviceDiscoveredEvent.disconnect(this);
+        m_ControlPoint.DeviceDissapearedEvent.disconnect(this);
     }
 }
 
