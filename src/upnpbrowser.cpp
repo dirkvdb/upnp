@@ -14,9 +14,9 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnpbrowser.h"
+#include "upnp/upnpbrowser.h"
 
-#include "upnpitem.h"
+#include "upnp/upnpitem.h"
 #include "utils/log.h"
 #include "utils/types.h"
 #include "utils/stringoperations.h"
