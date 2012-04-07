@@ -117,6 +117,7 @@ int ControlPoint::cpCb(Upnp_EventType eventType, void* pEvent, void* pCookie)
         {
             IXML_Document* pDoc = nullptr;
             
+            log::debug("Download device description from:", pDiscEvent->Location);
             int ret = UpnpDownloadXmlDoc(pDiscEvent->Location, &pDoc);
             if (ret != UPNP_E_SUCCESS)
             {

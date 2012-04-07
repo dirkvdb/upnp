@@ -21,8 +21,6 @@ namespace upnp
 {
 
 static const std::string protocolInfo   = "protocolInfo";
-static const std::string size           = "size";
-static const std::string resolution     = "resolution";
 static const std::string dlnaThumbnail  = "DLNA.ORG_PN=JPEG_TN";
 
 static const std::string emptyString;
@@ -62,25 +60,9 @@ Resource& Resource::operator=(Resource&& other)
     return *this;
 }
 
-const std::string& Resource::getMetaString(MetaData meta)
+const std::string& Resource::getMetaData(const std::string& metaKey) const
 {
-    switch (meta)
-    {
-    case ProtocolInfo:
-        return protocolInfo;
-    case Size:
-        return size;
-    case Resolution:
-        return resolution;
-    }
-    
-    return emptyString;
-}
-
-const std::string& Resource::getMetaData(MetaData meta) const
-{
-    const std::string& metaString = getMetaString(meta);
-    MetaMap::const_iterator iter = m_MetaData.find(metaString);
+    auto iter = m_MetaData.find(metaKey);
     if (iter != m_MetaData.end())
     {
         return iter->second;
@@ -96,7 +78,7 @@ const std::string& Resource::getUrl() const
 
 bool Resource::isThumbnail() const
 {
-    return (0 != getMetaData(ProtocolInfo).find(dlnaThumbnail));
+    return (0 != getMetaData(protocolInfo).find(dlnaThumbnail));
 }
 
 void Resource::setUrl(const std::string& url)

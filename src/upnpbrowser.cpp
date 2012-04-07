@@ -735,7 +735,7 @@ void Browser::handleUPnPError(int errorCode)
     {
         throw std::logic_error("Connection error");
     }
-    else if (UPNP_E_SOCKET_CONNECT)
+    else if (UPNP_E_TIMEDOUT)
     {
         throw std::logic_error("Timeout occured");
     }

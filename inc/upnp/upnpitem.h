@@ -29,13 +29,6 @@ typedef std::map<std::string, std::string> MetaMap;
 class Resource
 {
 public:
-    enum MetaData
-    {
-        ProtocolInfo,
-        Size,
-        Resolution
-    };
-
     Resource();
     Resource(const Resource& other);
     Resource(Resource&& other);
@@ -43,7 +36,7 @@ public:
     Resource& operator=(const Resource& other);
     Resource& operator=(Resource&& other);
 
-    const std::string& getMetaData(MetaData meta) const;
+    const std::string& getMetaData(const std::string& metaKey) const;
     const std::string& getUrl() const;
     bool isThumbnail() const;
     
@@ -51,8 +44,6 @@ public:
     void addMetaData(const std::string& key, const std::string& value);
 
 private:
-    static const std::string& getMetaString(MetaData meta);
-
     MetaMap         m_MetaData;
     std::string     m_Url;
 };
