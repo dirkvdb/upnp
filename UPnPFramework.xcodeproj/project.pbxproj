@@ -7,19 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		438FD84414DE84E300617600 /* upnpbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83614DE84E300617600 /* upnpbrowser.cpp */; };
-		438FD84514DE84E300617600 /* upnpbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83714DE84E300617600 /* upnpbrowser.h */; };
-		438FD84614DE84E300617600 /* upnpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83814DE84E300617600 /* upnpclient.cpp */; };
-		438FD84714DE84E300617600 /* upnpclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83914DE84E300617600 /* upnpclient.h */; };
-		438FD84814DE84E300617600 /* upnpcontrolpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */; };
-		438FD84914DE84E300617600 /* upnpcontrolpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83B14DE84E300617600 /* upnpcontrolpoint.h */; };
-		438FD84A14DE84E300617600 /* upnpdevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83C14DE84E300617600 /* upnpdevice.h */; };
-		438FD84B14DE84E300617600 /* upnpdevicescanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */; };
-		438FD84C14DE84E300617600 /* upnpdevicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD83E14DE84E300617600 /* upnpdevicescanner.h */; };
-		438FD84E14DE84E300617600 /* upnphttpget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD84014DE84E300617600 /* upnphttpget.cpp */; };
-		438FD84F14DE84E300617600 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD84114DE84E300617600 /* upnphttpget.h */; };
-		438FD85014DE84E300617600 /* upnpitem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438FD84214DE84E300617600 /* upnpitem.cpp */; };
-		438FD85114DE84E300617600 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438FD84314DE84E300617600 /* upnpitem.h */; };
+		438A7A46150E9B1F0093A521 /* upnpbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */; };
+		438A7A47150E9B1F0093A521 /* upnpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A41150E9B1F0093A521 /* upnpclient.cpp */; };
+		438A7A48150E9B1F0093A521 /* upnpcontrolpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */; };
+		438A7A49150E9B1F0093A521 /* upnpdevicescanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */; };
+		438A7A4A150E9B1F0093A521 /* upnphttpget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A44150E9B1F0093A521 /* upnphttpget.cpp */; };
+		438A7A4B150E9B1F0093A521 /* upnpitem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A45150E9B1F0093A521 /* upnpitem.cpp */; };
+		438A7A54150E9B300093A521 /* upnpbrowser.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A4D150E9B300093A521 /* upnpbrowser.h */; };
+		438A7A55150E9B300093A521 /* upnpclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A4E150E9B300093A521 /* upnpclient.h */; };
+		438A7A56150E9B300093A521 /* upnpcontrolpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */; };
+		438A7A57150E9B300093A521 /* upnpdevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A50150E9B300093A521 /* upnpdevice.h */; };
+		438A7A58150E9B300093A521 /* upnpdevicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A51150E9B300093A521 /* upnpdevicescanner.h */; };
+		438A7A59150E9B300093A521 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A52150E9B300093A521 /* upnphttpget.h */; };
+		438A7A5A150E9B300093A521 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,19 +36,19 @@
 
 /* Begin PBXFileReference section */
 		4341AB361387B66600297297 /* libUPnPFramework.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUPnPFramework.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		438FD83614DE84E300617600 /* upnpbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnpbrowser.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD83714DE84E300617600 /* upnpbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpbrowser.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD83814DE84E300617600 /* upnpclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnpclient.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD83914DE84E300617600 /* upnpclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpclient.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnpcontrolpoint.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD83B14DE84E300617600 /* upnpcontrolpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpcontrolpoint.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD83C14DE84E300617600 /* upnpdevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpdevice.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnpdevicescanner.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD83E14DE84E300617600 /* upnpdevicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpdevicescanner.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD84014DE84E300617600 /* upnphttpget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnphttpget.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD84114DE84E300617600 /* upnphttpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnphttpget.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		438FD84214DE84E300617600 /* upnpitem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = upnpitem.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		438FD84314DE84E300617600 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = upnpitem.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpbrowser.cpp; path = src/upnpbrowser.cpp; sourceTree = "<group>"; };
+		438A7A41150E9B1F0093A521 /* upnpclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpclient.cpp; path = src/upnpclient.cpp; sourceTree = "<group>"; };
+		438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpcontrolpoint.cpp; path = src/upnpcontrolpoint.cpp; sourceTree = "<group>"; };
+		438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpdevicescanner.cpp; path = src/upnpdevicescanner.cpp; sourceTree = "<group>"; };
+		438A7A44150E9B1F0093A521 /* upnphttpget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnphttpget.cpp; path = src/upnphttpget.cpp; sourceTree = "<group>"; };
+		438A7A45150E9B1F0093A521 /* upnpitem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpitem.cpp; path = src/upnpitem.cpp; sourceTree = "<group>"; };
+		438A7A4D150E9B300093A521 /* upnpbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpbrowser.h; sourceTree = "<group>"; };
+		438A7A4E150E9B300093A521 /* upnpclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpclient.h; sourceTree = "<group>"; };
+		438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpcontrolpoint.h; sourceTree = "<group>"; };
+		438A7A50150E9B300093A521 /* upnpdevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdevice.h; sourceTree = "<group>"; };
+		438A7A51150E9B300093A521 /* upnpdevicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdevicescanner.h; sourceTree = "<group>"; };
+		438A7A52150E9B300093A521 /* upnphttpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnphttpget.h; sourceTree = "<group>"; };
+		438A7A53150E9B300093A521 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpitem.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,7 +65,13 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
-				438FD83514DE84E300617600 /* upnp */,
+				438A7A4C150E9B300093A521 /* upnp */,
+				438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */,
+				438A7A41150E9B1F0093A521 /* upnpclient.cpp */,
+				438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */,
+				438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */,
+				438A7A44150E9B1F0093A521 /* upnphttpget.cpp */,
+				438A7A45150E9B1F0093A521 /* upnpitem.cpp */,
 				4341AB371387B66600297297 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -78,24 +84,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		438FD83514DE84E300617600 /* upnp */ = {
+		438A7A4C150E9B300093A521 /* upnp */ = {
 			isa = PBXGroup;
 			children = (
-				438FD83614DE84E300617600 /* upnpbrowser.cpp */,
-				438FD83714DE84E300617600 /* upnpbrowser.h */,
-				438FD83814DE84E300617600 /* upnpclient.cpp */,
-				438FD83914DE84E300617600 /* upnpclient.h */,
-				438FD83A14DE84E300617600 /* upnpcontrolpoint.cpp */,
-				438FD83B14DE84E300617600 /* upnpcontrolpoint.h */,
-				438FD83C14DE84E300617600 /* upnpdevice.h */,
-				438FD83D14DE84E300617600 /* upnpdevicescanner.cpp */,
-				438FD83E14DE84E300617600 /* upnpdevicescanner.h */,
-				438FD84014DE84E300617600 /* upnphttpget.cpp */,
-				438FD84114DE84E300617600 /* upnphttpget.h */,
-				438FD84214DE84E300617600 /* upnpitem.cpp */,
-				438FD84314DE84E300617600 /* upnpitem.h */,
+				438A7A4D150E9B300093A521 /* upnpbrowser.h */,
+				438A7A4E150E9B300093A521 /* upnpclient.h */,
+				438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */,
+				438A7A50150E9B300093A521 /* upnpdevice.h */,
+				438A7A51150E9B300093A521 /* upnpdevicescanner.h */,
+				438A7A52150E9B300093A521 /* upnphttpget.h */,
+				438A7A53150E9B300093A521 /* upnpitem.h */,
 			);
-			path = upnp;
+			name = upnp;
+			path = inc/upnp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -105,13 +106,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				438FD84514DE84E300617600 /* upnpbrowser.h in Headers */,
-				438FD84714DE84E300617600 /* upnpclient.h in Headers */,
-				438FD84914DE84E300617600 /* upnpcontrolpoint.h in Headers */,
-				438FD84A14DE84E300617600 /* upnpdevice.h in Headers */,
-				438FD84C14DE84E300617600 /* upnpdevicescanner.h in Headers */,
-				438FD84F14DE84E300617600 /* upnphttpget.h in Headers */,
-				438FD85114DE84E300617600 /* upnpitem.h in Headers */,
+				438A7A54150E9B300093A521 /* upnpbrowser.h in Headers */,
+				438A7A55150E9B300093A521 /* upnpclient.h in Headers */,
+				438A7A56150E9B300093A521 /* upnpcontrolpoint.h in Headers */,
+				438A7A57150E9B300093A521 /* upnpdevice.h in Headers */,
+				438A7A58150E9B300093A521 /* upnpdevicescanner.h in Headers */,
+				438A7A59150E9B300093A521 /* upnphttpget.h in Headers */,
+				438A7A5A150E9B300093A521 /* upnpitem.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,7 +143,7 @@
 		4341AB2D1387B66600297297 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 				ORGANIZATIONNAME = None;
 			};
 			buildConfigurationList = 4341AB301387B66600297297 /* Build configuration list for PBXProject "UPnPFramework" */;
@@ -167,12 +168,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				438FD84414DE84E300617600 /* upnpbrowser.cpp in Sources */,
-				438FD84614DE84E300617600 /* upnpclient.cpp in Sources */,
-				438FD84814DE84E300617600 /* upnpcontrolpoint.cpp in Sources */,
-				438FD84B14DE84E300617600 /* upnpdevicescanner.cpp in Sources */,
-				438FD84E14DE84E300617600 /* upnphttpget.cpp in Sources */,
-				438FD85014DE84E300617600 /* upnpitem.cpp in Sources */,
+				438A7A46150E9B1F0093A521 /* upnpbrowser.cpp in Sources */,
+				438A7A47150E9B1F0093A521 /* upnpclient.cpp in Sources */,
+				438A7A48150E9B1F0093A521 /* upnpcontrolpoint.cpp in Sources */,
+				438A7A49150E9B1F0093A521 /* upnpdevicescanner.cpp in Sources */,
+				438A7A4A150E9B1F0093A521 /* upnphttpget.cpp in Sources */,
+				438A7A4B150E9B1F0093A521 /* upnpitem.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +234,7 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
 			};
 			name = Debug;
 		};
@@ -253,6 +255,7 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
 			};
 			name = Release;
 		};
