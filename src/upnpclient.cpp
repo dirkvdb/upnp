@@ -16,35 +16,113 @@
 
 #include "upnp/upnpclient.h"
 
-#include "utils/stringoperations.h"
+#include "utils/log.h"
+
+#include <stdexcept>
+#include <algorithm>
+
+using namespace utils;
 
 namespace upnp
 {
-
-Client::Client(const ControlPoint& cp, const Device& device)
-: m_Browser(cp)
+    
+Client::Client()
+: m_Client(0)
 {
-    m_Browser.setDevice(device);
+    log::debug(this, " Client:", &UPnPDeviceDiscoveredEvent);
 }
 
-void Client::getItemsInContainer(Item& container, utils::ISubscriber<Item>& subscriber)
+Client::~Client()
 {
-    m_Browser.getItems(subscriber, container);
+    destroy();
 }
 
-void Client::getContainersInContainer(Item& container, utils::ISubscriber<Item>& subscriber)
+void Client::initialize()
 {
-    m_Browser.getContainers(subscriber, container);
+    log::debug("Initializing UPnP SDK");
+    
+    int rc = UpnpInit(nullptr, 0);
+    if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
+    {
+        UpnpFinish();
+        log::error("UpnpInit() Error:", rc);
+        throw std::logic_error("Failed to initialise UPnP stack");
+    }
+    
+    rc = UpnpRegisterClient(upnpCallback, nullptr, &m_Client);
+    if (UPNP_E_SUCCESS == rc)
+    {
+        UpnpSetMaxContentLength(128 * 1024);
+    }
+    else if (UPNP_E_ALREADY_REGISTERED == rc)
+    {
+        log::warn("Control Point was already registered");
+    }
+    else if (UPNP_E_SUCCESS != rc )
+    {
+        log::error("Error registering Control Point: ", rc);
+        UpnpFinish();
+        throw std::logic_error("Error registering Control Point");
+    }    
 }
 
-void Client::getAllInContainer(Item& container, utils::ISubscriber<Item>& subscriber)
+void Client::destroy()
 {
-    m_Browser.getContainersAndItems(subscriber, container);
+    UpnpUnRegisterClient(m_Client);
+    UpnpFinish();
+    
+    log::info("Destroyed UPnP SDK");
 }
 
-void Client::getMetaData(upnp::Item& item)
+void Client::reset()
 {
-    m_Browser.getMetaData(item, "");
+    destroy();
+    initialize();
+}
+
+int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
+{
+    Client* pClient = reinterpret_cast<Client*>(pCookie);
+    
+    switch (eventType)
+    {
+    case UPNP_DISCOVERY_ADVERTISEMENT_ALIVE:
+    case UPNP_DISCOVERY_SEARCH_RESULT:
+    {
+        struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
+        if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
+        {
+            log::error("Error in Discovery Alive Callback:", pDiscEvent->ErrCode);
+        }
+        else if (pDiscEvent->DeviceId && pDiscEvent->DeviceType && pDiscEvent->Location)
+        {
+            Discovery disc;
+            disc.udn            = pDiscEvent->DeviceId;
+            disc.deviceType     = pDiscEvent->DeviceType;
+            disc.location       = pDiscEvent->Location;
+            
+            pClient->UPnPDeviceDiscoveredEvent(disc);
+        }
+        break;
+    }
+    case UPNP_DISCOVERY_ADVERTISEMENT_BYEBYE:
+    {
+        struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
+        if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
+        {
+            log::error("Error in Discovery Bye Bye Callback:", pDiscEvent->ErrCode);
+        }
+        else
+        {
+            pClient->UPnPDeviceDissapearedEvent(pDiscEvent->DeviceId);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    
+    return 0;
 }
 
 }

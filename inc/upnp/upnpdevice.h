@@ -18,31 +18,57 @@
 #define UPNP_DEVICE_H
 
 #include <string>
+#include <map>
 
 #include "utils/types.h"
 
 namespace upnp
 {
 
+class Service
+{
+public:
+    enum Type
+    {
+        ContentDirectory,
+        RenderingControl,
+        ConnectionManager,
+        AVTransport,
+        Unknown
+    };
+    
+    Type            m_Type;
+    std::string     m_Id;
+    std::string     m_SCPDUrl;
+    std::string     m_ControlURL;
+    std::string     m_EventSubscriptionURL;
+};
+
 class Device
 {
 public:
+    enum Type
+    {
+        MediaServer,
+        MediaRenderer,
+        Unknown
+    };
+
     bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
 
+    Type            m_Type;
     std::string     m_UserDefinedName;
     std::string     m_FriendlyName;
-    std::string     m_DeviceType;
     std::string     m_UDN;
     std::string     m_BaseURL;
     std::string     m_RelURL;
     std::string     m_PresURL;
     std::string     m_Location;
-    std::string     m_CDServiceID;
-    std::string     m_CDControlURL;
-    std::string     m_CDEventSubURL;
     std::string     m_CDSubscriptionID;
     std::string     m_ContainerId;
     int32_t         m_AdvTimeout;
+    
+    std::map<Service::Type, Service>    m_Services;
 };
 
 class IDeviceSubscriber

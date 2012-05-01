@@ -21,6 +21,8 @@
 #include <vector>
 #include <map>
 
+#include "upnp/upnpprotocolinfo.h"
+
 namespace upnp
 {
 
@@ -38,14 +40,17 @@ public:
 
     const std::string& getMetaData(const std::string& metaKey) const;
     const std::string& getUrl() const;
+    const ProtocolInfo& getProtocolInfo() const;
     bool isThumbnail() const;
     
-    void setUrl(const std::string& url);
     void addMetaData(const std::string& key, const std::string& value);
+    void setUrl(const std::string& url);
+    void setProtocolInfo(const ProtocolInfo& info);    
 
 private:
     MetaMap         m_MetaData;
     std::string     m_Url;
+    ProtocolInfo    m_ProtocolInfo;
 };
 
 class Item

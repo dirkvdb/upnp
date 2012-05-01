@@ -14,53 +14,44 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CLIENT_H
-#define UPNP_CLIENT_H
+#ifndef UPNP_UTILS_H
+#define UPNP_UTILS_H
 
 #include <string>
-#include <mutex>
+#include <stdexcept>
+#include <sstream>
+
 #include <upnp/upnp.h>
-
-#include "utils/subscriber.h"
-#include "utils/signal.h"
-
+#include <upnp/upnptools.h>
 
 namespace upnp
 {
-    
-class Client
+
+inline void handleUPnPResult(int errorCode)
 {
-public:
-    struct Discovery
+    if (UPNP_E_SUCCESS == errorCode)
     {
-        std::string udn;
-        std::string deviceType;
-        std::string location;
-    };
-
-    Client();
-    Client(const Client&) = delete;
-    ~Client();
-
-    Client& operator=(const Client&) = delete;
-    
-    void initialize();
-    void destroy();
-    
-    operator UpnpClient_Handle() const { return m_Client; }
-    
-    void reset();
-    
-    utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
-    
-private:
-    static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-
-    UpnpClient_Handle                   		m_Client;
-};
-    
+        return;
+    }
+    else if (708 == errorCode)
+    {
+        throw std::logic_error("Unsupported or invalid search criteria");
+    }
+    else if (709 == errorCode)
+    {
+        throw std::logic_error("Unsupported or invalid sort criteria");
+    }
+    else if (801 == errorCode)
+    {
+        throw std::logic_error("UPnP Access denied");
+    }
+    else
+    {
+        throw std::logic_error(UpnpGetErrorMessage(errorCode));
+    }
 }
 
-#endif
+}
 
+
+#endif

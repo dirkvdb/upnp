@@ -27,24 +27,24 @@
 #include <upnp/upnp.h>
 
 #include "upnpitem.h"
-#include "upnpcontrolpoint.h"
+#include "upnpdevice.h"
 
 #include "utils/threadpool.h"
+#include "utils/subscriber.h"
 
 namespace upnp
 {
 
-class UPnPControlPoint;
-
+class Client;
 
 class Browser
 {
 public:
-    Browser(const ControlPoint& ctrlPnt);
+    Browser(const Client& client);
     ~Browser();
 
-    Device getDevice() const;
-    void setDevice(const Device& device);
+    std::shared_ptr<Device> getDevice() const;
+    void setDevice(std::shared_ptr<Device> device);
     
     // fetch the child containers and items of container with id 'containerId', if the containers' metadata is not known yet it will be also be fetched
     void getContainersAndItems(utils::ISubscriber<Item>& subscriber, Item& container, uint32_t limit = 0, uint32_t offset = 0, void* pExtraData = nullptr);
@@ -83,9 +83,7 @@ private:
 
 
     static IXML_Document* parseBrowseResult(IXML_Document* pDoc);
-    static void addActionToDocument(IXML_Document** pDoc, const std::string& type, const std::string& action, const std::string& value);
-    static void handleUPnPError(int errorCode);
-
+    
     static int browserCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     
     void getContainersAndItemsThread(const Item& container, uint32_t limit, uint32_t offset, utils::ISubscriber<Item>& subscriber, void* pData);
@@ -93,8 +91,8 @@ private:
     void getItemsThread(const Item& container, uint32_t limit, uint32_t offset, const std::string& sort, utils::ISubscriber<Item>& subscriber, void* pData);
     void getMetaDataThread(std::shared_ptr<Item> item, const std::string& filter, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, void* pData);
 
-    const ControlPoint&                 m_CtrlPnt;
-    Device                              m_Device;
+    const Client&                       m_Client;
+    std::shared_ptr<Device>             m_Device;
     std::string                         m_SubscriptionId;
     utils::ThreadPool                   m_ThreadPool;
     bool                                m_Stop;

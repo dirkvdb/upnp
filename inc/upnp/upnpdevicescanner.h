@@ -20,43 +20,45 @@
 #include <map>
 #include <string>
 #include <mutex>
+#include <memory>
 
-#include "upnpdevice.h"
+#include <upnp/upnp.h>
+
+#include "upnp/upnpdevice.h"
+#include "upnp/upnpclient.h"
 #include "utils/signal.h"
 
 namespace upnp
 {
 
-class ControlPoint;
-
 class DeviceScanner
 {
 public:
-    enum DeviceType
-    {
-        Servers
-    };
-    
-    DeviceScanner(ControlPoint& controlPoint, DeviceType type);
+    DeviceScanner(Client& client, Device::Type type);
     
     void start();
     void stop();
     void refresh();
     
     uint32_t getDeviceCount();
-    std::map<std::string, Device> getDevices();
+    std::map<std::string, std::shared_ptr<Device>> getDevices();
     
-    void onUPnPDeviceDiscovered(const Device& device);
-    void onUPnPDeviceDissapeared(const Device& device);
-
-    utils::Signal<void(const Device&)> DeviceDiscoveredEvent;
-    utils::Signal<void(const Device&)> DeviceDissapearedEvent;
+    utils::Signal<void(std::shared_ptr<Device>)> DeviceDiscoveredEvent;
+    utils::Signal<void(std::shared_ptr<Device>)> DeviceDissapearedEvent;
+    
+    void onDeviceDiscovered(const Client::Discovery& discovery);
+    void onDeviceDissapeared(const std::string& deviceId);
     
 private:
-    ControlPoint&                   m_ControlPoint;
-    DeviceType                      m_Type;
-    std::map<std::string, Device>   m_Devices;
-    std::mutex                      m_Mutex;
+    static std::string getFirstDocumentItem(IXML_Document* pDoc, const std::string& item);
+    static std::string getFirstElementItem(IXML_Element* pElement, const std::string& item);
+    static IXML_NodeList* getFirstServiceList(IXML_Document* pDoc);
+    static bool findAndParseService(IXML_Document* pDoc, Service::Type serviceType, std::shared_ptr<Device>& device);
+    
+    Client&                                         m_Client;
+    Device::Type                                    m_Type;
+    std::map<std::string, std::shared_ptr<Device>>  m_Devices;
+    std::mutex                                      m_Mutex;
 };
 
 }

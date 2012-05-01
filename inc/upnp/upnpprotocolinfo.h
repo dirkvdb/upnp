@@ -14,53 +14,36 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CLIENT_H
-#define UPNP_CLIENT_H
+#ifndef UPNP_PROTOCOL_INFO_H
+#define UPNP_PROTOCOL_INFO_H
 
 #include <string>
-#include <mutex>
-#include <upnp/upnp.h>
-
-#include "utils/subscriber.h"
-#include "utils/signal.h"
-
 
 namespace upnp
 {
     
-class Client
+class ProtocolInfo
 {
 public:
-    struct Discovery
-    {
-        std::string udn;
-        std::string deviceType;
-        std::string location;
-    };
-
-    Client();
-    Client(const Client&) = delete;
-    ~Client();
-
-    Client& operator=(const Client&) = delete;
+    ProtocolInfo();
+    ProtocolInfo(const std::string& protocolString);
     
-    void initialize();
-    void destroy();
+    std::string getProtocol() const;
+    std::string getNetwork() const;
+    std::string getContentFormat() const;
+    std::string getAdditionalInfo() const;
     
-    operator UpnpClient_Handle() const { return m_Client; }
+    bool isCompatibleWith(const ProtocolInfo& info) const;
     
-    void reset();
-    
-    utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
+    std::string toString() const;
     
 private:
-    static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-
-    UpnpClient_Handle                   		m_Client;
+    std::string m_Protocol;
+    std::string m_Network;
+    std::string m_ContentFormat;
+    std::string m_AdditionalInfo;
 };
-    
+
 }
 
 #endif
-

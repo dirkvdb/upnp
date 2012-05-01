@@ -1,0 +1,32 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+ENABLE_TESTING()
+
+FIND_PACKAGE(PkgConfig)
+FIND_PACKAGE(GTest REQUIRED)
+FIND_PACKAGE(GMock REQUIRED)
+
+INCLUDE_DIRECTORIES(
+	${GTEST_INCLUDE_DIRS}
+	${CMAKE_CURRENT_SOURCE_DIR}/../inc/
+)
+
+ADD_EXECUTABLE(upnptest
+	devicediscover.h
+	main.cpp
+	mediarenderertest.cpp
+	mediaservertest.cpp
+	testenvironment.h
+)
+
+SET (CMAKE_CXX_FLAGS "-std=c++0x")
+
+TARGET_LINK_LIBRARIES(upnptest
+	-lpthread
+	${GMOCK_LIBRARIES}
+	${GTEST_BOTH_LIBRARIES}
+	${UPNPFRAMEWORK_LIBRARIES}
+)
+
+ADD_TEST(UPnPTests upnptest)
+ 

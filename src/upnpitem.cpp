@@ -35,27 +35,31 @@ Resource::Resource()
 Resource::Resource(const Resource& other)
 : m_MetaData(other.m_MetaData)
 , m_Url(other.m_Url)
+, m_ProtocolInfo(other.m_ProtocolInfo)
 {
 }
 
 Resource::Resource(Resource&& other)
 : m_MetaData(std::move(other.m_MetaData))
 , m_Url(std::move(other.m_Url))
+, m_ProtocolInfo(std::move(other.m_ProtocolInfo))
 {    
 }
 
 Resource& Resource::operator=(const Resource& other)
 {
-    m_MetaData = other.m_MetaData;
-    m_Url = other.m_Url;
-    
+    m_MetaData      = other.m_MetaData;
+    m_Url           = other.m_Url;
+    m_ProtocolInfo  = other.m_ProtocolInfo;
+        
     return *this;
 }
 
 Resource& Resource::operator=(Resource&& other)
 {
-    m_MetaData = std::move(other.m_MetaData);
-    m_Url = std::move(other.m_Url);
+    m_MetaData      = std::move(other.m_MetaData);
+    m_Url           = std::move(other.m_Url);
+    m_ProtocolInfo  = std::move(other.m_ProtocolInfo);
     
     return *this;
 }
@@ -76,9 +80,19 @@ const std::string& Resource::getUrl() const
     return m_Url;
 }
 
+const ProtocolInfo& Resource::getProtocolInfo() const
+{
+    return m_ProtocolInfo;
+}
+
 bool Resource::isThumbnail() const
 {
     return (0 != getMetaData(protocolInfo).find(dlnaThumbnail));
+}
+
+void Resource::addMetaData(const std::string& key, const std::string& value)
+{
+    m_MetaData[key] = value;
 }
 
 void Resource::setUrl(const std::string& url)
@@ -86,10 +100,11 @@ void Resource::setUrl(const std::string& url)
     m_Url = url;
 }
 
-void Resource::addMetaData(const std::string& key, const std::string& value)
+void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 {
-    m_MetaData[key] = value;
+    m_ProtocolInfo = info;
 }
+
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)

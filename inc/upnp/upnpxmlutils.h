@@ -14,53 +14,18 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CLIENT_H
-#define UPNP_CLIENT_H
+#ifndef UPNP_XML_UTILS_H
+#define UPNP_XML_UTILS_H
 
 #include <string>
-#include <mutex>
+
 #include <upnp/upnp.h>
-
-#include "utils/subscriber.h"
-#include "utils/signal.h"
-
 
 namespace upnp
 {
-    
-class Client
-{
-public:
-    struct Discovery
-    {
-        std::string udn;
-        std::string deviceType;
-        std::string location;
-    };
 
-    Client();
-    Client(const Client&) = delete;
-    ~Client();
+std::string getFirstElementValue(IXML_Document* pDoc, const std::string& item);
 
-    Client& operator=(const Client&) = delete;
-    
-    void initialize();
-    void destroy();
-    
-    operator UpnpClient_Handle() const { return m_Client; }
-    
-    void reset();
-    
-    utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
-    
-private:
-    static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-
-    UpnpClient_Handle                   		m_Client;
-};
-    
 }
 
 #endif
-

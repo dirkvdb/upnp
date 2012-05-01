@@ -14,53 +14,37 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CLIENT_H
-#define UPNP_CLIENT_H
+#ifndef UPNP_MEDIA_RENDERER_H
+#define UPNP_MEDIA_RENDERER_H
 
-#include <string>
-#include <mutex>
-#include <upnp/upnp.h>
+#include <memory>
 
-#include "utils/subscriber.h"
-#include "utils/signal.h"
-
+#include "upnp/upnpconnectionmanager.h"
+#include "upnp/upnprenderingcontrol.h"
 
 namespace upnp
 {
-    
-class Client
+
+class Item;
+class Device;
+class Client;
+
+class MediaRenderer
 {
 public:
-    struct Discovery
-    {
-        std::string udn;
-        std::string deviceType;
-        std::string location;
-    };
-
-    Client();
-    Client(const Client&) = delete;
-    ~Client();
-
-    Client& operator=(const Client&) = delete;
+    MediaRenderer(const Client& cp);
     
-    void initialize();
-    void destroy();
-    
-    operator UpnpClient_Handle() const { return m_Client; }
-    
-    void reset();
-    
-    utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
+    void setDevice(std::shared_ptr<Device> device);
+    bool supportsPlayback(const Item& item) const;
     
 private:
-    static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-
-    UpnpClient_Handle                   		m_Client;
-};
+    std::shared_ptr<Device>     m_Device;
+    std::vector<ProtocolInfo>   m_ProtocolInfo;
     
+    ConnectionManager           m_ConnectionMgr;
+    RenderingControl            m_RenderingControl;
+};
+
 }
 
 #endif
-

@@ -16,7 +16,11 @@
 
 #include "upnp/upnpbrowser.h"
 
+#include "upnp/upnputils.h"
 #include "upnp/upnpitem.h"
+#include "upnp/upnpaction.h"
+#include "upnp/upnpclient.h"
+
 #include "utils/log.h"
 #include "utils/types.h"
 #include "utils/stringoperations.h"
@@ -41,8 +45,8 @@ static const uint32_t maxNumThreads = 20;
 
 const std::string Browser::rootId = "0";
 
-Browser::Browser(const ControlPoint& ctrlPnt)
-: m_CtrlPnt(ctrlPnt)
+Browser::Browser(const Client& client)
+: m_Client(client)
 , m_ThreadPool(maxNumThreads)
 , m_Stop(false)
 {
@@ -57,9 +61,15 @@ Browser::~Browser()
     m_ThreadPool.stop();
 }
 
-Device Browser::getDevice() const
+std::shared_ptr<Device> Browser::getDevice() const
 {
     return m_Device;
+}
+
+void Browser::setDevice(std::shared_ptr<Device> device)
+{
+    log::info("Set device:", device->m_FriendlyName);
+    m_Device = device;
 }
 
 void Browser::cancel()
@@ -67,20 +77,14 @@ void Browser::cancel()
     m_Stop = true;
 }
 
-void Browser::setDevice(const Device& device)
-{
-    log::info("Set device:", device.m_FriendlyName);
-    m_Device = device;
-}
-
 void Browser::subscribe()
 {
     unsubscribe();
 
-    log::debug("Subscribe to device:", m_Device.m_FriendlyName);
+    log::debug("Subscribe to device:", m_Device->m_FriendlyName);
 
     //subscribe to eventURL
-    int ret = UpnpSubscribeAsync(m_CtrlPnt, m_Device.m_CDEventSubURL.c_str(), defaultTimeout, Browser::browserCb, this);
+    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), defaultTimeout, Browser::browserCb, this);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error("Failed to subscribe to UPnP device");
@@ -89,12 +93,12 @@ void Browser::subscribe()
 
 void Browser::unsubscribe()
 {
-    if (!m_Device.m_CDSubscriptionID.empty())
+    if (!m_Device->m_CDSubscriptionID.empty())
     {
-        int ret = UpnpUnSubscribe(m_CtrlPnt, &(m_Device.m_CDSubscriptionID[0]));
+        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_CDSubscriptionID[0]));
         if (ret != UPNP_E_SUCCESS)
         {
-            log::warn("Failed to unsubscribe from device:", m_Device.m_FriendlyName);
+            log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
         }
     }
 }
@@ -259,34 +263,19 @@ void Browser::getMetaDataAsync(utils::ISubscriber<std::shared_ptr<Item>>& subscr
     m_ThreadPool.queueFunction(std::bind(&Browser::getMetaDataThread, this, item, filter, std::ref(subscriber), pExtraData));
 }
 
-void Browser::addActionToDocument(IXML_Document** pDoc, const std::string& type, const std::string& action, const std::string& value)
-{
-    int ret = UpnpAddToAction(pDoc, type.c_str(), ContentDirectoryServiceType, action.c_str(), value.c_str());
-    if (ret != UPNP_E_SUCCESS)
-    {
-        throw std::logic_error("Failed to add action to UPnP request: " + type);
-    }
-}
-
 void Browser::getContainerMetaData(Item& container)
 {
-    IXML_Document* pAction = nullptr;
-
-    addActionToDocument(&pAction, "Browse", "ObjectID", container.getObjectId());
-    addActionToDocument(&pAction, "Browse", "BrowseFlag", "BrowseMetadata");
-    addActionToDocument(&pAction, "Browse", "Filter", "@childCount");
-    addActionToDocument(&pAction, "Browse", "StartingIndex", "0");
-    addActionToDocument(&pAction, "Browse", "RequestedCount", "0");
-    addActionToDocument(&pAction, "Browse", "SortCriteria", "");
+    Action browseAction("Browse", ContentDirectoryServiceType);
+    browseAction.addArgument("ObjectID", container.getObjectId());
+    browseAction.addArgument("BrowseFlag", "BrowseMetadata");
+    browseAction.addArgument("Filter", "@childCount");
+    browseAction.addArgument("StartingIndex", "0");
+    browseAction.addArgument("RequestedCount", "0");
+    browseAction.addArgument("SortCriteria", "");
 
     IXML_Document* pResult = nullptr;
-    int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        handleUPnPError(ret);
-        ixmlDocument_free(pResult);
-    }
-
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
+    
     IXML_Document* pBrowseResult = parseBrowseResult(pResult);
     if (!pBrowseResult)
     {
@@ -297,33 +286,24 @@ void Browser::getContainerMetaData(Item& container)
 
     ixmlDocument_free(pBrowseResult);
     ixmlDocument_free(pResult);
-    ixmlDocument_free(pAction);
 }
 
 IXML_Document* Browser::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter,
                                      uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Stop = false;
-    IXML_Document* pAction = nullptr;
-
-    std::string requestSizeString   = numericops::toString(limit);
-
-    addActionToDocument(&pAction, "Browse", "ObjectID", objectId);
-    addActionToDocument(&pAction, "Browse", "BrowseFlag", flag);
-    addActionToDocument(&pAction, "Browse", "Filter", filter);
-    addActionToDocument(&pAction, "Browse", "StartingIndex", numericops::toString(startIndex));
-    addActionToDocument(&pAction, "Browse", "RequestedCount", requestSizeString);
-    addActionToDocument(&pAction, "Browse", "SortCriteria", sort);
     
-    IXML_Document* pResult = nullptr;
-    int ret = UpnpSendAction(m_CtrlPnt, m_Device.m_CDControlURL.c_str(), ContentDirectoryServiceType, nullptr, pAction, &pResult);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        ixmlDocument_free(pAction);
-        handleUPnPError(ret);
-    }
+    Action browseAction("Browse", ContentDirectoryServiceType);
+    browseAction.addArgument("ObjectID", objectId);
+    browseAction.addArgument("BrowseFlag", flag);
+    browseAction.addArgument("Filter", filter);
+    browseAction.addArgument("StartingIndex", numericops::toString(startIndex));
+    browseAction.addArgument("RequestedCount", numericops::toString(limit));
+    browseAction.addArgument("SortCriteria", sort);
 
-    ixmlDocument_free(pAction);
+    IXML_Document* pResult = nullptr;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
+
     return pResult;
 }
 
@@ -345,12 +325,12 @@ int Browser::browserCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
             if (pSubEvent->Sid)
             {
                 log::info(pSubEvent->Sid);
-                pUPnP->m_Device.m_CDSubscriptionID = pSubEvent->Sid;
-                log::info("Successfully subscribed to", pUPnP->m_Device.m_FriendlyName, "id =", pSubEvent->Sid);
+                pUPnP->m_Device->m_CDSubscriptionID = pSubEvent->Sid;
+                log::info("Successfully subscribed to", pUPnP->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
             }
             else
             {
-                pUPnP->m_Device.m_CDSubscriptionID.clear();
+                pUPnP->m_Device->m_CDSubscriptionID.clear();
                 log::error("Subscription id for device is empty");
             }
         }
@@ -647,7 +627,21 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
                             if (!pValue) continue;
                             
                             //log::debug(pKey, "-", pValue);
-                            resource.addMetaData(pKey, pValue);
+                            if (std::string("protocolInfo") == pKey)
+                            {
+                                try
+                                {
+                                    resource.setProtocolInfo(ProtocolInfo(pValue));
+                                }
+                                catch (std::exception& e)
+                                {
+                                    log::warn(e.what());
+                                }
+                            }
+                            else
+                            {
+                                resource.addMetaData(pKey, pValue);
+                            }
                         }
 
                         ixmlNamedNodeMap_free(pNodeMap);
@@ -722,32 +716,6 @@ void Browser::getMetaDataThread(std::shared_ptr<Item> item, const std::string& f
     {
         log::error("Exception getting metadata:", e.what());
         subscriber.onError(e.what());
-    }
-}
-
-void Browser::handleUPnPError(int errorCode)
-{
-    if (801 == errorCode)
-    {
-        throw std::logic_error("Access denied");
-    }
-    else if (UPNP_E_SOCKET_CONNECT)
-    {
-        throw std::logic_error("Connection error");
-    }
-    else if (UPNP_E_TIMEDOUT)
-    {
-        throw std::logic_error("Timeout occured");
-    }
-    else if (UPNP_E_NETWORK_ERROR)
-    {
-        throw std::logic_error("Network error");
-    }
-    else
-    {
-        std::stringstream ss;
-        ss << "Error code: " << errorCode;
-        throw std::logic_error(ss.str());
     }
 }
 
