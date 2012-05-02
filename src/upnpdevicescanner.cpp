@@ -99,14 +99,14 @@ std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
     return m_Devices;
 }
 
-std::string DeviceScanner::getFirstDocumentItem(IXML_Document* pDoc, const std::string& item)
+std::string DeviceScanner::getFirstDocumentItem(IXmlDocument& doc, const std::string& item)
 {
     std::string result;
     
-    IXML_NodeList* pNodeList = ixmlDocument_getElementsByTagName(pDoc, item.c_str());
-    if (pNodeList)
+    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
+    if (nodeList)
     {
-        IXML_Node* pTmpNode = ixmlNodeList_item(pNodeList, 0);
+        IXML_Node* pTmpNode = ixmlNodeList_item(nodeList, 0);
         if (pTmpNode)
         {
             IXML_Node* pTextNode = ixmlNode_getFirstChild(pTmpNode);
@@ -116,40 +116,8 @@ std::string DeviceScanner::getFirstDocumentItem(IXML_Document* pDoc, const std::
                 result = pValue;
             }
         }
-        
-        ixmlNodeList_free(pNodeList);
     }
     
-    return result;
-}
-
-std::string DeviceScanner::getFirstElementItem(IXML_Element* pElement, const std::string& item)
-{
-    std::string result;
-    
-    IXML_NodeList* pNodeList = ixmlElement_getElementsByTagName(pElement, item.c_str());
-    if (pNodeList == nullptr)
-    {
-        log::error("Error finding", item, "in XML Node");
-        return result;
-    }
-    
-    IXML_Node* pTmpNode = ixmlNodeList_item(pNodeList, 0);
-    if (pTmpNode == nullptr)
-    {
-        log::error("Error finding", item, "value in XML Node");
-        ixmlNodeList_free(pNodeList);
-        return result;
-    }
-    
-    IXML_Node* pTextNode = ixmlNode_getFirstChild(pTmpNode);
-    const char* pValue = ixmlNode_getNodeValue(pTextNode);
-    if (pValue)
-    {
-        result = pValue;
-    }
-    
-    ixmlNodeList_free(pNodeList);
     return result;
 }
 
@@ -171,51 +139,46 @@ Device::Type stringToDeviceType(const std::string& type)
     return Device::Unknown;
 }
 
-IXML_NodeList* DeviceScanner::getFirstServiceList(IXML_Document* pDoc)
+IXmlNodeList DeviceScanner::getFirstServiceList(IXmlDocument& doc)
 {
-    IXML_NodeList* pServiceList = nullptr;
+    IXmlNodeList serviceList;
     
-    IXML_NodeList* pServlistNodelist = ixmlDocument_getElementsByTagName(pDoc, "serviceList");
-    if (pServlistNodelist && ixmlNodeList_length(pServlistNodelist))
+    IXmlNodeList servlistNodelist = ixmlDocument_getElementsByTagName(doc, "serviceList");
+    if (servlistNodelist && ixmlNodeList_length(servlistNodelist))
     {
-        IXML_Node* pServlistNode = ixmlNodeList_item(pServlistNodelist, 0);
-        pServiceList = ixmlElement_getElementsByTagName(reinterpret_cast<IXML_Element*>(pServlistNode), "service");
+        IXML_Node* pServlistNode = ixmlNodeList_item(servlistNodelist, 0);
+        serviceList = ixmlElement_getElementsByTagName(reinterpret_cast<IXML_Element*>(pServlistNode), "service");
     }
     
-    if (pServlistNodelist)
-    {
-        ixmlNodeList_free(pServlistNodelist);
-    }
-    
-    return pServiceList;
+    return serviceList;
 }
 
-bool DeviceScanner::findAndParseService(IXML_Document* pDoc, const Service::Type serviceType, std::shared_ptr<Device>& device)
+bool DeviceScanner::findAndParseService(IXmlDocument& doc, const Service::Type serviceType, std::shared_ptr<Device>& device)
 {
     bool found = false;
     
-    IXML_NodeList* pServiceList = getFirstServiceList(pDoc);
-    if (!pServiceList)
+    IXmlNodeList serviceList = getFirstServiceList(doc);
+    if (!serviceList)
     {
         return found;
     }
     
     std::string base = device->m_BaseURL.empty() ? device->m_Location : device->m_BaseURL;
     
-    int numServices = ixmlNodeList_length(pServiceList);
+    int numServices = ixmlNodeList_length(serviceList);
     for (int i = 0; i < numServices; ++i)
     {
-        IXML_Element* pService = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(pServiceList, i));
+        IXML_Element* pService = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(serviceList, i));
         
         Service service;
-        service.m_Type = stringToServiceType(getFirstElementItem(pService, "serviceType"));
+        service.m_Type = stringToServiceType(getFirstElementValue(pService, "serviceType"));
         
         if (service.m_Type == serviceType)
         {
-            service.m_Id                    = getFirstElementItem(pService, "serviceId");
+            service.m_Id                    = getFirstElementValue(pService, "serviceId");
             
-            std::string relControlURL       = getFirstElementItem(pService, "controlURL");
-            std::string relEventURL         = getFirstElementItem(pService, "eventSubURL");
+            std::string relControlURL       = getFirstElementValue(pService, "controlURL");
+            std::string relEventURL         = getFirstElementValue(pService, "eventSubURL");
             
             char url[200];
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
@@ -245,11 +208,6 @@ bool DeviceScanner::findAndParseService(IXML_Document* pDoc, const Service::Type
         }
     }
     
-    if (pServiceList)
-    {
-        ixmlNodeList_free(pServiceList);
-    }
-    
     return found;
 }
 
@@ -274,10 +232,10 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
     
     log::debug("New device:", discovery.udn);
     
-    IXML_Document* pDoc = nullptr;
+    IXmlDocument doc;
     
     log::debug("Download device description from:", discovery.location);
-    int ret = UpnpDownloadXmlDoc(discovery.location.c_str(), &pDoc);
+    int ret = UpnpDownloadXmlDoc(discovery.location.c_str(), &doc);
     if (ret != UPNP_E_SUCCESS)
     {
         log::error("Error obtaining device description from", discovery.location, " error =", ret);
@@ -287,24 +245,19 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
     auto device = std::make_shared<Device>();
     
     device->m_Location   = discovery.location;
-    device->m_UDN        = getFirstDocumentItem(pDoc, "UDN");
-    device->m_Type       = stringToDeviceType(getFirstDocumentItem(pDoc, "deviceType"));
+    device->m_UDN        = getFirstDocumentItem(doc, "UDN");
+    device->m_Type       = stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
     
     if (device->m_UDN.empty() || device->m_Type != m_Type)
     {
-        if (pDoc)
-        {
-            ixmlDocument_free(pDoc);
-        }
-        
         return;
     }
     
     
     {
-        device->m_FriendlyName   = getFirstDocumentItem(pDoc, "friendlyName");
-        device->m_BaseURL        = getFirstDocumentItem(pDoc, "URLBase");
-        device->m_RelURL         = getFirstDocumentItem(pDoc, "presentationURL");
+        device->m_FriendlyName   = getFirstDocumentItem(doc, "friendlyName");
+        device->m_BaseURL        = getFirstDocumentItem(doc, "URLBase");
+        device->m_RelURL         = getFirstDocumentItem(doc, "presentationURL");
         
         char presURL[200];
         int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : discovery.location.c_str()), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
@@ -315,11 +268,11 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
         
         if (device->m_Type == Device::MediaServer)
         {
-            if (findAndParseService(pDoc, Service::ContentDirectory, device))
+            if (findAndParseService(doc, Service::ContentDirectory, device))
             {
                 // try to obtain the optional services
-                findAndParseService(pDoc, Service::AVTransport, device);
-                findAndParseService(pDoc, Service::ConnectionManager, device);
+                findAndParseService(doc, Service::AVTransport, device);
+                findAndParseService(doc, Service::ConnectionManager, device);
                 
                 log::info("Media server added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
 
@@ -333,12 +286,12 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
         }
         else if (device->m_Type == Device::MediaRenderer)
         {
-            if (   findAndParseService(pDoc, Service::RenderingControl, device)
-                && findAndParseService(pDoc, Service::ConnectionManager, device)
+            if (   findAndParseService(doc, Service::RenderingControl, device)
+                && findAndParseService(doc, Service::ConnectionManager, device)
                 )
             {
                 // try to obtain the optional services
-                findAndParseService(pDoc, Service::AVTransport, device);
+                findAndParseService(doc, Service::AVTransport, device);
                 
                 log::info("Media renderer added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
                 
@@ -349,11 +302,6 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
                 
                 DeviceDiscoveredEvent(device);
             }
-        }
-        
-        if (pDoc)
-        {
-            ixmlDocument_free(pDoc);
         }
     }
 }

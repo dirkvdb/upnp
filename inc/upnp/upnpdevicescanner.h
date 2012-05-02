@@ -26,6 +26,7 @@
 
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpclient.h"
+#include "upnp/upnpxmlutils.h"
 #include "utils/signal.h"
 
 namespace upnp
@@ -50,10 +51,9 @@ public:
     void onDeviceDissapeared(const std::string& deviceId);
     
 private:
-    static std::string getFirstDocumentItem(IXML_Document* pDoc, const std::string& item);
-    static std::string getFirstElementItem(IXML_Element* pElement, const std::string& item);
-    static IXML_NodeList* getFirstServiceList(IXML_Document* pDoc);
-    static bool findAndParseService(IXML_Document* pDoc, Service::Type serviceType, std::shared_ptr<Device>& device);
+    static std::string getFirstDocumentItem(IXmlDocument& doc, const std::string& item);
+    static IXmlNodeList getFirstServiceList(IXmlDocument& doc);
+    static bool findAndParseService(IXmlDocument& doc, Service::Type serviceType, std::shared_ptr<Device>& device);
     
     Client&                                         m_Client;
     Device::Type                                    m_Type;

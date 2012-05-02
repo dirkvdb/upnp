@@ -48,10 +48,10 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
 
     Action action("GetProtocolInfo", ConnectionManagerServiceType);
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &pResult));
+    IXmlDocument result;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &result));
     
-    auto infos = stringops::tokenize(getFirstElementValue(pResult, "Sink"), ",");
+    auto infos = stringops::tokenize(getFirstElementValue(result, "Sink"), ",");
     for (auto& info : infos)
     {
         try
@@ -64,8 +64,6 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
         }
     }
     
-    ixmlDocument_free(pResult);
-    
     return protocolInfo;
 }
 
@@ -77,15 +75,13 @@ ConnectionManager::ConnectionInfo ConnectionManager::prepareForConnection(const 
     action.addArgument("PeerConnectionID", peerConnectionId);
     action.addArgument("Direction", directionToString(direction));
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &pResult));
+    IXmlDocument result;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &result));
     
     ConnectionInfo connInfo;
-    connInfo.connectionId               = getFirstElementValue(pResult, "ConnectionID");
-    connInfo.avTransportId              = getFirstElementValue(pResult, "AVTransportID");
-    connInfo.renderingControlServiceId  = getFirstElementValue(pResult, "RcsID");
-    
-    ixmlDocument_free(pResult);
+    connInfo.connectionId               = getFirstElementValue(result, "ConnectionID");
+    connInfo.avTransportId              = getFirstElementValue(result, "AVTransportID");
+    connInfo.renderingControlServiceId  = getFirstElementValue(result, "RcsID");
     
     return connInfo;
 }
@@ -95,22 +91,18 @@ void ConnectionManager::connectionComplete(const ConnectionInfo& connectionInfo)
     Action action("ConnectionComplete", ConnectionManagerServiceType);
     action.addArgument("ConnectionID", connectionInfo.connectionId);
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &pResult));
-    
-    ixmlDocument_free(pResult);
+    IXmlDocument result;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &result));
 }
 
 std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
 {
     Action action("GetCurrentConnectionIDs", ConnectionManagerServiceType);
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &pResult));
+    IXmlDocument result;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &result));
 
-    std::vector<std::string> ids = stringops::tokenize(getFirstElementValue(pResult, "ConnectionIDs"), ",");
-    
-    ixmlDocument_free(pResult);
+    std::vector<std::string> ids = stringops::tokenize(getFirstElementValue(result, "ConnectionIDs"), ",");
     
     return ids;
 }
@@ -120,20 +112,18 @@ ConnectionManager::ConnectionInfo ConnectionManager::getCurrentConnectionInfo(co
     Action action("GetCurrentConnectionInfo", ConnectionManagerServiceType);
 	action.addArgument("ConnectionID", connectionId);
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &pResult));
+    IXmlDocument result;
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ConnectionManager].m_ControlURL.c_str(), ConnectionManagerServiceType, nullptr, action.getActionDocument(), &result));
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
-    connInfo.avTransportId              = getFirstElementValue(pResult, "AVTransportID");
-    connInfo.renderingControlServiceId  = getFirstElementValue(pResult, "RcsID");
-    connInfo.protocolInfo               = ProtocolInfo(getFirstElementValue(pResult, "ProtocolInfo"));
-    connInfo.peerConnectionManager      = getFirstElementValue(pResult, "PeerConnectionManager");
-    connInfo.peerConnectionId           = getFirstElementValue(pResult, "PeerConnectionID");
-    connInfo.direction                  = directionFromString(getFirstElementValue(pResult, "Direction"));
-    connInfo.connectionStatus           = connectionStatusFromString(getFirstElementValue(pResult, "Status"));
-    
-    ixmlDocument_free(pResult);
+    connInfo.avTransportId              = getFirstElementValue(result, "AVTransportID");
+    connInfo.renderingControlServiceId  = getFirstElementValue(result, "RcsID");
+    connInfo.protocolInfo               = ProtocolInfo(getFirstElementValue(result, "ProtocolInfo"));
+    connInfo.peerConnectionManager      = getFirstElementValue(result, "PeerConnectionManager");
+    connInfo.peerConnectionId           = getFirstElementValue(result, "PeerConnectionID");
+    connInfo.direction                  = directionFromString(getFirstElementValue(result, "Direction"));
+    connInfo.connectionStatus           = connectionStatusFromString(getFirstElementValue(result, "Status"));
     
     return connInfo;
 }

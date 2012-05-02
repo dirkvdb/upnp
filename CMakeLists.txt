@@ -1,5 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+SET(CMAKE_MODULES_PATH modules)
 ADD_SUBDIRECTORY(modules/utils)
 
 FIND_PACKAGE(PkgConfig)
@@ -12,7 +13,7 @@ IF (UPNP_FOUND)
             ${UPNP_INCLUDE_DIRS})
     SET (UPNPFRAMEWORK_LIBRARY_DIRS ${UPNP_LIBRARY_DIRS})
     SET (UPNPFRAMEWORK_LIBRARIES upnpframework ${UPNP_LIBRARIES})
-
+    
     ADD_LIBRARY(upnpframework STATIC
         inc/upnp/upnpaction.h               src/upnpaction.cpp
         inc/upnp/upnpclient.h               src/upnpclient.cpp
@@ -34,6 +35,12 @@ IF (UPNP_FOUND)
     LINK_DIRECTORIES(${UPNPFRAMEWORK_LIBRARY_DIRS})
 
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall")
+    
+    ADD_CUSTOM_COMMAND(TARGET upnpframework
+                       POST_BUILD
+                       COMMAND ctags -R -f .tags .
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                       COMMENT "Generating tags" VERBATIM)
 ENDIF (UPNP_FOUND)
 
 ADD_SUBDIRECTORY(test)

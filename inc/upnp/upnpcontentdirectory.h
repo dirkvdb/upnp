@@ -23,6 +23,7 @@
 #include <upnp/upnp.h>
 #include "upnp/upnpitem.h"
 #include "upnp/upnptypes.h"
+#include "upnp/upnpxmlutils.h"
 
 #include "utils/subscriber.h"
 
@@ -69,10 +70,10 @@ private:
     void querySortCapabilities();
     void querySystemUpdateID();
     
-    IXML_Document* parseBrowseResult(IXML_Document* pDoc, SearchResult& result);
-    void parseMetaData(IXML_Document* pDoc, Item& item);
-    std::vector<Item> parseContainers(IXML_Document* pDoc);
-    std::vector<Item> parseItems(IXML_Document* pDoc);
+    IXmlDocument parseBrowseResult(IXmlDocument& doc, SearchResult& result);
+    void parseMetaData(IXmlDocument& doc, Item& item);
+    std::vector<Item> parseContainers(IXmlDocument& doc);
+    std::vector<Item> parseItems(IXmlDocument& doc);
     
     void notifySubscriber(const std::vector<Item>& items, utils::ISubscriber<Item>& subscriber);
 

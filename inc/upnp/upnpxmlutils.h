@@ -24,7 +24,47 @@
 namespace upnp
 {
 
-std::string getFirstElementValue(IXML_Document* pDoc, const std::string& item);
+class IXmlDocument
+{
+public:
+    IXmlDocument();
+    IXmlDocument(IXML_Document* pDoc);
+    IXmlDocument(const IXmlDocument& doc) = delete;
+    IXmlDocument(IXmlDocument&& doc);
+    ~IXmlDocument();
+
+    IXmlDocument& operator= (const IXmlDocument& other) = delete;
+    IXmlDocument& operator= (IXML_Document* pDoc);
+
+    operator IXML_Document*() const;
+    operator bool() const;
+    IXML_Document** operator &();
+
+private:
+    IXML_Document*  m_pDoc;
+};
+
+class IXmlNodeList
+{
+public:
+    IXmlNodeList();
+    IXmlNodeList(IXML_NodeList* pList);
+    IXmlNodeList(const IXmlNodeList& doc) = delete;
+    IXmlNodeList(IXmlNodeList&& list);
+    ~IXmlNodeList();
+
+    IXmlNodeList& operator= (const IXmlNodeList& other) = delete;
+    IXmlNodeList& operator= (IXML_NodeList* pList);
+
+    operator IXML_NodeList*() const;
+    operator bool() const;
+
+private:
+    IXML_NodeList*  m_pList;
+};
+
+std::string getFirstElementValue(IXmlDocument& doc, const std::string& item);
+std::string getFirstElementValue(IXML_Element* pElement, const std::string& item);
 
 }
 
