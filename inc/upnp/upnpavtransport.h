@@ -1,0 +1,114 @@
+//    Copyright (C) 2012 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#ifndef UPNP_AV_TRANSPORT_H
+#define UPNP_AV_TRANSPORT_H
+
+#include "upnp/upnpdevice.h"
+
+#include <upnp/upnp.h>
+
+#include <set>
+#include <memory>
+#include <string>
+
+namespace upnp
+{
+    
+class Client;
+class Item;
+
+class AVTransport
+{
+public:
+    enum class Action
+    {
+        SetAVTransportURI,
+        SetNextAVTransportURI, // Optional
+        GetMediaInfo,
+        GetTransportInfo,
+        GetPositionInfo,
+        GetDeviceCapabilities,
+        GetTransportSettings,
+        Stop,
+        Play,
+        Pause, // Optional
+        Record, // Optional
+        Seek,
+        Next,
+        Previous,
+        SetPlayMode, // Optional
+        SetRecordQualityMode, // Optional
+        GetCurrentTransportActions // Optional
+    };
+    
+    enum class Variable
+    {
+        TransportState,
+        TransportStatus,
+        PlaybackStorageMedium,
+        PossiblePlaybackStorageMedia,
+        PossibleRecordStorageMedia,
+        CurrentPlayMode,
+        TransportPlaySpeed,
+        RecordStorageMedium,
+        RecordMediumWriteStatus,
+        PossibleRecordQualityModes,
+        CurrentRecordQualityMode,
+        NumberOfTracks,
+        CurrentTrack,
+        CurrentTrackDuration,
+        CurrentMediaDuration,
+        CurrentTrackURI,
+        CurrentTrackMetaData,
+        AVTransportURI,
+        AVTransportURIMetaData,
+        NextAVTransportURI,
+        NextAVTransportURIMetaData,
+        CurrentTransportActions,
+        LastChange //event 
+    };
+
+    AVTransport(Client& client);
+    ~AVTransport();
+    
+    void setDevice(std::shared_ptr<Device> device);
+    
+    bool supportsAction(Action action) const;
+    void subscribe();
+    void unsubscribe();
+    
+    void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData);
+    void play(const std::string& connectionId, const std::string& speed);
+    void stop(const std::string& connectionId);
+    
+private:
+    void parseServiceDescription(const std::string& descriptionUrl);
+    void eventOccurred(Upnp_Event* pEvent);
+    
+    static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
+    static Action actionFromString(const std::string& action);
+    static Variable variableFromString(const std::string& action);
+
+    Client&                         m_Client;
+    std::shared_ptr<Device>         m_Device;
+    std::set<Action>                m_SupportedActions;
+    std::map<Variable, std::string> m_Variables;
+};
+    
+}
+
+#endif

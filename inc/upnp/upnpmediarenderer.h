@@ -21,6 +21,7 @@
 
 #include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnprenderingcontrol.h"
+#include "upnp/upnpavtransport.h"
 
 namespace upnp
 {
@@ -28,21 +29,38 @@ namespace upnp
 class Item;
 class Device;
 class Client;
+class AVTransport;
+class ProtocolInfo;
+class Resource;
+struct ConnectionManager::ConnectionInfo;
 
 class MediaRenderer
 {
 public:
-    MediaRenderer(const Client& cp);
+    MediaRenderer(Client& cp);
     
     void setDevice(std::shared_ptr<Device> device);
-    bool supportsPlayback(const Item& item) const;
+    bool supportsPlayback(const Item& item, Resource& suggestedResource) const;
+    
+    std::string getPeerConnectionId() const;
+    
+    ConnectionManager& connectionManager();
+
+    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    void play(const ConnectionManager::ConnectionInfo& info);
+    void stop(const ConnectionManager::ConnectionInfo& info);
+    
+    void activateEvents();
+    void deactivateEvents();
     
 private:
-    std::shared_ptr<Device>     m_Device;
-    std::vector<ProtocolInfo>   m_ProtocolInfo;
+    std::shared_ptr<Device>         m_Device;
+    std::vector<ProtocolInfo>       m_ProtocolInfo;
     
-    ConnectionManager           m_ConnectionMgr;
-    RenderingControl            m_RenderingControl;
+    Client&                         m_Client;
+    ConnectionManager               m_ConnectionMgr;
+    RenderingControl                m_RenderingControl;
+    std::unique_ptr<AVTransport>    m_AVtransport;
 };
 
 }

@@ -47,7 +47,9 @@ inline void handleUPnPResult(int errorCode)
     }
     else
     {
-        throw std::logic_error(UpnpGetErrorMessage(errorCode));
+        std::stringstream ss;
+        ss << UpnpGetErrorMessage(errorCode) << " (" << errorCode << ")";
+        throw std::logic_error(ss.str().c_str());
     }
 }
 

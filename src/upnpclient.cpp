@@ -49,7 +49,7 @@ void Client::initialize()
         throw std::logic_error("Failed to initialise UPnP stack");
     }
     
-    rc = UpnpRegisterClient(upnpCallback, nullptr, &m_Client);
+    rc = UpnpRegisterClient(upnpCallback, this, &m_Client);
     if (UPNP_E_SUCCESS == rc)
     {
         UpnpSetMaxContentLength(128 * 1024);
@@ -83,6 +83,11 @@ void Client::reset()
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
     Client* pClient = reinterpret_cast<Client*>(pCookie);
+    if (!pClient)
+    {
+        log::error("Empty cookie:", eventType);
+        return 0;
+    }
     
     switch (eventType)
     {
@@ -116,6 +121,11 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         {
             pClient->UPnPDeviceDissapearedEvent(pDiscEvent->DeviceId);
         }
+        break;
+    }
+    case UPNP_EVENT_RECEIVED:
+    {
+        pClient->UPnPEventOccurredEvent(reinterpret_cast<Upnp_Event*>(pEvent));
         break;
     }
     default:

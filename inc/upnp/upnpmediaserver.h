@@ -21,6 +21,7 @@
 
 #include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnpcontentdirectory.h"
+#include "upnp/upnpavtransport.h"
 
 #include "utils/threadpool.h"
 
@@ -42,17 +43,19 @@ public:
         Descending
     };
 
-    MediaServer(const Client& client);
+    MediaServer(Client& client);
     ~MediaServer();
     
     void setDevice(std::shared_ptr<Device> device);
     
     void abort();
     
+    // ContentDirectory related methods
     bool canSearchForProperty(Property prop) const;
     bool canSortOnProperty(Property prop) const;
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
+    std::string getPeerConnectionId() const;
     
     void getItemsInContainer(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getItemsInContainerAsync(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
@@ -69,6 +72,11 @@ public:
     void getMetaData(Item& item);
     void getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
+    // AVTransport related methods
+    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    
+    ConnectionManager& connectionManager();
+    
 private:
     void performBrowseRequest(ContentDirectory::BrowseType type, Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     void performBrowseRequestThread(ContentDirectory::BrowseType type, const Item& item, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
@@ -76,14 +84,16 @@ private:
     void searchThread(Item& container, const T& criteria, utils::ISubscriber<Item>& subscriber);
     void getMetaDataThread(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
-    std::shared_ptr<Device>     m_Device;
-    std::vector<ProtocolInfo>   m_ProtocolInfo;
+    std::shared_ptr<Device>             m_Device;
+    std::vector<ProtocolInfo>           m_ProtocolInfo;
     
-    ContentDirectory            m_ContentDirectory;
-    ConnectionManager           m_ConnectionMgr;
+    Client&                             m_Client;
+    ContentDirectory                    m_ContentDirectory;
+    ConnectionManager                   m_ConnectionMgr;
+    std::unique_ptr<AVTransport>        m_AVTransport;
     
-    utils::ThreadPool           m_ThreadPool;
-    bool                        m_Abort;
+    utils::ThreadPool                   m_ThreadPool;
+    bool                                m_Abort;
 };
     
 }

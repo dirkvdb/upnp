@@ -17,7 +17,9 @@
 #ifndef UPNP_XML_UTILS_H
 #define UPNP_XML_UTILS_H
 
+#include <map>
 #include <string>
+#include <vector>
 
 #include <upnp/upnp.h>
 
@@ -63,8 +65,11 @@ private:
     IXML_NodeList*  m_pList;
 };
 
+std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item);
 std::string getFirstElementValue(IXmlDocument& doc, const std::string& item);
 std::string getFirstElementValue(IXML_Element* pElement, const std::string& item);
+std::vector<std::string> getActionsFromDescription(IXmlDocument& doc);
+std::map<std::string, std::string> getEventValues(IXmlDocument& doc);
 
 }
 

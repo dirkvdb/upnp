@@ -17,12 +17,19 @@
 #include "upnp/upnpmediarenderer.h"
 
 #include "upnp/upnpitem.h"
+#include "utils/log.h"
+
+#include <sstream>
+
+using namespace utils;
+
 
 namespace upnp
 {
 
-MediaRenderer::MediaRenderer(const Client& client)
-: m_ConnectionMgr(client)
+MediaRenderer::MediaRenderer(Client& client)
+: m_Client(client)
+, m_ConnectionMgr(client)
 , m_RenderingControl(client)
 {
 }
@@ -33,10 +40,16 @@ void MediaRenderer::setDevice(std::shared_ptr<Device> device)
     m_ConnectionMgr.setDevice(device);
     m_RenderingControl.setDevice(device);
     
+    if (m_Device->implementsService(Service::Type::AVTransport))
+    {
+        m_AVtransport.reset(new AVTransport(m_Client));
+        m_AVtransport->setDevice(device);
+    }
+    
     m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
 }
 
-bool MediaRenderer::supportsPlayback(const Item& item) const
+bool MediaRenderer::supportsPlayback(const Item& item, Resource& suggestedResource) const
 {
     for (auto& res : item.getResources())
     {
@@ -44,12 +57,66 @@ bool MediaRenderer::supportsPlayback(const Item& item) const
         {
             if (info.isCompatibleWith(res.getProtocolInfo()))
             {
+                suggestedResource = res;
                 return true;
             }
         }
     }
     
     return false;
+}
+
+std::string MediaRenderer::getPeerConnectionId() const
+{
+    std::stringstream ss;
+    ss << m_Device->m_UDN << "/" << m_Device->m_Services[Service::ConnectionManager].m_Id;
+    
+    return ss.str();
+}
+
+void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->setAVTransportURI(info.connectionId, resource.getUrl(), "");
+    }
+}
+
+void MediaRenderer::play(const ConnectionManager::ConnectionInfo& info)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->play(info.connectionId, "1");
+    }
+}
+
+void MediaRenderer::stop(const ConnectionManager::ConnectionInfo& info)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->stop(info.connectionId);
+    }
+}
+
+void MediaRenderer::activateEvents()
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->subscribe();
+    }
+}
+
+void MediaRenderer::deactivateEvents()
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->unsubscribe();
+    }
+}
+
+ConnectionManager& MediaRenderer::connectionManager()
+{
+    return m_ConnectionMgr;
 }
 
 }

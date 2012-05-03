@@ -179,8 +179,9 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const Service::Type s
             
             std::string relControlURL       = getFirstElementValue(pService, "controlURL");
             std::string relEventURL         = getFirstElementValue(pService, "eventSubURL");
+            std::string scpURL              = getFirstElementValue(pService, "SCPDURL");
             
-            char url[200];
+            char url[512];
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
@@ -199,6 +200,16 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const Service::Type s
             else
             {
                 service.m_EventSubscriptionURL = url;
+            }
+
+            ret = UpnpResolveURL(base.c_str(), scpURL.c_str(), url);
+            if (ret != UPNP_E_SUCCESS)
+            {
+                log::error("Error generating eventURL from", base, "and", scpURL);
+            }
+            else
+            {
+                service.m_SCPDUrl = url;
             }
             
             device->m_Services[serviceType] = service;
@@ -294,6 +305,7 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
                 findAndParseService(doc, Service::AVTransport, device);
                 
                 log::info("Media renderer added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
+                log::info(device->m_Services[Service::ConnectionManager].m_ControlURL);
                 
                 {
                     std::lock_guard<std::mutex> lock(m_Mutex);

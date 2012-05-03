@@ -53,6 +53,7 @@ public:
     
     utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
     utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
+    utils::Signal<void(Upnp_Event*)> UPnPEventOccurredEvent;    
     
 private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);

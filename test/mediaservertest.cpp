@@ -148,5 +148,14 @@ TEST_F(MediaServerTest, SearchRootContainer)
     m_Server.search(root, criteria, subscriber);
 }
 
+TEST_F(MediaServerTest, SupportedActions)
+{
+    EXPECT_TRUE(m_Server.connectionManager().supportsAction(ConnectionManager::Action::GetProtocolInfo));
+    EXPECT_TRUE(m_Server.connectionManager().supportsAction(ConnectionManager::Action::GetCurrentConnectionIDs));
+    EXPECT_TRUE(m_Server.connectionManager().supportsAction(ConnectionManager::Action::GetCurrentConnectionInfo));
+    EXPECT_FALSE(m_Server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection));
+    EXPECT_FALSE(m_Server.connectionManager().supportsAction(ConnectionManager::Action::ConnectionComplete));
+}
+
 }
 }

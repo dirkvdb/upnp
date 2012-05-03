@@ -16,7 +16,11 @@
 
 #include "upnp/upnpxmlutils.h"
 
+#include "utils/log.h"
+
 #include <stdexcept>
+
+using namespace utils;
 
 namespace upnp
 {
@@ -142,6 +146,75 @@ std::string getFirstElementValue(IXML_Element* pElement, const std::string& item
     }
     
     return getFirstElementValue(nodeList, item);
+}
+
+std::vector<std::string> getActionsFromDescription(IXmlDocument& doc)
+{
+    std::vector<std::string> actions;
+    
+    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, "action");
+    if (!nodeList)
+    {
+        throw std::logic_error("Failed to find actions in document");
+    }
+    
+    unsigned long numActions = ixmlNodeList_length(nodeList);
+    actions.reserve(numActions);
+    
+    for (unsigned long i = 0; i < numActions; ++i)
+    {
+        IXML_Element* pActionElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(nodeList, i));
+        if (!pActionElem)
+        {
+            log::error("Failed to get action from action list, skipping");
+            continue;
+        }
+    
+        actions.push_back(getFirstElementValue(pActionElem, "name"));
+    }
+    
+    return actions;
+}
+
+std::map<std::string, std::string> getEventValues(IXmlDocument& doc)
+{
+    std::map<std::string, std::string> values;
+    
+    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, "InstanceID");
+    if (!nodeList)
+    {
+        throw std::logic_error("Failed to find InstanceID element in event");
+    }
+    
+    IXML_Node* pInstanceNode = ixmlNodeList_item(nodeList, 0);
+    if (pInstanceNode == nullptr)
+    {
+        throw std::logic_error("Failed to find InstanceID element in event");
+    }
+    
+    IXmlNodeList children = ixmlNode_getChildNodes(pInstanceNode);
+    if (!children)
+    {
+        throw std::logic_error("Failed to get variables from event");
+    }
+    
+    unsigned long numVars = ixmlNodeList_length(children);
+    for (unsigned long i = 0; i < numVars; ++i)
+    {
+        IXML_Element* pVarElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(children, i));
+        if (!pVarElem)
+        {
+            log::error("Failed to get variable from the list, skipping");
+            continue;
+        }
+        
+        const char* pVal = ixmlElement_getAttribute(pVarElem, "val");
+        if (!pVal) continue;
+        
+        values[pVarElem->tagName] = pVal;        
+    }
+    
+    return values;
 }
 
 }

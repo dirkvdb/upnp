@@ -17,6 +17,7 @@
 #ifndef UPNP_CONNECTION_MANAGER_H
 #define UPNP_CONNECTION_MANAGER_H
 
+#include <set>
 #include <string>
 #include <vector>
 #include <memory>
@@ -47,6 +48,15 @@ public:
         Unknown
     };
     
+    enum class Action
+    {
+        GetProtocolInfo,
+        PrepareForConnection, // Optional
+        ConnectionComplete, // Optional
+        GetCurrentConnectionIDs,
+        GetCurrentConnectionInfo
+    };
+    
     struct ConnectionInfo
     {
         std::string         connectionId;
@@ -58,10 +68,15 @@ public:
         Direction           direction;
         ConnectionStatus    connectionStatus;
     };
+    
+    static std::string UnknownConnectionId;
+    static std::string DefaultConnectionId;
 
     ConnectionManager(const Client& cp);
     
     void setDevice(std::shared_ptr<Device> device);
+    
+    bool supportsAction(Action action) const;
     
     std::vector<ProtocolInfo> getProtocolInfo();
     ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, const std::string& peerConnectionId, Direction direction);
@@ -70,12 +85,16 @@ public:
     ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
     
 private:
+    void parseServiceDescription(const std::string& descriptionUrl);
+    
     static std::string directionToString(Direction direction);
     static Direction directionFromString(const std::string& direction);
     static ConnectionStatus connectionStatusFromString(const std::string& status);
-
+    static Action actionFromString(const std::string& action);
+    
     const Client&               m_Client;
     std::shared_ptr<Device>     m_Device;
+    std::set<Action>            m_SupportedActions;
 };
     
 }

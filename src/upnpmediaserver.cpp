@@ -17,10 +17,12 @@
 #include "upnp/upnpmediaserver.h"
 
 #include "upnp/upnpitem.h"
+#include "upnp/upnpdevice.h"
 
 #include "utils/log.h"
 
 #include <cmath>
+#include <sstream>
 #include <algorithm>
 
 using namespace utils;
@@ -32,8 +34,9 @@ const std::string MediaServer::rootId = "0";
 static const uint32_t g_maxNumThreads = 20;
 static const uint32_t g_requestSize = 10;
     
-MediaServer::MediaServer(const Client& client)
-: m_ContentDirectory(client)
+MediaServer::MediaServer(Client& client)
+: m_Client(client)
+, m_ContentDirectory(client)
 , m_ConnectionMgr(client)
 , m_ThreadPool(g_maxNumThreads)
 , m_Abort(false)
@@ -51,7 +54,13 @@ void MediaServer::setDevice(std::shared_ptr<Device> device)
 {
     m_Device = device;
     m_ContentDirectory.setDevice(device);
-    m_ConnectionMgr.setDevice(device);    
+    m_ConnectionMgr.setDevice(device); 
+    
+    if (m_Device->implementsService(Service::Type::AVTransport))
+    {
+        m_AVTransport.reset(new AVTransport(m_Client));
+        m_AVTransport->setDevice(device);
+    }
 }
 
 void MediaServer::abort()
@@ -91,6 +100,24 @@ const std::vector<Property>& MediaServer::getSearchCapabilities() const
 const std::vector<Property>& MediaServer::getSortCapabilities() const
 {
     return m_ContentDirectory.getSortCapabilities();
+}
+
+std::string MediaServer::getPeerConnectionId() const
+{
+    if (!m_ConnectionMgr.supportsAction(upnp::ConnectionManager::Action::PrepareForConnection))
+    {
+        return ConnectionManager::UnknownConnectionId;
+    }
+    
+    std::stringstream ss;
+    ss << m_Device->m_UDN << "/";
+    
+    if (m_Device->implementsService(Service::ConnectionManager))
+    {
+       ss << m_Device->m_Services[Service::ConnectionManager].m_Id;
+    }
+    
+    return ss.str();
 }
 
 void MediaServer::getItemsInContainer(Item& container, utils::ISubscriber<Item>& subscriber, Property sort, SortMode sortMode)
@@ -186,6 +213,14 @@ void MediaServer::getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscribe
     m_ThreadPool.queueFunction(std::bind(&MediaServer::getMetaDataThread, this, item, std::ref(subscriber)));
 }
 
+void MediaServer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+{
+    if (m_AVTransport)
+    {
+        m_AVTransport->setAVTransportURI(info.connectionId, resource.getUrl(), "");
+    }
+}
+
 void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, Item& container, utils::ISubscriber<Item>& subscriber, Property sort, SortMode sortMode)
 {
     if (sort != Property::Unknown && !canSortOnProperty(sort))
@@ -247,6 +282,11 @@ void MediaServer::getMetaDataThread(std::shared_ptr<Item> item, utils::ISubscrib
         log::error("Exception getting metadata:", e.what());
         subscriber.onError(e.what());
     }
+}
+
+ConnectionManager& MediaServer::connectionManager()
+{
+    return m_ConnectionMgr;
 }
 
 }

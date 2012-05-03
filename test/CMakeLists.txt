@@ -19,6 +19,7 @@ ADD_EXECUTABLE(upnptest
 	main.cpp
 	mediarenderertest.cpp
 	mediaservertest.cpp
+	controlpointtest.cpp
 	testenvironment.h
 )
 

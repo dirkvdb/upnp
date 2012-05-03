@@ -27,6 +27,7 @@
 		438A7A58150E9B300093A521 /* upnpdevicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A51150E9B300093A521 /* upnpdevicescanner.h */; };
 		438A7A59150E9B300093A521 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A52150E9B300093A521 /* upnphttpget.h */; };
 		438A7A5A150E9B300093A521 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
+		439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -74,6 +75,8 @@
 		438A7A51150E9B300093A521 /* upnpdevicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdevicescanner.h; sourceTree = "<group>"; };
 		438A7A52150E9B300093A521 /* upnphttpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnphttpget.h; sourceTree = "<group>"; };
 		438A7A53150E9B300093A521 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpitem.h; sourceTree = "<group>"; };
+		439EBBCD1551BD48000177C5 /* upnpavtransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpavtransport.h; sourceTree = "<group>"; };
+		439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransport.cpp; path = src/upnpavtransport.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +104,7 @@
 				4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */,
 				4357AEFD154C71120021F9BE /* upnpconnectionmanager.cpp */,
 				438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */,
+				439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */,
 				4357AEFA154C58C00021F9BE /* upnpprotocolinfo.cpp */,
 				438A7A44150E9B1F0093A521 /* upnphttpget.cpp */,
 				4357AEF6154BFE900021F9BE /* upnpaction.cpp */,
@@ -137,6 +141,7 @@
 				4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */,
 				4357AF0D154D58570021F9BE /* upnptypes.h */,
 				432C62B2154EE9CC00068315 /* upnpclient.h */,
+				439EBBCD1551BD48000177C5 /* upnpavtransport.h */,
 			);
 			name = upnp;
 			path = inc/upnp;
@@ -224,6 +229,7 @@
 				4357AF09154D21840021F9BE /* upnpcontentdirectory.cpp in Sources */,
 				4357AF0C154D30ED0021F9BE /* upnpmediaserver.cpp in Sources */,
 				432C62B5154EEA2A00068315 /* upnpclient.cpp in Sources */,
+				439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

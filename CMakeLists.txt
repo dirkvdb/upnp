@@ -16,10 +16,11 @@ IF (UPNP_FOUND)
     
     ADD_LIBRARY(upnpframework STATIC
         inc/upnp/upnpaction.h               src/upnpaction.cpp
+        inc/upnp/upnpavtransport.h          src/upnpavtransport.cpp
         inc/upnp/upnpclient.h               src/upnpclient.cpp
         inc/upnp/upnpconnectionmanager.h    src/upnpconnectionmanager.cpp
         inc/upnp/upnpcontentdirectory.h     src/upnpcontentdirectory.cpp
-        #inc/upnp/upnpcontrolpoint.h         src/upnpcontrolpoint.cpp
+        inc/upnp/upnpcontrolpoint.h         src/upnpcontrolpoint.cpp
         inc/upnp/upnpdevice.h
         inc/upnp/upnpdevicescanner.h        src/upnpdevicescanner.cpp
         inc/upnp/upnphttpget.h              src/upnphttpget.cpp
@@ -35,6 +36,10 @@ IF (UPNP_FOUND)
     LINK_DIRECTORIES(${UPNPFRAMEWORK_LIBRARY_DIRS})
 
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall")
+
+    IF (UNIX OR APPLE)
+        SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCONSOLE_SUPPORTS_COLOR")
+    ENDIF (UNIX OR APPLE)
     
     ADD_CUSTOM_COMMAND(TARGET upnpframework
                        POST_BUILD

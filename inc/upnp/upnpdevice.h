@@ -55,6 +55,8 @@ public:
     };
 
     bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
+    
+    bool implementsService(Service::Type type) const { return m_Services.find(type) != m_Services.end(); }
 
     Type            m_Type;
     std::string     m_UserDefinedName;

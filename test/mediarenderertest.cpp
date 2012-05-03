@@ -97,7 +97,8 @@ TEST_F(MediaRendererTest, SupportedProtocols)
         Item item;
         item.addResource(res);
 
-        EXPECT_TRUE(m_Renderer.supportsPlayback(item)) << "Protocol not supported: " << item.getResources()[0].getProtocolInfo().toString();
+        Resource suggestedResource;
+        EXPECT_TRUE(m_Renderer.supportsPlayback(item, suggestedResource)) << "Protocol not supported: " << item.getResources()[0].getProtocolInfo().toString();
     }
 }
 
