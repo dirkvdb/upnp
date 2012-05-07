@@ -82,7 +82,7 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
     return protocolInfo;
 }
 
-ConnectionManager::ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionId, const std::string& peerConnectionManager, Direction direction)
+ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionId, const std::string& peerConnectionManager, Direction direction)
 {
     upnp::Action action("PrepareForConnection", ConnectionManagerServiceType);
 	action.addArgument("RemoteProtocolInfo", protocolInfo.toString());
@@ -122,7 +122,7 @@ std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
     return ids;
 }
 
-ConnectionManager::ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& connectionId)
+ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& connectionId)
 {
     upnp::Action action("GetCurrentConnectionInfo", ConnectionManagerServiceType);
 	action.addArgument("ConnectionID", connectionId);
@@ -166,34 +166,6 @@ void ConnectionManager::parseServiceDescription(const std::string& descriptionUr
             log::error(e.what());
         }
     }
-}
-
-std::string ConnectionManager::directionToString(Direction direction)
-{
-    switch (direction)
-    {
-    case Direction::Input:      return "Input";
-    case Direction::Output:     return "Output";
-    default:                    throw std::logic_error("Invalid direction specified");
-    }
-}
-
-ConnectionManager::Direction ConnectionManager::directionFromString(const std::string& direction)
-{
-    if (direction == "Input")   return Direction::Input;
-    if (direction == "Output")  return Direction::Output;
-    
-    throw std::logic_error("Invalid direction received");
-}
-
-ConnectionManager::ConnectionStatus ConnectionManager::connectionStatusFromString(const std::string& status)
-{
-    if (status == "OK")                     return ConnectionStatus::Ok;
-    if (status == "ContentFormatMismatch")  return ConnectionStatus::ContentFormatMismatch;
-    if (status == "InsufficientBandwith")   return ConnectionStatus::InsufficientBandwith;
-    if (status == "UnreliableChannel")      return ConnectionStatus::UnreliableChannel;
-    
-    return ConnectionStatus::Unknown;
 }
 
 ConnectionManager::Action ConnectionManager::actionFromString(const std::string& action)

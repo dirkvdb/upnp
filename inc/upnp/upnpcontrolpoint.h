@@ -22,6 +22,7 @@
 #include <upnp/upnp.h>
 
 #include "upnp/upnpconnectionmanager.h"
+#include "upnp/upnpmediarenderer.h"
 
 namespace upnp
 {
@@ -29,7 +30,6 @@ namespace upnp
 class Client;
 class Item;
 class MediaServer;
-class MediaRenderer;
 class ProtocolInfo;
     
 class ControlPoint
@@ -39,7 +39,8 @@ public:
     ControlPoint(const ControlPoint&) = delete;
     ~ControlPoint();
     
-    void setRenderer(MediaRenderer& renderer);
+    void setRendererDevice(std::shared_ptr<Device> dev);
+    std::shared_ptr<Device> getActiveRenderer();
     
     ControlPoint& operator=(const ControlPoint&) = delete;
     
@@ -47,12 +48,9 @@ public:
     void stop();
     
 private:
-    void throwOnBadRenderer();
-
     Client&                             m_Client;
-    MediaRenderer*                      m_Renderer;
-    
-    ConnectionManager::ConnectionInfo   m_ConnInfo;
+    MediaRenderer                       m_Renderer;
+    ConnectionInfo                      m_ConnInfo;
     
     bool                                m_RendererSupportsPrepareForConnection;
 };

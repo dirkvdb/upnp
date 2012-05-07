@@ -93,23 +93,23 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
-				438A7A4C150E9B300093A521 /* upnp */,
-				438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */,
-				438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */,
-				4357AF05154C81890021F9BE /* upnpxmlutils.cpp */,
-				4357AF08154D21840021F9BE /* upnpcontentdirectory.cpp */,
-				4357AF0B154D30ED0021F9BE /* upnpmediaserver.cpp */,
-				432C62B4154EEA2900068315 /* upnpclient.cpp */,
-				4357AF03154C7C390021F9BE /* upnpmediarenderer.cpp */,
-				4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */,
-				4357AEFD154C71120021F9BE /* upnpconnectionmanager.cpp */,
-				438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */,
-				439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */,
-				4357AEFA154C58C00021F9BE /* upnpprotocolinfo.cpp */,
-				438A7A44150E9B1F0093A521 /* upnphttpget.cpp */,
-				4357AEF6154BFE900021F9BE /* upnpaction.cpp */,
-				438A7A45150E9B1F0093A521 /* upnpitem.cpp */,
 				4341AB371387B66600297297 /* Products */,
+				438A7A4C150E9B300093A521 /* upnp */,
+				4357AEF6154BFE900021F9BE /* upnpaction.cpp */,
+				439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */,
+				438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */,
+				432C62B4154EEA2900068315 /* upnpclient.cpp */,
+				4357AEFD154C71120021F9BE /* upnpconnectionmanager.cpp */,
+				4357AF08154D21840021F9BE /* upnpcontentdirectory.cpp */,
+				438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */,
+				438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */,
+				438A7A44150E9B1F0093A521 /* upnphttpget.cpp */,
+				438A7A45150E9B1F0093A521 /* upnpitem.cpp */,
+				4357AF03154C7C390021F9BE /* upnpmediarenderer.cpp */,
+				4357AF0B154D30ED0021F9BE /* upnpmediaserver.cpp */,
+				4357AEFA154C58C00021F9BE /* upnpprotocolinfo.cpp */,
+				4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */,
+				4357AF05154C81890021F9BE /* upnpxmlutils.cpp */,
 			);
 			sourceTree = "<group>";
 		};
@@ -288,6 +288,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
@@ -309,6 +310,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";

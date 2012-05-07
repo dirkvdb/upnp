@@ -18,6 +18,9 @@
 #define UPNP_AV_TRANSPORT_H
 
 #include "upnp/upnpdevice.h"
+#include "upnp/upnpxmlutils.h"
+
+#include "utils/signal.h"
 
 #include <upnp/upnp.h>
 
@@ -30,6 +33,7 @@ namespace upnp
     
 class Client;
 class Item;
+class Action;
 
 class AVTransport
 {
@@ -81,6 +85,36 @@ public:
         CurrentTransportActions,
         LastChange //event 
     };
+    
+    enum class TransportState
+    {
+        Stopped,
+        Playing,
+        Transitioning,
+        PausedPlayback,
+        PausedRecording,
+        Recording,
+        NoMediaPresent
+    };
+    
+    struct PositionInfo
+    {
+        std::string track;
+        std::string trackDuration;
+        std::string trackMetaData;
+        std::string trackURI;
+        std::string relTime;
+        std::string absTime;
+        std::string relCount;
+        std::string absCount;
+    };
+    
+    struct TransportInfo
+    {
+        std::string currentTransportState;
+        std::string currentTransportStatus;
+        std::string currentSpeed;
+    };
 
     AVTransport(Client& client);
     ~AVTransport();
@@ -94,19 +128,28 @@ public:
     void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData);
     void play(const std::string& connectionId, const std::string& speed);
     void stop(const std::string& connectionId);
+    void previous(const std::string& connectionId);
+    void next(const std::string& connectionId);
+    PositionInfo getPositionInfo(const std::string& connectionId);
+    TransportInfo getTransportInfo(const std::string& connectionId);
+    
+    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
     
 private:
     void parseServiceDescription(const std::string& descriptionUrl);
     void eventOccurred(Upnp_Event* pEvent);
     
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId);
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args);
+    
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static Action actionFromString(const std::string& action);
+    std::string actionToString(Action action);
     static Variable variableFromString(const std::string& action);
 
     Client&                         m_Client;
     std::shared_ptr<Device>         m_Device;
     std::set<Action>                m_SupportedActions;
-    std::map<Variable, std::string> m_Variables;
 };
     
 }

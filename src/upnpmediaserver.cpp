@@ -32,7 +32,7 @@ namespace upnp
 
 const std::string MediaServer::rootId = "0";
 static const uint32_t g_maxNumThreads = 20;
-static const uint32_t g_requestSize = 10;
+static const uint32_t g_requestSize =64;
     
 MediaServer::MediaServer(Client& client)
 : m_Client(client)
@@ -213,7 +213,7 @@ void MediaServer::getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscribe
     m_ThreadPool.queueFunction(std::bind(&MediaServer::getMetaDataThread, this, item, std::ref(subscriber)));
 }
 
-void MediaServer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+void MediaServer::setTransportItem(const ConnectionInfo& info, Resource& resource)
 {
     if (m_AVTransport)
     {
@@ -235,7 +235,13 @@ void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, Item& 
     
     for (uint32_t offset = 0; offset < container.getChildCount() && !m_Abort; offset += g_requestSize)
     {
-        m_ContentDirectory.browseDirectChildren(type, subscriber, container.getObjectId(), "*", offset, g_requestSize, (sortMode == SortMode::Ascending ? "+" : "-") + propertyToString(sort));
+        std::stringstream ss;
+        if (sort != Property::Unknown)
+        {
+            ss << (sortMode == SortMode::Ascending ? "+" : "-") << propertyToString(sort);
+        }
+        
+        m_ContentDirectory.browseDirectChildren(type, subscriber, container.getObjectId(), "*", offset, g_requestSize, ss.str());
     }
     
     subscriber.finalItemReceived();

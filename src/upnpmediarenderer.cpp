@@ -22,6 +22,7 @@
 #include <sstream>
 
 using namespace utils;
+using namespace std::placeholders;
 
 
 namespace upnp
@@ -34,8 +35,18 @@ MediaRenderer::MediaRenderer(Client& client)
 {
 }
 
+std::shared_ptr<Device> MediaRenderer::getDevice()
+{
+    return m_Device;
+}
+
 void MediaRenderer::setDevice(std::shared_ptr<Device> device)
 {
+    if (m_Device)
+    {
+        m_AVtransport->LastChangedEvent.disconnect(this);
+    }
+
     m_Device = device;
     m_ConnectionMgr.setDevice(device);
     m_RenderingControl.setDevice(device);
@@ -43,6 +54,7 @@ void MediaRenderer::setDevice(std::shared_ptr<Device> device)
     if (m_Device->implementsService(Service::Type::AVTransport))
     {
         m_AVtransport.reset(new AVTransport(m_Client));
+        m_AVtransport->LastChangedEvent.connect(std::bind(&MediaRenderer::onLastChanged, this, _1), this);
         m_AVtransport->setDevice(device);
     }
     
@@ -74,7 +86,7 @@ std::string MediaRenderer::getPeerConnectionId() const
     return ss.str();
 }
 
-void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+void MediaRenderer::setTransportItem(const ConnectionInfo& info, Resource& resource)
 {
     if (m_AVtransport)
     {
@@ -82,7 +94,7 @@ void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& in
     }
 }
 
-void MediaRenderer::play(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::play(const ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -90,7 +102,7 @@ void MediaRenderer::play(const ConnectionManager::ConnectionInfo& info)
     }
 }
 
-void MediaRenderer::stop(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::stop(const ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -112,6 +124,13 @@ void MediaRenderer::deactivateEvents()
     {
         m_AVtransport->unsubscribe();
     }
+}
+
+void MediaRenderer::onLastChanged(const std::map<AVTransport::Variable, std::string>& vars)
+{
+    auto iter = vars.find(AVTransport::Variable::CurrentTrackURI);
+    if (iter != vars.end())
+        log::info("Last changed:", iter->second);
 }
 
 ConnectionManager& MediaRenderer::connectionManager()

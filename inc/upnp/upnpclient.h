@@ -44,7 +44,7 @@ public:
 
     Client& operator=(const Client&) = delete;
     
-    void initialize();
+    void initialize(const char* interfaceName = nullptr, int port = 0);
     void destroy();
     
     operator UpnpClient_Handle() const { return m_Client; }

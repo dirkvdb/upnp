@@ -80,7 +80,7 @@ void DeviceScanner::refresh()
 {
     log::debug("Send UPnP discovery");
     
-    int rc = UpnpSearchAsync(m_Client, 5, deviceTypeToString(m_Type), &m_Client);
+    int rc = UpnpSearchAsync(m_Client, 10, deviceTypeToString(m_Type), &m_Client);
     if (UPNP_E_SUCCESS != rc)
     {
         log::error("Error sending search request:", rc);

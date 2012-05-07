@@ -32,13 +32,14 @@ class Client;
 class AVTransport;
 class ProtocolInfo;
 class Resource;
-struct ConnectionManager::ConnectionInfo;
+struct ConnectionInfo;
 
 class MediaRenderer
 {
 public:
     MediaRenderer(Client& cp);
     
+    std::shared_ptr<Device> getDevice();
     void setDevice(std::shared_ptr<Device> device);
     bool supportsPlayback(const Item& item, Resource& suggestedResource) const;
     
@@ -46,14 +47,16 @@ public:
     
     ConnectionManager& connectionManager();
 
-    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
-    void play(const ConnectionManager::ConnectionInfo& info);
-    void stop(const ConnectionManager::ConnectionInfo& info);
+    void setTransportItem(const ConnectionInfo& info, Resource& resource);
+    void play(const ConnectionInfo& info);
+    void stop(const ConnectionInfo& info);
     
     void activateEvents();
     void deactivateEvents();
     
 private:
+    void onLastChanged(const std::map<AVTransport::Variable, std::string>& vars);
+
     std::shared_ptr<Device>         m_Device;
     std::vector<ProtocolInfo>       m_ProtocolInfo;
     

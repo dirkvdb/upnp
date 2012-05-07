@@ -17,6 +17,10 @@
 #ifndef UPNP_TYPES_H
 #define UPNP_TYPES_H
 
+#include <stdexcept>
+
+#include "upnp/upnpprotocolinfo.h"
+
 namespace upnp
 {
 
@@ -44,6 +48,33 @@ enum class Property
     Actor,
     All,
     Unknown
+};
+
+enum class Direction
+{
+    Input,
+    Output
+};
+
+enum class ConnectionStatus
+{
+    Ok,
+    ContentFormatMismatch,
+    InsufficientBandwith,
+    UnreliableChannel,
+    Unknown
+};
+
+struct ConnectionInfo
+{
+    std::string         connectionId;
+    std::string         avTransportId;
+    std::string         renderingControlServiceId;
+    ProtocolInfo        protocolInfo;
+    std::string         peerConnectionManager;
+    std::string         peerConnectionId;
+    Direction           direction;
+    ConnectionStatus    connectionStatus;
 };
 
 inline Property propertyFromString(const std::string& name)
@@ -101,6 +132,34 @@ inline std::string propertyToString(Property prop)
     case Property::Unknown:
     default:                          return "";
     }
+}
+
+inline std::string directionToString(Direction direction)
+{
+    switch (direction)
+    {
+        case Direction::Input:      return "Input";
+        case Direction::Output:     return "Output";
+        default:                    throw std::logic_error("Invalid direction specified");
+    }
+}
+
+inline Direction directionFromString(const std::string& direction)
+{
+    if (direction == "Input")   return Direction::Input;
+    if (direction == "Output")  return Direction::Output;
+    
+    throw std::logic_error("Invalid direction received");
+}
+
+inline ConnectionStatus connectionStatusFromString(const std::string& status)
+{
+    if (status == "OK")                     return ConnectionStatus::Ok;
+    if (status == "ContentFormatMismatch")  return ConnectionStatus::ContentFormatMismatch;
+    if (status == "InsufficientBandwith")   return ConnectionStatus::InsufficientBandwith;
+    if (status == "UnreliableChannel")      return ConnectionStatus::UnreliableChannel;
+    
+    return ConnectionStatus::Unknown;
 }
 
 }

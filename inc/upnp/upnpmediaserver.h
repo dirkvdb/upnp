@@ -73,7 +73,7 @@ public:
     void getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
     // AVTransport related methods
-    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    void setTransportItem(const ConnectionInfo& info, Resource& resource);
     
     ConnectionManager& connectionManager();
     

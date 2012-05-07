@@ -43,7 +43,6 @@ public:
     ControlPointTest()
     : m_Cp(g_Env->getClient())
     , m_Server(g_Env->getClient())
-    , m_Renderer(g_Env->getClient())
     {
     }
 
@@ -51,9 +50,7 @@ protected:
     virtual void SetUp()
     {
         m_Server.setDevice(g_Env->getServer());
-        m_Renderer.setDevice(g_Env->getRenderer());
-
-        m_Cp.setRenderer(m_Renderer);
+        m_Cp.setRendererDevice(g_Env->getRenderer());
     }
 
     virtual void TearDown()
@@ -62,7 +59,6 @@ protected:
 
     ControlPoint                m_Cp;
     MediaServer                 m_Server;
-    MediaRenderer               m_Renderer;
 };
 
 TEST_F(ControlPointTest, PlayItem)
@@ -78,8 +74,8 @@ TEST_F(ControlPointTest, PlayItem)
     //sleep(10);
     //m_Cp.playItem(m_Server, item);
 
-    while (true)
-        sleep(10);
+    //while (true)
+    //    sleep(10);
 }
 
 }

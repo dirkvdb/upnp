@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 
+#include "upnp/upnptypes.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
@@ -32,22 +33,7 @@ class Client;
     
 class ConnectionManager
 {
-public:
-    enum class Direction
-    {
-        Input,
-        Output
-    };
-    
-    enum class ConnectionStatus
-    {
-        Ok,
-        ContentFormatMismatch,
-        InsufficientBandwith,
-        UnreliableChannel,
-        Unknown
-    };
-    
+public:    
     enum class Action
     {
         GetProtocolInfo,
@@ -55,18 +41,6 @@ public:
         ConnectionComplete, // Optional
         GetCurrentConnectionIDs,
         GetCurrentConnectionInfo
-    };
-    
-    struct ConnectionInfo
-    {
-        std::string         connectionId;
-        std::string         avTransportId;
-        std::string         renderingControlServiceId;
-        ProtocolInfo        protocolInfo;
-        std::string         peerConnectionManager;
-        std::string         peerConnectionId;
-        Direction           direction;
-        ConnectionStatus    connectionStatus;
     };
     
     static std::string UnknownConnectionId;
@@ -87,9 +61,6 @@ public:
 private:
     void parseServiceDescription(const std::string& descriptionUrl);
     
-    static std::string directionToString(Direction direction);
-    static Direction directionFromString(const std::string& direction);
-    static ConnectionStatus connectionStatusFromString(const std::string& status);
     static Action actionFromString(const std::string& action);
     
     const Client&               m_Client;

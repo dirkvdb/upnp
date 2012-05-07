@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <algorithm>
 
+//#include <upnp/upnpdebug.h>
+
 using namespace utils;
 
 namespace upnp
@@ -29,7 +31,6 @@ namespace upnp
 Client::Client()
 : m_Client(0)
 {
-    log::debug(this, " Client:", &UPnPDeviceDiscoveredEvent);
 }
 
 Client::~Client()
@@ -37,11 +38,11 @@ Client::~Client()
     destroy();
 }
 
-void Client::initialize()
+void Client::initialize(const char* interfaceName, int port)
 {
     log::debug("Initializing UPnP SDK");
     
-    int rc = UpnpInit(nullptr, 0);
+    int rc = UpnpInit2(interfaceName, port);
     if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
     {
         UpnpFinish();
@@ -52,7 +53,7 @@ void Client::initialize()
     rc = UpnpRegisterClient(upnpCallback, this, &m_Client);
     if (UPNP_E_SUCCESS == rc)
     {
-        UpnpSetMaxContentLength(128 * 1024);
+        UpnpSetMaxContentLength(512 * 1024);
     }
     else if (UPNP_E_ALREADY_REGISTERED == rc)
     {
@@ -83,11 +84,6 @@ void Client::reset()
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
     Client* pClient = reinterpret_cast<Client*>(pCookie);
-    if (!pClient)
-    {
-        log::error("Empty cookie:", eventType);
-        return 0;
-    }
     
     switch (eventType)
     {
@@ -106,6 +102,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
             disc.deviceType     = pDiscEvent->DeviceType;
             disc.location       = pDiscEvent->Location;
             
+            log::warn(pDiscEvent->DeviceId, pDiscEvent->Location);
             pClient->UPnPDeviceDiscoveredEvent(disc);
         }
         break;

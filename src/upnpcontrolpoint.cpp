@@ -27,7 +27,7 @@ namespace upnp
     
 ControlPoint::ControlPoint(Client& client)
 : m_Client(client)
-, m_Renderer(nullptr)
+, m_Renderer(client)
 , m_RendererSupportsPrepareForConnection(false)
 {
     m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
@@ -37,28 +37,31 @@ ControlPoint::~ControlPoint()
 {
 }
 
-void ControlPoint::setRenderer(upnp::MediaRenderer& renderer)
+void ControlPoint::setRendererDevice(std::shared_ptr<Device> dev)
 {
-    m_Renderer = &renderer;
+    m_Renderer.setDevice(dev);
     
-    m_RendererSupportsPrepareForConnection = renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
+    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
     m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
     
-    m_Renderer->activateEvents();
+    m_Renderer.activateEvents();
+}
+
+std::shared_ptr<Device> ControlPoint::getActiveRenderer()
+{
+    return m_Renderer.getDevice();
 }
 
 void ControlPoint::playItem(MediaServer& server, Item& item)
 {
-    throwOnBadRenderer();
-    
     if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer->stop(m_ConnInfo);
+        m_Renderer.stop(m_ConnInfo);
         m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
     }
     
     Resource resource;
-    if (!m_Renderer->supportsPlayback(item, resource))
+    if (!m_Renderer.supportsPlayback(item, resource))
     {
         throw std::logic_error("The requested item is not supported by the renderer");
     }
@@ -69,14 +72,14 @@ void ControlPoint::playItem(MediaServer& server, Item& item)
         {
             m_ConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
                                                                          ConnectionManager::UnknownConnectionId,
-                                                                         m_Renderer->getPeerConnectionId(),
-                                                                         ConnectionManager::Direction::Output);
+                                                                         m_Renderer.getPeerConnectionId(),
+                                                                         Direction::Output);
         }
         
-        m_ConnInfo = m_Renderer->connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                          m_ConnInfo.connectionId,
-                                                                          server.getPeerConnectionId(),
-                                                                          ConnectionManager::Direction::Input);
+        m_ConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
+                                                                         m_ConnInfo.connectionId,
+                                                                         server.getPeerConnectionId(),
+                                                                         Direction::Input);
     }
     else
     {    
@@ -84,30 +87,22 @@ void ControlPoint::playItem(MediaServer& server, Item& item)
     }
     
     server.setTransportItem(m_ConnInfo, resource);
-    m_Renderer->setTransportItem(m_ConnInfo, resource);
-    m_Renderer->play(m_ConnInfo);
+    m_Renderer.setTransportItem(m_ConnInfo, resource);
+    m_Renderer.play(m_ConnInfo);
 }
 
 void ControlPoint::stop()
 {
     if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer->stop(m_ConnInfo);
+        m_Renderer.stop(m_ConnInfo);
         m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
     }
     else
     {
         m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
-        m_Renderer->stop(m_ConnInfo);
+        m_Renderer.stop(m_ConnInfo);
         m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
-    }
-}
-
-void ControlPoint::throwOnBadRenderer()
-{
-    if (!m_Renderer)
-    {
-        throw std::logic_error("No media renderer has been set in the control point");
     }
 }
 

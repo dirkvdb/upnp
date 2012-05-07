@@ -212,6 +212,9 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
 {
     m_Abort = false;
 
+    log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
+    log::debug(m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str());
+    
     Action browseAction("Browse", ContentDirectoryServiceType);
     browseAction.addArgument("ObjectID", objectId);
     browseAction.addArgument("BrowseFlag", flag);
