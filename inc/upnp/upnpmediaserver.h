@@ -57,19 +57,19 @@ public:
     const std::vector<Property>& getSortCapabilities() const;
     std::string getPeerConnectionId() const;
     
-    void getItemsInContainer(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getItemsInContainerAsync(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainer(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainerAsync(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainer(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainerAsync(Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getItemsInContainer            (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getItemsInContainerAsync       (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainer       (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainerAsync  (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainer              (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainerAsync         (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
-    uint32_t search(Item& container, const std::string& criteria, utils::ISubscriber<Item>& subscriber);
-    uint32_t search(Item& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<Item>& subscriber);
-    void searchAsync(Item& container, const std::string& criteria, utils::ISubscriber<Item>& subscriber);
-    void searchAsync(Item& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<Item>& subscriber);
+    uint32_t search (std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void searchAsync(std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    uint32_t search (std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void searchAsync(std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
-    void getMetaData(Item& item);
+    void getMetaData(std::shared_ptr<Item>& item);
     void getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
     // AVTransport related methods
@@ -78,10 +78,10 @@ public:
     ConnectionManager& connectionManager();
     
 private:
-    void performBrowseRequest(ContentDirectory::BrowseType type, Item& container, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void performBrowseRequestThread(ContentDirectory::BrowseType type, const Item& item, utils::ISubscriber<Item>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequest(ContentDirectory::BrowseType type, std::shared_ptr<Item> container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequestThread(ContentDirectory::BrowseType type, std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     template <typename T>
-    void searchThread(Item& container, const T& criteria, utils::ISubscriber<Item>& subscriber);
+    void searchThread(std::shared_ptr<Item> container, const T& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     void getMetaDataThread(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
     std::shared_ptr<Device>             m_Device;

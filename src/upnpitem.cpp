@@ -16,6 +16,7 @@
 
 #include "upnp/upnpitem.h"
 
+#include "utils/log.h"
 
 namespace upnp
 {
@@ -192,12 +193,12 @@ uint32_t Item::getChildCount() const
 
 Item::Class Item::getClass() const
 {
-    MetaMap::const_iterator iter = m_MetaData.find(classTag);
+    auto iter = m_MetaData.find(classTag);
     if (iter == m_MetaData.end())
     {
         return Unknown;
     }
-
+    
     const std::string& upnpClass = iter->second;
     if (0 == upnpClass.find("object.item.audioItem"))
     {
@@ -233,6 +234,17 @@ Item::Class Item::getClass() const
     }
     
     return Unknown;
+}
+
+std::string Item::getClassString() const
+{
+    auto iter = m_MetaData.find(classTag);
+    if (iter == m_MetaData.end())
+    {
+        return "Unknown";
+    }
+    
+    return iter->second;
 }
 
 void Item::setObjectId(const std::string& id)

@@ -95,7 +95,7 @@ void AVTransport::setAVTransportURI(const std::string& connectionId, const std::
     std::map<std::string, std::string> args;
     args.insert(std::make_pair("CurrentURI", uri));
     args.insert(std::make_pair("CurrentURIMetaData", uriMetaData));
-    executeAction(Action::Play, connectionId, args);
+    executeAction(Action::SetAVTransportURI, connectionId, args);
 }
 
 void AVTransport::play(const std::string& connectionId, const std::string& speed)

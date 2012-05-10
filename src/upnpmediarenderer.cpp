@@ -61,9 +61,14 @@ void MediaRenderer::setDevice(std::shared_ptr<Device> device)
     m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
 }
 
-bool MediaRenderer::supportsPlayback(const Item& item, Resource& suggestedResource) const
+bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const
 {
-    for (auto& res : item.getResources())
+    if (!m_Device)
+    {
+        throw std::logic_error("No UPnP renderer selected");
+    }
+
+    for (auto& res : item->getResources())
     {
         for (auto& info : m_ProtocolInfo)
         {

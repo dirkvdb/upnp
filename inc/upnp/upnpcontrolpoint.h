@@ -44,7 +44,7 @@ public:
     
     ControlPoint& operator=(const ControlPoint&) = delete;
     
-    void playItem(MediaServer& server, Item& item);
+    void playItem(MediaServer& server, std::shared_ptr<Item>& item);
     void stop();
     
 private:

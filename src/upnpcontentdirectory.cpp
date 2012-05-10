@@ -128,26 +128,26 @@ void ContentDirectory::querySystemUpdateID()
     handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
     m_SystemUpdateId = getFirstElementValue(result, "Id");
-    
-    log::debug("SystemUpdateId", m_SystemUpdateId);    
 }
 
-void ContentDirectory::browseMetadata(Item& item, const std::string& filter)
+void ContentDirectory::browseMetadata(std::shared_ptr<Item>& item, const std::string& filter)
 {
     SearchResult res;
 
-    IXmlDocument result = browseAction(item.getObjectId(), "BrowseMetadata", filter, 0, 0, "");
+    IXmlDocument result = browseAction(item->getObjectId(), "BrowseMetadata", filter, 0, 0, "");
     IXmlDocument browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
         throw std::logic_error("Failed to browse meta data");
     }
     
+    //log::debug(ixmlDocumenttoString(browseResult));
+    
     parseMetaData(browseResult, item);
 }
 
 
-void ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<Item>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+void ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     SearchResult res;
 
@@ -158,18 +158,22 @@ void ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<
         throw std::logic_error("Failed to browse direct children");
     }
     
+    //log::debug(ixmlDocumenttoString(browseResult));
+    
     if (type == ContainersOnly || type == All)
     {
-        notifySubscriber(parseContainers(browseResult), subscriber);
+        auto containers = parseContainers(browseResult);
+        notifySubscriber(containers, subscriber);
     }
     
     if (type == ItemsOnly || type == All)
     {
-        notifySubscriber(parseItems(browseResult), subscriber);
+        auto items = parseItems(browseResult);
+        notifySubscriber(items, subscriber);
     }
 }
 
-ContentDirectory::SearchResult ContentDirectory::search(utils::ISubscriber<Item>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ContentDirectory::SearchResult ContentDirectory::search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -191,13 +195,15 @@ ContentDirectory::SearchResult ContentDirectory::search(utils::ISubscriber<Item>
         throw std::logic_error("Failed to perform search");
     }
 
-    notifySubscriber(parseContainers(searchResultDoc), subscriber);
-    notifySubscriber(parseItems(searchResultDoc), subscriber);
+    auto containers = parseContainers(searchResultDoc);
+    notifySubscriber(containers, subscriber);
+    auto items = parseItems(searchResultDoc);
+    notifySubscriber(items, subscriber);
 
     return searchResult;
 }
 
-void ContentDirectory::notifySubscriber(const std::vector<Item>& items, utils::ISubscriber<Item>& subscriber)
+void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber)
 {
     for (auto& item : items)
     {
@@ -212,8 +218,8 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
 {
     m_Abort = false;
 
-    log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
-    log::debug(m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str());
+    //log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
+    //log::debug(m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str());
     
     Action browseAction("Browse", ContentDirectoryServiceType);
     browseAction.addArgument("ObjectID", objectId);
@@ -242,7 +248,7 @@ IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, SearchResult
     return browseDoc;
 }
 
-void ContentDirectory::parseMetaData(IXmlDocument& doc, Item& item)
+void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
     
@@ -256,13 +262,13 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, Item& item)
         const char* pParentId = ixmlElement_getAttribute(pItemElem, "parentID");
         if (pParentId)
         {
-            item.setParentId(pParentId);
+            item->setParentId(pParentId);
         }
         
         const char* pChildcount = ixmlElement_getAttribute(pItemElem, "childCount");
         if (pChildcount)
         {
-            item.setChildCount(stringops::toNumeric<uint32_t>(pChildcount));
+            item->setChildCount(stringops::toNumeric<uint32_t>(pChildcount));
         }
         
         IXML_Node* pItemNode = ixmlNodeList_item(itemList, 0);
@@ -282,9 +288,11 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, Item& item)
                 const char* pValue = ixmlNode_getNodeValue(pTextNode);
                 if (!pValue) continue;
                 
-                item.addMetaData(pKey, pValue);
+                item->addMetaData(pKey, pValue);
             }
         }
+        
+        //log::debug("-- Item with metadata --\n", *item);
     }
     
     itemList = ixmlDocument_getElementsByTagName(doc, "item");
@@ -297,7 +305,7 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, Item& item)
         const char* pParentId = ixmlElement_getAttribute(pItemElem, "parentID");
         if (pParentId)
         {
-            item.addMetaData("parentID", pParentId);
+            item->addMetaData("parentID", pParentId);
         }
         
         IXML_Node* pItemNode = ixmlNodeList_item(itemList, 0);
@@ -356,23 +364,23 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, Item& item)
                         ixmlNamedNodeMap_free(pNodeMap);
                     }
                     
-                    item.addResource(resource);
+                    item->addResource(resource);
                 }
                 else
                 {
                     //log::debug(pKey, "-", pValue);
-                    item.addMetaData(pKey, pValue);
+                    item->addMetaData(pKey, pValue);
                 }
             }
         }
     }
 }
 
-std::vector<Item> ContentDirectory::parseContainers(IXmlDocument& doc)
+std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocument& doc)
 {
     assert(doc && "ParseContainers: Invalid document supplied");
 
-    std::vector<Item> containers;
+    std::vector<std::shared_ptr<Item>> containers;
     IXmlNodeList containerList = ixmlDocument_getElementsByTagName(doc, "container");
     if (containerList)
     {
@@ -396,35 +404,37 @@ std::vector<Item> ContentDirectory::parseContainers(IXmlDocument& doc)
             if (!pParentId) continue;
             
             const char* pChildCount = ixmlElement_getAttribute(pContainerElem, "childCount");
-            if (!pChildCount) continue;
             
-            // read title value
-            IXmlNodeList nodeList = ixmlElement_getElementsByTagName(pContainerElem, "dc:title");
-            if (!nodeList) continue;
-            
-            IXML_Node* pElement = ixmlNodeList_item(nodeList, 0);
-            if (!pElement) continue;
-            
-            IXML_Node* pTextNode = ixmlNode_getFirstChild(pElement);
-            if (!pTextNode) continue;
-            
-            const char* pTitle = ixmlNode_getNodeValue(pTextNode);
-            if (!pTitle) continue;
-            
-            containers.push_back(Item(pId, pTitle));
-            containers.back().setParentId(pParentId);
-            containers.back().setChildCount(stringops::toNumeric<uint32_t>(pChildCount));
+            try
+            {
+                containers.push_back(std::make_shared<Item>(pId, getFirstElementValue(pContainerElem, "dc:title")));
+                containers.back()->setParentId(pParentId);
+                
+                if (pChildCount)
+                {
+                    containers.back()->setChildCount(stringops::toNumeric<uint32_t>(pChildCount));
+                }
+                
+                containers.back()->addMetaData("upnp:class", getFirstElementValue(pContainerElem, "upnp:class"));
+                try { containers.back()->addMetaData("upnp:albumArtURI", getFirstElementValue(pContainerElem, "upnp:albumArtURI")); } catch (std::exception&) {}
+                
+                //log::debug("-- Container --\n", *containers.back());
+            }
+            catch (std::exception& e)
+            {
+                log::warn("Failed to parse container");
+            }
         }
     }
     
     return containers;
 }
 
-std::vector<Item> ContentDirectory::parseItems(IXmlDocument& doc)
+std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& doc)
 {
     assert(doc && "ParseItems: Invalid document supplied");
 
-    std::vector<Item> items;
+    std::vector<std::shared_ptr<Item>> items;
     IXmlNodeList itemList = ixmlDocument_getElementsByTagName(doc, "item");
     if (itemList)
     {
@@ -445,21 +455,83 @@ std::vector<Item> ContentDirectory::parseItems(IXmlDocument& doc)
             const char* pParentId = ixmlElement_getAttribute(pItemElem, "parentID");
             if (!pParentId) continue;
             
-            // read title value
-            IXmlNodeList nodeList = ixmlElement_getElementsByTagName(pItemElem, "dc:title");
-            if (!nodeList) continue;
-            
-            IXML_Node* pElement = ixmlNodeList_item(nodeList, 0);
-            if (!pElement) continue;
-            
-            IXML_Node* pTextNode = ixmlNode_getFirstChild(pElement);
-            if (!pTextNode) continue;
-            
-            const char* pTitle = ixmlNode_getNodeValue(pTextNode);
-            if (!pTitle) continue;
-            
-            items.push_back(Item(pId, pTitle));
-            items.back().setParentId(pParentId);
+            try
+            {
+                items.push_back(std::make_shared<Item>(pId, getFirstElementValue(pItemElem, "dc:title")));
+                items.back()->setParentId(pParentId);
+                
+                IXmlNodeList children = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(pItemElem));
+                if (children)
+                {
+                    uint32_t numChildren = ixmlNodeList_length(children);
+                    for (uint32_t i = 0; i < numChildren && !m_Abort; ++i)
+                    {
+                        IXML_Element* pChild = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(children, i));
+                        const char* pKey = ixmlElement_getTagName(pChild);
+                        if (!pKey) continue;
+                        
+                        IXML_Node* pTextNode = ixmlNode_getFirstChild((IXML_Node*)pChild);
+                        if (!pTextNode) continue;
+                        
+                        const char* pValue = ixmlNode_getNodeValue(pTextNode);
+                        if (!pValue) continue;
+                        
+                        if (std::string("res") == pKey)
+                        {
+                            Resource resource;
+                            resource.setUrl(pValue);
+                            
+                            IXML_NamedNodeMap* pNodeMap = ixmlNode_getAttributes(reinterpret_cast<IXML_Node*>(pChild));
+                            if (pNodeMap)
+                            {
+                                unsigned long numAttributes = ixmlNamedNodeMap_getLength(pNodeMap);
+                                for (unsigned long i = 0; i < numAttributes && !m_Abort; ++i)
+                                {
+                                    IXML_Node* pItem = ixmlNamedNodeMap_item(pNodeMap, i);
+                                    const char* pKey = ixmlNode_getNodeName(pItem);
+                                    if (!pKey) continue;
+                                    
+                                    const char* pValue = ixmlNode_getNodeValue(pItem);
+                                    if (!pValue) continue;
+                                    
+                                    //log::debug(pKey, "-", pValue);
+                                    if (std::string("protocolInfo") == pKey)
+                                    {
+                                        try
+                                        {
+                                            resource.setProtocolInfo(ProtocolInfo(pValue));
+                                        }
+                                        catch (std::exception& e)
+                                        {
+                                            log::warn(e.what());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        resource.addMetaData(pKey, pValue);
+                                    }
+                                }
+                                
+                                ixmlNamedNodeMap_free(pNodeMap);
+                            }
+                            
+                            items.back()->addResource(resource);
+                        }
+                        else
+                        {
+                            //log::debug(pKey, "-", pValue);
+                            items.back()->addMetaData(pKey, pValue);
+                        }
+                    }
+                }
+
+                
+                //log::debug("-- Item --\n", *items.back());
+            }
+            catch (std::exception& e)
+            {
+                log::warn("Failed to parse item");
+            }
         }
     }
     

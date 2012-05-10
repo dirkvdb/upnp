@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <map>
 
 #include "upnp/upnpprotocolinfo.h"
@@ -45,13 +46,19 @@ public:
     
     void addMetaData(const std::string& key, const std::string& value);
     void setUrl(const std::string& url);
-    void setProtocolInfo(const ProtocolInfo& info);    
+    void setProtocolInfo(const ProtocolInfo& info);
 
 private:
     MetaMap         m_MetaData;
     std::string     m_Url;
     ProtocolInfo    m_ProtocolInfo;
 };
+
+inline std::ostream& operator<< (std::ostream& os, const Resource& res)
+{
+    return os << "Resource Url: " << res.getUrl() << std::endl
+              << "ProtocolInfo: " << res.getProtocolInfo().toString() << std::endl;
+}
 
 class Item
 {
@@ -84,6 +91,7 @@ public:
     
     uint32_t getChildCount() const;
     Class getClass() const;
+    std::string getClassString() const;
     
     void setObjectId(const std::string& id);
     void setParentId(const std::string& id);
@@ -95,6 +103,7 @@ public:
     
     std::string getMetaData(const std::string& key) const;
     
+    friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
     
 private:
     std::string             m_ObjectId;
@@ -103,6 +112,28 @@ private:
     std::vector<Resource>   m_Resources;
     uint32_t                m_ChildCount;
 };
+
+inline std::ostream& operator<< (std::ostream& os, const Item& item)
+{
+    os << "Item: " << item.getTitle() << "(" << item.getObjectId() << ")" << std::endl
+       << "Childcount: " << item.getChildCount() << std::endl
+       << "Class: " << item.getClassString();
+    
+    for (auto& res : item.getResources())
+    {
+        os << res << std::endl;
+    }
+    
+    if (item.getResources().empty()) os << std::endl;
+    
+    os << "Metadata:" << std::endl;
+    for (auto& meta : item.m_MetaData)
+    {
+        os << meta.first << " - " << meta.second << std::endl;
+    }
+    
+    return os;
+}
 
 }
 

@@ -102,7 +102,6 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
             disc.deviceType     = pDiscEvent->DeviceType;
             disc.location       = pDiscEvent->Location;
             
-            log::warn(pDiscEvent->DeviceId, pDiscEvent->Location);
             pClient->UPnPDeviceDiscoveredEvent(disc);
         }
         break;

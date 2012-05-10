@@ -22,6 +22,10 @@
 #include "upnp/upnpprotocolinfo.h"
 #include "upnp/upnpconnectionmanager.h"
 
+#include "utils/log.h"
+
+using namespace utils;
+
 namespace upnp
 {
     
@@ -52,7 +56,7 @@ std::shared_ptr<Device> ControlPoint::getActiveRenderer()
     return m_Renderer.getDevice();
 }
 
-void ControlPoint::playItem(MediaServer& server, Item& item)
+void ControlPoint::playItem(MediaServer& server, std::shared_ptr<Item>& item)
 {
     if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
@@ -65,6 +69,8 @@ void ControlPoint::playItem(MediaServer& server, Item& item)
     {
         throw std::logic_error("The requested item is not supported by the renderer");
     }
+    
+    log::debug("Suggested resource: ", resource);
     
     if (m_RendererSupportsPrepareForConnection)
     {

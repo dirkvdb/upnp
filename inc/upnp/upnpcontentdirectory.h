@@ -59,9 +59,9 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
     
-    void browseMetadata(Item& item, const std::string& filter);
-    void browseDirectChildren(BrowseType type, utils::ISubscriber<Item>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    SearchResult search(utils::ISubscriber<Item>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    void browseMetadata(std::shared_ptr<Item>& item, const std::string& filter);
+    void browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    SearchResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
             
 private:
     IXML_Document* browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
@@ -71,11 +71,11 @@ private:
     void querySystemUpdateID();
     
     IXmlDocument parseBrowseResult(IXmlDocument& doc, SearchResult& result);
-    void parseMetaData(IXmlDocument& doc, Item& item);
-    std::vector<Item> parseContainers(IXmlDocument& doc);
-    std::vector<Item> parseItems(IXmlDocument& doc);
+    void parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item);
+    std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);
+    std::vector<std::shared_ptr<Item>> parseItems(IXmlDocument& doc);
     
-    void notifySubscriber(const std::vector<Item>& items, utils::ISubscriber<Item>& subscriber);
+    void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
     const Client&               m_Client;
     std::shared_ptr<Device>     m_Device;

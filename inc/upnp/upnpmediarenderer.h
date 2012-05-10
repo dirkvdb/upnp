@@ -41,7 +41,7 @@ public:
     
     std::shared_ptr<Device> getDevice();
     void setDevice(std::shared_ptr<Device> device);
-    bool supportsPlayback(const Item& item, Resource& suggestedResource) const;
+    bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
     
     std::string getPeerConnectionId() const;
     
