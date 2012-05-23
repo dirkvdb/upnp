@@ -44,7 +44,7 @@ public:
         ContainersOnly
     };
     
-    struct SearchResult
+    struct ActionResult
     {
         uint32_t totalMatches;
         uint32_t numberReturned;
@@ -60,8 +60,8 @@ public:
     const std::vector<Property>& getSortCapabilities() const;
     
     void browseMetadata(std::shared_ptr<Item>& item, const std::string& filter);
-    void browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    SearchResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    ActionResult browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
             
 private:
     IXML_Document* browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
@@ -70,7 +70,7 @@ private:
     void querySortCapabilities();
     void querySystemUpdateID();
     
-    IXmlDocument parseBrowseResult(IXmlDocument& doc, SearchResult& result);
+    IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
     void parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item);
     std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);
     std::vector<std::shared_ptr<Item>> parseItems(IXmlDocument& doc);

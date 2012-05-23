@@ -19,10 +19,16 @@
 
 #include "utils/log.h"
 
+#include <chrono>
+#include <algorithm>
 #include <upnp/upnptools.h>
 
 using namespace utils;
 using namespace std::placeholders;
+using namespace std::chrono;
+
+namespace upnp
+{
 
 static const char* MediaServerDeviceType            = "urn:schemas-upnp-org:device:MediaServer:1";
 static const char* MediaRendererDeviceType          = "urn:schemas-upnp-org:device:MediaRenderer:1";
@@ -31,12 +37,13 @@ static const char* RenderingControlServiceType      = "urn:schemas-upnp-org:serv
 static const char* ConnectionManagerServiceType     = "urn:schemas-upnp-org:service:ConnectionManager:1";
 static const char* AVTransportServiceType           = "urn:schemas-upnp-org:service:AVTransport:1";
 
-namespace upnp
-{
+static const int timeCheckInterval = 60;
+
 
 DeviceScanner::DeviceScanner(Client& client, Device::Type type)
 : m_Client(client)
 , m_Type(type)
+, m_Stop(false)
 {
 }
     
@@ -53,14 +60,63 @@ void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
 
 void DeviceScanner::start()
 {
+    log::debug("Start device scanner, known devices(", m_Devices.size(), ")");
+
     m_Client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
     m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
-}
     
+    m_Thread = std::async(std::launch::async, std::bind(&DeviceScanner::checkForTimeoutThread, this));
+}
+
 void DeviceScanner::stop()
 {
     m_Client.UPnPDeviceDiscoveredEvent.disconnect(this);
     m_Client.UPnPDeviceDissapearedEvent.disconnect(this);
+    
+    m_Stop = true;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        m_Condition.notify_all();
+    }
+    
+    m_Thread.wait();
+    m_Stop = false;
+    
+    log::debug("Stop device scanner, known devices(", m_Devices.size(), ")");
+}
+
+void DeviceScanner::checkForTimeoutThread()
+{
+    while (!m_Stop)
+    {
+        std::unique_lock<std::mutex> lock(m_Mutex);
+    
+        system_clock::time_point now = system_clock::now();
+        auto mapEnd = m_Devices.end();
+        for (auto iter = m_Devices.begin(); iter != mapEnd;)
+        {
+            if (now > iter->second->m_TimeoutTime)
+            {
+                auto dev = iter->second;
+            
+                log::info("Device timed out removing it from the list:", iter->second->m_FriendlyName);
+                iter = m_Devices.erase(iter);
+                
+                DeviceDissapearedEvent(dev);
+            }
+            else
+            {
+                ++iter;
+            }
+        }
+        
+        
+        if (std::cv_status::no_timeout == m_Condition.wait_for(lock, seconds(timeCheckInterval)))
+        {
+            return;
+        }
+    }
 }
 
 const char* deviceTypeToString(Device::Type type)
@@ -223,9 +279,9 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const Service::Type s
 }
 
 
-void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
+void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
 {
-    if (m_Type != stringToDeviceType(discovery.deviceType))
+    if (m_Type != stringToDeviceType(pDiscovery->DeviceType))
     {
         return;
     }
@@ -233,31 +289,32 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
         
-        auto iter = m_Devices.find(discovery.udn);
+        auto iter = m_Devices.find(pDiscovery->DeviceId);
         if (iter != m_Devices.end())
         {
-            // device already known
+            // device already known, just update the timeout time
+            iter->second->m_TimeoutTime =  system_clock::now() + seconds(pDiscovery->Expires);
             return;
         }
     }
     
-    log::debug("New device:", discovery.udn);
+    log::debug("New device:", pDiscovery->DeviceId, pDiscovery->Location);
     
     IXmlDocument doc;
     
-    log::debug("Download device description from:", discovery.location);
-    int ret = UpnpDownloadXmlDoc(discovery.location.c_str(), &doc);
+    int ret = UpnpDownloadXmlDoc(pDiscovery->Location, &doc);
     if (ret != UPNP_E_SUCCESS)
     {
-        log::error("Error obtaining device description from", discovery.location, " error =", ret);
+        log::error("Error obtaining device description from", pDiscovery->Location, " error =", ret);
         return;
     }
 
     auto device = std::make_shared<Device>();
     
-    device->m_Location   = discovery.location;
-    device->m_UDN        = getFirstDocumentItem(doc, "UDN");
-    device->m_Type       = stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
+    device->m_Location      = pDiscovery->Location;
+    device->m_UDN           = getFirstDocumentItem(doc, "UDN");
+    device->m_Type          = stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
+    device->m_TimeoutTime   = system_clock::now() + seconds(pDiscovery->Expires);
     
     if (device->m_UDN.empty() || device->m_Type != m_Type)
     {
@@ -271,7 +328,7 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
         device->m_RelURL         = getFirstDocumentItem(doc, "presentationURL");
         
         char presURL[200];
-        int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : discovery.location.c_str()), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
+        int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : pDiscovery->Location), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
         if (UPNP_E_SUCCESS == ret)
         {
             device->m_PresURL = presURL;
@@ -305,7 +362,6 @@ void DeviceScanner::onDeviceDiscovered(const Client::Discovery& discovery)
                 findAndParseService(doc, Service::AVTransport, device);
                 
                 log::info("Media renderer added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
-                log::info(device->m_Services[Service::ConnectionManager].m_ControlURL);
                 
                 {
                     std::lock_guard<std::mutex> lock(m_Mutex);

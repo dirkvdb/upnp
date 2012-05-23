@@ -24,11 +24,13 @@
 #include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnpmediarenderer.h"
 
+
 namespace upnp
 {
 
 class Client;
 class Item;
+class WebServer;
 class MediaServer;
 class ProtocolInfo;
     
@@ -39,17 +41,26 @@ public:
     ControlPoint(const ControlPoint&) = delete;
     ~ControlPoint();
     
+    void setWebserver(WebServer& webServer);
     void setRendererDevice(std::shared_ptr<Device> dev);
     std::shared_ptr<Device> getActiveRenderer();
     
     ControlPoint& operator=(const ControlPoint&) = delete;
     
     void playItem(MediaServer& server, std::shared_ptr<Item>& item);
+    void playFromItemOnwards(MediaServer& server, std::shared_ptr<Item>& item);
+    void playContainer(MediaServer& server, std::shared_ptr<Item>& item);
     void stop();
     
 private:
+    void throwOnMissingWebserver();
+    void stopPlaybackIfNecessary();
+    std::string generatePlaylistFilename();
+    std::shared_ptr<Item> createPlaylistItem(const std::string& filename);
+
     Client&                             m_Client;
     MediaRenderer                       m_Renderer;
+    WebServer*                          m_pWebServer;
     ConnectionInfo                      m_ConnInfo;
     
     bool                                m_RendererSupportsPrepareForConnection;

@@ -72,11 +72,14 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
         try
         {
             protocolInfo.push_back(ProtocolInfo(info));
+            log::debug(info);
         }
         catch (std::exception& e)
         {
             log::warn(e.what());
         }
+        
+        protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
     }
     
     return protocolInfo;
@@ -147,7 +150,6 @@ void ConnectionManager::parseServiceDescription(const std::string& descriptionUr
 {
     IXmlDocument doc;
     
-    log::debug("Download service description from:", descriptionUrl);
     int ret = UpnpDownloadXmlDoc(descriptionUrl.c_str(), &doc);
     if (ret != UPNP_E_SUCCESS)
     {

@@ -31,13 +31,6 @@ namespace upnp
 class Client
 {
 public:
-    struct Discovery
-    {
-        std::string udn;
-        std::string deviceType;
-        std::string location;
-    };
-
     Client();
     Client(const Client&) = delete;
     ~Client();
@@ -51,7 +44,7 @@ public:
     
     void reset();
     
-    utils::Signal<void(const Discovery&)> UPnPDeviceDiscoveredEvent;
+    utils::Signal<void(Upnp_Discovery*)> UPnPDeviceDiscoveredEvent;
     utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
     utils::Signal<void(Upnp_Event*)> UPnPEventOccurredEvent;    
     

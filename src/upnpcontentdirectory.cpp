@@ -132,7 +132,7 @@ void ContentDirectory::querySystemUpdateID()
 
 void ContentDirectory::browseMetadata(std::shared_ptr<Item>& item, const std::string& filter)
 {
-    SearchResult res;
+    ActionResult res;
 
     IXmlDocument result = browseAction(item->getObjectId(), "BrowseMetadata", filter, 0, 0, "");
     IXmlDocument browseResult = parseBrowseResult(result, res);
@@ -147,9 +147,9 @@ void ContentDirectory::browseMetadata(std::shared_ptr<Item>& item, const std::st
 }
 
 
-void ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
-    SearchResult res;
+    ActionResult res;
 
     IXmlDocument result = browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
     IXmlDocument browseResult = parseBrowseResult(result, res);
@@ -171,9 +171,11 @@ void ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<
         auto items = parseItems(browseResult);
         notifySubscriber(items, subscriber);
     }
+    
+    return res;
 }
 
-ContentDirectory::SearchResult ContentDirectory::search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -188,7 +190,7 @@ ContentDirectory::SearchResult ContentDirectory::search(utils::ISubscriber<std::
     IXmlDocument result;
     handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
-    SearchResult searchResult;
+    ActionResult searchResult;
     IXmlDocument searchResultDoc = parseBrowseResult(result, searchResult);
     if (!searchResultDoc)
     {
@@ -210,6 +212,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
         if (m_Abort) break;
         
         //subscriber.onItem(item, pExtraData);
+        log::debug("Item:", item->getTitle());
         subscriber.onItem(item);
     }
 }
@@ -235,7 +238,7 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
     return pResult;
 }
 
-IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, SearchResult& result)
+IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, ActionResult& result)
 {
     assert(doc && "ParseBrowseResult: Invalid document supplied");
     
@@ -417,6 +420,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocumen
                 
                 containers.back()->addMetaData("upnp:class", getFirstElementValue(pContainerElem, "upnp:class"));
                 try { containers.back()->addMetaData("upnp:albumArtURI", getFirstElementValue(pContainerElem, "upnp:albumArtURI")); } catch (std::exception&) {}
+                try { containers.back()->addMetaData("upnp:artist", getFirstElementValue(pContainerElem, "upnp:artist")); } catch (std::exception&) {}
                 
                 //log::debug("-- Container --\n", *containers.back());
             }

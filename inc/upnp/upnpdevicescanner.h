@@ -21,6 +21,7 @@
 #include <string>
 #include <mutex>
 #include <memory>
+#include <future>
 
 #include <upnp/upnp.h>
 
@@ -47,7 +48,7 @@ public:
     utils::Signal<void(std::shared_ptr<Device>)> DeviceDiscoveredEvent;
     utils::Signal<void(std::shared_ptr<Device>)> DeviceDissapearedEvent;
     
-    void onDeviceDiscovered(const Client::Discovery& discovery);
+    void onDeviceDiscovered(Upnp_Discovery* pDiscovery);
     void onDeviceDissapeared(const std::string& deviceId);
     
 private:
@@ -55,10 +56,17 @@ private:
     static IXmlNodeList getFirstServiceList(IXmlDocument& doc);
     static bool findAndParseService(IXmlDocument& doc, Service::Type serviceType, std::shared_ptr<Device>& device);
     
+    void checkForTimeoutThread();
+    
     Client&                                         m_Client;
     Device::Type                                    m_Type;
     std::map<std::string, std::shared_ptr<Device>>  m_Devices;
     std::mutex                                      m_Mutex;
+    
+    std::future<void>                               m_Thread;
+    std::condition_variable                         m_Condition;
+    bool                                            m_Stop;
+    
 };
 
 }

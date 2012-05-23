@@ -47,7 +47,7 @@ void Client::initialize(const char* interfaceName, int port)
     {
         UpnpFinish();
         log::error("UpnpInit() Error:", rc);
-        throw std::logic_error("Failed to initialise UPnP stack");
+        throw std::logic_error("Failed to initialize UPnP stack");
     }
     
     rc = UpnpRegisterClient(upnpCallback, this, &m_Client);
@@ -64,7 +64,9 @@ void Client::initialize(const char* interfaceName, int port)
         log::error("Error registering Control Point: ", rc);
         UpnpFinish();
         throw std::logic_error("Error registering Control Point");
-    }    
+    } 
+    
+    log::info("Initialized:", UpnpGetServerIpAddress(), ":", UpnpGetServerPort());
 }
 
 void Client::destroy()
@@ -97,12 +99,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         }
         else if (pDiscEvent->DeviceId && pDiscEvent->DeviceType && pDiscEvent->Location)
         {
-            Discovery disc;
-            disc.udn            = pDiscEvent->DeviceId;
-            disc.deviceType     = pDiscEvent->DeviceType;
-            disc.location       = pDiscEvent->Location;
-            
-            pClient->UPnPDeviceDiscoveredEvent(disc);
+            pClient->UPnPDeviceDiscoveredEvent(pDiscEvent);
         }
         break;
     }

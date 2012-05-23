@@ -19,6 +19,7 @@
 
 #include <string>
 #include <map>
+#include <chrono>
 
 #include "utils/types.h"
 
@@ -68,7 +69,8 @@ public:
     std::string     m_Location;
     std::string     m_CDSubscriptionID;
     std::string     m_ContainerId;
-    int32_t         m_AdvTimeout;
+    
+    std::chrono::system_clock::time_point   m_TimeoutTime;
     
     std::map<Service::Type, Service>    m_Services;
 };

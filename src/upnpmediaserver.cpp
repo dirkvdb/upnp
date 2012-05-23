@@ -120,40 +120,66 @@ std::string MediaServer::getPeerConnectionId() const
     return ss.str();
 }
 
-void MediaServer::getItemsInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+class VectorSubscriber : public utils::ISubscriber<std::shared_ptr<Item>>
 {
-    performBrowseRequest(ContentDirectory::ItemsOnly, container, subscriber, sort, sortMode);
+public:
+    VectorSubscriber(std::vector<std::shared_ptr<Item>>& items)
+    : m_Items(items) {}
+
+    void onItem(std::shared_ptr<Item> item, void*)
+    {
+        m_Items.push_back(item);
+    }
+    
+private:
+    std::vector<std::shared_ptr<Item>>&     m_Items;
+};
+
+std::vector<std::shared_ptr<Item>> MediaServer::getItemsInContainer(std::shared_ptr<Item>& container, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+{
+    std::vector<std::shared_ptr<Item>> items;
+    VectorSubscriber sub(items);
+    
+    getItemsInContainer(container, sub, offset, limit, sort, mode);
+
+    return items;
 }
 
-void MediaServer::getItemsInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ItemsOnly, container, std::ref(subscriber), sort, sortMode));
+    performBrowseRequest(ContentDirectory::ItemsOnly, container, subscriber, offset, limit, sort, sortMode);
 }
 
-void MediaServer::getContainersInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::ContainersOnly, container, subscriber, sort, sortMode);
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ItemsOnly, container, std::ref(subscriber), offset, limit, sort, sortMode));
 }
 
-void MediaServer::getContainersInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::getContainersInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ContainersOnly, container, std::ref(subscriber), sort, sortMode));
+    performBrowseRequest(ContentDirectory::ContainersOnly, container, subscriber, offset, limit, sort, sortMode);
 }
 
-void MediaServer::getAllInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::getContainersInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::All, container, subscriber, sort, sortMode);
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ContainersOnly, container, std::ref(subscriber), offset, limit, sort, sortMode));
 }
 
-void MediaServer::getAllInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::getAllInContainer(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::All, container, std::ref(subscriber), sort, sortMode));
+    performBrowseRequest(ContentDirectory::All, container, subscriber, offset, limit, sort, sortMode);
+}
+
+void MediaServer::getAllInContainerAsync(std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+{
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::All, container, std::ref(subscriber), offset, limit, sort, sortMode));
 }
 
 uint32_t MediaServer::search(std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber)
 {
+    m_Abort = false;
     uint32_t offset = 0;
-    ContentDirectory::SearchResult res {0, 0};
+    ContentDirectory::ActionResult res {0, 0};
 
     do
     {
@@ -221,19 +247,18 @@ void MediaServer::setTransportItem(const ConnectionInfo& info, Resource& resourc
     }
 }
 
-void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, std::shared_ptr<Item> container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, std::shared_ptr<Item> container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
+    m_Abort = false;
+
     if (sort != Property::Unknown && !canSortOnProperty(sort))
     {
         throw std::logic_error("The server does not support sort on: " + propertyToString(sort));
     }
 
-    if (container->getChildCount() == 0)
-    {
-        getMetaData(container);
-    }
-    
-    for (uint32_t offset = 0; offset < container->getChildCount() && !m_Abort; offset += g_requestSize)
+    bool itemsLeft = true;
+    uint32_t itemsReceived = 0;
+    for (uint32_t curOffset = offset; itemsLeft && !m_Abort; curOffset += g_requestSize)
     {
         std::stringstream ss;
         if (sort != Property::Unknown)
@@ -241,17 +266,28 @@ void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, std::s
             ss << (sortMode == SortMode::Ascending ? "+" : "-") << propertyToString(sort);
         }
         
-        m_ContentDirectory.browseDirectChildren(type, subscriber, container->getObjectId(), "*", offset, g_requestSize, ss.str());
+        uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
+        ContentDirectory::ActionResult res = m_ContentDirectory.browseDirectChildren(type, subscriber, container->getObjectId(), "*", curOffset, requestSize, ss.str());
+        itemsReceived += res.numberReturned;
+        
+        if (limit > 0)
+        {
+            itemsLeft = (res.numberReturned == 0) ? false : itemsReceived < limit;
+        }
+        else
+        {
+            itemsLeft = res.numberReturned == g_requestSize;
+        }
     }
     
     subscriber.finalItemReceived();
 }
 
-void MediaServer::performBrowseRequestThread(ContentDirectory::BrowseType type, std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequestThread(ContentDirectory::BrowseType type, std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
     try
     {
-        performBrowseRequest(type, item, subscriber, sort, sortMode);
+        performBrowseRequest(type, item, subscriber, offset, limit, sort, sortMode);
     }
     catch(std::exception& e)
     {
