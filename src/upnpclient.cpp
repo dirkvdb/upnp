@@ -66,7 +66,7 @@ void Client::initialize(const char* interfaceName, int port)
         throw std::logic_error("Error registering Control Point");
     } 
     
-    log::info("Initialized:", UpnpGetServerIpAddress(), ":", UpnpGetServerPort());
+    log::debug("Initialized:", UpnpGetServerIpAddress(), ":", UpnpGetServerPort());
 }
 
 void Client::destroy()
@@ -74,7 +74,7 @@ void Client::destroy()
     UpnpUnRegisterClient(m_Client);
     UpnpFinish();
     
-    log::info("Destroyed UPnP SDK");
+    log::debug("Destroyed UPnP SDK");
 }
 
 void Client::reset()

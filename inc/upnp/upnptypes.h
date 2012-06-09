@@ -24,6 +24,15 @@
 namespace upnp
 {
 
+enum class ServiceType
+{
+    ContentDirectory,
+    RenderingControl,
+    ConnectionManager,
+    AVTransport,
+    Unknown
+};
+
 enum class Property
 {
     Id,
@@ -76,6 +85,27 @@ struct ConnectionInfo
     Direction           direction;
     ConnectionStatus    connectionStatus;
 };
+
+inline ServiceType serviceTypeFromString(const std::string& name)
+{
+    if (name == "ContentDirectory")     return ServiceType::ContentDirectory;
+    if (name == "RenderingControl")     return ServiceType::RenderingControl;
+    if (name == "ConnectionManager")    return ServiceType::ConnectionManager;
+    if (name == "AVTransport")          return ServiceType::AVTransport;
+    
+    return ServiceType::Unknown;
+}
+
+inline std::string serviceTypeToString(ServiceType type)
+{
+    if (type == ServiceType::ContentDirectory)      return "ContentDirectory";
+    if (type == ServiceType::RenderingControl)      return "RenderingControl";
+    if (type == ServiceType::ConnectionManager)     return "ConnectionManager";
+    if (type == ServiceType::AVTransport)           return "AVTransport";
+    if (type == ServiceType::Unknown)               return "UnknownServiceType";
+    
+    throw std::logic_error("Invalid service type received");
+}
 
 inline Property propertyFromString(const std::string& name)
 {

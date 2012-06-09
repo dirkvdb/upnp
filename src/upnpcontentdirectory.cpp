@@ -79,7 +79,7 @@ void ContentDirectory::querySearchCapabilities()
     Action action("GetSearchCapabilities", ContentDirectoryServiceType);
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
     auto caps = stringops::tokenize(getFirstElementValue(result, "SearchCaps"), ",");
     
@@ -102,7 +102,7 @@ void ContentDirectory::querySortCapabilities()
     Action action("GetSortCapabilities", ContentDirectoryServiceType);
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
     auto caps = stringops::tokenize(getFirstElementValue(result, "SortCaps"), ",");
     
@@ -125,7 +125,7 @@ void ContentDirectory::querySystemUpdateID()
     Action action("GetSystemUpdateID", ContentDirectoryServiceType);
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
     m_SystemUpdateId = getFirstElementValue(result, "Id");
 }
@@ -188,7 +188,7 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
     action.addArgument("SortCriteria", sort);
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
     
     ActionResult searchResult;
     IXmlDocument searchResultDoc = parseBrowseResult(result, searchResult);
@@ -212,7 +212,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
         if (m_Abort) break;
         
         //subscriber.onItem(item, pExtraData);
-        log::debug("Item:", item->getTitle());
+        //log::debug("Item:", item->getTitle());
         subscriber.onItem(item);
     }
 }
@@ -222,7 +222,7 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
     m_Abort = false;
 
     //log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
-    //log::debug(m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str());
+    //log::debug(m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str());
     
     Action browseAction("Browse", ContentDirectoryServiceType);
     browseAction.addArgument("ObjectID", objectId);
@@ -233,7 +233,7 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
     browseAction.addArgument("SortCriteria", sort);
     
     IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
     
     return pResult;
 }

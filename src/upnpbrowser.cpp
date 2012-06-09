@@ -84,7 +84,7 @@ void Browser::subscribe()
     log::debug("Subscribe to device:", m_Device->m_FriendlyName);
 
     //subscribe to eventURL
-    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), defaultTimeout, Browser::browserCb, this);
+    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), defaultTimeout, Browser::browserCb, this);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error("Failed to subscribe to UPnP device");
@@ -274,7 +274,7 @@ void Browser::getContainerMetaData(Item& container)
     browseAction.addArgument("SortCriteria", "");
 
     IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
     
     IXML_Document* pBrowseResult = parseBrowseResult(pResult);
     if (!pBrowseResult)
@@ -302,7 +302,7 @@ IXML_Document* Browser::browseAction(const std::string& objectId, const std::str
     browseAction.addArgument("SortCriteria", sort);
 
     IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
 
     return pResult;
 }

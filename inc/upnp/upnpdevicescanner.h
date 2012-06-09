@@ -37,6 +37,7 @@ class DeviceScanner
 {
 public:
     DeviceScanner(Client& client, Device::Type type);
+    ~DeviceScanner() throw();
     
     void start();
     void stop();
@@ -54,7 +55,7 @@ public:
 private:
     static std::string getFirstDocumentItem(IXmlDocument& doc, const std::string& item);
     static IXmlNodeList getFirstServiceList(IXmlDocument& doc);
-    static bool findAndParseService(IXmlDocument& doc, Service::Type serviceType, std::shared_ptr<Device>& device);
+    static bool findAndParseService(IXmlDocument& doc, ServiceType serviceType, std::shared_ptr<Device>& device);
     
     void checkForTimeoutThread();
     
@@ -65,6 +66,7 @@ private:
     
     std::future<void>                               m_Thread;
     std::condition_variable                         m_Condition;
+    bool                                            m_Started;
     bool                                            m_Stop;
     
 };

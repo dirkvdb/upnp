@@ -48,9 +48,9 @@ void AVTransport::setDevice(std::shared_ptr<Device> device)
 {
     m_Device = device;
     
-    if (m_Device->implementsService(Service::AVTransport))
+    if (m_Device->implementsService(ServiceType::AVTransport))
     {
-        parseServiceDescription(m_Device->m_Services[Service::AVTransport].m_SCPDUrl);
+        parseServiceDescription(m_Device->m_Services[ServiceType::AVTransport].m_SCPDUrl);
     }
 }
 
@@ -63,11 +63,11 @@ void AVTransport::subscribe()
 {
     unsubscribe();
     
-    log::debug("Subscribe to AVTransport service:", m_Device->m_FriendlyName, m_Device->m_Services[Service::AVTransport].m_EventSubscriptionURL);
+    log::debug("Subscribe to AVTransport service:", m_Device->m_FriendlyName, m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionURL);
     
     m_Client.UPnPEventOccurredEvent.connect(std::bind(&AVTransport::eventOccurred, this, _1), this);
     
-    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[Service::AVTransport].m_EventSubscriptionURL.c_str(), defaultTimeout, &AVTransport::eventCb, this);
+    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionURL.c_str(), defaultTimeout, &AVTransport::eventCb, this);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error("Failed to subscribe to UPnP device:" + numericops::toString(ret));
@@ -151,7 +151,7 @@ IXmlDocument AVTransport::executeAction(Action actionType, const std::string& co
     action.addArgument("InstanceID", connectionId);
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
     
     return result;
 }
@@ -167,7 +167,7 @@ IXmlDocument AVTransport::executeAction(Action actionType, const std::string& co
     }
     
     IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[Service::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
+    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
 
     return result;
 }

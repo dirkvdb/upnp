@@ -48,6 +48,7 @@ public:
     ~MediaServer();
     
     void setDevice(std::shared_ptr<Device> device);
+    std::shared_ptr<Device> getDevice();
     
     void abort();
     

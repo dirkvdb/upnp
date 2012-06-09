@@ -56,11 +56,16 @@ void MediaServer::setDevice(std::shared_ptr<Device> device)
     m_ContentDirectory.setDevice(device);
     m_ConnectionMgr.setDevice(device); 
     
-    if (m_Device->implementsService(Service::Type::AVTransport))
+    if (m_Device->implementsService(ServiceType::AVTransport))
     {
         m_AVTransport.reset(new AVTransport(m_Client));
         m_AVTransport->setDevice(device);
     }
+}
+
+std::shared_ptr<Device> MediaServer::getDevice()
+{
+    return m_Device;
 }
 
 void MediaServer::abort()
@@ -112,9 +117,9 @@ std::string MediaServer::getPeerConnectionId() const
     std::stringstream ss;
     ss << m_Device->m_UDN << "/";
     
-    if (m_Device->implementsService(Service::ConnectionManager))
+    if (m_Device->implementsService(ServiceType::ConnectionManager))
     {
-       ss << m_Device->m_Services[Service::ConnectionManager].m_Id;
+       ss << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
     }
     
     return ss.str();

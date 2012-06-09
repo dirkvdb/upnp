@@ -16,6 +16,7 @@
 
 #include "upnp/upnpdevicescanner.h"
 #include "upnp/upnpclient.h"
+#include "upnp/upnptypes.h"
 
 #include "utils/log.h"
 
@@ -39,12 +40,17 @@ static const char* AVTransportServiceType           = "urn:schemas-upnp-org:serv
 
 static const int timeCheckInterval = 60;
 
-
 DeviceScanner::DeviceScanner(Client& client, Device::Type type)
 : m_Client(client)
 , m_Type(type)
+, m_Started(false)
 , m_Stop(false)
 {
+}
+
+DeviceScanner::~DeviceScanner() throw()
+{
+    stop();
 }
     
 void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
@@ -60,28 +66,40 @@ void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
 
 void DeviceScanner::start()
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    if (m_Started)
+    {
+        return;
+    }
+    
     log::debug("Start device scanner, known devices(", m_Devices.size(), ")");
 
     m_Client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
     m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
     
     m_Thread = std::async(std::launch::async, std::bind(&DeviceScanner::checkForTimeoutThread, this));
+    m_Started = true;
 }
 
 void DeviceScanner::stop()
 {
-    m_Client.UPnPDeviceDiscoveredEvent.disconnect(this);
-    m_Client.UPnPDeviceDissapearedEvent.disconnect(this);
-    
-    m_Stop = true;
-    
-    {
+    {   
         std::lock_guard<std::mutex> lock(m_Mutex);
+        if (!m_Started)
+        {
+            return;
+        }
+
+        m_Client.UPnPDeviceDiscoveredEvent.disconnect(this);
+        m_Client.UPnPDeviceDissapearedEvent.disconnect(this);
+        
+        m_Stop = true;
         m_Condition.notify_all();
     }
     
     m_Thread.wait();
     m_Stop = false;
+    m_Started = false;
     
     log::debug("Stop device scanner, known devices(", m_Devices.size(), ")");
 }
@@ -136,7 +154,7 @@ void DeviceScanner::refresh()
 {
     log::debug("Send UPnP discovery");
     
-    int rc = UpnpSearchAsync(m_Client, 10, deviceTypeToString(m_Type), &m_Client);
+    int rc = UpnpSearchAsync(m_Client, 5, deviceTypeToString(m_Type), &m_Client);
     if (UPNP_E_SUCCESS != rc)
     {
         log::error("Error sending search request:", rc);
@@ -177,14 +195,14 @@ std::string DeviceScanner::getFirstDocumentItem(IXmlDocument& doc, const std::st
     return result;
 }
 
-Service::Type stringToServiceType(const std::string& type)
+ServiceType stringToServiceType(const std::string& type)
 {
-    if (type == ContentDirectoryServiceType)    return Service::ContentDirectory;
-    if (type == AVTransportServiceType)         return Service::AVTransport;
-    if (type == ConnectionManagerServiceType)   return Service::ConnectionManager;
-    if (type == RenderingControlServiceType)    return Service::RenderingControl;
+    if (type == ContentDirectoryServiceType)    return ServiceType::ContentDirectory;
+    if (type == AVTransportServiceType)         return ServiceType::AVTransport;
+    if (type == ConnectionManagerServiceType)   return ServiceType::ConnectionManager;
+    if (type == RenderingControlServiceType)    return ServiceType::RenderingControl;
     
-    return Service::Unknown;
+    return ServiceType::Unknown;
 }
 
 Device::Type stringToDeviceType(const std::string& type)
@@ -209,7 +227,7 @@ IXmlNodeList DeviceScanner::getFirstServiceList(IXmlDocument& doc)
     return serviceList;
 }
 
-bool DeviceScanner::findAndParseService(IXmlDocument& doc, const Service::Type serviceType, std::shared_ptr<Device>& device)
+bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType serviceType, std::shared_ptr<Device>& device)
 {
     bool found = false;
     
@@ -298,8 +316,6 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         }
     }
     
-    log::debug("New device:", pDiscovery->DeviceId, pDiscovery->Location);
-    
     IXmlDocument doc;
     
     int ret = UpnpDownloadXmlDoc(pDiscovery->Location, &doc);
@@ -336,11 +352,11 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         
         if (device->m_Type == Device::MediaServer)
         {
-            if (findAndParseService(doc, Service::ContentDirectory, device))
+            if (findAndParseService(doc, ServiceType::ContentDirectory, device))
             {
                 // try to obtain the optional services
-                findAndParseService(doc, Service::AVTransport, device);
-                findAndParseService(doc, Service::ConnectionManager, device);
+                findAndParseService(doc, ServiceType::AVTransport, device);
+                findAndParseService(doc, ServiceType::ConnectionManager, device);
                 
                 log::info("Media server added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
 
@@ -354,12 +370,12 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         }
         else if (device->m_Type == Device::MediaRenderer)
         {
-            if (   findAndParseService(doc, Service::RenderingControl, device)
-                && findAndParseService(doc, Service::ConnectionManager, device)
+            if (   findAndParseService(doc, ServiceType::RenderingControl, device)
+                && findAndParseService(doc, ServiceType::ConnectionManager, device)
                 )
             {
                 // try to obtain the optional services
-                findAndParseService(doc, Service::AVTransport, device);
+                findAndParseService(doc, ServiceType::AVTransport, device);
                 
                 log::info("Media renderer added to the list:", device->m_FriendlyName, "(", device->m_UDN, ")");
                 

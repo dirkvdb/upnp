@@ -22,6 +22,7 @@
 #include <chrono>
 
 #include "utils/types.h"
+#include "upnp/upnptypes.h"
 
 namespace upnp
 {
@@ -29,16 +30,7 @@ namespace upnp
 class Service
 {
 public:
-    enum Type
-    {
-        ContentDirectory,
-        RenderingControl,
-        ConnectionManager,
-        AVTransport,
-        Unknown
-    };
-    
-    Type            m_Type;
+    ServiceType     m_Type;
     std::string     m_Id;
     std::string     m_SCPDUrl;
     std::string     m_ControlURL;
@@ -57,7 +49,7 @@ public:
 
     bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
     
-    bool implementsService(Service::Type type) const { return m_Services.find(type) != m_Services.end(); }
+    bool implementsService(ServiceType type) const { return m_Services.find(type) != m_Services.end(); }
 
     Type            m_Type;
     std::string     m_UserDefinedName;
@@ -72,7 +64,7 @@ public:
     
     std::chrono::system_clock::time_point   m_TimeoutTime;
     
-    std::map<Service::Type, Service>    m_Services;
+    std::map<ServiceType, Service>    m_Services;
 };
 
 class IDeviceSubscriber

@@ -51,7 +51,7 @@ void MediaRenderer::setDevice(std::shared_ptr<Device> device)
     m_ConnectionMgr.setDevice(device);
     m_RenderingControl.setDevice(device);
     
-    if (m_Device->implementsService(Service::Type::AVTransport))
+    if (m_Device->implementsService(ServiceType::AVTransport))
     {
         m_AVtransport.reset(new AVTransport(m_Client));
         m_AVtransport->LastChangedEvent.connect(std::bind(&MediaRenderer::onLastChanged, this, _1), this);
@@ -86,7 +86,7 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
 std::string MediaRenderer::getPeerConnectionId() const
 {
     std::stringstream ss;
-    ss << m_Device->m_UDN << "/" << m_Device->m_Services[Service::ConnectionManager].m_Id;
+    ss << m_Device->m_UDN << "/" << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
     
     return ss.str();
 }
