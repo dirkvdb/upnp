@@ -37,6 +37,8 @@ public:
     void setDevice(std::shared_ptr<Device> device);
     
 private:
+    static void handleUPnPResult(int errorCode);
+
     const Client&               m_Client;
     std::shared_ptr<Device>     m_Device;
 };

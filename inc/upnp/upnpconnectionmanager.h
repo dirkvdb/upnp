@@ -62,6 +62,7 @@ private:
     void parseServiceDescription(const std::string& descriptionUrl);
     
     static Action actionFromString(const std::string& action);
+    static void handleUPnPResult(int errorCode);
     
     const Client&               m_Client;
     std::shared_ptr<Device>     m_Device;

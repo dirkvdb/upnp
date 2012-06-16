@@ -22,6 +22,7 @@
 #include <iostream>
 #include <map>
 
+#include "upnp/upnptypes.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
@@ -98,19 +99,21 @@ public:
     void setTitle(const std::string& title);
     void setChildCount(uint32_t count);
         
-    void addMetaData(const std::string& key, const std::string& value);
+    void addMetaData(Property prop, const std::string& value);
     void addResource(const Resource& resource);
     
-    std::string getMetaData(const std::string& key) const;
+    std::string getMetaData(Property prop) const;
     
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
     
 private:
-    std::string             m_ObjectId;
-    std::string             m_ParentId;
-    MetaMap                 m_MetaData;
-    std::vector<Resource>   m_Resources;
-    uint32_t                m_ChildCount;
+    std::string                     m_ObjectId;
+    std::string                     m_ParentId;
+    std::string                     m_Title;
+    
+    std::map<Property, std::string> m_MetaData;
+    std::vector<Resource>           m_Resources;
+    uint32_t                        m_ChildCount;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Item& item)
@@ -129,7 +132,7 @@ inline std::ostream& operator<< (std::ostream& os, const Item& item)
     os << "Metadata:" << std::endl;
     for (auto& meta : item.m_MetaData)
     {
-        os << meta.first << " - " << meta.second << std::endl;
+        os << propertyToString(meta.first) << " - " << meta.second << std::endl;
     }
     
     return os;

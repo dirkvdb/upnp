@@ -378,5 +378,33 @@ AVTransport::Variable AVTransport::variableFromString(const std::string& var)
     
     throw std::logic_error("Unknown AVTransport variable:" + var);
 }
+
+void AVTransport::handleUPnPResult(int errorCode)
+{
+    if (errorCode == UPNP_E_SUCCESS) return;
+    
+    switch (errorCode)
+    {
+        case 701: throw std::logic_error("Playback transition not supported at this moment");
+        case 702: throw std::logic_error("No content found in media item");
+        case 703: throw std::logic_error("The media could not be read");
+        case 704: throw std::logic_error("Storage format not supported by the device");
+        case 705: throw std::logic_error("The device is locked");
+        case 706: throw std::logic_error("Error when writing media");
+        case 707: throw std::logic_error("Media is not writable");
+        case 708: throw std::logic_error("Format is not supported for recording");
+        case 709: throw std::logic_error("The media is full");
+        case 710: throw std::logic_error("Seek mode is not supported");
+        case 711: throw std::logic_error("Illegal seek target");
+        case 712: throw std::logic_error("Play mode is not supported");
+        case 713: throw std::logic_error("Record quality is not supported");
+        case 714: throw std::logic_error("Unsupported MIME-type");
+        case 715: throw std::logic_error("Resource is already being played");
+        case 716: throw std::logic_error("Resource not found");
+        case 717: throw std::logic_error("Play speed not supported");
+        case 718: throw std::logic_error("Invalid instance id");
+        default: upnp::handleUPnPResult(errorCode);
+    }
+}
     
 }

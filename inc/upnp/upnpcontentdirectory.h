@@ -70,6 +70,10 @@ private:
     void querySortCapabilities();
     void querySystemUpdateID();
     
+    static void handleUPnPResult(int errorCode);
+    static void addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, std::shared_ptr<Item>& item);
+    static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
+    
     IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
     void parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item);
     std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);

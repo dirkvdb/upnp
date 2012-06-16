@@ -25,8 +25,6 @@ static const std::string protocolInfo   = "protocolInfo";
 static const std::string dlnaThumbnail  = "DLNA.ORG_PN=JPEG_TN";
 
 static const std::string emptyString;
-static const std::string titleTag       = "dc:title";
-static const std::string classTag       = "upnp:class";
 static const std::string resourceTag    = "res";
 
 Resource::Resource()
@@ -110,8 +108,8 @@ void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)
 , m_ChildCount(0)
+, m_Title(title)
 {
-    setTitle(title);
 }
 
 Item::Item(const Item& other)
@@ -172,13 +170,7 @@ const std::string& Item::getParentId() const
 
 const std::string& Item::getTitle() const
 {
-    MetaMap::const_iterator iter = m_MetaData.find(titleTag);
-    if (iter != m_MetaData.end())
-    {
-        return iter->second;
-    }
-    
-    return emptyString;
+    return m_Title;
 }
 
 const std::vector<Resource>& Item::getResources() const
@@ -193,7 +185,7 @@ uint32_t Item::getChildCount() const
 
 Item::Class Item::getClass() const
 {
-    auto iter = m_MetaData.find(classTag);
+    auto iter = m_MetaData.find(Property::Class);
     if (iter == m_MetaData.end())
     {
         return Unknown;
@@ -238,7 +230,7 @@ Item::Class Item::getClass() const
 
 std::string Item::getClassString() const
 {
-    auto iter = m_MetaData.find(classTag);
+    auto iter = m_MetaData.find(Property::Class);
     if (iter == m_MetaData.end())
     {
         return "Unknown";
@@ -259,7 +251,7 @@ void Item::setParentId(const std::string& id)
 
 void Item::setTitle(const std::string& title)
 {
-    m_MetaData[titleTag] = title;
+    m_Title = title;
 }
 
 void Item::setChildCount(uint32_t count)
@@ -267,9 +259,9 @@ void Item::setChildCount(uint32_t count)
     m_ChildCount = count;
 }
 
-void Item::addMetaData(const std::string& key, const std::string& value)
+void Item::addMetaData(Property prop, const std::string& value)
 {
-    m_MetaData[key] = value;
+    m_MetaData[prop] = value;
 }
 
 void Item::addResource(const Resource& resource)
@@ -277,9 +269,9 @@ void Item::addResource(const Resource& resource)
     m_Resources.push_back(resource);
 }
 
-std::string Item::getMetaData(const std::string& key) const
+std::string Item::getMetaData(Property prop) const
 {
-    auto iter = m_MetaData.find(key);
+    auto iter = m_MetaData.find(prop);
     if (iter != m_MetaData.end())
     {
         return iter->second;

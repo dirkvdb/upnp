@@ -85,15 +85,7 @@ void ContentDirectory::querySearchCapabilities()
     
     for (auto& cap : caps)
     {
-        Property prop = propertyFromString(cap);
-        if (prop != Property::Unknown)
-        {
-            m_SearchCaps.push_back(prop);
-        }
-        else
-        {
-            log::warn("Unknown search capability", cap);
-        }
+        addPropertyToList(cap, m_SearchCaps);
     }
 }
 
@@ -108,15 +100,7 @@ void ContentDirectory::querySortCapabilities()
     
     for (auto& cap : caps)
     {
-        Property prop = propertyFromString(cap);
-        if (prop != Property::Unknown)
-        {
-            m_SortCaps.push_back(prop);
-        }
-        else
-        {
-            log::warn("Unknown sort capability", cap);
-        }
+        addPropertyToList(cap, m_SortCaps);
     }
 }
 
@@ -141,7 +125,9 @@ void ContentDirectory::browseMetadata(std::shared_ptr<Item>& item, const std::st
         throw std::logic_error("Failed to browse meta data");
     }
     
-    //log::debug(ixmlDocumenttoString(browseResult));
+#ifdef DEBUG_CONTENT_BROWSING
+    log::debug(IXmlString(ixmlDocumenttoString(browseResult)));
+#endif
     
     parseMetaData(browseResult, item);
 }
@@ -157,9 +143,11 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
     {
         throw std::logic_error("Failed to browse direct children");
     }
-    
-    //log::debug(ixmlDocumenttoString(browseResult));
-    
+
+#ifdef DEBUG_CONTENT_BROWSING
+    log::debug(IXmlString(ixmlDocumenttoString(browseResult)));
+#endif
+
     if (type == ContainersOnly || type == All)
     {
         auto containers = parseContainers(browseResult);
@@ -211,8 +199,10 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
     {
         if (m_Abort) break;
         
-        //subscriber.onItem(item, pExtraData);
-        //log::debug("Item:", item->getTitle());
+#ifdef DEBUG_CONTENT_BROWSING
+        log::debug("Item:", item->getTitle());
+#endif
+
         subscriber.onItem(item);
     }
 }
@@ -220,9 +210,10 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
 IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
-
-    //log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
-    //log::debug(m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str());
+    
+#ifdef DEBUG_CONTENT_BROWSING
+    log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
+#endif
     
     Action browseAction("Browse", ContentDirectoryServiceType);
     browseAction.addArgument("ObjectID", objectId);
@@ -291,11 +282,9 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& i
                 const char* pValue = ixmlNode_getNodeValue(pTextNode);
                 if (!pValue) continue;
                 
-                item->addMetaData(pKey, pValue);
+                addPropertyToItem(pKey, pValue, item);
             }
         }
-        
-        //log::debug("-- Item with metadata --\n", *item);
     }
     
     itemList = ixmlDocument_getElementsByTagName(doc, "item");
@@ -308,7 +297,7 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& i
         const char* pParentId = ixmlElement_getAttribute(pItemElem, "parentID");
         if (pParentId)
         {
-            item->addMetaData("parentID", pParentId);
+            item->setParentId(pParentId);
         }
         
         IXML_Node* pItemNode = ixmlNodeList_item(itemList, 0);
@@ -372,7 +361,7 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& i
                 else
                 {
                     //log::debug(pKey, "-", pValue);
-                    item->addMetaData(pKey, pValue);
+                    addPropertyToItem(pKey, pValue, item);
                 }
             }
         }
@@ -418,11 +407,9 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocumen
                     containers.back()->setChildCount(stringops::toNumeric<uint32_t>(pChildCount));
                 }
                 
-                containers.back()->addMetaData("upnp:class", getFirstElementValue(pContainerElem, "upnp:class"));
-                try { containers.back()->addMetaData("upnp:albumArtURI", getFirstElementValue(pContainerElem, "upnp:albumArtURI")); } catch (std::exception&) {}
-                try { containers.back()->addMetaData("upnp:artist", getFirstElementValue(pContainerElem, "upnp:artist")); } catch (std::exception&) {}
-                
-                //log::debug("-- Container --\n", *containers.back());
+                containers.back()->addMetaData(Property::Class, getFirstElementValue(pContainerElem, "upnp:class"));
+                try { containers.back()->addMetaData(Property::AlbumArt, getFirstElementValue(pContainerElem, "upnp:albumArtURI")); } catch (std::exception&) {}
+                try { containers.back()->addMetaData(Property::Artist, getFirstElementValue(pContainerElem, "upnp:artist")); } catch (std::exception&) {}
             }
             catch (std::exception& e)
             {
@@ -524,7 +511,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& do
                         else
                         {
                             //log::debug(pKey, "-", pValue);
-                            items.back()->addMetaData(pKey, pValue);
+                            addPropertyToItem(pKey, pValue, items.back());
                         }
                     }
                 }
@@ -542,4 +529,60 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& do
     return items;
 }
 
+void ContentDirectory::handleUPnPResult(int errorCode)
+{
+    if (errorCode == UPNP_E_SUCCESS) return;
+
+    switch (errorCode)
+    {
+    case 701: throw std::logic_error("No such object, the specified id is invalid");
+    case 702: throw std::logic_error("Invalid CurrentTagValue, probably out of date");
+    case 703: throw std::logic_error("Invalid NewTagValue, parameter is invalid");
+    case 704: throw std::logic_error("Unable to delete a required tag");
+    case 705: throw std::logic_error("UPdate read only tag not allowed");
+    case 706: throw std::logic_error("Parameter Mismatch");
+    case 708: throw std::logic_error("Unsupported or invalid search criteria");
+    case 709: throw std::logic_error("Unsupported or invalid sort criteria");
+    case 710: throw std::logic_error("No such container");
+    case 711: throw std::logic_error("This is a restricted object");
+    case 712: throw std::logic_error("Operation would result in bad metadata");
+    case 713: throw std::logic_error("The parent object is restricted");
+    case 714: throw std::logic_error("No such source resource");
+    case 715: throw std::logic_error("Source resource access denied");
+    case 716: throw std::logic_error("A transfer is busy");
+    case 717: throw std::logic_error("No such file transfer");
+    case 718: throw std::logic_error("No such destination resource");
+    case 719: throw std::logic_error("Destination resource access denied");
+    case 720: throw std::logic_error("Cannot process the request");
+    default: upnp::handleUPnPResult(errorCode);
+    }
 }
+
+void ContentDirectory::addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, std::shared_ptr<Item>& item)
+{
+    Property prop = propertyFromString(pPropertyName);
+    if (prop != Property::Unknown)
+    {
+        item->addMetaData(prop, pPropertyValue);
+    }
+    else
+    {
+        log::warn("Unknown property:", pPropertyName);
+    }
+}
+
+void ContentDirectory::addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
+{
+    Property prop = propertyFromString(propertyName);
+    if (prop != Property::Unknown)
+    {
+        vec.push_back(prop);
+    }
+    else
+    {
+        log::warn("Unknown property:", propertyName);
+    }
+}
+
+}
+

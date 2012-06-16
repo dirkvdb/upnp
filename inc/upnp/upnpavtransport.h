@@ -144,8 +144,9 @@ private:
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static Action actionFromString(const std::string& action);
-    std::string actionToString(Action action);
+    static std::string actionToString(Action action);
     static Variable variableFromString(const std::string& action);
+    static void handleUPnPResult(int errorCode);
 
     Client&                         m_Client;
     std::shared_ptr<Device>         m_Device;

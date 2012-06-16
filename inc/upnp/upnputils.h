@@ -33,14 +33,6 @@ inline void handleUPnPResult(int errorCode)
     {
         return;
     }
-    else if (708 == errorCode)
-    {
-        throw std::logic_error("Unsupported or invalid search criteria");
-    }
-    else if (709 == errorCode)
-    {
-        throw std::logic_error("Unsupported or invalid sort criteria");
-    }
     else if (801 == errorCode)
     {
         throw std::logic_error("UPnP Access denied");

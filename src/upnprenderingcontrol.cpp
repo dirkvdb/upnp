@@ -41,4 +41,15 @@ void RenderingControl::setDevice(std::shared_ptr<Device> device)
     m_Device = device;
 }
 
+void RenderingControl::handleUPnPResult(int errorCode)
+{
+    if (errorCode == UPNP_E_SUCCESS) return;
+    
+    switch (errorCode)
+    {
+        case 702: throw std::logic_error("Invalid instance id");
+        default: upnp::handleUPnPResult(errorCode);
+    }
+}
+
 }

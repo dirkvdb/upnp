@@ -104,6 +104,26 @@ IXmlNodeList::operator bool() const
     return m_pList != nullptr;
 }
 
+IXmlString::IXmlString(DOMString str)
+: m_String(str)
+{
+}
+
+IXmlString::~IXmlString()
+{
+    ixmlFreeDOMString(m_String);
+}
+
+IXmlString::operator DOMString() const
+{
+    return m_String;
+}
+
+IXmlString::operator bool() const
+{
+    return m_String != nullptr;
+}
+
 std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item)
 {
     std::string result;

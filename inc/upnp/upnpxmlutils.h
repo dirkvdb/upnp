@@ -65,6 +65,22 @@ private:
     IXML_NodeList*  m_pList;
 };
 
+class IXmlString
+{
+public:
+    IXmlString(DOMString str);
+    IXmlString(const IXmlString& str) = delete;
+    ~IXmlString();
+    
+    IXmlString& operator= (const IXmlString& other) = delete;
+    
+    operator DOMString() const;
+    operator bool() const;
+    
+private:
+    DOMString   m_String;
+};
+
 std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item);
 std::string getFirstElementValue(IXmlDocument& doc, const std::string& item);
 std::string getFirstElementValue(IXML_Element* pElement, const std::string& item);

@@ -569,7 +569,15 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
                 const char* pValue = ixmlNode_getNodeValue(pTextNode);
                 if (!pValue) continue;
                 
-                item.addMetaData(pKey, pValue);
+                Property prop = propertyFromString(pKey);
+                if (prop != Property::Unknown)
+                {
+                    item.addMetaData(prop, pValue);
+                }
+                else
+                {
+                    log::warn("Unknown property:", pKey);
+                }
             }
 
             ixmlNodeList_free(pChildren);
@@ -588,7 +596,7 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
         const char* pParentId = ixmlElement_getAttribute(pItemElem, "parentID");
         if (pParentId)
         {
-            item.addMetaData("parentID", pParentId);
+            item.setParentId(pParentId);
         }
 
         IXML_Node* pItemNode = ixmlNodeList_item(pItemList, 0);
@@ -652,7 +660,16 @@ void Browser::parseMetaData(IXML_Document* pDoc, Item& item)
                 else
                 {
                     //log::debug(pKey, "-", pValue);
-                    item.addMetaData(pKey, pValue);
+                
+                    Property prop = propertyFromString(pKey);
+                    if (prop != Property::Unknown)
+                    {
+                        item.addMetaData(prop, pValue);
+                    }
+                    else
+                    {
+                        log::warn("Unknown property:", pKey);
+                    }
                 }
             }
 
