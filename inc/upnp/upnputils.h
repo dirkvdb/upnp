@@ -27,6 +27,14 @@
 namespace upnp
 {
 
+inline void throwOnNull(const void* pPtr, const char* pMsg)
+{
+    if (!pPtr)
+    {
+        throw std::logic_error(pMsg);
+    }
+}
+
 inline void handleUPnPResult(int errorCode)
 {
     if (UPNP_E_SUCCESS == errorCode)

@@ -76,6 +76,11 @@ private:
     
     IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
     void parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item);
+    
+    void parseContainer(IXML_Element* pContainerElem, std::shared_ptr<Item>& item);
+    void parseItem(IXML_Element* pItemElem, std::shared_ptr<Item>& item);
+    Resource parseResource(IXML_NamedNodeMap* pNodeMap, const char* pUrl);
+    
     std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);
     std::vector<std::shared_ptr<Item>> parseItems(IXmlDocument& doc);
     

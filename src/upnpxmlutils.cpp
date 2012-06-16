@@ -162,7 +162,7 @@ std::string getFirstElementValue(IXML_Element* pElement, const std::string& item
     IXmlNodeList nodeList = ixmlElement_getElementsByTagName(pElement, item.c_str());
     if (!nodeList)
     {
-        throw std::logic_error("Failed to find element value in element: " + item);
+        return result;
     }
     
     return getFirstElementValue(nodeList, item);

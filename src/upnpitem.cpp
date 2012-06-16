@@ -261,7 +261,10 @@ void Item::setChildCount(uint32_t count)
 
 void Item::addMetaData(Property prop, const std::string& value)
 {
-    m_MetaData[prop] = value;
+    if (!value.empty())
+    {
+        m_MetaData[prop] = value;
+    }
 }
 
 void Item::addResource(const Resource& resource)
