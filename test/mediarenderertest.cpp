@@ -26,6 +26,7 @@ using namespace testing;
 #include "upnp/upnpcontrolpoint.h"
 #include "upnp/upnpmediarenderer.h"
 #include "upnp/upnpitem.h"
+#include "upnp/upnptypes.h"
 
 #include "testenvironment.h"
 
@@ -63,9 +64,9 @@ protected:
 
 TEST_F(MediaRendererTest, DiscoveredServices)
 {
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(Service::RenderingControl));
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(Service::ConnectionManager));
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(Service::AVTransport));
+    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::RenderingControl));
+    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::ConnectionManager));
+    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::AVTransport));
 }
 
 TEST_F(MediaRendererTest, SupportedProtocols)
@@ -94,11 +95,11 @@ TEST_F(MediaRendererTest, SupportedProtocols)
         Resource res;
         res.setProtocolInfo(upnp::ProtocolInfo(protocol));
 
-        Item item;
-        item.addResource(res);
+        auto item = std::make_shared<Item>();
+        item->addResource(res);
 
         Resource suggestedResource;
-        EXPECT_TRUE(m_Renderer.supportsPlayback(item, suggestedResource)) << "Protocol not supported: " << item.getResources()[0].getProtocolInfo().toString();
+        EXPECT_TRUE(m_Renderer.supportsPlayback(item, suggestedResource)) << "Protocol not supported: " << item->getResources()[0].getProtocolInfo().toString();
     }
 }
 

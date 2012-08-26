@@ -107,8 +107,8 @@ void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)
-, m_ChildCount(0)
 , m_Title(title)
+, m_ChildCount(0)
 {
 }
 

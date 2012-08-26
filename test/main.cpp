@@ -33,6 +33,6 @@ int main(int argc, char **argv)
     
     InitGoogleTest(&argc, argv);
 
-    g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
+    //g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
     return RUN_ALL_TESTS();
 }

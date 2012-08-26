@@ -19,6 +19,7 @@
 
 #include <string>
 #include <cinttypes>
+#include <memory>
 
 namespace upnp
 {

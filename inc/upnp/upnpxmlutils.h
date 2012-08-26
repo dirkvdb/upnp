@@ -28,6 +28,9 @@
 namespace upnp
 {
 
+class IXmlNode;    
+class IXmlNodeList;
+
 class IXmlDocument
 {
 public:
@@ -43,6 +46,8 @@ public:
     operator IXML_Document*() const;
     operator bool() const;
     IXML_Document** operator &();
+    
+    IXmlNodeList getElementsByTagName(const std::string& tagName);
 
 private:
     IXML_Document*  m_pDoc;
@@ -53,7 +58,7 @@ class IXmlNodeList
 public:
     IXmlNodeList();
     IXmlNodeList(IXML_NodeList* pList);
-    IXmlNodeList(const IXmlNodeList& doc) = delete;
+    IXmlNodeList(const IXmlNodeList& list) = delete;
     IXmlNodeList(IXmlNodeList&& list);
     ~IXmlNodeList();
 
@@ -62,9 +67,56 @@ public:
 
     operator IXML_NodeList*() const;
     operator bool() const;
+    
+    IXmlNode getNode(unsigned long index);
+    unsigned long getLength();
 
 private:
     IXML_NodeList*  m_pList;
+};
+
+class IXmlNode
+{
+public:
+    IXmlNode();
+    IXmlNode(IXML_Node* pNode);
+    IXmlNode(const IXmlNode& node) = delete;
+    IXmlNode(IXmlNode&& node);
+    
+    operator IXML_Node*() const;
+    operator bool() const;
+    
+    std::string getName();
+    std::string getValue();
+    std::string getAttribute(const std::string& attr);
+    
+    IXmlNode getFirstChild();
+    IXmlNodeList getChildNodes();
+    
+private:
+    IXML_Node*  m_pNode;
+};
+
+class IXmlElement
+{
+public:
+    IXmlElement();
+    IXmlElement(IXML_Element* pElement);
+    IXmlElement(IXmlNode&& node);
+    IXmlElement(const IXmlElement& node) = delete;
+    IXmlElement(IXmlElement&& node);
+    
+    IXmlElement& operator= (IXmlNode& node);
+    
+    operator IXML_Element*() const;
+    operator bool() const;
+    
+    std::string getName();
+    std::string getAttribute(const std::string& attr);
+    IXmlNodeList getElementsByTagName(const std::string& tagName);
+    
+private:
+    IXML_Element*  m_pElement;
 };
 
 class IXmlString

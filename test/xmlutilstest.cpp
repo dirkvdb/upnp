@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <algorithm>
 
 
 using namespace utils;
@@ -30,10 +31,10 @@ namespace upnp
 namespace test
 {
 
-static const testXML = 
-"<?xml version="1.0"?>"
+static const std::string testXML = 
+"<?xml version=\"1.0\"?>"
 "<scpd"
-"  xmlns="urn:schemas-upnp-org:service-1-0">"
+"  xmlns=\"urn:schemas-upnp-org:service-1-0\">"
 "    <specVersion>"
 "        <major>1</major>"
 "        <minor>0</minor>"
@@ -103,7 +104,7 @@ static const testXML =
 "            </allowedValueRange>"
 "        </stateVariable>"
 "    </serviceStateTable>"
-"</scpd>"
+"</scpd>";
 
 
 class XmlUtilsTest : public Test
@@ -120,12 +121,45 @@ protected:
     IXmlDocument    doc;
 };
 
+TEST_F(XmlUtilsTest, getFirstElementValue)
+{
+    const std::string xml = 
+        "<allowedValueRange>"
+        "    <minimum>0</minimum>"
+        "    <maximum>100</maximum>"
+        "    <step>1</step>"
+        "</allowedValueRange>";
+        
+    IXmlDocument doc = ixmlParseBuffer(xml.c_str());
+    EXPECT_STREQ("0", getFirstElementValue(doc, "minimum").c_str());
+    EXPECT_STREQ("100", getFirstElementValue(doc, "maximum").c_str());
+    EXPECT_STREQ("1", getFirstElementValue(doc, "step").c_str());
+}
+
 TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
 {
     auto vars = getStateVariablesFromDescription(doc);
 
-    auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) { return var.name == "LastChange"; })
-    EXPECT_NEQ(vars.end(), iter);
+    auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
+        return var.name == "LastChange";
+    });
+    
+    ASSERT_NE(vars.end(), iter);
+    EXPECT_STREQ("LastChange", iter->name.c_str());
+    EXPECT_STREQ("string", iter->dataType.c_str());
+    EXPECT_EQ(nullptr, iter->valueRange);
+    
+    iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
+        return var.name == "Volume";
+    });
+    
+    ASSERT_NE(vars.end(), iter);
+    EXPECT_STREQ("Volume", iter->name.c_str());
+    EXPECT_STREQ("ui2", iter->dataType.c_str());
+    EXPECT_NE(nullptr, iter->valueRange);
+    EXPECT_EQ(0, iter->valueRange->minimumValue);
+    EXPECT_EQ(100, iter->valueRange->maximumValue);
+    EXPECT_EQ(1, iter->valueRange->step);
 }
 
 }

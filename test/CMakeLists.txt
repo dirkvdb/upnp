@@ -17,13 +17,18 @@ INCLUDE_DIRECTORIES(
 ADD_EXECUTABLE(upnptest
 	devicediscover.h
 	main.cpp
-	mediarenderertest.cpp
-	mediaservertest.cpp
-	controlpointtest.cpp
+    xmlutilstest.cpp
+	#mediarenderertest.cpp
+	#mediaservertest.cpp
+	#controlpointtest.cpp
 	testenvironment.h
 )
 
-SET (CMAKE_CXX_FLAGS "-std=c++0x")
+SET (CMAKE_CXX_FLAGS "-std=c++11")
+
+LINK_DIRECTORIES(
+    ${UPNPFRAMEWORK_LIBRARY_DIRS}
+)
 
 TARGET_LINK_LIBRARIES(upnptest
 	-lpthread
