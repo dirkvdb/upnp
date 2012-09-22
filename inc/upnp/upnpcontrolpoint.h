@@ -39,17 +39,16 @@ class ControlPoint
 public:
     ControlPoint(Client& client);
     ControlPoint(const ControlPoint&) = delete;
-    ~ControlPoint();
-    
-    void setWebserver(WebServer& webServer);
-    void setRendererDevice(std::shared_ptr<Device> dev);
-    std::shared_ptr<Device> getActiveRenderer();
     
     ControlPoint& operator=(const ControlPoint&) = delete;
     
-    void playItem(MediaServer& server, std::shared_ptr<Item>& item);
-    void playFromItemOnwards(MediaServer& server, std::shared_ptr<Item>& item);
-    void playContainer(MediaServer& server, std::shared_ptr<Item>& item);
+    void setWebserver(WebServer& webServer);
+    void setRendererDevice(const std::shared_ptr<Device>& dev);
+    std::shared_ptr<Device> getActiveRenderer();
+    
+    void playItem(MediaServer& server, const std::shared_ptr<Item>& item);
+    void playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item);
+    void playContainer(MediaServer& server, const std::shared_ptr<Item>& item);
     void stop();
     
 private:

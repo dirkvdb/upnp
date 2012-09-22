@@ -47,7 +47,7 @@ public:
     MediaServer(Client& client);
     ~MediaServer();
     
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     std::shared_ptr<Device> getDevice();
     
     void abort();
@@ -59,22 +59,22 @@ public:
     const std::vector<Property>& getSortCapabilities() const;
     std::string getPeerConnectionId() const;
     
-    std::vector<std::shared_ptr<Item>> getItemsInContainer(std::shared_ptr<Item>& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    std::vector<std::shared_ptr<Item>> getItemsInContainer(const std::shared_ptr<Item>& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
-    void getItemsInContainer            (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getItemsInContainerAsync       (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainer       (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainerAsync  (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainer              (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainerAsync         (std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getItemsInContainer            (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getItemsInContainerAsync       (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainer       (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainerAsync  (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainer              (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainerAsync         (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
-    uint32_t search (std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
-    void searchAsync(std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
-    uint32_t search (std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
-    void searchAsync(std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    uint32_t search (const std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void searchAsync(const std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    uint32_t search (const std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void searchAsync(const std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
-    void getMetaData(std::shared_ptr<Item>& item);
-    void getMetaDataAsync(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void getMetaData(const std::shared_ptr<Item>& item);
+    void getMetaDataAsync(const std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     
     // AVTransport related methods
     void setTransportItem(const ConnectionInfo& info, Resource& resource);
@@ -82,11 +82,11 @@ public:
     ConnectionManager& connectionManager();
     
 private:
-    void performBrowseRequest(ContentDirectory::BrowseType type, std::shared_ptr<Item> container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void performBrowseRequestThread(ContentDirectory::BrowseType type, std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequest(ContentDirectory::BrowseType type, const std::shared_ptr<Item> container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequestThread(ContentDirectory::BrowseType type, const std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     template <typename T>
-    void searchThread(std::shared_ptr<Item> container, const T& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
-    void getMetaDataThread(std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void searchThread(const std::shared_ptr<Item> container, const T& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void getMetaDataThread(const std::shared_ptr<Item> item, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
     std::shared_ptr<Device>             m_Device;
     std::vector<ProtocolInfo>           m_ProtocolInfo;

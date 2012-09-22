@@ -43,22 +43,17 @@ ControlPoint::ControlPoint(Client& client)
     m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
 }
 
-ControlPoint::~ControlPoint()
-{
-}
-
 void ControlPoint::setWebserver(WebServer& webServer)
 {
     m_pWebServer = &webServer;
 }
 
-void ControlPoint::setRendererDevice(std::shared_ptr<Device> dev)
+void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
     m_Renderer.setDevice(dev);
-    
     m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
     m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
-    
+
     m_Renderer.activateEvents();
 }
 
@@ -67,7 +62,7 @@ std::shared_ptr<Device> ControlPoint::getActiveRenderer()
     return m_Renderer.getDevice();
 }
 
-void ControlPoint::playItem(MediaServer& server, std::shared_ptr<Item>& item)
+void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& item)
 {
     stopPlaybackIfNecessary();
     
@@ -93,7 +88,7 @@ void ControlPoint::playItem(MediaServer& server, std::shared_ptr<Item>& item)
                                                                          Direction::Input);
     }
     else
-    {    
+    {
         m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
     }
     
@@ -102,9 +97,10 @@ void ControlPoint::playItem(MediaServer& server, std::shared_ptr<Item>& item)
     m_Renderer.play(m_ConnInfo);
 }
 
-void ControlPoint::playFromItemOnwards(MediaServer& server, std::shared_ptr<Item>& item)
+void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item)
 {
     throwOnMissingWebserver();
+
     stopPlaybackIfNecessary();
 
     std::stringstream playlist;
@@ -112,23 +108,14 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, std::shared_ptr<Item
     auto parentItem = std::make_shared<Item>(item->getParentId());
     auto items = server.getItemsInContainer(parentItem, 0, 100);
     
-    bool skip = true;
-    for (auto& i : items)
-    {
-        if (skip && i->getObjectId() == item->getObjectId())
+    auto iter = std::find_if(items.begin(), items.end(), [item](const std::shared_ptr<Item>& i) { return i->getObjectId() == item->getObjectId(); });
+    std::for_each(iter, items.end(), [this, &playlist] (const std::shared_ptr<Item>& i) {
+        Resource resource;
+        if (m_Renderer.supportsPlayback(i, resource))
         {
-            skip = false;
+            playlist << resource.getUrl() << std::endl;
         }
-        
-        if (!skip)
-        {
-            Resource resource;
-            if (m_Renderer.supportsPlayback(i, resource))
-            {
-                playlist << resource.getUrl() << std::endl;
-            }
-        }
-    }
+    });
     
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
@@ -136,12 +123,14 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, std::shared_ptr<Item
     log::debug("Playlist:", playlist.str());
     
     auto playlistItem = createPlaylistItem(filename);
+    
     playItem(server, playlistItem);
 }
 
-void ControlPoint::playContainer(MediaServer& server, std::shared_ptr<Item>& item)
+void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item>& item)
 {
     throwOnMissingWebserver();
+    
     stopPlaybackIfNecessary();
 
     auto items = server.getItemsInContainer(item);
@@ -184,7 +173,11 @@ void ControlPoint::stopPlaybackIfNecessary()
 {
     if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.stop(m_ConnInfo);
+        if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
+        {
+            m_Renderer.stop(m_ConnInfo);
+        }
+        
         m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
     }
 }

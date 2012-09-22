@@ -56,6 +56,7 @@ enum class Property
     TrackNumber,
     Actor,
     All,
+    Description,
     Unknown
 };
 
@@ -114,6 +115,7 @@ inline Property propertyFromString(const std::string& name)
     if (name == "dc:title")                 return Property::Title;
     if (name == "dc:creator")               return Property::Creator;
     if (name == "dc:date")                  return Property::Date;
+    if (name == "dc:description")           return Property::Description;
     if (name == "res")                      return Property::Res;
     if (name == "upnp:class")               return Property::Class;
     if (name == "restricted")               return Property::Restricted;
@@ -143,6 +145,7 @@ inline std::string propertyToString(Property prop)
     case Property::Title:             return "dc:title";
     case Property::Creator:           return "dc:creator";
     case Property::Date:              return "dc:date";
+    case Property::Description:       return "dc:description";
     case Property::Res:               return "res";
     case Property::Class:             return "upnp:class";
     case Property::Restricted:        return "restricted";

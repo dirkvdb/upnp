@@ -114,7 +114,7 @@ void ContentDirectory::querySystemUpdateID()
     m_SystemUpdateId = getFirstElementValue(result, "Id");
 }
 
-void ContentDirectory::browseMetadata(std::shared_ptr<Item>& item, const std::string& filter)
+void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter)
 {
     ActionResult res;
 
@@ -242,7 +242,7 @@ IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, ActionResult
     return browseDoc;
 }
 
-void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item)
+void ContentDirectory::parseMetaData(IXmlDocument& doc, const std::shared_ptr<Item>& item)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
     
@@ -269,7 +269,7 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& i
     log::warn("No metadata could be retrieved");
 }
 
-void ContentDirectory::parseContainer(IXML_Element* pContainerElem, std::shared_ptr<Item>& item)
+void ContentDirectory::parseContainer(IXML_Element* pContainerElem, const std::shared_ptr<Item>& item)
 {
     throwOnNull(pContainerElem, "Null container");
     
@@ -335,7 +335,7 @@ Resource ContentDirectory::parseResource(IXML_NamedNodeMap* pNodeMap, const char
     return res;
 }
 
-void ContentDirectory::parseItem(IXML_Element* pItemElem, std::shared_ptr<Item>& item)
+void ContentDirectory::parseItem(IXML_Element* pItemElem, const std::shared_ptr<Item>& item)
 {
     const char* pId = ixmlElement_getAttribute(pItemElem, "id");
     throwOnNull(pId, "No id in item");
@@ -468,7 +468,7 @@ void ContentDirectory::handleUPnPResult(int errorCode)
     }
 }
 
-void ContentDirectory::addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, std::shared_ptr<Item>& item)
+void ContentDirectory::addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, const std::shared_ptr<Item>& item)
 {
     Property prop = propertyFromString(pPropertyName);
     if (prop != Property::Unknown)

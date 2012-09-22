@@ -23,6 +23,9 @@
 #include "upnp/upnprenderingcontrol.h"
 #include "upnp/upnpavtransport.h"
 
+#include "utils/workerthread.h"
+#include "utils/signal.h"
+
 namespace upnp
 {
 
@@ -37,10 +40,22 @@ struct ConnectionInfo;
 class MediaRenderer
 {
 public:
+    enum class Action
+    {
+        Play,
+        Stop,
+        Pause,
+        Seek,
+        Next,
+        Previous,
+        Record
+    };
+
     MediaRenderer(Client& cp);
+    MediaRenderer(const MediaRenderer&) = delete;
     
     std::shared_ptr<Device> getDevice();
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
     
     std::string getPeerConnectionId() const;
@@ -54,16 +69,24 @@ public:
     void activateEvents();
     void deactivateEvents();
     
+    bool isActionAvailable(Action action) const;
+    
+    utils::Signal<void(const std::set<Action>&)>    AvailableActionsChanged;
+    
 private:
     void onLastChanged(const std::map<AVTransport::Variable, std::string>& vars);
-
-    std::shared_ptr<Device>         m_Device;
-    std::vector<ProtocolInfo>       m_ProtocolInfo;
+    void updateAvailableActions(const std::string& actionList);
     
-    Client&                         m_Client;
-    ConnectionManager               m_ConnectionMgr;
-    RenderingControl                m_RenderingControl;
-    std::unique_ptr<AVTransport>    m_AVtransport;
+    static MediaRenderer::Action transportActionToAction(AVTransport::Action action);
+    
+    std::shared_ptr<Device>             m_Device;
+    std::vector<ProtocolInfo>           m_ProtocolInfo;
+    std::set<Action>                    m_AvailableActions;
+    
+    Client&                             m_Client;
+    ConnectionManager                   m_ConnectionMgr;
+    RenderingControl                    m_RenderingControl;
+    std::unique_ptr<AVTransport>        m_AVtransport;
 };
 
 }

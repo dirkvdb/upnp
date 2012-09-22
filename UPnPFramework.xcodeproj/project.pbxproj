@@ -223,7 +223,7 @@
 		4341AB2D1387B66600297297 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0450;
 				ORGANIZATIONNAME = None;
 			};
 			buildConfigurationList = 4341AB301387B66600297297 /* Build configuration list for PBXProject "UPnPFramework" */;
@@ -341,7 +341,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = "$(SDK_DIR)/local/include";
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -363,7 +363,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = "$(SDK_DIR)/local/include";
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",

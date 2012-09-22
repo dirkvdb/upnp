@@ -125,8 +125,8 @@ public:
     void subscribe();
     void unsubscribe();
     
-    void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData);
-    void play(const std::string& connectionId, const std::string& speed);
+    void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");
+    void play(const std::string& connectionId, const std::string& speed = "1");
     void stop(const std::string& connectionId);
     void previous(const std::string& connectionId);
     void next(const std::string& connectionId);
@@ -134,6 +134,8 @@ public:
     TransportInfo getTransportInfo(const std::string& connectionId);
     
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
+    
+    static Action actionFromString(const std::string& action);
     
 private:
     void parseServiceDescription(const std::string& descriptionUrl);
@@ -143,7 +145,6 @@ private:
     IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args);
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
-    static Action actionFromString(const std::string& action);
     static std::string actionToString(Action action);
     static Variable variableFromString(const std::string& action);
     static void handleUPnPResult(int errorCode);

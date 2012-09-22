@@ -59,7 +59,7 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
     
-    void browseMetadata(std::shared_ptr<Item>& item, const std::string& filter);
+    void browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter);
     ActionResult browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
             
@@ -71,14 +71,14 @@ private:
     void querySystemUpdateID();
     
     static void handleUPnPResult(int errorCode);
-    static void addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, std::shared_ptr<Item>& item);
+    static void addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, const std::shared_ptr<Item>& item);
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
     
     IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
-    void parseMetaData(IXmlDocument& doc, std::shared_ptr<Item>& item);
+    void parseMetaData(IXmlDocument& doc, const std::shared_ptr<Item>& item);
     
-    void parseContainer(IXML_Element* pContainerElem, std::shared_ptr<Item>& item);
-    void parseItem(IXML_Element* pItemElem, std::shared_ptr<Item>& item);
+    void parseContainer(IXML_Element* pContainerElem, const std::shared_ptr<Item>& item);
+    void parseItem(IXML_Element* pItemElem, const std::shared_ptr<Item>& item);
     Resource parseResource(IXML_NamedNodeMap* pNodeMap, const char* pUrl);
     
     std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);

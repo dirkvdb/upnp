@@ -18,6 +18,7 @@
 
 #include "upnp/upnpitem.h"
 #include "utils/log.h"
+#include "utils/stringoperations.h"
 
 #include <sstream>
 
@@ -40,7 +41,7 @@ std::shared_ptr<Device> MediaRenderer::getDevice()
     return m_Device;
 }
 
-void MediaRenderer::setDevice(std::shared_ptr<Device> device)
+void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
 {
     if (m_Device)
     {
@@ -70,13 +71,14 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
 
     for (auto& res : item->getResources())
     {
-        for (auto& info : m_ProtocolInfo)
+        auto iter = std::find_if(m_ProtocolInfo.begin(), m_ProtocolInfo.end(), [res] (const ProtocolInfo& info) {
+            return info.isCompatibleWith(res.getProtocolInfo());
+        });
+        
+        if (iter != m_ProtocolInfo.end())
         {
-            if (info.isCompatibleWith(res.getProtocolInfo()))
-            {
-                suggestedResource = res;
-                return true;
-            }
+            suggestedResource = res;
+            return true;
         }
     }
     
@@ -95,7 +97,7 @@ void MediaRenderer::setTransportItem(const ConnectionInfo& info, Resource& resou
 {
     if (m_AVtransport)
     {
-        m_AVtransport->setAVTransportURI(info.connectionId, resource.getUrl(), "");
+        m_AVtransport->setAVTransportURI(info.connectionId, resource.getUrl());
     }
 }
 
@@ -103,7 +105,7 @@ void MediaRenderer::play(const ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
-        m_AVtransport->play(info.connectionId, "1");
+        m_AVtransport->play(info.connectionId);
     }
 }
 
@@ -131,11 +133,51 @@ void MediaRenderer::deactivateEvents()
     }
 }
 
+bool MediaRenderer::isActionAvailable(Action action) const
+{
+    return m_AvailableActions.find(action) != m_AvailableActions.end();
+}
+
 void MediaRenderer::onLastChanged(const std::map<AVTransport::Variable, std::string>& vars)
 {
     auto iter = vars.find(AVTransport::Variable::CurrentTrackURI);
     if (iter != vars.end())
+    {
         log::info("Last changed:", iter->second);
+    }
+    
+    iter = vars.find(AVTransport::Variable::CurrentTransportActions);
+    if (iter != vars.end())
+    {
+        updateAvailableActions(iter->second);
+    }
+}
+
+void MediaRenderer::updateAvailableActions(const std::string& actionList)
+{
+    auto actions = stringops::tokenize(actionList, ",");
+    
+    m_AvailableActions.clear();
+    std::for_each(actions.begin(), actions.end(), [this] (const std::string& action) {
+        try { m_AvailableActions.insert(transportActionToAction(AVTransport::actionFromString(action))); }
+        catch (std::exception& e) { log::warn(e.what()); }
+    });
+    
+    AvailableActionsChanged(m_AvailableActions);
+}
+
+MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action action)
+{
+    switch (action) {
+        case AVTransport::Action::Play:     return Action::Play;
+        case AVTransport::Action::Stop:     return Action::Stop;
+        case AVTransport::Action::Pause:    return Action::Pause;
+        case AVTransport::Action::Seek:     return Action::Seek;
+        case AVTransport::Action::Next:     return Action::Next;
+        case AVTransport::Action::Previous: return Action::Previous;
+        case AVTransport::Action::Record:   return Action::Record;
+        default: throw std::logic_error("Invalid transport action");
+    }
 }
 
 ConnectionManager& MediaRenderer::connectionManager()
