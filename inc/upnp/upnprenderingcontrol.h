@@ -17,11 +17,14 @@
 #ifndef UPNP_RENDERING_CONTROL_H
 #define UPNP_RENDERING_CONTROL_H
 
+#include "utils/signal.h"
+
 #include "upnp/upnpdevice.h"
+#include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
 
 #include <upnp/upnp.h>
-#include <vector>
+#include <set>
 #include <memory>
 
 namespace upnp
@@ -32,15 +35,59 @@ class Client;
 class RenderingControl
 {
 public:
-    RenderingControl(const Client& client);
+    enum class Action
+    {
+        ListPresets,
+        SetPreset,
+        GetVolume,
+        SetVolume,
+        GetVolumeDB,
+        SetVolumeDB,
+        GetMute,
+        SetMute
+    };
+    
+    enum class Variable
+    {
+        PresetNameList,
+        Mute,
+        Volume,
+        VolumeDB,
+        LastChange //event
+    };
+    
+    RenderingControl(Client& client);
     
     void setDevice(std::shared_ptr<Device> device);
     
+    void subscribe();
+    void unsubscribe();
+    
+    void increaseVolume(const std::string& connectionId, uint32_t percentage);
+    void decreaseVolume(const std::string& connectionId, uint32_t percentage);
+    
+    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
+    
 private:
+    void parseServiceDescription(const std::string& descriptionUrl);
+    void eventOccurred(Upnp_Event* pEvent);
+    
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId);
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args);
+    
+    static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static void handleUPnPResult(int errorCode);
+    static Action actionFromString(const std::string& action);
+    static std::string actionToString(Action action);
+    static Variable variableFromString(const std::string& var);
+    std::string variableToString(Variable var);
 
-    const Client&               m_Client;
+    Client&                     m_Client;
     std::shared_ptr<Device>     m_Device;
+    std::set<Action>            m_SupportedActions;
+    
+    uint32_t                    m_currentVolume;
+    uint32_t                    m_maxVolume;
 };
 
 }

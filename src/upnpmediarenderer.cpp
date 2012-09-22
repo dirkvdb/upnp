@@ -117,8 +117,20 @@ void MediaRenderer::stop(const ConnectionInfo& info)
     }
 }
 
+void MediaRenderer::increaseVolume(const ConnectionInfo& info, uint32_t percentage)
+{
+    m_RenderingControl.increaseVolume(info.connectionId, percentage);
+}
+
+void MediaRenderer::decreaseVolume(const ConnectionInfo& info, uint32_t percentage)
+{
+    m_RenderingControl.decreaseVolume(info.connectionId, percentage);
+}
+
 void MediaRenderer::activateEvents()
 {
+    m_RenderingControl.subscribe();
+
     if (m_AVtransport)
     {
         m_AVtransport->subscribe();
@@ -127,6 +139,8 @@ void MediaRenderer::activateEvents()
 
 void MediaRenderer::deactivateEvents()
 {
+    m_RenderingControl.unsubscribe();
+    
     if (m_AVtransport)
     {
         m_AVtransport->unsubscribe();

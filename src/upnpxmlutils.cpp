@@ -17,6 +17,7 @@
 #include "upnp/upnpxmlutils.h"
 
 #include "utils/log.h"
+#include "utils/stringoperations.h"
 
 #include <stdexcept>
 
@@ -124,6 +125,36 @@ IXmlString::operator bool() const
     return m_String != nullptr;
 }
 
+std::string getFirstElementAttribute(IXmlNodeList& nodeList, const std::string& item, const std::string& attribute)
+{
+    std::string result;
+    
+    IXML_Element* pTmpNode = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(nodeList, 0));
+    if (pTmpNode == nullptr)
+    {
+        throw std::logic_error("Failed to find XML element value: " + item);
+    }
+    
+    const char* pValue = ixmlElement_getAttribute(pTmpNode, attribute.c_str());
+    if (pValue)
+    {
+        result = pValue;
+    }
+    
+    return result;
+}
+
+std::string getFirstElementAttribute(IXmlDocument& doc, const std::string& item, const std::string& attribute)
+{
+    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
+    if (!nodeList)
+    {
+        throw std::logic_error("Failed to find element value in document: " + item);
+    }
+    
+    return getFirstElementAttribute(nodeList, item, attribute);
+}
+
 std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item)
 {
     std::string result;
@@ -143,7 +174,7 @@ std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item
     
     return result;
 }
-    
+
 std::string getFirstElementValue(IXmlDocument& doc, const std::string& item)
 {
     IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
@@ -194,6 +225,61 @@ std::vector<std::string> getActionsFromDescription(IXmlDocument& doc)
     }
     
     return actions;
+}
+
+std::vector<StateVariable> getStateVariablesFromDescription(IXmlDocument& doc)
+{
+    std::vector<StateVariable> variables;
+    
+    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, "stateVariable");
+    if (!nodeList)
+    {
+        throw std::logic_error("Failed to find state variables in document");
+    }
+    
+    unsigned long numVariables = ixmlNodeList_length(nodeList);
+    variables.reserve(numVariables);
+    
+    for (unsigned long i = 0; i < numVariables; ++i)
+    {
+        IXML_Element* pElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(nodeList, i));
+        if (!pElem)
+        {
+            log::error("Failed to get variable from state variable list, skipping");
+            continue;
+        }
+        
+        try
+        {
+            StateVariable var;
+            
+            const char* pVal = ixmlElement_getAttribute(pElem, "sendEvents");
+            if (pVal)
+            {
+                var.sendsEvents = std::string("yes") == pVal;
+            }
+            
+            var.name        = getFirstElementValue(pElem, "name");
+            var.dataType    = getFirstElementValue(pElem, "dataType");
+            
+            IXmlNodeList nodeList = ixmlElement_getElementsByTagName(pElem, "allowedValueRange");
+            if (nodeList)
+            {
+                var.valueRange.reset(new StateVariable::ValueRange());
+                var.valueRange->minimumValue    = stringops::toNumeric<uint32_t>(getFirstElementValue(nodeList, "minimum"));
+                var.valueRange->maximumValue    = stringops::toNumeric<uint32_t>(getFirstElementValue(nodeList, "maximum"));
+                var.valueRange->step            = stringops::toNumeric<uint32_t>(getFirstElementValue(nodeList, "step"));
+            }
+            
+            variables.push_back(var);
+        }
+        catch(std::exception& e)
+        {
+            log::warn("Failed to parse state variable: skipping");
+        }
+    }
+    
+    return variables;
 }
 
 std::map<std::string, std::string> getEventValues(IXmlDocument& doc)

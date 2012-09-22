@@ -83,6 +83,7 @@
 		4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpmediaserver.h; sourceTree = "<group>"; };
 		4357AF0B154D30ED0021F9BE /* upnpmediaserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpmediaserver.cpp; path = src/upnpmediaserver.cpp; sourceTree = "<group>"; };
 		4357AF0D154D58570021F9BE /* upnptypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnptypes.h; sourceTree = "<group>"; };
+		438A0265160DF89B00045136 /* upnpstatevariable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpstatevariable.h; sourceTree = "<group>"; };
 		438A7A40150E9B1F0093A521 /* upnpbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpbrowser.cpp; path = src/upnpbrowser.cpp; sourceTree = "<group>"; };
 		438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpcontrolpoint.cpp; path = src/upnpcontrolpoint.cpp; sourceTree = "<group>"; };
 		438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpdevicescanner.cpp; path = src/upnpdevicescanner.cpp; sourceTree = "<group>"; };
@@ -174,6 +175,7 @@
 				432C62B2154EE9CC00068315 /* upnpclient.h */,
 				439EBBCD1551BD48000177C5 /* upnpavtransport.h */,
 				43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */,
+				438A0265160DF89B00045136 /* upnpstatevariable.h */,
 			);
 			name = upnp;
 			path = inc/upnp;

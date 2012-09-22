@@ -32,6 +32,7 @@ namespace upnp
 
 static const int32_t defaultTimeout = 1801;
 static const char* AVTransportServiceType = "urn:schemas-upnp-org:service:AVTransport:1";
+static const char* AVTransportXMLNamespace = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
     
 AVTransport::AVTransport(Client& client)
@@ -63,8 +64,6 @@ void AVTransport::subscribe()
 {
     unsubscribe();
     
-    log::debug("Subscribe to AVTransport service:", m_Device->m_FriendlyName, m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionURL);
-    
     m_Client.UPnPEventOccurredEvent.connect(std::bind(&AVTransport::eventOccurred, this, _1), this);
     
     int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionURL.c_str(), defaultTimeout, &AVTransport::eventCb, this);
@@ -72,8 +71,6 @@ void AVTransport::subscribe()
     {
         throw std::logic_error("Failed to subscribe to UPnP device:" + numericops::toString(ret));
     }
-    
-    log::debug("Subscribed:", AVTransport::eventCb, &AVTransport::eventCb, this);
 }
 
 void AVTransport::unsubscribe()
@@ -100,10 +97,7 @@ void AVTransport::setAVTransportURI(const std::string& connectionId, const std::
 
 void AVTransport::play(const std::string& connectionId, const std::string& speed)
 {
-    // executeAction(Action::Play, connectionId, { {"Speed", speed} });
-    std::map<std::string, std::string> args;
-    args.insert(std::make_pair("Speed", speed));
-    executeAction(Action::Play, connectionId, args);
+    executeAction(Action::Play, connectionId, { {"Speed", speed} });
 }
 
 void AVTransport::stop(const std::string& connectionId)
@@ -227,7 +221,7 @@ void AVTransport::eventOccurred(Upnp_Event* pEvent)
                 }
                 catch (std::exception& e)
                 {
-                    log::warn("Unknown event variable ignored:", i.first);
+                    log::warn("Unknown AVTransport event variable ignored:", i.first);
                 }
             }
             
@@ -235,7 +229,7 @@ void AVTransport::eventOccurred(Upnp_Event* pEvent)
         }
         catch (std::exception& e)
         {
-            log::error("Failed to parse AVTRANSPORT event variables:", e.what());
+            log::error("Failed to parse AVTransport event variables:", e.what());
         }
     }
 }

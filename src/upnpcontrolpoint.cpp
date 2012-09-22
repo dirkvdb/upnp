@@ -57,9 +57,9 @@ void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
     m_Renderer.activateEvents();
 }
 
-std::shared_ptr<Device> ControlPoint::getActiveRenderer()
+MediaRenderer& ControlPoint::getActiveRenderer()
 {
-    return m_Renderer.getDevice();
+    return m_Renderer;
 }
 
 void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& item)
@@ -165,6 +165,36 @@ void ControlPoint::stop()
     {
         m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
         m_Renderer.stop(m_ConnInfo);
+        m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    }
+}
+
+void ControlPoint::increaseVolume(uint32_t percentage)
+{
+    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    {
+        m_Renderer.increaseVolume(m_ConnInfo, percentage);
+        m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    }
+    else
+    {
+        m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        m_Renderer.increaseVolume(m_ConnInfo, percentage);
+        m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    }
+}
+
+void ControlPoint::decreaseVolume(uint32_t percentage)
+{
+    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    {
+        m_Renderer.decreaseVolume(m_ConnInfo, percentage);
+        m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    }
+    else
+    {
+        m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        m_Renderer.decreaseVolume(m_ConnInfo, percentage);
         m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
     }
 }

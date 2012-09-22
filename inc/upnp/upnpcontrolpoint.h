@@ -44,12 +44,15 @@ public:
     
     void setWebserver(WebServer& webServer);
     void setRendererDevice(const std::shared_ptr<Device>& dev);
-    std::shared_ptr<Device> getActiveRenderer();
+    MediaRenderer& getActiveRenderer();
     
     void playItem(MediaServer& server, const std::shared_ptr<Item>& item);
     void playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item);
     void playContainer(MediaServer& server, const std::shared_ptr<Item>& item);
     void stop();
+    
+    void increaseVolume(uint32_t percentage);
+    void decreaseVolume(uint32_t percentage);
     
 private:
     void throwOnMissingWebserver();

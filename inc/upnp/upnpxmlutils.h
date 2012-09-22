@@ -23,6 +23,8 @@
 
 #include <upnp/upnp.h>
 
+#include "upnp/upnpstatevariable.h"
+
 namespace upnp
 {
 
@@ -81,9 +83,12 @@ private:
     DOMString   m_String;
 };
 
+std::string getFirstElementAttribute(IXmlNodeList& nodeList, const std::string& item, const std::string& attribute);
+std::string getFirstElementAttribute(IXmlDocument& doc, const std::string& item, const std::string& attribute);
 std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item);
 std::string getFirstElementValue(IXmlDocument& doc, const std::string& item);
 std::string getFirstElementValue(IXML_Element* pElement, const std::string& item);
+std::vector<StateVariable> getStateVariablesFromDescription(IXmlDocument& doc);
 std::vector<std::string> getActionsFromDescription(IXmlDocument& doc);
 std::map<std::string, std::string> getEventValues(IXmlDocument& doc);
 

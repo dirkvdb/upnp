@@ -66,6 +66,9 @@ public:
     void play(const ConnectionInfo& info);
     void stop(const ConnectionInfo& info);
     
+    void increaseVolume(const ConnectionInfo& info, uint32_t percentage);
+    void decreaseVolume(const ConnectionInfo& info, uint32_t percentage);
+    
     void activateEvents();
     void deactivateEvents();
     
