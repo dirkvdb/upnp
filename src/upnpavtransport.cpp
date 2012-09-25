@@ -32,7 +32,6 @@ namespace upnp
 
 static const int32_t defaultTimeout = 1801;
 static const char* AVTransportServiceType = "urn:schemas-upnp-org:service:AVTransport:1";
-static const char* AVTransportXMLNamespace = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
     
 AVTransport::AVTransport(Client& client)
@@ -75,11 +74,11 @@ void AVTransport::subscribe()
 
 void AVTransport::unsubscribe()
 {
-    if (!m_Device->m_CDSubscriptionID.empty())
+    if (!m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID.empty())
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
     
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_CDSubscriptionID[0]));
+        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID[0]));
         if (ret != UPNP_E_SUCCESS)
         {
             log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
@@ -100,9 +99,19 @@ void AVTransport::play(const std::string& connectionId, const std::string& speed
     executeAction(Action::Play, connectionId, { {"Speed", speed} });
 }
 
+void AVTransport::pause(const std::string& connectionId)
+{
+    executeAction(Action::Pause, connectionId);
+}
+
 void AVTransport::stop(const std::string& connectionId)
 {
     executeAction(Action::Stop, connectionId);
+}
+
+void AVTransport::next(const std::string& connectionId)
+{
+    executeAction(Action::Next, connectionId);
 }
 
 void AVTransport::previous(const std::string& connectionId)
@@ -192,7 +201,7 @@ void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
 
 void AVTransport::eventOccurred(Upnp_Event* pEvent)
 {
-    if (pEvent->Sid == m_Device->m_CDSubscriptionID)
+    if (pEvent->Sid == m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID)
     {
         IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(pEvent->ChangedVariables, "LastChange");
         if (!nodeList)
@@ -254,12 +263,12 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
             if (pSubEvent->Sid)
             {
                 log::info(pSubEvent->Sid);
-                av->m_Device->m_CDSubscriptionID = pSubEvent->Sid;
+                av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID = pSubEvent->Sid;
                 log::info("Successfully subscribed to", av->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
             }
             else
             {
-                av->m_Device->m_CDSubscriptionID.clear();
+                av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID.clear();
                 log::error("Subscription id for device is empty");
             }
         }
@@ -275,7 +284,7 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
         int ret = UpnpSubscribe(av->m_Client, pSubEvent->PublisherUrl, &timeout, newSID);
         if (ret == UPNP_E_SUCCESS)
         {
-            av->m_Device->m_CDSubscriptionID = newSID;
+            av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID = newSID;
             log::info("AVTransport subscription renewed: \n", newSID);
         }
         else

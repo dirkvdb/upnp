@@ -28,7 +28,6 @@
 
 static const int32_t defaultTimeout = 1801;
 static const char* RenderingControlServiceType = "urn:schemas-upnp-org:service:RenderingControl:1";
-static const char* RenderingControlXMLNamespace = "urn:schemas-upnp-org:metadata-1-0/RCS/";
 
 using namespace utils;
 using namespace std::placeholders;
@@ -57,8 +56,6 @@ void RenderingControl::subscribe()
 {
     unsubscribe();
     
-    log::debug("Subscribe to RenderingControl service:", m_Device->m_FriendlyName, m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionURL);
-    
     m_Client.UPnPEventOccurredEvent.connect(std::bind(&RenderingControl::eventOccurred, this, _1), this);
     
     int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionURL.c_str(), defaultTimeout, &RenderingControl::eventCb, this);
@@ -66,17 +63,15 @@ void RenderingControl::subscribe()
     {
         throw std::logic_error("Failed to subscribe to UPnP device:" + numericops::toString(ret));
     }
-    
-    log::debug("Subscribed:", RenderingControl::eventCb, &RenderingControl::eventCb, this);
 }
 
 void RenderingControl::unsubscribe()
 {
-    if (!m_Device->m_CDSubscriptionID.empty())
+    if (!m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID.empty())
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
         
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_CDSubscriptionID[0]));
+        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID[0]));
         if (ret != UPNP_E_SUCCESS)
         {
             log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
@@ -114,13 +109,20 @@ IXmlDocument RenderingControl::executeAction(Action actionType, const std::strin
 
 void RenderingControl::increaseVolume(const std::string& connectionId, uint32_t percentage)
 {
-    std::string vol = numericops::toString(m_currentVolume + ((m_maxVolume * percentage) / 100));
-    executeAction(Action::SetVolume, connectionId, { {"Channel", "Master"}, { "DesiredVolume", vol} });
+    int32_t vol = m_currentVolume + ((m_maxVolume * percentage) / 100);
+    setVolume(connectionId, vol);
 }
 
 void RenderingControl::decreaseVolume(const std::string& connectionId, uint32_t percentage)
 {
-    
+    int32_t vol = m_currentVolume - ((m_maxVolume * percentage) / 100);
+    setVolume(connectionId, vol);
+}
+
+void RenderingControl::setVolume(const std::string& connectionId, int32_t value)
+{
+    numericops::clip(value, m_minVolume, m_maxVolume);
+    executeAction(Action::SetVolume, connectionId, { {"Channel", "Master"}, { "DesiredVolume", numericops::toString(value)} });
 }
 
 void RenderingControl::parseServiceDescription(const std::string& descriptionUrl)
@@ -133,8 +135,6 @@ void RenderingControl::parseServiceDescription(const std::string& descriptionUrl
         log::error("Error obtaining device description from", descriptionUrl, " error =", ret);
         return;
     }
-    
-    log::debug(ixmlDocumenttoString(doc));
     
     for (auto& action : getActionsFromDescription(doc))
     {
@@ -154,6 +154,7 @@ void RenderingControl::parseServiceDescription(const std::string& descriptionUrl
         {
             if (variable.valueRange)
             {
+                m_minVolume = variable.valueRange->minimumValue;
                 m_maxVolume = variable.valueRange->maximumValue;
             }
         }
@@ -173,9 +174,7 @@ void RenderingControl::handleUPnPResult(int errorCode)
 
 void RenderingControl::eventOccurred(Upnp_Event* pEvent)
 {
-    log::debug("RenderingControl event occurred:", pEvent->Sid, m_Device->m_CDSubscriptionID);
-
-    if (pEvent->Sid == m_Device->m_CDSubscriptionID)
+    if (pEvent->Sid == m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID)
     {
         try
         {
@@ -190,14 +189,6 @@ void RenderingControl::eventOccurred(Upnp_Event* pEvent)
             if (!doc)
             {
                 // empty lastchange
-                return;
-            }
-            
-            std::string xmlns = getFirstElementAttribute(doc, "Event", "xmlns");
-            if (xmlns != RenderingControlXMLNamespace)
-            {
-                // this is not our Lastchange event
-                log::debug("Not my event:", xmlns);
                 return;
             }
             
@@ -235,8 +226,6 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
 {
     RenderingControl* rc = reinterpret_cast<RenderingControl*>(pInstance);
     
-    log::info("RenderingControl eventcb:", eventType);
-    
     switch (eventType)
     {
         case UPNP_EVENT_SUBSCRIBE_COMPLETE:
@@ -251,12 +240,12 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
                 if (pSubEvent->Sid)
                 {
                     log::info(pSubEvent->Sid);
-                    rc->m_Device->m_CDSubscriptionID = pSubEvent->Sid;
+                    rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID = pSubEvent->Sid;
                     log::info("Successfully subscribed to", rc->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
                 }
                 else
                 {
-                    rc->m_Device->m_CDSubscriptionID.clear();
+                    rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID.clear();
                     log::error("Subscription id for device is empty");
                 }
             }
@@ -272,7 +261,7 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
             int ret = UpnpSubscribe(rc->m_Client, pSubEvent->PublisherUrl, &timeout, newSID);
             if (ret == UPNP_E_SUCCESS)
             {
-                rc->m_Device->m_CDSubscriptionID = newSID;
+                rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID = newSID;
                 log::info("RenderingControl subscription renewed: \n", newSID);
             }
             else
@@ -295,7 +284,7 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
 RenderingControl::Action RenderingControl::actionFromString(const std::string& action)
 {
     if (action == "ListPresets")                return Action::ListPresets;
-    if (action == "SetPreset")                  return Action::SetPreset;
+    if (action == "SelectPreset")               return Action::SelectPreset;
     if (action == "GetVolume")                  return Action::GetVolume;
     if (action == "SetVolume")                  return Action::SetVolume;
     if (action == "GetVolumeDB")                return Action::GetVolumeDB;
@@ -311,7 +300,7 @@ std::string RenderingControl::actionToString(Action action)
     switch (action)
     {
     case Action::ListPresets:           return "ListPresets";
-    case Action::SetPreset:             return "SetPreset";
+    case Action::SelectPreset:          return "SelectPreset";
     case Action::GetVolume:             return "GetVolume";
     case Action::SetVolume:             return "SetVolume";
     case Action::GetVolumeDB:           return "GetVolumeDB";

@@ -64,7 +64,10 @@ public:
 
     void setTransportItem(const ConnectionInfo& info, Resource& resource);
     void play(const ConnectionInfo& info);
+    void pause(const ConnectionInfo& info);
     void stop(const ConnectionInfo& info);
+    void next(const ConnectionInfo& info);
+    void previous(const ConnectionInfo& info);
     
     void increaseVolume(const ConnectionInfo& info, uint32_t percentage);
     void decreaseVolume(const ConnectionInfo& info, uint32_t percentage);
@@ -90,6 +93,8 @@ private:
     ConnectionManager                   m_ConnectionMgr;
     RenderingControl                    m_RenderingControl;
     std::unique_ptr<AVTransport>        m_AVtransport;
+    
+    bool                                m_Active;
 };
 
 }

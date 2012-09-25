@@ -312,6 +312,7 @@
 				LIBRARY_SEARCH_PATHS = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				VALID_ARCHS = armv7;
 				VERSIONING_SYSTEM = "";
 			};
 			name = Debug;
@@ -329,6 +330,7 @@
 				LIBRARY_SEARCH_PATHS = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				VALID_ARCHS = armv7;
 				VERSIONING_SYSTEM = "";
 			};
 			name = Release;
@@ -352,6 +354,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
+				VALID_ARCHS = armv7;
 			};
 			name = Debug;
 		};
@@ -374,6 +377,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
+				VALID_ARCHS = armv7;
 			};
 			name = Release;
 		};

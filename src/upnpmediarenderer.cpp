@@ -33,6 +33,7 @@ MediaRenderer::MediaRenderer(Client& client)
 : m_Client(client)
 , m_ConnectionMgr(client)
 , m_RenderingControl(client)
+, m_Active(false)
 {
 }
 
@@ -45,7 +46,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
 {
     if (m_Device)
     {
-        m_AVtransport->LastChangedEvent.disconnect(this);
+        deactivateEvents();
     }
 
     m_Device = device;
@@ -55,11 +56,12 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
     if (m_Device->implementsService(ServiceType::AVTransport))
     {
         m_AVtransport.reset(new AVTransport(m_Client));
-        m_AVtransport->LastChangedEvent.connect(std::bind(&MediaRenderer::onLastChanged, this, _1), this);
         m_AVtransport->setDevice(device);
     }
     
     m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
+    
+    activateEvents();
 }
 
 bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const
@@ -109,11 +111,35 @@ void MediaRenderer::play(const ConnectionInfo& info)
     }
 }
 
+void MediaRenderer::pause(const ConnectionInfo& info)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->pause(info.connectionId);
+    }
+}
+
 void MediaRenderer::stop(const ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
         m_AVtransport->stop(info.connectionId);
+    }
+}
+
+void MediaRenderer::next(const ConnectionInfo& info)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->next(info.connectionId);
+    }
+}
+
+void MediaRenderer::previous(const ConnectionInfo& info)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->previous(info.connectionId);
     }
 }
 
@@ -129,21 +155,33 @@ void MediaRenderer::decreaseVolume(const ConnectionInfo& info, uint32_t percenta
 
 void MediaRenderer::activateEvents()
 {
-    m_RenderingControl.subscribe();
-
-    if (m_AVtransport)
+    if (!m_Active && m_Device)
     {
-        m_AVtransport->subscribe();
+        m_RenderingControl.subscribe();
+
+        if (m_AVtransport)
+        {
+            m_AVtransport->LastChangedEvent.connect(std::bind(&MediaRenderer::onLastChanged, this, _1), this);
+            m_AVtransport->subscribe();
+        }
+        
+        m_Active = true;
     }
 }
 
 void MediaRenderer::deactivateEvents()
 {
-    m_RenderingControl.unsubscribe();
-    
-    if (m_AVtransport)
+    if (m_Active && m_Device)
     {
-        m_AVtransport->unsubscribe();
+        m_RenderingControl.unsubscribe();
+    
+        if (m_AVtransport)
+        {
+            m_AVtransport->LastChangedEvent.disconnect(this);
+            m_AVtransport->unsubscribe();
+        }
+        
+        m_Active = false;
     }
 }
 

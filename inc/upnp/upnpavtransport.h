@@ -127,6 +127,7 @@ public:
     
     void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");
     void play(const std::string& connectionId, const std::string& speed = "1");
+    void pause(const std::string& connectionId);
     void stop(const std::string& connectionId);
     void previous(const std::string& connectionId);
     void next(const std::string& connectionId);

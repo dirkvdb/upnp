@@ -93,9 +93,9 @@ void Browser::subscribe()
 
 void Browser::unsubscribe()
 {
-    if (!m_Device->m_CDSubscriptionID.empty())
+    if (!m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID.empty())
     {
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_CDSubscriptionID[0]));
+        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID[0]));
         if (ret != UPNP_E_SUCCESS)
         {
             log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
@@ -325,12 +325,12 @@ int Browser::browserCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
             if (pSubEvent->Sid)
             {
                 log::info(pSubEvent->Sid);
-                pUPnP->m_Device->m_CDSubscriptionID = pSubEvent->Sid;
+                pUPnP->m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID = pSubEvent->Sid;
                 log::info("Successfully subscribed to", pUPnP->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
             }
             else
             {
-                pUPnP->m_Device->m_CDSubscriptionID.clear();
+                pUPnP->m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID.clear();
                 log::error("Subscription id for device is empty");
             }
         }

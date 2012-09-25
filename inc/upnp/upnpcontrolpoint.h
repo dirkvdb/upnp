@@ -21,6 +21,8 @@
 #include <mutex>
 #include <upnp/upnp.h>
 
+#include "utils/signal.h"
+
 #include "upnp/upnpconnectionmanager.h"
 #include "upnp/upnpmediarenderer.h"
 
@@ -46,10 +48,17 @@ public:
     void setRendererDevice(const std::shared_ptr<Device>& dev);
     MediaRenderer& getActiveRenderer();
     
+    void activate();
+    void deactivate();
+    
     void playItem(MediaServer& server, const std::shared_ptr<Item>& item);
     void playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item);
     void playContainer(MediaServer& server, const std::shared_ptr<Item>& item);
+    void resume();
+    void pause();
     void stop();
+    void next();
+    void previous();
     
     void increaseVolume(uint32_t percentage);
     void decreaseVolume(uint32_t percentage);

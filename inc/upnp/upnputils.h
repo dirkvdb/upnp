@@ -41,6 +41,10 @@ inline void handleUPnPResult(int errorCode)
     {
         return;
     }
+    else if (501 == errorCode)
+    {
+        throw std::logic_error("Internal server error");
+    }
     else if (801 == errorCode)
     {
         throw std::logic_error("UPnP Access denied");

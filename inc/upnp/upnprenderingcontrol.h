@@ -38,7 +38,7 @@ public:
     enum class Action
     {
         ListPresets,
-        SetPreset,
+        SelectPreset,
         GetVolume,
         SetVolume,
         GetVolumeDB,
@@ -65,6 +65,7 @@ public:
     
     void increaseVolume(const std::string& connectionId, uint32_t percentage);
     void decreaseVolume(const std::string& connectionId, uint32_t percentage);
+    void setVolume(const std::string& connectionId, int32_t value);
     
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
     
@@ -87,7 +88,8 @@ private:
     std::set<Action>            m_SupportedActions;
     
     uint32_t                    m_currentVolume;
-    uint32_t                    m_maxVolume;
+    int32_t                     m_minVolume;
+    int32_t                     m_maxVolume;
 };
 
 }

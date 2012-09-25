@@ -49,8 +49,8 @@ public:
     class ValueRange
     {
     public:
-        uint32_t     minimumValue = 0;
-        uint32_t     maximumValue = 0;
+        int32_t      minimumValue = 0;
+        int32_t      maximumValue = 0;
         uint32_t     step = 0;
     };
 

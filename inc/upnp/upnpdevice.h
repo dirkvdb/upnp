@@ -35,6 +35,7 @@ public:
     std::string     m_SCPDUrl;
     std::string     m_ControlURL;
     std::string     m_EventSubscriptionURL;
+    std::string     m_EventSubscriptionID;
 };
 
 class Device
@@ -59,7 +60,6 @@ public:
     std::string     m_RelURL;
     std::string     m_PresURL;
     std::string     m_Location;
-    std::string     m_CDSubscriptionID;
     std::string     m_ContainerId;
     
     std::chrono::system_clock::time_point   m_TimeoutTime;
