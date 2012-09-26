@@ -30,6 +30,7 @@
 namespace upnp
 {
 
+class Action;
 class Client;
     
 class RenderingControl
@@ -73,8 +74,7 @@ private:
     void parseServiceDescription(const std::string& descriptionUrl);
     void eventOccurred(Upnp_Event* pEvent);
     
-    IXmlDocument executeAction(Action actionType, const std::string& connectionId);
-    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args);
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static void handleUPnPResult(int errorCode);
@@ -84,7 +84,7 @@ private:
     std::string variableToString(Variable var);
 
     Client&                     m_Client;
-    std::shared_ptr<Device>     m_Device;
+    Service                     m_Service;
     std::set<Action>            m_SupportedActions;
     
     uint32_t                    m_currentVolume;

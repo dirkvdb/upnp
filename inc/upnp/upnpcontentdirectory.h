@@ -22,6 +22,7 @@
 
 #include <upnp/upnp.h>
 #include "upnp/upnpitem.h"
+#include "upnp/upnpdevice.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpxmlutils.h"
 
@@ -31,6 +32,7 @@
 namespace upnp
 {
 
+class Action;
 class Device;
 class Client;
 
@@ -64,7 +66,8 @@ public:
     ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
             
 private:
-    IXML_Document* browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    IXmlDocument sendAction(const Action& action);
+    IXmlDocument browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
 
     void querySearchCapabilities();
     void querySortCapabilities();
@@ -87,7 +90,7 @@ private:
     void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
     const Client&               m_Client;
-    std::shared_ptr<Device>     m_Device;
+    Service                     m_Service;
     
     std::vector<Property>       m_SearchCaps;
     std::vector<Property>       m_SortCaps;

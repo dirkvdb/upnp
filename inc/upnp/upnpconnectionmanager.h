@@ -23,12 +23,14 @@
 #include <memory>
 
 #include "upnp/upnptypes.h"
+#include "upnp/upnpdevice.h"
+#include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
 {
 
-class Device;
+class Action;
 class Client;
     
 class ConnectionManager
@@ -48,7 +50,7 @@ public:
 
     ConnectionManager(const Client& cp);
     
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     
     bool supportsAction(Action action) const;
     
@@ -59,13 +61,14 @@ public:
     ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
     
 private:
+    IXmlDocument sendAction(const upnp::Action& action);
     void parseServiceDescription(const std::string& descriptionUrl);
     
     static Action actionFromString(const std::string& action);
     static void handleUPnPResult(int errorCode);
     
     const Client&               m_Client;
-    std::shared_ptr<Device>     m_Device;
+    Service                     m_Service;
     std::set<Action>            m_SupportedActions;
 };
     

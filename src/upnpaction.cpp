@@ -21,12 +21,13 @@
 namespace upnp
 {
     
-Action::Action(const std::string& name, const std::string& serviceType)
+Action::Action(const std::string& name, const std::string& url, ServiceType serviceType)
 : m_Name(name)
-, m_ServiceType(serviceType)
+, m_Url(url)
+, m_ServiceType(serviceTypeToUrnString(serviceType))
 , m_pAction(nullptr)
 {
-    m_pAction = UpnpMakeAction(name.c_str(), serviceType.c_str(), 0, nullptr);
+    m_pAction = UpnpMakeAction(name.c_str(), m_ServiceType.c_str(), 0, nullptr);
 }
 
 Action::~Action()
@@ -48,6 +49,16 @@ void Action::addArgument(const std::string& name, const std::string& value)
 IXML_Document* Action::getActionDocument() const
 {
     return m_pAction;
+}
+
+std::string Action::getUrl() const
+{
+    return m_Url;
+}
+
+std::string Action::getServiceTypeUrn() const
+{
+    return m_ServiceType;
 }
     
 }

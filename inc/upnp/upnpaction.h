@@ -18,9 +18,12 @@
 #define UPNP_ACTION_H
 
 #include <string>
+#include <vector>
 
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
+
+#include "upnp/upnptypes.h"
 
 namespace upnp
 {
@@ -28,16 +31,21 @@ namespace upnp
 class Action
 {
 public:
-    Action(const std::string& name, const std::string& serviceType);
+    Action(const std::string& name, const std::string& url, ServiceType serviceType);
     ~Action();
     
     void addArgument(const std::string& name, const std::string& value);
+
     IXML_Document* getActionDocument() const;
+    std::string getUrl() const;
+    std::string getServiceTypeUrn() const;    
     
 private:
-    std::string         m_Name;
-    std::string         m_ServiceType;
-    IXML_Document*      m_pAction;
+    std::string                 m_Name;
+    std::string                 m_Url;
+    std::string                 m_ServiceType;
+    
+    IXML_Document*              m_pAction;
 }; 
     
 }

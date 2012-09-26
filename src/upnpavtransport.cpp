@@ -31,8 +31,6 @@ namespace upnp
 {
 
 static const int32_t defaultTimeout = 1801;
-static const char* AVTransportServiceType = "urn:schemas-upnp-org:service:AVTransport:1";
-
     
 AVTransport::AVTransport(Client& client)
 : m_Client(client)
@@ -46,11 +44,10 @@ AVTransport::~AVTransport()
 
 void AVTransport::setDevice(std::shared_ptr<Device> device)
 {
-    m_Device = device;
-    
-    if (m_Device->implementsService(ServiceType::AVTransport))
+    if (device->implementsService(ServiceType::AVTransport))
     {
-        parseServiceDescription(m_Device->m_Services[ServiceType::AVTransport].m_SCPDUrl);
+        m_Service = device->m_Services[ServiceType::AVTransport];
+        parseServiceDescription(m_Service.m_SCPDUrl);
     }
 }
 
@@ -64,25 +61,15 @@ void AVTransport::subscribe()
     unsubscribe();
     
     m_Client.UPnPEventOccurredEvent.connect(std::bind(&AVTransport::eventOccurred, this, _1), this);
-    
-    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionURL.c_str(), defaultTimeout, &AVTransport::eventCb, this);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        throw std::logic_error("Failed to subscribe to UPnP device:" + numericops::toString(ret));
-    }
+    m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, defaultTimeout, &AVTransport::eventCb, this);
 }
 
 void AVTransport::unsubscribe()
 {
-    if (!m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID.empty())
+    if (!m_Service.m_EventSubscriptionID.empty())
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
-    
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID[0]));
-        if (ret != UPNP_E_SUCCESS)
-        {
-            log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
-        }
+        m_Client.unsubscribeFromService(&(m_Service.m_EventSubscriptionID[0]));
     }
 }
 
@@ -148,20 +135,9 @@ AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connec
     return info;
 }
 
-IXmlDocument AVTransport::executeAction(Action actionType, const std::string& connectionId)
-{
-    upnp::Action action(actionToString(actionType), AVTransportServiceType);
-    action.addArgument("InstanceID", connectionId);
-    
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
-    
-    return result;
-}
-
 IXmlDocument AVTransport::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
 {
-    upnp::Action action(actionToString(actionType), AVTransportServiceType);
+    upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, ServiceType::AVTransport);
     action.addArgument("InstanceID", connectionId);
     
     for (auto& arg : args)
@@ -169,10 +145,17 @@ IXmlDocument AVTransport::executeAction(Action actionType, const std::string& co
         action.addArgument(arg.first, arg.second);
     }
     
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::AVTransport].m_ControlURL.c_str(), AVTransportServiceType, nullptr, action.getActionDocument(), &result));
-
-    return result;
+    try
+    {
+        return m_Client.sendAction(action);
+    }
+    catch (int32_t errorCode)
+    {
+        handleUPnPResult(errorCode);
+    }
+    
+    assert(false);
+    return IXmlDocument();
 }
 
 void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
@@ -201,7 +184,7 @@ void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
 
 void AVTransport::eventOccurred(Upnp_Event* pEvent)
 {
-    if (pEvent->Sid == m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID)
+    if (pEvent->Sid == m_Service.m_EventSubscriptionID)
     {
         IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(pEvent->ChangedVariables, "LastChange");
         if (!nodeList)
@@ -263,12 +246,12 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
             if (pSubEvent->Sid)
             {
                 log::info(pSubEvent->Sid);
-                av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID = pSubEvent->Sid;
-                log::info("Successfully subscribed to", av->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
+                av->m_Service.m_EventSubscriptionID = pSubEvent->Sid;
+                log::info("Successfully subscribed to AVTransport service: id =", pSubEvent->Sid);
             }
             else
             {
-                av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID.clear();
+                av->m_Service.m_EventSubscriptionID.clear();
                 log::error("Subscription id for device is empty");
             }
         }
@@ -279,18 +262,21 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
     {
         Upnp_Event_Subscribe* pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
         
-        Upnp_SID newSID;
-        int32_t timeout = defaultTimeout;
-        int ret = UpnpSubscribe(av->m_Client, pSubEvent->PublisherUrl, &timeout, newSID);
-        if (ret == UPNP_E_SUCCESS)
+        try
         {
-            av->m_Device->m_Services[ServiceType::AVTransport].m_EventSubscriptionID = newSID;
+            Upnp_SID newSID;
+            int32_t timeout = defaultTimeout;
+            
+            av->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout, newSID);
+            av->m_Service.m_EventSubscriptionID = newSID;
+            
             log::info("AVTransport subscription renewed: \n", newSID);
         }
-        else
+        catch (std::exception& e)
         {
-            log::error("Failed to renew event subscription: ", ret);
+            log::error(std::string("Failed to renew AVTransport event subscription: ") + e.what());
         }
+        
         break;
     }
     case UPNP_EVENT_RENEWAL_COMPLETE:

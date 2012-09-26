@@ -27,6 +27,12 @@
 namespace upnp
 {
 
+namespace
+{
+    static const char* MediaServerDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaServer:1";
+    static const char* MediaRendererDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaRenderer:1";
+}
+
 class Service
 {
 public:
@@ -65,6 +71,27 @@ public:
     std::chrono::system_clock::time_point   m_TimeoutTime;
     
     std::map<ServiceType, Service>    m_Services;
+    
+    static const std::string deviceTypeToString(Device::Type type)
+    {
+        switch (type)
+        {
+            case Device::MediaServer:
+                return MediaServerDeviceTypeUrn;
+            case Device::MediaRenderer:
+                return MediaRendererDeviceTypeUrn;
+            default:
+                throw std::logic_error("Invalid device type encountered");
+        }
+    }
+    
+    static const Device::Type stringToDeviceType(const std::string& type)
+    {
+        if (type == MediaServerDeviceTypeUrn)   { return Type::MediaServer; }
+        if (type == MediaRendererDeviceTypeUrn) { return Type::MediaRenderer; }
+        
+        throw std::logic_error("Invalid device type string encountered");
+    }
 };
 
 class IDeviceSubscriber

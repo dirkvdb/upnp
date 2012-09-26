@@ -19,7 +19,7 @@
 #include "upnp/upnputils.h"
 #include "upnp/upnpitem.h"
 #include "upnp/upnpaction.h"
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 
 #include "utils/log.h"
 #include "utils/types.h"
@@ -40,12 +40,11 @@ namespace upnp
 {
 
 static const int32_t defaultTimeout = 1801;
-static const char* ContentDirectoryServiceType = "urn:schemas-upnp-org:service:ContentDirectory:1";
 static const uint32_t maxNumThreads = 20;
 
 const std::string Browser::rootId = "0";
 
-Browser::Browser(const Client& client)
+Browser::Browser(const IClient& client)
 : m_Client(client)
 , m_ThreadPool(maxNumThreads)
 , m_Stop(false)
@@ -61,14 +60,8 @@ Browser::~Browser()
     m_ThreadPool.stop();
 }
 
-std::shared_ptr<Device> Browser::getDevice() const
-{
-    return m_Device;
-}
-
 void Browser::setDevice(std::shared_ptr<Device> device)
 {
-    log::info("Set device:", device->m_FriendlyName);
     m_Device = device;
 }
 
@@ -81,25 +74,21 @@ void Browser::subscribe()
 {
     unsubscribe();
 
-    log::debug("Subscribe to device:", m_Device->m_FriendlyName);
-
-    //subscribe to eventURL
-    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), defaultTimeout, Browser::browserCb, this);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        throw std::logic_error("Failed to subscribe to UPnP device");
-    }
+    m_Client.subscibeToService(m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), defaultTimeout, Browser::browserCb, this);
 }
 
 void Browser::unsubscribe()
 {
-    if (!m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID.empty())
+    try
     {
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID[0]));
-        if (ret != UPNP_E_SUCCESS)
+        if (!m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID.empty())
         {
-            log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
+            m_Client.unsubscribeFromService(&(m_Device->m_Services[ServiceType::ContentDirectory].m_EventSubscriptionID[0]));
         }
+    }
+    catch (std::exception& e)
+    {
+        log::warn(e.what());
     }
 }
 
@@ -265,7 +254,7 @@ void Browser::getMetaDataAsync(utils::ISubscriber<std::shared_ptr<Item>>& subscr
 
 void Browser::getContainerMetaData(Item& container)
 {
-    Action browseAction("Browse", ContentDirectoryServiceType);
+    Action browseAction("Browse", m_Service. ServiceType::ContentDirectory);
     browseAction.addArgument("ObjectID", container.getObjectId());
     browseAction.addArgument("BrowseFlag", "BrowseMetadata");
     browseAction.addArgument("Filter", "@childCount");

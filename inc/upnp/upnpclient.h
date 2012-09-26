@@ -17,18 +17,12 @@
 #ifndef UPNP_CLIENT_H
 #define UPNP_CLIENT_H
 
-#include <string>
-#include <mutex>
-#include <upnp/upnp.h>
-
-#include "utils/subscriber.h"
-#include "utils/signal.h"
-
+#include "upnp/upnpclientinterface.h"
 
 namespace upnp
 {
     
-class Client
+class Client : public IClient
 {
 public:
     Client();
@@ -37,21 +31,24 @@ public:
 
     Client& operator=(const Client&) = delete;
     
-    void initialize(const char* interfaceName = nullptr, int port = 0);
-    void destroy();
+    virtual void initialize(const char* interfaceName = nullptr, int port = 0);
+    virtual void destroy();
+    virtual void reset();
     
-    operator UpnpClient_Handle() const { return m_Client; }
+    virtual void searchDevices(Device::Type type, int timeout, void* cookie) const;
     
-    void reset();
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const;
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const;
+    virtual void unsubscribeFromService(const Upnp_SID subscriptionId) const;
     
-    utils::Signal<void(Upnp_Discovery*)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
-    utils::Signal<void(Upnp_Event*)> UPnPEventOccurredEvent;    
-    
-private:
+    virtual IXmlDocument sendAction(const Action& action) const;
+ 
+ private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
+    static void throwOnUPnPError(int errorCode);
+    static const char* deviceTypeToString(Device::Type type);
 
-    UpnpClient_Handle                   		m_Client;
+    UpnpClient_Handle   m_Client;
 };
     
 }

@@ -24,6 +24,14 @@
 namespace upnp
 {
 
+namespace
+{
+    static const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
+    static const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:1";
+    static const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:1";
+    static const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:1";
+}
+
 enum class ServiceType
 {
     ContentDirectory,
@@ -106,6 +114,26 @@ inline std::string serviceTypeToString(ServiceType type)
     if (type == ServiceType::Unknown)               return "UnknownServiceType";
     
     throw std::logic_error("Invalid service type received");
+}
+
+inline std::string serviceTypeToUrnString(ServiceType type)
+{
+    if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
+    if (type == ServiceType::RenderingControl)      return AVTransportServiceTypeUrn;
+    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
+    if (type == ServiceType::AVTransport)           return RenderingControlServiceTypeUrn;
+    
+    throw std::logic_error("Invalid service type received for urn");
+}
+
+inline ServiceType stringToServiceTypeUrn(const std::string& type)
+{
+    if (type == ContentDirectoryServiceTypeUrn)    return ServiceType::ContentDirectory;
+    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
+    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
+    if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
+    
+    return ServiceType::Unknown;
 }
 
 inline Property propertyFromString(const std::string& name)

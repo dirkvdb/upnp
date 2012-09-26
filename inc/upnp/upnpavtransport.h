@@ -142,8 +142,7 @@ private:
     void parseServiceDescription(const std::string& descriptionUrl);
     void eventOccurred(Upnp_Event* pEvent);
     
-    IXmlDocument executeAction(Action actionType, const std::string& connectionId);
-    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args);
+    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static std::string actionToString(Action action);
@@ -151,7 +150,7 @@ private:
     static void handleUPnPResult(int errorCode);
 
     Client&                         m_Client;
-    std::shared_ptr<Device>         m_Device;
+    Service                         m_Service;
     std::set<Action>                m_SupportedActions;
 };
     

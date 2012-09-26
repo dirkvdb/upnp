@@ -21,8 +21,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-//#include <upnp/upnpdebug.h>
-
 using namespace utils;
 
 namespace upnp
@@ -83,6 +81,56 @@ void Client::reset()
     initialize();
 }
 
+void Client::searchDevices(Device::Type type, int timeout, void* cookie) const
+{
+    log::debug("Send UPnP discovery");
+    
+    int rc = UpnpSearchAsync(m_Client, timeout, Device::deviceTypeToString(type).c_str(), cookie);
+    if (UPNP_E_SUCCESS != rc)
+    {
+        log::error("Error sending search request:", rc);
+    }
+}
+
+void Client::subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const
+{
+    log::debug("Subscribe to service:", publisherUrl);
+    
+    int ret = UpnpSubscribe(m_Client, publisherUrl.c_str(), &timeout, subscriptionId);
+    if (ret != UPNP_E_SUCCESS)
+    {
+        throw std::logic_error("Failed to subscribe to UPnP device service");
+    }
+}
+
+void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const
+{
+    log::debug("Subscribe to service:", publisherUrl);
+    
+    int ret = UpnpSubscribeAsync(m_Client, publisherUrl.c_str(), timeout, callback, cookie);
+    if (ret != UPNP_E_SUCCESS)
+    {
+        throw std::logic_error("Failed to subscribe to UPnP device service");
+    }
+}
+
+void Client::unsubscribeFromService(const Upnp_SID subscriptionId) const
+{
+    int ret = UpnpUnSubscribe(m_Client, subscriptionId);
+    if (ret != UPNP_E_SUCCESS)
+    {
+        throw std::logic_error("Failed to unsubscribe from UPnP device service");
+    }
+}
+
+IXmlDocument Client::sendAction(const Action& action) const
+{
+    IXmlDocument result;
+    throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &result));
+    
+    return result;
+}
+
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
     Client* pClient = reinterpret_cast<Client*>(pCookie);
@@ -127,5 +175,15 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
     
     return 0;
 }
+
+void Client::throwOnUPnPError(int32_t errorCode)
+{
+    if (errorCode != UPNP_E_SUCCESS)
+    {
+        throw errorCode;
+    }
+}
+
+
 
 }

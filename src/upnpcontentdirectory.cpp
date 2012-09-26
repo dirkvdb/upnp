@@ -29,9 +29,6 @@
 
 using namespace utils;
 
-static const char* ContentDirectoryServiceType = "urn:schemas-upnp-org:service:ContentDirectory:1";
-
-
 namespace upnp
 {
 
@@ -47,7 +44,7 @@ void ContentDirectory::setDevice(std::shared_ptr<Device> device)
     m_SearchCaps.clear();
     m_SortCaps.clear();
     m_SystemUpdateId.clear();
-    m_Device = device;
+    m_Service = device->m_Services[ServiceType::ContentDirectory];
     
     try { querySearchCapabilities(); }
     catch (std::exception& e) { log::error("Failed to obtain search capabilities:", e.what()); }
@@ -76,11 +73,8 @@ const std::vector<Property>& ContentDirectory::getSortCapabilities() const
 
 void ContentDirectory::querySearchCapabilities()
 {
-    Action action("GetSearchCapabilities", ContentDirectoryServiceType);
-    
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
-    
+    Action action("GetSearchCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
+    IXmlDocument result = sendAction(action);
     auto caps = stringops::tokenize(getFirstElementValue(result, "SearchCaps"), ",");
     
     for (auto& cap : caps)
@@ -91,11 +85,8 @@ void ContentDirectory::querySearchCapabilities()
 
 void ContentDirectory::querySortCapabilities()
 {
-    Action action("GetSortCapabilities", ContentDirectoryServiceType);
-    
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
-    
+    Action action("GetSortCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
+    IXmlDocument result = sendAction(action);
     auto caps = stringops::tokenize(getFirstElementValue(result, "SortCaps"), ",");
     
     for (auto& cap : caps)
@@ -106,10 +97,8 @@ void ContentDirectory::querySortCapabilities()
 
 void ContentDirectory::querySystemUpdateID()
 {
-    Action action("GetSystemUpdateID", ContentDirectoryServiceType);
-    
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    Action action("GetSystemUpdateID", m_Service.m_ControlURL, ServiceType::ContentDirectory);
+    IXmlDocument result = sendAction(action);
     
     m_SystemUpdateId = getFirstElementValue(result, "Id");
 }
@@ -167,7 +156,7 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
 {
     m_Abort = false;
     
-    Action action("Search", ContentDirectoryServiceType);
+    Action action("Search", m_Service.m_ControlURL, ServiceType::ContentDirectory);
     action.addArgument("ObjectID", objectId);
     action.addArgument("SearchCriteria", criteria);
     action.addArgument("Filter", filter);
@@ -175,8 +164,7 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
     action.addArgument("RequestedCount", numericops::toString(limit));
     action.addArgument("SortCriteria", sort);
     
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, action.getActionDocument(), &result));
+    IXmlDocument result = m_Client.sendAction(action);
     
     ActionResult searchResult;
     IXmlDocument searchResultDoc = parseBrowseResult(result, searchResult);
@@ -207,7 +195,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
     }
 }
 
-IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+IXmlDocument ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -215,7 +203,7 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
     log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
 #endif
     
-    Action browseAction("Browse", ContentDirectoryServiceType);
+    Action browseAction("Browse", m_Service.m_ControlURL, ServiceType::ContentDirectory);
     browseAction.addArgument("ObjectID", objectId);
     browseAction.addArgument("BrowseFlag", flag);
     browseAction.addArgument("Filter", filter);
@@ -223,10 +211,7 @@ IXML_Document* ContentDirectory::browseAction(const std::string& objectId, const
     browseAction.addArgument("RequestedCount", numericops::toString(limit));
     browseAction.addArgument("SortCriteria", sort);
     
-    IXML_Document* pResult = nullptr;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::ContentDirectory].m_ControlURL.c_str(), ContentDirectoryServiceType, nullptr, browseAction.getActionDocument(), &pResult));
-    
-    return pResult;
+    return m_Client.sendAction(browseAction);
 }
 
 IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, ActionResult& result)
@@ -437,6 +422,21 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& do
     }
     
     return items;
+}
+
+IXmlDocument ContentDirectory::sendAction(const Action& action)
+{
+    try
+    {
+        return m_Client.sendAction(action);
+    }
+    catch (int32_t errorCode)
+    {
+        handleUPnPResult(errorCode);
+    }
+    
+    assert(false);
+    return IXmlDocument();
 }
 
 void ContentDirectory::handleUPnPResult(int errorCode)

@@ -27,7 +27,6 @@
 #include "utils/numericoperations.h"
 
 static const int32_t defaultTimeout = 1801;
-static const char* RenderingControlServiceType = "urn:schemas-upnp-org:service:RenderingControl:1";
 
 using namespace utils;
 using namespace std::placeholders;
@@ -38,17 +37,17 @@ namespace upnp
 RenderingControl::RenderingControl(Client& client)
 : m_Client(client)
 , m_currentVolume(0)
+, m_minVolume(0)
 , m_maxVolume(100)
 {
 }
 
 void RenderingControl::setDevice(std::shared_ptr<Device> device)
 {
-    m_Device = device;
-    
-    if (m_Device->implementsService(ServiceType::RenderingControl))
+    if (device->implementsService(ServiceType::RenderingControl))
     {
-        parseServiceDescription(m_Device->m_Services[ServiceType::RenderingControl].m_SCPDUrl);
+        m_Service = device->m_Services[ServiceType::RenderingControl];
+        parseServiceDescription(m_Service.m_SCPDUrl);
     }
 }
 
@@ -57,42 +56,21 @@ void RenderingControl::subscribe()
     unsubscribe();
     
     m_Client.UPnPEventOccurredEvent.connect(std::bind(&RenderingControl::eventOccurred, this, _1), this);
-    
-    int ret = UpnpSubscribeAsync(m_Client, m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionURL.c_str(), defaultTimeout, &RenderingControl::eventCb, this);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        throw std::logic_error("Failed to subscribe to UPnP device:" + numericops::toString(ret));
-    }
+    m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, defaultTimeout, &RenderingControl::eventCb, this);
 }
 
 void RenderingControl::unsubscribe()
 {
-    if (!m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID.empty())
+    if (!m_Service.m_EventSubscriptionID.empty())
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
-        
-        int ret = UpnpUnSubscribe(m_Client, &(m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID[0]));
-        if (ret != UPNP_E_SUCCESS)
-        {
-            log::warn("Failed to unsubscribe from device:", m_Device->m_FriendlyName);
-        }
+        m_Client.unsubscribeFromService(&(m_Service.m_EventSubscriptionID[0]));
     }
-}
-
-IXmlDocument RenderingControl::executeAction(Action actionType, const std::string& connectionId)
-{
-    upnp::Action action(actionToString(actionType), RenderingControlServiceType);
-    action.addArgument("InstanceID", connectionId);
-    
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::RenderingControl].m_ControlURL.c_str(), RenderingControlServiceType, nullptr, action.getActionDocument(), &result));
-    
-    return result;
 }
 
 IXmlDocument RenderingControl::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
 {
-    upnp::Action action(actionToString(actionType), RenderingControlServiceType);
+    upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, ServiceType::RenderingControl);
     action.addArgument("InstanceID", connectionId);
     
     for (auto& arg : args)
@@ -100,10 +78,17 @@ IXmlDocument RenderingControl::executeAction(Action actionType, const std::strin
         action.addArgument(arg.first, arg.second);
     }
     
-    IXmlDocument result;
-    handleUPnPResult(UpnpSendAction(m_Client, m_Device->m_Services[ServiceType::RenderingControl].m_ControlURL.c_str(), RenderingControlServiceType, nullptr, action.getActionDocument(), &result));
+    try
+    {
+        return m_Client.sendAction(action);
+    }
+    catch (int32_t errorCode)
+    {
+        handleUPnPResult(errorCode);
+    }
     
-    return result;
+    assert(false);
+    return IXmlDocument();
 }
 
 
@@ -174,7 +159,7 @@ void RenderingControl::handleUPnPResult(int errorCode)
 
 void RenderingControl::eventOccurred(Upnp_Event* pEvent)
 {
-    if (pEvent->Sid == m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID)
+    if (pEvent->Sid == m_Service.m_EventSubscriptionID)
     {
         try
         {
@@ -240,12 +225,12 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
                 if (pSubEvent->Sid)
                 {
                     log::info(pSubEvent->Sid);
-                    rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID = pSubEvent->Sid;
-                    log::info("Successfully subscribed to", rc->m_Device->m_FriendlyName, "id =", pSubEvent->Sid);
+                    rc->m_Service.m_EventSubscriptionID = pSubEvent->Sid;
+                    log::info("Successfully subscribed to rendering control service id =", pSubEvent->Sid);
                 }
                 else
                 {
-                    rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID.clear();
+                    rc->m_Service.m_EventSubscriptionID.clear();
                     log::error("Subscription id for device is empty");
                 }
             }
@@ -256,17 +241,19 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
         {
             Upnp_Event_Subscribe* pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
             
-            Upnp_SID newSID;
-            int32_t timeout = defaultTimeout;
-            int ret = UpnpSubscribe(rc->m_Client, pSubEvent->PublisherUrl, &timeout, newSID);
-            if (ret == UPNP_E_SUCCESS)
+            try
             {
-                rc->m_Device->m_Services[ServiceType::RenderingControl].m_EventSubscriptionID = newSID;
+                Upnp_SID newSID;
+                int32_t timeout = defaultTimeout;
+                
+                rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout, newSID);
+                rc->m_Service.m_EventSubscriptionID = newSID;
+                
                 log::info("RenderingControl subscription renewed: \n", newSID);
             }
-            else
+            catch (std::exception& e)
             {
-                log::error("Failed to renew event subscription: ", ret);
+                log::error(std::string("Failed to renew RenderingControl event subscription: ") + e.what());
             }
             break;
         }

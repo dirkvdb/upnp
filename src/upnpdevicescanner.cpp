@@ -31,13 +31,6 @@ using namespace std::chrono;
 namespace upnp
 {
 
-static const char* MediaServerDeviceType            = "urn:schemas-upnp-org:device:MediaServer:1";
-static const char* MediaRendererDeviceType          = "urn:schemas-upnp-org:device:MediaRenderer:1";
-static const char* ContentDirectoryServiceType      = "urn:schemas-upnp-org:service:ContentDirectory:1";
-static const char* RenderingControlServiceType      = "urn:schemas-upnp-org:service:RenderingControl:1";
-static const char* ConnectionManagerServiceType     = "urn:schemas-upnp-org:service:ConnectionManager:1";
-static const char* AVTransportServiceType           = "urn:schemas-upnp-org:service:AVTransport:1";
-
 static const int timeCheckInterval = 60;
 
 DeviceScanner::DeviceScanner(Client& client, Device::Type type)
@@ -137,28 +130,9 @@ void DeviceScanner::checkForTimeoutThread()
     }
 }
 
-const char* deviceTypeToString(Device::Type type)
-{
-    switch (type)
-    {
-    case Device::MediaServer:
-        return MediaServerDeviceType;
-    case Device::MediaRenderer:
-        return MediaRendererDeviceType;
-    default:
-        throw std::logic_error("Invalid device type encountered");
-    }
-}
-
 void DeviceScanner::refresh()
 {
-    log::debug("Send UPnP discovery");
     
-    int rc = UpnpSearchAsync(m_Client, 5, deviceTypeToString(m_Type), &m_Client);
-    if (UPNP_E_SUCCESS != rc)
-    {
-        log::error("Error sending search request:", rc);
-    }
 }
 
 uint32_t DeviceScanner::getDeviceCount()
@@ -195,24 +169,6 @@ std::string DeviceScanner::getFirstDocumentItem(IXmlDocument& doc, const std::st
     return result;
 }
 
-ServiceType stringToServiceType(const std::string& type)
-{
-    if (type == ContentDirectoryServiceType)    return ServiceType::ContentDirectory;
-    if (type == AVTransportServiceType)         return ServiceType::AVTransport;
-    if (type == ConnectionManagerServiceType)   return ServiceType::ConnectionManager;
-    if (type == RenderingControlServiceType)    return ServiceType::RenderingControl;
-    
-    return ServiceType::Unknown;
-}
-
-Device::Type stringToDeviceType(const std::string& type)
-{
-    if (type == MediaServerDeviceType)    return Device::MediaServer;
-    if (type == MediaRendererDeviceType)  return Device::MediaRenderer;
-    
-    return Device::Unknown;
-}
-
 IXmlNodeList DeviceScanner::getFirstServiceList(IXmlDocument& doc)
 {
     IXmlNodeList serviceList;
@@ -245,7 +201,7 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType ser
         IXML_Element* pService = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(serviceList, i));
         
         Service service;
-        service.m_Type = stringToServiceType(getFirstElementValue(pService, "serviceType"));
+        service.m_Type = stringToServiceTypeUrn(getFirstElementValue(pService, "serviceType"));
         
         if (service.m_Type == serviceType)
         {
@@ -299,7 +255,7 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType ser
 
 void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
 {
-    if (m_Type != stringToDeviceType(pDiscovery->DeviceType))
+    if (m_Type != Device::stringToDeviceType(pDiscovery->DeviceType))
     {
         return;
     }
@@ -329,7 +285,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
     
     device->m_Location      = pDiscovery->Location;
     device->m_UDN           = getFirstDocumentItem(doc, "UDN");
-    device->m_Type          = stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
+    device->m_Type          = Device::stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
     device->m_TimeoutTime   = system_clock::now() + seconds(pDiscovery->Expires);
     
     if (device->m_UDN.empty() || device->m_Type != m_Type)

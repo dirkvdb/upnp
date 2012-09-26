@@ -35,15 +35,14 @@
 namespace upnp
 {
 
-class Client;
+class IClient;
 
 class Browser
 {
 public:
-    Browser(const Client& client);
+    Browser(const IClient& client);
     ~Browser();
 
-    std::shared_ptr<Device> getDevice() const;
     void setDevice(std::shared_ptr<Device> device);
     
     // fetch the child containers and items of container with id 'containerId', if the containers' metadata is not known yet it will be also be fetched
@@ -91,7 +90,7 @@ private:
     void getItemsThread(const Item& container, uint32_t limit, uint32_t offset, const std::string& sort, utils::ISubscriber<Item>& subscriber, void* pData);
     void getMetaDataThread(std::shared_ptr<Item> item, const std::string& filter, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, void* pData);
 
-    const Client&                       m_Client;
+    const IClient&                      m_Client;
     std::shared_ptr<Device>             m_Device;
     std::string                         m_SubscriptionId;
     utils::ThreadPool                   m_ThreadPool;
