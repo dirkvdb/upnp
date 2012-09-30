@@ -39,13 +39,14 @@ public:
     virtual void destroy() = 0;
     virtual void reset() = 0;
     
-    virtual void searchDevices(Device::Type type, int timeout, void* cookie) const = 0;
+    virtual void searchDevices(Device::Type type, int timeout) const = 0;
     
     virtual void subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const = 0;
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const = 0;
     virtual void unsubscribeFromService(const Upnp_SID subscriptionId) const = 0;
     
     virtual IXmlDocument sendAction(const Action& action) const = 0;
+    virtual IXmlDocument downloadXmlDocument(const std::string& url) const = 0;
     
     utils::Signal<void(Upnp_Discovery*)> UPnPDeviceDiscoveredEvent;
     utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;

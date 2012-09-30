@@ -51,7 +51,7 @@ public:
         Record
     };
 
-    MediaRenderer(Client& cp);
+    MediaRenderer(IClient& cp);
     MediaRenderer(const MediaRenderer&) = delete;
     
     std::shared_ptr<Device> getDevice();
@@ -89,7 +89,7 @@ private:
     std::vector<ProtocolInfo>           m_ProtocolInfo;
     std::set<Action>                    m_AvailableActions;
     
-    Client&                             m_Client;
+    IClient&                            m_Client;
     ConnectionManager                   m_ConnectionMgr;
     RenderingControl                    m_RenderingControl;
     std::unique_ptr<AVTransport>        m_AVtransport;

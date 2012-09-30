@@ -31,7 +31,7 @@ namespace upnp
 {
 
 class Action;
-class Client;
+class IClient;
     
 class RenderingControl
 {
@@ -57,12 +57,14 @@ public:
         LastChange //event
     };
     
-    RenderingControl(Client& client);
+    RenderingControl(IClient& client);
     
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     
     void subscribe();
     void unsubscribe();
+    
+    bool supportsAction(Action action);
     
     void increaseVolume(const std::string& connectionId, uint32_t percentage);
     void decreaseVolume(const std::string& connectionId, uint32_t percentage);
@@ -81,15 +83,15 @@ private:
     static Action actionFromString(const std::string& action);
     static std::string actionToString(Action action);
     static Variable variableFromString(const std::string& var);
-    std::string variableToString(Variable var);
+    static std::string variableToString(Variable var);
 
-    Client&                     m_Client;
+    IClient&                    m_Client;
     Service                     m_Service;
     std::set<Action>            m_SupportedActions;
     
-    uint32_t                    m_currentVolume;
-    int32_t                     m_minVolume;
-    int32_t                     m_maxVolume;
+    uint32_t                    m_CurrentVolume;
+    int32_t                     m_MinVolume;
+    int32_t                     m_MaxVolume;
 };
 
 }

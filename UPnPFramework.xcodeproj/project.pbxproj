@@ -30,8 +30,11 @@
 		4303F211161216A80057A64C /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A52150E9B300093A521 /* upnphttpget.h */; };
 		4303F212161216A80057A64C /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
 		4303F21A161232220057A64C /* libUPnPFrameworkNative.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4303F217161216A80057A64C /* libUPnPFrameworkNative.a */; };
-		4303F21B161232360057A64C /* libUtils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 433638471562DECF0018D554 /* libUtils.a */; };
 		432C62B5154EEA2A00068315 /* upnpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 432C62B4154EEA2900068315 /* upnpclient.cpp */; };
+		435654761613B6BF00868D6B /* libgmock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 435654741613B6BF00868D6B /* libgmock.a */; };
+		435654771613B6BF00868D6B /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 435654751613B6BF00868D6B /* libgtest.a */; };
+		4356547A1613B90400868D6B /* libUtils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 433638471562DECF0018D554 /* libUtils.a */; };
+		435654811613BC3500868D6B /* upnprenderingcontroltest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4356547D1613B9B200868D6B /* upnprenderingcontroltest.cpp */; };
 		4357AEF4154BF7470021F9BE /* upnprenderingcontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */; };
 		4357AEF7154BFE900021F9BE /* upnpaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AEF6154BFE900021F9BE /* upnpaction.cpp */; };
 		4357AEFB154C58C00021F9BE /* upnpprotocolinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AEFA154C58C00021F9BE /* upnpprotocolinfo.cpp */; };
@@ -50,7 +53,7 @@
 		438A7A59150E9B300093A521 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A52150E9B300093A521 /* upnphttpget.h */; };
 		438A7A5A150E9B300093A521 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
 		439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */; };
-		43E2F21316124315008ED6EB /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43E2F20516124276008ED6EB /* libgtest.a */; };
+		43CC5A961617613F001B72D8 /* upnpavtransporttest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */; };
 		43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */; };
 /* End PBXBuildFile section */
 
@@ -83,33 +86,12 @@
 			remoteGlobalIDString = 433638091562DE440018D554;
 			remoteInfo = Utils;
 		};
-		43E2F20216124276008ED6EB /* PBXContainerItemProxy */ = {
+		435654781613B76600868D6B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 43E2F1EF16124276008ED6EB /* gtest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4539C8FF0EC27F6400A70F4C;
-			remoteInfo = "gtest-framework";
-		};
-		43E2F20416124276008ED6EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 43E2F1EF16124276008ED6EB /* gtest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 40C848FA101A209C0083642A;
-			remoteInfo = "gtest-static";
-		};
-		43E2F20616124276008ED6EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 43E2F1EF16124276008ED6EB /* gtest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 40C8490B101A217E0083642A;
-			remoteInfo = "gtest_main-static";
-		};
-		43E2F211161242E0008ED6EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 43E2F1EF16124276008ED6EB /* gtest.xcodeproj */;
+			containerPortal = 4336383F1562DECF0018D554 /* Utils.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 40C848F9101A209C0083642A;
-			remoteInfo = "gtest-static";
+			remoteGlobalIDString = 433638091562DE440018D554;
+			remoteInfo = Utils;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -154,6 +136,12 @@
 		4336383F1562DECF0018D554 /* Utils.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utils.xcodeproj; path = modules/utils/Utils.xcodeproj; sourceTree = "<group>"; };
 		4341AB361387B66600297297 /* libUPnPFramework.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUPnPFramework.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4356541A16137C1800868D6B /* upnpclientinterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpclientinterface.h; sourceTree = "<group>"; };
+		435654741613B6BF00868D6B /* libgmock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock.a; path = modules/gmock/lib/libgmock.a; sourceTree = "<group>"; };
+		435654751613B6BF00868D6B /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest.a; path = modules/gmock/lib/libgtest.a; sourceTree = "<group>"; };
+		4356547C1613B96800868D6B /* upnpclientmock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpclientmock.h; sourceTree = "<group>"; };
+		4356547D1613B9B200868D6B /* upnprenderingcontroltest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnprenderingcontroltest.cpp; sourceTree = "<group>"; };
+		435654821614D10100868D6B /* testxmls.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = testxmls.h; sourceTree = "<group>"; };
+		4356548316165F9100868D6B /* eventlistenermock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = eventlistenermock.h; sourceTree = "<group>"; };
 		4357AEF1154BF7280021F9BE /* upnprenderingcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnprenderingcontrol.h; sourceTree = "<group>"; };
 		4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnprenderingcontrol.cpp; path = src/upnprenderingcontrol.cpp; sourceTree = "<group>"; };
 		4357AEF5154BFE7F0021F9BE /* upnpaction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpaction.h; sourceTree = "<group>"; };
@@ -184,7 +172,7 @@
 		438A7A53150E9B300093A521 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpitem.h; sourceTree = "<group>"; };
 		439EBBCD1551BD48000177C5 /* upnpavtransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpavtransport.h; sourceTree = "<group>"; };
 		439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransport.cpp; path = src/upnpavtransport.cpp; sourceTree = "<group>"; };
-		43E2F1EF16124276008ED6EB /* gtest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = gtest.xcodeproj; path = "modules/gtest-1.6.0/xcode/gtest.xcodeproj"; sourceTree = "<group>"; };
+		43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpavtransporttest.cpp; sourceTree = "<group>"; };
 		43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpwebserver.h; sourceTree = "<group>"; };
 		43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpwebserver.cpp; path = src/upnpwebserver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -194,8 +182,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43E2F21316124315008ED6EB /* libgtest.a in Frameworks */,
-				4303F21B161232360057A64C /* libUtils.a in Frameworks */,
+				4356547A1613B90400868D6B /* libUtils.a in Frameworks */,
+				435654761613B6BF00868D6B /* libgmock.a in Frameworks */,
+				435654771613B6BF00868D6B /* libgtest.a in Frameworks */,
 				4303F21A161232220057A64C /* libUPnPFrameworkNative.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -220,9 +209,13 @@
 		4303F15E1612080E0057A64C /* UnitTests */ = {
 			isa = PBXGroup;
 			children = (
+				4356547B1613B95700868D6B /* Mocks */,
 				4303F188161208630057A64C /* main.cpp */,
 				4303F189161208630057A64C /* testutils.h */,
 				4303F18A161208630057A64C /* xmlutilstest.cpp */,
+				4356547D1613B9B200868D6B /* upnprenderingcontroltest.cpp */,
+				435654821614D10100868D6B /* testxmls.h */,
+				43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */,
 			);
 			path = UnitTests;
 			sourceTree = "<group>";
@@ -238,7 +231,8 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
-				43E2F1EF16124276008ED6EB /* gtest.xcodeproj */,
+				435654741613B6BF00868D6B /* libgmock.a */,
+				435654751613B6BF00868D6B /* libgtest.a */,
 				4336383F1562DECF0018D554 /* Utils.xcodeproj */,
 				4303F15E1612080E0057A64C /* UnitTests */,
 				4341AB371387B66600297297 /* Products */,
@@ -271,6 +265,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4356547B1613B95700868D6B /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				4356547C1613B96800868D6B /* upnpclientmock.h */,
+				4356548316165F9100868D6B /* eventlistenermock.h */,
+			);
+			name = Mocks;
+			sourceTree = "<group>";
+		};
 		438A7A4C150E9B300093A521 /* upnp */ = {
 			isa = PBXGroup;
 			children = (
@@ -297,16 +300,6 @@
 			);
 			name = upnp;
 			path = inc/upnp;
-			sourceTree = "<group>";
-		};
-		43E2F1F016124276008ED6EB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				43E2F20316124276008ED6EB /* gtest.framework */,
-				43E2F20516124276008ED6EB /* libgtest.a */,
-				43E2F20716124276008ED6EB /* libgtest_main.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -350,7 +343,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				43E2F212161242E0008ED6EB /* PBXTargetDependency */,
+				435654791613B76600868D6B /* PBXTargetDependency */,
 				4303F219161216C30057A64C /* PBXTargetDependency */,
 			);
 			name = UPnPUnitTests;
@@ -417,10 +410,6 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 43E2F1F016124276008ED6EB /* Products */;
-					ProjectRef = 43E2F1EF16124276008ED6EB /* gtest.xcodeproj */;
-				},
-				{
 					ProductGroup = 433638401562DECF0018D554 /* Products */;
 					ProjectRef = 4336383F1562DECF0018D554 /* Utils.xcodeproj */;
 				},
@@ -442,27 +431,6 @@
 			remoteRef = 433638461562DECF0018D554 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		43E2F20316124276008ED6EB /* gtest.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = gtest.framework;
-			remoteRef = 43E2F20216124276008ED6EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		43E2F20516124276008ED6EB /* libgtest.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libgtest.a;
-			remoteRef = 43E2F20416124276008ED6EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		43E2F20716124276008ED6EB /* libgtest_main.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libgtest_main.a;
-			remoteRef = 43E2F20616124276008ED6EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -470,6 +438,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43CC5A961617613F001B72D8 /* upnpavtransporttest.cpp in Sources */,
+				435654811613BC3500868D6B /* upnprenderingcontroltest.cpp in Sources */,
 				4303F18B161208630057A64C /* main.cpp in Sources */,
 				4303F18C161208630057A64C /* xmlutilstest.cpp in Sources */,
 			);
@@ -537,10 +507,10 @@
 			name = Utils;
 			targetProxy = 4336384A1562E0560018D554 /* PBXContainerItemProxy */;
 		};
-		43E2F212161242E0008ED6EB /* PBXTargetDependency */ = {
+		435654791613B76600868D6B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = "gtest-static";
-			targetProxy = 43E2F211161242E0008ED6EB /* PBXContainerItemProxy */;
+			name = Utils;
+			targetProxy = 435654781613B76600868D6B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -548,8 +518,8 @@
 		4303F1641612080E0057A64C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -567,10 +537,13 @@
 				LIBRARY_SEARCH_PATHS = /opt/ioslibs/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-lixml",
 					"-lthreadutil",
 					"-lupnp",
+					"-lgmock",
+					"-lgtest",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -582,8 +555,8 @@
 		4303F1651612080E0057A64C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -591,15 +564,19 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
 				LIBRARY_SEARCH_PATHS = /opt/ioslibs/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-lixml",
 					"-lthreadutil",
 					"-lupnp",
+					"-lgmock",
+					"-lgtest",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -613,7 +590,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -639,7 +616,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -703,7 +680,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -727,7 +704,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;

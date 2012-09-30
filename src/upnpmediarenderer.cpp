@@ -29,7 +29,7 @@ using namespace std::placeholders;
 namespace upnp
 {
 
-MediaRenderer::MediaRenderer(Client& client)
+MediaRenderer::MediaRenderer(IClient& client)
 : m_Client(client)
 , m_ConnectionMgr(client)
 , m_RenderingControl(client)
@@ -44,24 +44,31 @@ std::shared_ptr<Device> MediaRenderer::getDevice()
 
 void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
 {
-    if (m_Device)
+    try
     {
-        deactivateEvents();
-    }
+        if (m_Device)
+        {
+            deactivateEvents();
+        }
 
-    m_Device = device;
-    m_ConnectionMgr.setDevice(device);
-    m_RenderingControl.setDevice(device);
-    
-    if (m_Device->implementsService(ServiceType::AVTransport))
-    {
-        m_AVtransport.reset(new AVTransport(m_Client));
-        m_AVtransport->setDevice(device);
+        m_Device = device;
+        m_ConnectionMgr.setDevice(device);
+        m_RenderingControl.setDevice(device);
+        
+        if (m_Device->implementsService(ServiceType::AVTransport))
+        {
+            m_AVtransport.reset(new AVTransport(m_Client));
+            m_AVtransport->setDevice(device);
+        }
+        
+        m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
+        
+        activateEvents();
     }
-    
-    m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
-    
-    activateEvents();
+    catch (std::exception& e)
+    {
+        throw std::logic_error(std::string("Failed to set renderer device:") + e.what());
+    }
 }
 
 bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const

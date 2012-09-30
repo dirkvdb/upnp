@@ -14,45 +14,28 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ACTION_H
-#define UPNP_ACTION_H
+#ifndef EVENT_LISTENER_MOCK_H
+#define EVENT_LISTENER_MOCK_H
 
-#include <string>
-#include <vector>
+#include <gtest/gtest.h>
 
-#include <upnp/upnp.h>
-#include <upnp/upnptools.h>
-
-#include "upnp/upnptypes.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnpavtransport.h"
+#include "upnprenderingcontrol.h"
 
 namespace upnp
 {
-    
-class Action
+namespace test
+{
+
+class EventListenerMock
 {
 public:
-    Action(const std::string& name, const std::string& url, ServiceType serviceType);
-    
-    void addArgument(const std::string& name, const std::string& value);
+    MOCK_METHOD1(RenderingControlLastChangedEvent, void(const std::map<RenderingControl::Variable, std::string>&));
+    MOCK_METHOD1(AVTransportLastChangedEvent, void(const std::map<AVTransport::Variable, std::string>&));
+};
 
-    const IXmlDocument& getActionDocument() const;
-    
-    std::string getName() const;
-    std::string getUrl() const;
-    std::string getServiceTypeUrn() const;
-    ServiceType getServiceType() const;
-    
-    bool operator==(const Action& other) const;
-    
-private:
-    std::string                 m_Name;
-    std::string                 m_Url;
-    ServiceType                 m_ServiceType;
-    
-    IXmlDocument                m_ActionDoc;
-}; 
-    
 }
+}
+
 
 #endif

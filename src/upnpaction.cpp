@@ -14,6 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#include "utils/log.h"
 #include "upnp/upnpaction.h"
 
 #include <stdexcept>
@@ -24,31 +25,27 @@ namespace upnp
 Action::Action(const std::string& name, const std::string& url, ServiceType serviceType)
 : m_Name(name)
 , m_Url(url)
-, m_ServiceType(serviceTypeToUrnString(serviceType))
-, m_pAction(nullptr)
+, m_ServiceType(serviceType)
 {
-    m_pAction = UpnpMakeAction(name.c_str(), m_ServiceType.c_str(), 0, nullptr);
-}
-
-Action::~Action()
-{
-    if (m_pAction)
-    {
-        ixmlDocument_free(m_pAction);
-    }
+    m_ActionDoc = UpnpMakeAction(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr);
 }
 
 void Action::addArgument(const std::string& name, const std::string& value)
 {
-    if (UPNP_E_SUCCESS != UpnpAddToAction(&m_pAction, m_Name.c_str(), m_ServiceType.c_str(), name.c_str(), value.c_str()))
+    if (UPNP_E_SUCCESS != UpnpAddToAction(&m_ActionDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
     {
         throw std::logic_error("Failed to add action to UPnP request: " + name);
     }
 }
 
-IXML_Document* Action::getActionDocument() const
+const IXmlDocument& Action::getActionDocument() const
 {
-    return m_pAction;
+    return m_ActionDoc;
+}
+
+std::string Action::getName() const
+{
+    return m_Name;
 }
 
 std::string Action::getUrl() const
@@ -58,7 +55,22 @@ std::string Action::getUrl() const
 
 std::string Action::getServiceTypeUrn() const
 {
+    return serviceTypeToUrnString(m_ServiceType);
+}
+
+ServiceType Action::getServiceType() const
+{
     return m_ServiceType;
+}
+
+bool Action::operator==(const Action& other) const
+{
+    if (!m_ActionDoc && other.m_ActionDoc)
+    {
+        return false;
+    }
+
+    return m_ActionDoc.toString() == other.m_ActionDoc.toString();
 }
     
 }

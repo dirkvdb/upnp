@@ -31,7 +31,7 @@ namespace upnp
     
 class Item;
 class Device;
-class Client;
+class IClient;
 
 class MediaServer
 {
@@ -44,7 +44,7 @@ public:
         Descending
     };
 
-    MediaServer(Client& client);
+    MediaServer(IClient& client);
     ~MediaServer();
     
     void setDevice(const std::shared_ptr<Device>& device);
@@ -91,7 +91,7 @@ private:
     std::shared_ptr<Device>             m_Device;
     std::vector<ProtocolInfo>           m_ProtocolInfo;
     
-    Client&                             m_Client;
+    IClient&                            m_Client;
     ContentDirectory                    m_ContentDirectory;
     ConnectionManager                   m_ConnectionMgr;
     std::unique_ptr<AVTransport>        m_AVTransport;

@@ -16,7 +16,7 @@
 
 #include "upnp/upnpconnectionmanager.h"
 
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpaction.h"
 #include "upnp/upnputils.h"
@@ -33,7 +33,7 @@ namespace upnp
 std::string ConnectionManager::UnknownConnectionId = "-1";
 std::string ConnectionManager::DefaultConnectionId = "0";
 
-ConnectionManager::ConnectionManager(const Client& client)
+ConnectionManager::ConnectionManager(IClient& client)
 : m_Client(client)
 {
 }
@@ -59,7 +59,7 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
     upnp::Action action("GetProtocolInfo", m_Service.m_ControlURL, ServiceType::ConnectionManager);
     IXmlDocument result = sendAction(action);
     
-    auto infos = stringops::tokenize(getFirstElementValue(result, "Sink"), ",");
+    auto infos = stringops::tokenize(result.getChildElementValueRecursive("Sink"), ",");
     for (auto& info : infos)
     {
         try
@@ -89,9 +89,9 @@ ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& proto
     IXmlDocument result = sendAction(action);
     
     ConnectionInfo connInfo;
-    connInfo.connectionId               = getFirstElementValue(result, "ConnectionID");
-    connInfo.avTransportId              = getFirstElementValue(result, "AVTransportID");
-    connInfo.renderingControlServiceId  = getFirstElementValue(result, "RcsID");
+    connInfo.connectionId               = result.getChildElementValue("ConnectionID");
+    connInfo.avTransportId              = result.getChildElementValue("AVTransportID");
+    connInfo.renderingControlServiceId  = result.getChildElementValue("RcsID");
     
     return connInfo;
 }
@@ -109,7 +109,7 @@ std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
     upnp::Action action("GetCurrentConnectionIDs", m_Service.m_ControlURL, ServiceType::ConnectionManager);
     
     IXmlDocument result = sendAction(action);
-    std::vector<std::string> ids = stringops::tokenize(getFirstElementValue(result, "ConnectionIDs"), ",");
+    std::vector<std::string> ids = stringops::tokenize(result.getChildElementValue("ConnectionIDs"), ",");
     
     return ids;
 }
@@ -123,13 +123,13 @@ ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& co
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
-    connInfo.avTransportId              = getFirstElementValue(result, "AVTransportID");
-    connInfo.renderingControlServiceId  = getFirstElementValue(result, "RcsID");
-    connInfo.protocolInfo               = ProtocolInfo(getFirstElementValue(result, "ProtocolInfo"));
-    connInfo.peerConnectionManager      = getFirstElementValue(result, "PeerConnectionManager");
-    connInfo.peerConnectionId           = getFirstElementValue(result, "PeerConnectionID");
-    connInfo.direction                  = directionFromString(getFirstElementValue(result, "Direction"));
-    connInfo.connectionStatus           = connectionStatusFromString(getFirstElementValue(result, "Status"));
+    connInfo.avTransportId              = result.getChildElementValue("AVTransportID");
+    connInfo.renderingControlServiceId  = result.getChildElementValue("RcsID");
+    connInfo.protocolInfo               = ProtocolInfo(result.getChildElementValue("ProtocolInfo"));
+    connInfo.peerConnectionManager      = result.getChildElementValue("PeerConnectionManager");
+    connInfo.peerConnectionId           = result.getChildElementValue("PeerConnectionID");
+    connInfo.direction                  = directionFromString(result.getChildElementValue("Direction"));
+    connInfo.connectionStatus           = connectionStatusFromString(result.getChildElementValue("Status"));
     
     return connInfo;
 }

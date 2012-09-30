@@ -31,7 +31,7 @@ namespace upnp
 {
 
 class Action;
-class Client;
+class IClient;
     
 class ConnectionManager
 {
@@ -48,7 +48,7 @@ public:
     static std::string UnknownConnectionId;
     static std::string DefaultConnectionId;
 
-    ConnectionManager(const Client& cp);
+    ConnectionManager(IClient& cp);
     
     void setDevice(const std::shared_ptr<Device>& device);
     
@@ -67,7 +67,7 @@ private:
     static Action actionFromString(const std::string& action);
     static void handleUPnPResult(int errorCode);
     
-    const Client&               m_Client;
+    IClient&                    m_Client;
     Service                     m_Service;
     std::set<Action>            m_SupportedActions;
 };

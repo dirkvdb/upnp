@@ -81,11 +81,11 @@ void Client::reset()
     initialize();
 }
 
-void Client::searchDevices(Device::Type type, int timeout, void* cookie) const
+void Client::searchDevices(Device::Type type, int timeout) const
 {
     log::debug("Send UPnP discovery");
     
-    int rc = UpnpSearchAsync(m_Client, timeout, Device::deviceTypeToString(type).c_str(), cookie);
+    int rc = UpnpSearchAsync(m_Client, timeout, Device::deviceTypeToString(type).c_str(), this);
     if (UPNP_E_SUCCESS != rc)
     {
         log::error("Error sending search request:", rc);
@@ -127,8 +127,21 @@ IXmlDocument Client::sendAction(const Action& action) const
 {
     IXmlDocument result;
     throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &result));
+    log::debug(result.toString());
     
     return result;
+}
+
+IXmlDocument Client::downloadXmlDocument(const std::string& url) const
+{
+    IXmlDocument doc;
+    int ret = UpnpDownloadXmlDoc(url.c_str(), &doc);
+    if (ret != UPNP_E_SUCCESS)
+    {
+        throw std::logic_error(std::string("Error downloading xml document from ") + url);
+    }
+    
+    return doc;
 }
 
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)

@@ -26,7 +26,7 @@
 #include <upnp/upnp.h>
 
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnpxmlutils.h"
 #include "utils/signal.h"
 
@@ -36,7 +36,7 @@ namespace upnp
 class DeviceScanner
 {
 public:
-    DeviceScanner(Client& client, Device::Type type);
+    DeviceScanner(IClient& client, Device::Type type);
     ~DeviceScanner() throw();
     
     void start();
@@ -59,7 +59,7 @@ private:
     
     void checkForTimeoutThread();
     
-    Client&                                         m_Client;
+    IClient&                                        m_Client;
     Device::Type                                    m_Type;
     std::map<std::string, std::shared_ptr<Device>>  m_Devices;
     std::mutex                                      m_Mutex;

@@ -90,7 +90,7 @@ public:
         if (type == MediaServerDeviceTypeUrn)   { return Type::MediaServer; }
         if (type == MediaRendererDeviceTypeUrn) { return Type::MediaRenderer; }
         
-        throw std::logic_error("Invalid device type string encountered");
+        return Type::Unknown;
     }
 };
 

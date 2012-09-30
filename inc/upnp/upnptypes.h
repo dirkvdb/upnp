@@ -119,9 +119,9 @@ inline std::string serviceTypeToString(ServiceType type)
 inline std::string serviceTypeToUrnString(ServiceType type)
 {
     if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
-    if (type == ServiceType::RenderingControl)      return AVTransportServiceTypeUrn;
+    if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
-    if (type == ServiceType::AVTransport)           return RenderingControlServiceTypeUrn;
+    if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
     
     throw std::logic_error("Invalid service type received for urn");
 }
@@ -129,9 +129,9 @@ inline std::string serviceTypeToUrnString(ServiceType type)
 inline ServiceType stringToServiceTypeUrn(const std::string& type)
 {
     if (type == ContentDirectoryServiceTypeUrn)    return ServiceType::ContentDirectory;
-    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
-    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
     if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
+    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
+    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
     
     return ServiceType::Unknown;
 }

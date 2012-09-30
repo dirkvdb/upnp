@@ -20,6 +20,7 @@
 #include <string>
 #include <cinttypes>
 #include <memory>
+#include <iostream>
 
 namespace upnp
 {
@@ -59,6 +60,11 @@ public:
     bool                        sendsEvents = false;
     std::unique_ptr<ValueRange> valueRange;
 };
+
+inline std::ostream& operator<< (std::ostream& os, const StateVariable::ValueRange& range)
+{
+    return os << "ValueRange: [" << range.minimumValue << "-" << range.maximumValue << "] step = " << range.step;
+}
 
 }
 

@@ -33,7 +33,7 @@ namespace upnp
 
 static const int timeCheckInterval = 60;
 
-DeviceScanner::DeviceScanner(Client& client, Device::Type type)
+DeviceScanner::DeviceScanner(IClient& client, Device::Type type)
 : m_Client(client)
 , m_Type(type)
 , m_Started(false)
@@ -132,7 +132,7 @@ void DeviceScanner::checkForTimeoutThread()
 
 void DeviceScanner::refresh()
 {
-    
+    m_Client.searchDevices(m_Type, 5);
 }
 
 uint32_t DeviceScanner::getDeviceCount()
@@ -195,21 +195,19 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType ser
     
     std::string base = device->m_BaseURL.empty() ? device->m_Location : device->m_BaseURL;
     
-    int numServices = ixmlNodeList_length(serviceList);
-    for (int i = 0; i < numServices; ++i)
+    unsigned long numServices = serviceList.size();
+    for (unsigned long i = 0; i < numServices; ++i)
     {
-        IXML_Element* pService = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(serviceList, i));
+        IXmlElement serviceElem = serviceList.getNode(i);
         
         Service service;
-        service.m_Type = stringToServiceTypeUrn(getFirstElementValue(pService, "serviceType"));
-        
+        service.m_Type = stringToServiceTypeUrn(serviceElem.getChildElementValue("serviceType"));
         if (service.m_Type == serviceType)
         {
-            service.m_Id                    = getFirstElementValue(pService, "serviceId");
-            
-            std::string relControlURL       = getFirstElementValue(pService, "controlURL");
-            std::string relEventURL         = getFirstElementValue(pService, "eventSubURL");
-            std::string scpURL              = getFirstElementValue(pService, "SCPDURL");
+            service.m_Id                    = serviceElem.getChildElementValue("serviceId");
+            std::string relControlURL       = serviceElem.getChildElementValue("controlURL");
+            std::string relEventURL         = serviceElem.getChildElementValue("eventSubURL");
+            std::string scpURL              = serviceElem.getChildElementValue("SCPDURL");
             
             char url[512];
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);

@@ -17,12 +17,18 @@
 #ifndef UPNP_TEST_UTILS_H
 #define UPNP_TEST_UTILS_H
 
+#include "upnp/upnpitem.h"
+#include "upnp/upnptypes.h"
+
 namespace upnp
 {
 
-inline std::ostream& operator<< (std::ostream& os, const Item& item)
+inline IXmlDocument generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
 {
-	return os << item.getTitle() << " (" << item.getObjectId() << ")";
+    std::stringstream ss;
+    ss << "<u:" << action << "Response xmlns:u=\"" << serviceTypeToUrnString(type) << "\"></u:" << action << "Response>";
+    
+    return IXmlDocument(ss.str());
 }
 
 }

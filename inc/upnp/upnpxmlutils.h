@@ -34,9 +34,16 @@ class IXmlNodeList;
 class IXmlDocument
 {
 public:
+    enum OwnershipType
+    {
+        TakeOwnership,
+        NoOwnership
+    };
+
     IXmlDocument();
-    IXmlDocument(IXML_Document* pDoc);
-    IXmlDocument(const IXmlDocument& doc) = delete;
+    IXmlDocument(const std::string& xml);
+    IXmlDocument(IXML_Document* pDoc, OwnershipType ownership = TakeOwnership);
+    IXmlDocument(const IXmlDocument& doc);
     IXmlDocument(IXmlDocument&& doc);
     ~IXmlDocument();
 
@@ -47,10 +54,16 @@ public:
     operator bool() const;
     IXML_Document** operator &();
     
+    IXmlNode getFirstChild();
     IXmlNodeList getElementsByTagName(const std::string& tagName);
+    std::string getChildElementValue(const std::string& tagName);
+    std::string getChildElementValueRecursive(const std::string& tagName);
+    
+    std::string toString() const;
 
 private:
     IXML_Document*  m_pDoc;
+    OwnershipType   m_Ownership;
 };
 
 class IXmlNodeList
@@ -68,11 +81,30 @@ public:
     operator IXML_NodeList*() const;
     operator bool() const;
     
-    IXmlNode getNode(unsigned long index);
-    unsigned long getLength();
+    IXmlNode getNode(uint64_t index);
+    uint64_t size();
 
 private:
     IXML_NodeList*  m_pList;
+};
+
+class IXmlNamedNodeMap
+{
+public:
+    IXmlNamedNodeMap();
+    IXmlNamedNodeMap(IXML_NamedNodeMap* pNode);
+    IXmlNamedNodeMap(const IXmlNamedNodeMap& node) = delete;
+    IXmlNamedNodeMap(IXmlNamedNodeMap&& node);
+    ~IXmlNamedNodeMap();
+    
+    uint64_t size() const;
+    IXmlNode getNode(uint64_t index) const;
+    
+    operator IXML_NamedNodeMap*() const;
+    operator bool() const;
+    
+private:
+    IXML_NamedNodeMap*  m_pNodeMap;
 };
 
 class IXmlNode
@@ -88,7 +120,8 @@ public:
     
     std::string getName();
     std::string getValue();
-    std::string getAttribute(const std::string& attr);
+    IXmlNamedNodeMap getAttributes();
+    IXmlNode getParent();
     
     IXmlNode getFirstChild();
     IXmlNodeList getChildNodes();
@@ -112,8 +145,16 @@ public:
     operator bool() const;
     
     std::string getName();
+    std::string getValue();
     std::string getAttribute(const std::string& attr);
+    IXmlNamedNodeMap getAttributes();
+    
+    IXmlNode getFirstChild();
+    IXmlNodeList getChildNodes();
     IXmlNodeList getElementsByTagName(const std::string& tagName);
+    std::string getChildElementValue(const std::string& tagName);
+    
+    std::string toString();
     
 private:
     IXML_Element*  m_pElement;
@@ -128,6 +169,7 @@ public:
     
     IXmlString& operator= (const IXmlString& other) = delete;
     
+    operator std::string() const;
     operator DOMString() const;
     operator bool() const;
     
@@ -137,9 +179,6 @@ private:
 
 std::string getFirstElementAttribute(IXmlNodeList& nodeList, const std::string& item, const std::string& attribute);
 std::string getFirstElementAttribute(IXmlDocument& doc, const std::string& item, const std::string& attribute);
-std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item);
-std::string getFirstElementValue(IXmlDocument& doc, const std::string& item);
-std::string getFirstElementValue(IXML_Element* pElement, const std::string& item);
 std::vector<StateVariable> getStateVariablesFromDescription(IXmlDocument& doc);
 std::vector<std::string> getActionsFromDescription(IXmlDocument& doc);
 std::map<std::string, std::string> getEventValues(IXmlDocument& doc);

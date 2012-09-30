@@ -35,13 +35,14 @@ public:
     virtual void destroy();
     virtual void reset();
     
-    virtual void searchDevices(Device::Type type, int timeout, void* cookie) const;
+    virtual void searchDevices(Device::Type type, int timeout) const;
     
     virtual void subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const;
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const;
     virtual void unsubscribeFromService(const Upnp_SID subscriptionId) const;
     
     virtual IXmlDocument sendAction(const Action& action) const;
+    virtual IXmlDocument downloadXmlDocument(const std::string& url) const;
  
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);

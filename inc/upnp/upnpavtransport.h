@@ -31,7 +31,7 @@
 namespace upnp
 {
     
-class Client;
+class IClient;
 class Item;
 class Action;
 
@@ -83,6 +83,13 @@ public:
         NextAVTransportURI,
         NextAVTransportURIMetaData,
         CurrentTransportActions,
+        RelativeTimePosition,
+        AbsoluteTimePosition,
+        RelativeCounterPosition,
+        AbsoluteCounterPosition,
+        ArgumentTypeSeekMode,
+        ArgumentTypeSeekTarget,
+        ArgumentTypeInstanceId,
         LastChange //event 
     };
     
@@ -116,10 +123,10 @@ public:
         std::string currentSpeed;
     };
 
-    AVTransport(Client& client);
+    AVTransport(IClient& client);
     ~AVTransport();
     
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     
     bool supportsAction(Action action) const;
     void subscribe();
@@ -149,7 +156,7 @@ private:
     static Variable variableFromString(const std::string& action);
     static void handleUPnPResult(int errorCode);
 
-    Client&                         m_Client;
+    IClient&                        m_Client;
     Service                         m_Service;
     std::set<Action>                m_SupportedActions;
 };

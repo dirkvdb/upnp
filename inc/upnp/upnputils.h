@@ -41,9 +41,17 @@ inline void handleUPnPResult(int errorCode)
     {
         return;
     }
+    else if (401 == errorCode)
+    {
+        throw std::logic_error("Failed to connect");
+    }
+    else if (500 == errorCode)
+    {
+        throw std::logic_error("UPnP device error");
+    }
     else if (501 == errorCode)
     {
-        throw std::logic_error("Internal server error");
+        throw std::logic_error("Request not supported");
     }
     else if (801 == errorCode)
     {

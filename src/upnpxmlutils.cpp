@@ -29,23 +29,68 @@ namespace upnp
 
 IXmlDocument::IXmlDocument()
 : m_pDoc(nullptr)
+, m_Ownership(NoOwnership)
 {
 }
 
-IXmlDocument::IXmlDocument(IXML_Document* pDoc)
-: m_pDoc(pDoc)
+IXmlDocument::IXmlDocument(const std::string& xml)
+: m_pDoc(ixmlParseBuffer(xml.c_str()))
+, m_Ownership(TakeOwnership)
 {
+    if (!m_pDoc)
+    {
+        throw std::logic_error("Invalid xml document string received");
+    }
+}
+
+IXmlDocument::IXmlDocument(IXML_Document* pDoc, OwnershipType ownership)
+: m_pDoc(pDoc)
+, m_Ownership(ownership)
+{
+}
+
+IXmlDocument::IXmlDocument(const IXmlDocument& doc)
+: m_pDoc(nullptr)
+, m_Ownership(TakeOwnership)
+{
+    // this copy constructor is only meant to be used in unit tests where the use of gmock requries copy constructors
+    // real code sjould avoid copies of the document for performance reasons
+
+    if (doc)
+    {
+        m_pDoc = doc.m_pDoc;
+    
+        //log::warn("IXmlDocument copy constructor is implmented for gmock compatibility, should not get executed in code for performance reaseons");
+        
+        m_pDoc = ixmlDocument_createDocument();
+        
+        IXmlNodeList nodeList = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(static_cast<IXML_Document*>(doc)));
+        for (int i = 0; i < nodeList.size(); ++i)
+        {
+            IXML_Node* pNode = nullptr;
+            IXmlNode node = nodeList.getNode(i);
+            if (IXML_SUCCESS != ixmlDocument_importNode(m_pDoc, node, TRUE, &pNode))
+            {
+                throw std::logic_error("Failed to clone xml document");
+            }
+            
+            ixmlNode_appendChild(reinterpret_cast<IXML_Node*>(static_cast<IXML_Document*>(m_pDoc)), pNode);
+        }
+    }
 }
 
 IXmlDocument::IXmlDocument(IXmlDocument&& doc)
-: m_pDoc(doc.m_pDoc)
+: m_pDoc(std::move(doc.m_pDoc))
+, m_Ownership(TakeOwnership)
 {
-    doc.m_pDoc = nullptr;
 }
 
 IXmlDocument::~IXmlDocument()
 {
-    ixmlDocument_free(m_pDoc);
+    if (TakeOwnership == m_Ownership)
+    {
+        //ixmlDocument_free(m_pDoc);
+    }
 }
 
 IXmlDocument& IXmlDocument::operator= (IXML_Document* pDoc)
@@ -69,6 +114,12 @@ IXmlDocument::operator bool() const
     return m_pDoc != nullptr;
 }
 
+IXmlNode IXmlDocument::getFirstChild()
+{
+    IXmlNode node(reinterpret_cast<IXML_Node*>(m_pDoc));
+    return node.getFirstChild();
+}
+
 IXmlNodeList IXmlDocument::getElementsByTagName(const std::string& tagName)
 {
     IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(m_pDoc, tagName.c_str());
@@ -78,6 +129,49 @@ IXmlNodeList IXmlDocument::getElementsByTagName(const std::string& tagName)
     }
     
     return nodeList;
+}
+
+std::string IXmlDocument::getChildElementValue(const std::string& tagName)
+{
+    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pDoc));
+    if (!list)
+    {
+        throw std::logic_error(std::string("Failed to get document subelements with tag: ") + tagName);
+    }
+    
+    for (uint64_t i = 0; i < list.size(); ++i)
+    {
+        IXmlNode node = list.getNode(i);
+        if (node.getName() == tagName)
+        {
+            IXmlNode textNode = ixmlNode_getFirstChild(node);
+            return textNode.getValue();
+        }
+    }
+    
+    throw std::logic_error(std::string("No child element found in document with name ") + tagName);
+}
+
+std::string IXmlDocument::getChildElementValueRecursive(const std::string& tagName)
+{
+    IXmlNodeList nodeList = getElementsByTagName(tagName);
+    if (nodeList.size() == 0)
+    {
+        throw std::logic_error(std::string("Failed to get document subelement value with tag: ") + tagName);
+    }
+    
+    return nodeList.getNode(0).getFirstChild().getValue();
+}
+
+std::string IXmlDocument::toString() const
+{
+    IXmlString str(ixmlDocumenttoString(m_pDoc));
+    if (!str)
+    {
+        throw std::logic_error("Failed to convert document to string");
+    }
+    
+    return str;
 }
 
 IXmlNodeList::IXmlNodeList()
@@ -117,7 +211,7 @@ IXmlNodeList::operator bool() const
     return m_pList != nullptr;
 }
 
-IXmlNode IXmlNodeList::getNode(unsigned long index)
+IXmlNode IXmlNodeList::getNode(uint64_t index)
 {
     IXmlNode node = ixmlNodeList_item(m_pList, index);
     if (!node)
@@ -128,7 +222,7 @@ IXmlNode IXmlNodeList::getNode(unsigned long index)
     return node;
 }
 
-unsigned long IXmlNodeList::getLength()
+uint64_t IXmlNodeList::size()
 {
     return ixmlNodeList_length(m_pList);
 }
@@ -174,6 +268,22 @@ std::string IXmlNode::getValue()
     return pStr;
 }
 
+IXmlNamedNodeMap IXmlNode::getAttributes()
+{
+    IXmlNamedNodeMap nodeMap = ixmlNode_getAttributes(m_pNode);
+    if (!nodeMap)
+    {
+        throw std::logic_error(std::string("Failed to get attribute map from node: ") + getName());
+    }
+    
+    return nodeMap;
+}
+
+IXmlNode IXmlNode::getParent()
+{
+    return ixmlNode_getParentNode(m_pNode);
+}
+
 IXmlNode IXmlNode::getFirstChild()
 {
     IXmlNode node = ixmlNode_getFirstChild(m_pNode);
@@ -194,6 +304,52 @@ IXmlNodeList IXmlNode::getChildNodes()
     }
     
     return children;
+}
+
+IXmlNamedNodeMap::IXmlNamedNodeMap()
+: m_pNodeMap(nullptr)
+{
+}
+
+IXmlNamedNodeMap::IXmlNamedNodeMap(IXML_NamedNodeMap* pNodeMap)
+: m_pNodeMap(pNodeMap)
+{
+}
+
+IXmlNamedNodeMap::IXmlNamedNodeMap(IXmlNamedNodeMap&& nodeMap)
+: m_pNodeMap(std::move(nodeMap.m_pNodeMap))
+{
+}
+
+IXmlNamedNodeMap::~IXmlNamedNodeMap()
+{
+    ixmlNamedNodeMap_free(m_pNodeMap);
+}
+
+uint64_t IXmlNamedNodeMap::size() const
+{
+    return ixmlNamedNodeMap_getLength(m_pNodeMap);
+}
+
+IXmlNode IXmlNamedNodeMap::getNode(uint64_t index) const
+{
+    IXmlNode node = ixmlNamedNodeMap_item(m_pNodeMap, index);
+    if (!node)
+    {
+        throw std::logic_error("Failed to get node from named node map");
+    }
+    
+    return node;
+}
+
+IXmlNamedNodeMap::operator IXML_NamedNodeMap*() const
+{
+    return m_pNodeMap;
+}
+
+IXmlNamedNodeMap::operator bool() const
+{
+    return m_pNodeMap != nullptr;
 }
 
 IXmlElement::IXmlElement()
@@ -237,6 +393,17 @@ std::string IXmlElement::getName()
     return ixmlElement_getTagName(m_pElement);
 }
 
+std::string IXmlElement::getValue()
+{
+    IXmlNode node = ixmlNode_getFirstChild(reinterpret_cast<IXML_Node*>(m_pElement));
+    if (!node)
+    {
+        throw std::logic_error(std::string("Failed to get value from node ") + getName());
+    }
+    
+    return node.getValue();
+}
+
 std::string IXmlElement::getAttribute(const std::string& attr)
 {
     const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
@@ -246,6 +413,34 @@ std::string IXmlElement::getAttribute(const std::string& attr)
     }
     
     return pAttr;
+}
+
+IXmlNamedNodeMap IXmlElement::getAttributes()
+{
+    IXmlNode node(reinterpret_cast<IXML_Node*>(m_pElement));
+    return node.getAttributes();
+}
+
+IXmlNode IXmlElement::getFirstChild()
+{
+    IXmlNode node = ixmlNode_getFirstChild(reinterpret_cast<IXML_Node*>(m_pElement));
+    if (!node)
+    {
+        throw std::logic_error(std::string("Failed to get first child node from element: ") + getName());
+    }
+    
+    return node;
+}
+
+IXmlNodeList IXmlElement::getChildNodes()
+{
+    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pElement));
+    if (!list)
+    {
+        throw std::logic_error("Failed to get element childnodes");
+    }
+    
+    return list;
 }
 
 IXmlNodeList IXmlElement::getElementsByTagName(const std::string& tagName)
@@ -259,6 +454,38 @@ IXmlNodeList IXmlElement::getElementsByTagName(const std::string& tagName)
     return list;
 }
 
+std::string IXmlElement::getChildElementValue(const std::string& tagName)
+{
+    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pElement));
+    if (!list)
+    {
+        throw std::logic_error(std::string("Failed to get element subelements with tag: ") + tagName);
+    }
+    
+    for (unsigned long i = 0; i < list.size(); ++i)
+    {
+        IXmlNode node = list.getNode(i);
+        if (node.getName() == tagName)
+        {
+            IXmlNode textNode = ixmlNode_getFirstChild(node);
+            return textNode.getValue();
+        }
+    }
+    
+    throw std::logic_error(std::string("No child element found with name ") + tagName);
+}
+
+std::string IXmlElement::toString()
+{
+    IXmlString str(ixmlPrintNode(reinterpret_cast<IXML_Node*>(m_pElement)));
+    if (!str)
+    {
+        throw std::logic_error("Failed to convert document to string");
+    }
+    
+    return str;
+}
+
 IXmlString::IXmlString(DOMString str)
 : m_String(str)
 {
@@ -267,6 +494,11 @@ IXmlString::IXmlString(DOMString str)
 IXmlString::~IXmlString()
 {
     ixmlFreeDOMString(m_String);
+}
+
+IXmlString::operator std::string() const
+{
+    return std::string(m_String);
 }
 
 IXmlString::operator DOMString() const
@@ -309,73 +541,18 @@ std::string getFirstElementAttribute(IXmlDocument& doc, const std::string& item,
     return getFirstElementAttribute(nodeList, item, attribute);
 }
 
-std::string getFirstElementValue(IXmlNodeList& nodeList, const std::string& item)
-{
-    std::string result;
-    
-    IXML_Node* pTmpNode = ixmlNodeList_item(nodeList, 0);
-    if (pTmpNode == nullptr)
-    {
-        throw std::logic_error("Failed to find XML element value: " + item);
-    }
-    
-    IXML_Node* pTextNode = ixmlNode_getFirstChild(pTmpNode);
-    const char* pValue = ixmlNode_getNodeValue(pTextNode);
-    if (pValue)
-    {
-        result = pValue;
-    }
-    
-    return result;
-}
-
-std::string getFirstElementValue(IXmlDocument& doc, const std::string& item)
-{
-    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
-    if (!nodeList)
-    {
-        throw std::logic_error("Failed to find element value in document: " + item);
-    }
-
-    return getFirstElementValue(nodeList, item);
-}
-
-std::string getFirstElementValue(IXML_Element* pElement, const std::string& item)
-{
-    std::string result;
-    
-    IXmlNodeList nodeList = ixmlElement_getElementsByTagName(pElement, item.c_str());
-    if (!nodeList)
-    {
-        return result;
-    }
-    
-    return getFirstElementValue(nodeList, item);
-}
-
 std::vector<std::string> getActionsFromDescription(IXmlDocument& doc)
 {
     std::vector<std::string> actions;
     
-    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, "action");
-    if (!nodeList)
-    {
-        throw std::logic_error("Failed to find actions in document");
-    }
-    
-    unsigned long numActions = ixmlNodeList_length(nodeList);
+    IXmlNodeList nodeList = doc.getElementsByTagName("action");
+    unsigned long numActions = nodeList.size();
     actions.reserve(numActions);
     
     for (unsigned long i = 0; i < numActions; ++i)
     {
-        IXML_Element* pActionElem = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(nodeList, i));
-        if (!pActionElem)
-        {
-            log::error("Failed to get action from action list, skipping");
-            continue;
-        }
-    
-        actions.push_back(getFirstElementValue(pActionElem, "name"));
+        IXmlElement actionElem = nodeList.getNode(i);
+        actions.push_back(actionElem.getChildElementValue("name"));
     }
     
     return actions;
@@ -386,7 +563,7 @@ std::vector<StateVariable> getStateVariablesFromDescription(IXmlDocument& doc)
     std::vector<StateVariable> variables;
     
     IXmlNodeList nodeList = doc.getElementsByTagName("stateVariable");
-    unsigned long numVariables = nodeList.getLength();
+    unsigned long numVariables = nodeList.size();
     variables.reserve(numVariables);
     
     for (unsigned long i = 0; i < numVariables; ++i)
@@ -397,26 +574,21 @@ std::vector<StateVariable> getStateVariablesFromDescription(IXmlDocument& doc)
         {
             StateVariable var;
             var.sendsEvents = elem.getAttribute("sendEvents") == "yes";
-            
-            var.name        = elem.getElementsByTagName("name").getNode(0).getFirstChild().getValue();
-            var.dataType    = elem.getElementsByTagName("dataType").getNode(0).getFirstChild().getValue();
+            var.name        = elem.getChildElementValue("name");
+            var.dataType    = elem.getChildElementValue("dataType");
             
             try
             {
                 IXmlElement rangeElement = elem.getElementsByTagName("allowedValueRange").getNode(0);
-                var.valueRange.reset(new StateVariable::ValueRange());
-                IXmlNode minNode = rangeElement.getElementsByTagName("minimum").getNode(0);
-                IXmlNode maxNode = rangeElement.getElementsByTagName("maximum").getNode(0);
-                IXmlNode stepNode = rangeElement.getElementsByTagName("step").getNode(0);
+                std::unique_ptr<StateVariable::ValueRange> range(new StateVariable::ValueRange());
                 
-                var.valueRange->minimumValue    = stringops::toNumeric<uint32_t>(minNode.getFirstChild().getValue());
-                var.valueRange->maximumValue    = stringops::toNumeric<uint32_t>(maxNode.getFirstChild().getValue());
-                var.valueRange->step            = stringops::toNumeric<uint32_t>(stepNode.getFirstChild().getValue());
+                range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("minimum"));
+                range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("maximum"));
+                range->step            = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("step"));
+                
+                var.valueRange = std::move(range);
             }
-            catch(std::exception&)
-            {
-                // no value range for this element, no biggy
-            }
+            catch(std::exception&) { /* no value range for this element, no biggy */ }
             
             variables.push_back(var);
         }
@@ -434,10 +606,9 @@ std::map<std::string, std::string> getEventValues(IXmlDocument& doc)
     std::map<std::string, std::string> values;
     
     IXmlNodeList nodeList = doc.getElementsByTagName("InstanceID");
-    IXmlNode instanceNode = nodeList.getNode(0);
-    IXmlNodeList children = instanceNode.getChildNodes();
+    IXmlNodeList children = nodeList.getNode(0).getChildNodes();
     
-    unsigned long numVars = children.getLength();
+    unsigned long numVars = children.size();
     for (unsigned long i = 0; i < numVars; ++i)
     {
         IXmlElement elem = children.getNode(i);

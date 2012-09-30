@@ -17,7 +17,7 @@
 #include "upnp/upnprenderingcontrol.h"
 
 #include "upnp/upnputils.h"
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnpaction.h"
 #include "upnp/upnpcontrolpoint.h"
 #include "upnp/upnpxmlutils.h"
@@ -34,15 +34,15 @@ using namespace std::placeholders;
 namespace upnp
 {
 
-RenderingControl::RenderingControl(Client& client)
+RenderingControl::RenderingControl(IClient& client)
 : m_Client(client)
-, m_currentVolume(0)
-, m_minVolume(0)
-, m_maxVolume(100)
+, m_CurrentVolume(0)
+, m_MinVolume(0)
+, m_MaxVolume(100)
 {
 }
 
-void RenderingControl::setDevice(std::shared_ptr<Device> device)
+void RenderingControl::setDevice(const std::shared_ptr<Device>& device)
 {
     if (device->implementsService(ServiceType::RenderingControl))
     {
@@ -65,7 +65,13 @@ void RenderingControl::unsubscribe()
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
         m_Client.unsubscribeFromService(&(m_Service.m_EventSubscriptionID[0]));
+        m_Service.m_EventSubscriptionID.clear();
     }
+}
+
+bool RenderingControl::supportsAction(Action action)
+{
+    return m_SupportedActions.find(action) != m_SupportedActions.end();
 }
 
 IXmlDocument RenderingControl::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
@@ -94,55 +100,55 @@ IXmlDocument RenderingControl::executeAction(Action actionType, const std::strin
 
 void RenderingControl::increaseVolume(const std::string& connectionId, uint32_t percentage)
 {
-    int32_t vol = m_currentVolume + ((m_maxVolume * percentage) / 100);
+    int32_t vol = m_CurrentVolume + ((m_MaxVolume * percentage) / 100);
     setVolume(connectionId, vol);
 }
 
 void RenderingControl::decreaseVolume(const std::string& connectionId, uint32_t percentage)
 {
-    int32_t vol = m_currentVolume - ((m_maxVolume * percentage) / 100);
+    int32_t vol = m_CurrentVolume - ((m_MaxVolume * percentage) / 100);
     setVolume(connectionId, vol);
 }
 
 void RenderingControl::setVolume(const std::string& connectionId, int32_t value)
 {
-    numericops::clip(value, m_minVolume, m_maxVolume);
+    numericops::clip(value, m_MinVolume, m_MaxVolume);
     executeAction(Action::SetVolume, connectionId, { {"Channel", "Master"}, { "DesiredVolume", numericops::toString(value)} });
 }
 
 void RenderingControl::parseServiceDescription(const std::string& descriptionUrl)
 {
-    IXmlDocument doc;
-    
-    int ret = UpnpDownloadXmlDoc(descriptionUrl.c_str(), &doc);
-    if (ret != UPNP_E_SUCCESS)
+    try
     {
-        log::error("Error obtaining device description from", descriptionUrl, " error =", ret);
-        return;
-    }
-    
-    for (auto& action : getActionsFromDescription(doc))
-    {
-        try
+        IXmlDocument doc = m_Client.downloadXmlDocument(descriptionUrl);
+        
+        for (auto& action : getActionsFromDescription(doc))
         {
-            m_SupportedActions.insert(actionFromString(action));
-        }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
-    }
-    
-    for (auto& variable : getStateVariablesFromDescription(doc))
-    {
-        if (variable.name == variableToString(Variable::Volume))
-        {
-            if (variable.valueRange)
+            try
             {
-                m_minVolume = variable.valueRange->minimumValue;
-                m_maxVolume = variable.valueRange->maximumValue;
+                m_SupportedActions.insert(actionFromString(action));
+            }
+            catch (std::exception& e)
+            {
+                log::error(e.what());
             }
         }
+        
+        for (auto& variable : getStateVariablesFromDescription(doc))
+        {
+            if (variable.name == variableToString(Variable::Volume))
+            {
+                if (variable.valueRange)
+                {
+                    m_MinVolume = variable.valueRange->minimumValue;
+                    m_MaxVolume = variable.valueRange->maximumValue;
+                }
+            }
+        }
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
     }
 }
 
@@ -163,39 +169,33 @@ void RenderingControl::eventOccurred(Upnp_Event* pEvent)
     {
         try
         {
-            IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(pEvent->ChangedVariables, "LastChange");
-            if (!nodeList)
-            {
-                log::error("Failed to find LastChange element in RenderingControl event");
-                return;
-            }
+            IXmlDocument doc(pEvent->ChangedVariables, IXmlDocument::NoOwnership);
+            IXmlDocument changeDoc(doc.getChildElementValueRecursive("LastChange"));
             
-            IXmlDocument doc = ixmlParseBuffer(getFirstElementValue(nodeList, "LastChange").c_str());
-            if (!doc)
-            {
-                // empty lastchange
-                return;
-            }
+            //log::debug(doc.toString());
+            
+            IXmlNode instanceNode = changeDoc.getElementsByTagName("InstanceID").getNode(0);
+            IXmlNodeList children = instanceNode.getChildNodes();
             
             std::map<Variable, std::string> vars;
-            auto values = getEventValues(doc);
-            for (auto& i : values)
+            unsigned long numVars = children.size();
+            for (unsigned long i = 0; i < numVars; ++i)
             {
                 try
                 {
-                    vars[variableFromString(i.first)] = i.second;
-                    log::debug(i.first, i.second);
+                    IXmlElement elem = children.getNode(i);
+                    vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
                 }
                 catch (std::exception& e)
                 {
-                    log::warn("Unknown RenderingControl event variable ignored:", i.first);
+                    log::warn("Unknown RenderingControl event variable ignored:", e.what());
                 }
-                
-                auto iter = vars.find(Variable::Volume);
-                if (iter != vars.end())
-                {
-                    m_currentVolume = stringops::toNumeric<uint32_t>(iter->second);
-                }
+            }
+            
+            auto iter = vars.find(Variable::Volume);
+            if (iter != vars.end())
+            {
+                m_CurrentVolume = stringops::toNumeric<uint32_t>(iter->second);
             }
             
             LastChangedEvent(vars);
@@ -224,9 +224,7 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
             {
                 if (pSubEvent->Sid)
                 {
-                    log::info(pSubEvent->Sid);
                     rc->m_Service.m_EventSubscriptionID = pSubEvent->Sid;
-                    log::info("Successfully subscribed to rendering control service id =", pSubEvent->Sid);
                 }
                 else
                 {
@@ -249,7 +247,7 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
                 rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout, newSID);
                 rc->m_Service.m_EventSubscriptionID = newSID;
                 
-                log::info("RenderingControl subscription renewed: \n", newSID);
+                log::debug("RenderingControl subscription renewed: \n", newSID);
             }
             catch (std::exception& e)
             {
@@ -258,7 +256,7 @@ int RenderingControl::eventCb(Upnp_EventType eventType, void* pEvent, void* pIns
             break;
         }
         case UPNP_EVENT_RENEWAL_COMPLETE:
-            log::info("RenderingControl subscription renewal complete");
+            log::debug("RenderingControl subscription renewal complete");
             break;
         default:
             log::info("Unhandled action:", eventType);

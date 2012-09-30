@@ -121,19 +121,28 @@ protected:
     IXmlDocument    doc;
 };
 
-TEST_F(XmlUtilsTest, getFirstElementValue)
+TEST_F(XmlUtilsTest, documentGetChildElementValue)
 {
-    const std::string xml = 
-        "<allowedValueRange>"
-        "    <minimum>0</minimum>"
-        "    <maximum>100</maximum>"
-        "    <step>1</step>"
-        "</allowedValueRange>";
+    const std::string xml = "<allowedValueRange>TestValue</allowedValueRange>";
         
     IXmlDocument doc = ixmlParseBuffer(xml.c_str());
-    EXPECT_STREQ("0", getFirstElementValue(doc, "minimum").c_str());
-    EXPECT_STREQ("100", getFirstElementValue(doc, "maximum").c_str());
-    EXPECT_STREQ("1", getFirstElementValue(doc, "step").c_str());
+    EXPECT_EQ(std::string("TestValue"), doc.getChildElementValue("allowedValueRange"));
+}
+
+TEST_F(XmlUtilsTest, elementGetChildElementValue)
+{
+    const std::string xml =
+    "<allowedValueRange>"
+    "    <minimum>0</minimum>"
+    "    <maximum>100</maximum>"
+    "    <step>1</step>"
+    "</allowedValueRange>";
+    
+    IXmlDocument doc = ixmlParseBuffer(xml.c_str());
+    IXmlElement node = doc.getFirstChild();
+    EXPECT_EQ(std::string("0"),     node.getChildElementValue("minimum"));
+    EXPECT_EQ(std::string("100"),   node.getChildElementValue("maximum"));
+    EXPECT_EQ(std::string("1"),     node.getChildElementValue("step"));
 }
 
 TEST_F(XmlUtilsTest, getStateVariablesFromDescription)

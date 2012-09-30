@@ -34,7 +34,7 @@ namespace upnp
 
 class Action;
 class Device;
-class Client;
+class IClient;
 
 class ContentDirectory
 {
@@ -52,9 +52,9 @@ public:
         uint32_t numberReturned;
     };
 
-    ContentDirectory(const Client& client);
+    ContentDirectory(IClient& client);
         
-    void setDevice(std::shared_ptr<Device> device);
+    void setDevice(const std::shared_ptr<Device>& device);
     
     void abort();
     
@@ -74,22 +74,22 @@ private:
     void querySystemUpdateID();
     
     static void handleUPnPResult(int errorCode);
-    static void addPropertyToItem(const char* pPropertyName, const char* pPropertyValue, const std::shared_ptr<Item>& item);
+    static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item);
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
     
     IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
     void parseMetaData(IXmlDocument& doc, const std::shared_ptr<Item>& item);
     
-    void parseContainer(IXML_Element* pContainerElem, const std::shared_ptr<Item>& item);
-    void parseItem(IXML_Element* pItemElem, const std::shared_ptr<Item>& item);
-    Resource parseResource(IXML_NamedNodeMap* pNodeMap, const char* pUrl);
+    void parseContainer(IXmlElement& containerElem, const std::shared_ptr<Item>& item);
+    void parseItem(IXmlElement& itemElem, const std::shared_ptr<Item>& item);
+    Resource parseResource(IXmlNamedNodeMap& nodeMap, const std::string& url);
     
     std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);
     std::vector<std::shared_ptr<Item>> parseItems(IXmlDocument& doc);
     
     void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
-    const Client&               m_Client;
+    IClient&                    m_Client;
     Service                     m_Service;
     
     std::vector<Property>       m_SearchCaps;

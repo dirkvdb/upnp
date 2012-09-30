@@ -14,45 +14,37 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ACTION_H
-#define UPNP_ACTION_H
+#ifndef UPNP_CLIENT_MOCK_H
+#define UPNP_CLIENT_MOCK_H
 
-#include <string>
-#include <vector>
+#include <gmock/gmock.h>
 
-#include <upnp/upnp.h>
-#include <upnp/upnptools.h>
+#include "upnpclientinterface.h"
 
-#include "upnp/upnptypes.h"
-#include "upnp/upnpxmlutils.h"
+using namespace testing;
 
 namespace upnp
 {
+namespace test
+{
     
-class Action
+class ClientMock : public IClient
 {
 public:
-    Action(const std::string& name, const std::string& url, ServiceType serviceType);
+    MOCK_METHOD2(initialize, void(const char*, int32_t));
+    MOCK_METHOD0(destroy, void());
+    MOCK_METHOD0(reset, void());
     
-    void addArgument(const std::string& name, const std::string& value);
+    MOCK_CONST_METHOD2(searchDevices, void(Device::Type, int));
+    
+    MOCK_CONST_METHOD3(subscribeToService, void(const std::string&, int32_t&, Upnp_SID));
+    MOCK_CONST_METHOD4(subscribeToService, void(const std::string&, int32_t, Upnp_FunPtr, void*));
+    MOCK_CONST_METHOD1(unsubscribeFromService, void(const Upnp_SID));
+    MOCK_CONST_METHOD1(sendAction, IXmlDocument(const Action&));
+    MOCK_CONST_METHOD1(downloadXmlDocument, IXmlDocument(const std::string&));
+};
 
-    const IXmlDocument& getActionDocument() const;
-    
-    std::string getName() const;
-    std::string getUrl() const;
-    std::string getServiceTypeUrn() const;
-    ServiceType getServiceType() const;
-    
-    bool operator==(const Action& other) const;
-    
-private:
-    std::string                 m_Name;
-    std::string                 m_Url;
-    ServiceType                 m_ServiceType;
-    
-    IXmlDocument                m_ActionDoc;
-}; 
-    
+}
 }
 
 #endif

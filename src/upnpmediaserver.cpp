@@ -34,7 +34,7 @@ const std::string MediaServer::rootId = "0";
 static const uint32_t g_maxNumThreads = 20;
 static const uint32_t g_requestSize =32;
     
-MediaServer::MediaServer(Client& client)
+MediaServer::MediaServer(IClient& client)
 : m_Client(client)
 , m_ContentDirectory(client)
 , m_ConnectionMgr(client)
@@ -52,14 +52,21 @@ MediaServer::~MediaServer()
 
 void MediaServer::setDevice(const std::shared_ptr<Device>& device)
 {
-    m_Device = device;
-    m_ContentDirectory.setDevice(device);
-    m_ConnectionMgr.setDevice(device); 
-    
-    if (m_Device->implementsService(ServiceType::AVTransport))
+    try
     {
-        m_AVTransport.reset(new AVTransport(m_Client));
-        m_AVTransport->setDevice(device);
+        m_Device = device;
+        m_ContentDirectory.setDevice(device);
+        m_ConnectionMgr.setDevice(device);
+        
+        if (m_Device->implementsService(ServiceType::AVTransport))
+        {
+            m_AVTransport.reset(new AVTransport(m_Client));
+            m_AVTransport->setDevice(device);
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw std::logic_error(std::string("Failed to set server device:") + e.what());
     }
 }
 

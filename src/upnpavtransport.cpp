@@ -16,7 +16,7 @@
 
 #include "upnp/upnpavtransport.h"
 
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnputils.h"
 #include "upnp/upnpaction.h"
 #include "upnp/upnpxmlutils.h"
@@ -32,17 +32,24 @@ namespace upnp
 
 static const int32_t defaultTimeout = 1801;
     
-AVTransport::AVTransport(Client& client)
+AVTransport::AVTransport(IClient& client)
 : m_Client(client)
 {
 }
 
 AVTransport::~AVTransport()
 {
-    unsubscribe();
+    try
+    {
+        unsubscribe();
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+    }
 }
 
-void AVTransport::setDevice(std::shared_ptr<Device> device)
+void AVTransport::setDevice(const std::shared_ptr<Device>& device)
 {
     if (device->implementsService(ServiceType::AVTransport))
     {
@@ -70,6 +77,7 @@ void AVTransport::unsubscribe()
     {
         m_Client.UPnPEventOccurredEvent.disconnect(this);
         m_Client.unsubscribeFromService(&(m_Service.m_EventSubscriptionID[0]));
+        m_Service.m_EventSubscriptionID.clear();
     }
 }
 
@@ -111,9 +119,9 @@ AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& conn
     IXmlDocument doc = executeAction(Action::GetTransportInfo, connectionId);
     
     TransportInfo info;
-    info.currentTransportState      = getFirstElementValue(doc, "CurrentTransportState");
-    info.currentTransportStatus     = getFirstElementValue(doc, "CurrentTransportStatus");
-    info.currentSpeed               = getFirstElementValue(doc, "CurrentSpeed");
+    info.currentTransportState      = doc.getChildElementValue("CurrentTransportState");
+    info.currentTransportStatus     = doc.getChildElementValue("CurrentTransportStatus");
+    info.currentSpeed               = doc.getChildElementValue("CurrentSpeed");
     
     return info;
 }
@@ -123,14 +131,14 @@ AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connec
     IXmlDocument doc = executeAction(Action::GetPositionInfo, connectionId);
     
     PositionInfo info;
-    info.track          = getFirstElementValue(doc, "Track");
-    info.trackDuration  = getFirstElementValue(doc, "TrackDuration");
-    info.trackMetaData  = getFirstElementValue(doc, "TrackMetaData");
-    info.trackURI       = getFirstElementValue(doc, "TrackURI");
-    info.relTime        = getFirstElementValue(doc, "RelTime");
-    info.absTime        = getFirstElementValue(doc, "AbsTime");
-    info.relCount       = getFirstElementValue(doc, "RelCount");
-    info.absCount       = getFirstElementValue(doc, "AbsCount");
+    info.track          = doc.getChildElementValue("Track");
+    info.trackDuration  = doc.getChildElementValue("TrackDuration");
+    info.trackMetaData  = doc.getChildElementValue("TrackMetaData");
+    info.trackURI       = doc.getChildElementValue("TrackURI");
+    info.relTime        = doc.getChildElementValue("RelTime");
+    info.absTime        = doc.getChildElementValue("AbsTime");
+    info.relCount       = doc.getChildElementValue("RelCount");
+    info.absCount       = doc.getChildElementValue("AbsCount");
     
     return info;
 }
@@ -160,14 +168,7 @@ IXmlDocument AVTransport::executeAction(Action actionType, const std::string& co
 
 void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
 {
-    IXmlDocument doc;
-    
-    int ret = UpnpDownloadXmlDoc(descriptionUrl.c_str(), &doc);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        log::error("Error obtaining device description from", descriptionUrl, " error =", ret);
-        return;
-    }
+    IXmlDocument doc = m_Client.downloadXmlDocument(descriptionUrl);
     
     for (auto& action : getActionsFromDescription(doc))
     {
@@ -186,30 +187,21 @@ void AVTransport::eventOccurred(Upnp_Event* pEvent)
 {
     if (pEvent->Sid == m_Service.m_EventSubscriptionID)
     {
-        IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(pEvent->ChangedVariables, "LastChange");
-        if (!nodeList)
-        {
-            log::error("Failed to find LastChange element in AVTransport event");
-            return;
-        }
-        
-        IXmlDocument doc = ixmlParseBuffer(getFirstElementValue(nodeList, "LastChange").c_str());
-        if (!doc)
-        {
-            // empty lastchange
-            return;
-        }
-        
         try
         {
+            IXmlDocument doc(pEvent->ChangedVariables, IXmlDocument::NoOwnership);
+            IXmlDocument changeDoc(doc.getChildElementValueRecursive("LastChange"));
+            
             std::map<Variable, std::string> vars;
-            auto values = getEventValues(doc);
+            auto values = getEventValues(changeDoc);
             for (auto& i : values)
             {
                 try
                 {
                     vars[variableFromString(i.first)] = i.second;
+#ifdef DEBUG_AVTRANSPORT
                     log::debug(i.first, i.second);
+#endif
                 }
                 catch (std::exception& e)
                 {
@@ -230,8 +222,6 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
 {
     AVTransport* av = reinterpret_cast<AVTransport*>(pInstance);
     
-    log::info("eventcb:", eventType);
-    
     switch (eventType)
     {
     case UPNP_EVENT_SUBSCRIBE_COMPLETE:
@@ -245,9 +235,7 @@ int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance
         {
             if (pSubEvent->Sid)
             {
-                log::info(pSubEvent->Sid);
                 av->m_Service.m_EventSubscriptionID = pSubEvent->Sid;
-                log::info("Successfully subscribed to AVTransport service: id =", pSubEvent->Sid);
             }
             else
             {
@@ -363,6 +351,13 @@ AVTransport::Variable AVTransport::variableFromString(const std::string& var)
     if (var == "NextAVTransportURI")             return Variable::NextAVTransportURI;
     if (var == "NextAVTransportURIMetaData")     return Variable::NextAVTransportURIMetaData;
     if (var == "CurrentTransportActions")        return Variable::CurrentTransportActions;
+    if (var == "RelativeTimePosition")           return Variable::RelativeTimePosition;
+    if (var == "AbsoluteTimePosition")           return Variable::AbsoluteTimePosition;
+    if (var == "RelativeCounterPosition")        return Variable::RelativeCounterPosition;
+    if (var == "AbsoluteCounterPosition")        return Variable::AbsoluteCounterPosition;
+    if (var == "A_ARG_TYPE_SeekMode")            return Variable::ArgumentTypeSeekMode;
+    if (var == "A_ARG_TYPE_SeekTarget")          return Variable::ArgumentTypeSeekTarget;
+    if (var == "A_ARG_TYPE_InstanceID")          return Variable::ArgumentTypeInstanceId;
     if (var == "LastChange")                     return Variable::LastChange;
     
     throw std::logic_error("Unknown AVTransport variable:" + var);
