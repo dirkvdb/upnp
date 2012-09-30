@@ -27,6 +27,67 @@ using namespace utils;
 namespace upnp
 {
 
+IXmlNode::IXmlNode()
+: m_pNode(nullptr)
+{
+}
+
+IXmlNode::IXmlNode(IXML_Node* pNode)
+: m_pNode(pNode)
+{
+}
+
+IXmlNode::IXmlNode(IXmlNode&& node)
+: m_pNode(std::move(node.m_pNode))
+{
+}
+
+IXmlNode::~IXmlNode()
+{
+}
+
+IXmlNode::operator IXML_Node*() const
+{
+    return m_pNode;
+}
+
+IXmlNode::operator bool() const
+{
+    return m_pNode != nullptr;
+}
+
+std::string IXmlNode::getName()
+{
+    return ixmlNode_getNodeName(m_pNode);
+}
+
+std::string IXmlNode::getValue()
+{
+    const char* pStr = ixmlNode_getNodeValue(m_pNode);
+    if (!pStr)
+    {
+        throw std::logic_error(std::string("Failed to get node value: ") + getName());
+    }
+    
+    return pStr;
+}
+
+std::string IXmlNode::toString()
+{
+    IXmlString str(ixmlPrintNode(m_pNode));
+    if (!str)
+    {
+        throw std::logic_error("Failed to convert node to string");
+    }
+    
+    return str;
+}
+
+void IXmlNode::setNodePointer(IXML_Node* pNode)
+{
+    m_pNode = pNode;
+}
+
 IXmlDocument::IXmlDocument()
 : m_pDoc(nullptr)
 , m_Ownership(NoOwnership)
@@ -41,10 +102,13 @@ IXmlDocument::IXmlDocument(const std::string& xml)
     {
         throw std::logic_error("Invalid xml document string received");
     }
+    
+    setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
 }
 
 IXmlDocument::IXmlDocument(IXML_Document* pDoc, OwnershipType ownership)
-: m_pDoc(pDoc)
+: IXmlNode(reinterpret_cast<IXML_Node*>(pDoc))
+, m_pDoc(pDoc)
 , m_Ownership(ownership)
 {
 }
@@ -58,11 +122,13 @@ IXmlDocument::IXmlDocument(const IXmlDocument& doc)
 
     if (doc)
     {
-        m_pDoc = doc.m_pDoc;
+        //m_pDoc = doc.m_pDoc;
+        //setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
     
         //log::warn("IXmlDocument copy constructor is implmented for gmock compatibility, should not get executed in code for performance reaseons");
         
         m_pDoc = ixmlDocument_createDocument();
+        setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
         
         IXmlNodeList nodeList = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(static_cast<IXML_Document*>(doc)));
         for (int i = 0; i < nodeList.size(); ++i)
@@ -80,7 +146,8 @@ IXmlDocument::IXmlDocument(const IXmlDocument& doc)
 }
 
 IXmlDocument::IXmlDocument(IXmlDocument&& doc)
-: m_pDoc(std::move(doc.m_pDoc))
+: IXmlNode(std::forward<IXmlNode>(doc))
+, m_pDoc(std::move(doc.m_pDoc))
 , m_Ownership(TakeOwnership)
 {
 }
@@ -96,6 +163,7 @@ IXmlDocument::~IXmlDocument()
 IXmlDocument& IXmlDocument::operator= (IXML_Document* pDoc)
 {
     m_pDoc = pDoc;
+    setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
     return *this;
 }
 
@@ -114,12 +182,6 @@ IXmlDocument::operator bool() const
     return m_pDoc != nullptr;
 }
 
-IXmlNode IXmlDocument::getFirstChild()
-{
-    IXmlNode node(reinterpret_cast<IXML_Node*>(m_pDoc));
-    return node.getFirstChild();
-}
-
 IXmlNodeList IXmlDocument::getElementsByTagName(const std::string& tagName)
 {
     IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(m_pDoc, tagName.c_str());
@@ -133,19 +195,13 @@ IXmlNodeList IXmlDocument::getElementsByTagName(const std::string& tagName)
 
 std::string IXmlDocument::getChildElementValue(const std::string& tagName)
 {
-    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pDoc));
-    if (!list)
-    {
-        throw std::logic_error(std::string("Failed to get document subelements with tag: ") + tagName);
-    }
-    
+    IXmlNodeList list = getChildNodes();
     for (uint64_t i = 0; i < list.size(); ++i)
     {
         IXmlNode node = list.getNode(i);
         if (node.getName() == tagName)
         {
-            IXmlNode textNode = ixmlNode_getFirstChild(node);
-            return textNode.getValue();
+            return node.getFirstChild().getValue();
         }
     }
     
@@ -185,9 +241,8 @@ IXmlNodeList::IXmlNodeList(IXML_NodeList* pList)
 }
 
 IXmlNodeList::IXmlNodeList(IXmlNodeList&& doc)
-: m_pList(doc.m_pList)
+: m_pList(std::move(doc.m_pList))
 {
-    doc.m_pList = nullptr;
 }
 
 IXmlNodeList::~IXmlNodeList()
@@ -225,47 +280,6 @@ IXmlNode IXmlNodeList::getNode(uint64_t index)
 uint64_t IXmlNodeList::size()
 {
     return ixmlNodeList_length(m_pList);
-}
-
-IXmlNode::IXmlNode()
-: m_pNode(nullptr)
-{
-}
-
-IXmlNode::IXmlNode(IXML_Node* pNode)
-: m_pNode(pNode)
-{
-}
-
-IXmlNode::IXmlNode(IXmlNode&& node)
-: m_pNode(std::move(node.m_pNode))
-{
-}
-
-IXmlNode::operator IXML_Node*() const
-{
-    return m_pNode;
-}
-
-IXmlNode::operator bool() const
-{
-    return m_pNode != nullptr;
-}
-
-std::string IXmlNode::getName()
-{
-    return ixmlNode_getNodeName(m_pNode);
-}
-
-std::string IXmlNode::getValue()
-{
-    const char* pStr = ixmlNode_getNodeValue(m_pNode);
-    if (!pStr)
-    {
-        throw std::logic_error(std::string("Failed to get node value: ") + getName());
-    }
-    
-    return pStr;
 }
 
 IXmlNamedNodeMap IXmlNode::getAttributes()
@@ -358,12 +372,15 @@ IXmlElement::IXmlElement()
 }
 
 IXmlElement::IXmlElement(IXML_Element* pElement)
-: m_pElement(pElement)
+: IXmlNode(reinterpret_cast<IXML_Node*>(pElement))
+, m_pElement(pElement)
 {
 }
 
+// this move constructor allows a move of an XmlNode to an XmlElement, it upcasts the node
 IXmlElement::IXmlElement(IXmlNode&& node)
-: m_pElement(std::move(reinterpret_cast<IXML_Element*>(static_cast<IXML_Node*>(node))))
+: IXmlNode(std::forward<IXmlNode>(node))
+, m_pElement(reinterpret_cast<IXML_Element*>(static_cast<IXML_Node*>(*this)))
 {
 }
 
@@ -372,8 +389,10 @@ IXmlElement::IXmlElement(IXmlElement&& node)
 {
 }
 
+// this assignment operator allows a copy of an XmlNode to an XmlElement, it upcasts the node
 IXmlElement& IXmlElement::operator= (IXmlNode& node)
 {
+    setNodePointer(static_cast<IXML_Node*>(node));
     m_pElement = reinterpret_cast<IXML_Element*>(static_cast<IXML_Node*>(node));
     return *this;
 }
@@ -395,13 +414,7 @@ std::string IXmlElement::getName()
 
 std::string IXmlElement::getValue()
 {
-    IXmlNode node = ixmlNode_getFirstChild(reinterpret_cast<IXML_Node*>(m_pElement));
-    if (!node)
-    {
-        throw std::logic_error(std::string("Failed to get value from node ") + getName());
-    }
-    
-    return node.getValue();
+    return getFirstChild().getValue();
 }
 
 std::string IXmlElement::getAttribute(const std::string& attr)
@@ -413,34 +426,6 @@ std::string IXmlElement::getAttribute(const std::string& attr)
     }
     
     return pAttr;
-}
-
-IXmlNamedNodeMap IXmlElement::getAttributes()
-{
-    IXmlNode node(reinterpret_cast<IXML_Node*>(m_pElement));
-    return node.getAttributes();
-}
-
-IXmlNode IXmlElement::getFirstChild()
-{
-    IXmlNode node = ixmlNode_getFirstChild(reinterpret_cast<IXML_Node*>(m_pElement));
-    if (!node)
-    {
-        throw std::logic_error(std::string("Failed to get first child node from element: ") + getName());
-    }
-    
-    return node;
-}
-
-IXmlNodeList IXmlElement::getChildNodes()
-{
-    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pElement));
-    if (!list)
-    {
-        throw std::logic_error("Failed to get element childnodes");
-    }
-    
-    return list;
 }
 
 IXmlNodeList IXmlElement::getElementsByTagName(const std::string& tagName)
@@ -456,34 +441,18 @@ IXmlNodeList IXmlElement::getElementsByTagName(const std::string& tagName)
 
 std::string IXmlElement::getChildElementValue(const std::string& tagName)
 {
-    IXmlNodeList list = ixmlNode_getChildNodes(reinterpret_cast<IXML_Node*>(m_pElement));
-    if (!list)
-    {
-        throw std::logic_error(std::string("Failed to get element subelements with tag: ") + tagName);
-    }
-    
-    for (unsigned long i = 0; i < list.size(); ++i)
+    IXmlNodeList list = getChildNodes();
+    uint64_t size = list.size();
+    for (uint64_t i = 0; i < size; ++i)
     {
         IXmlNode node = list.getNode(i);
         if (node.getName() == tagName)
         {
-            IXmlNode textNode = ixmlNode_getFirstChild(node);
-            return textNode.getValue();
+            return node.getFirstChild().getValue();
         }
     }
     
     throw std::logic_error(std::string("No child element found with name ") + tagName);
-}
-
-std::string IXmlElement::toString()
-{
-    IXmlString str(ixmlPrintNode(reinterpret_cast<IXML_Node*>(m_pElement)));
-    if (!str)
-    {
-        throw std::logic_error("Failed to convert document to string");
-    }
-    
-    return str;
 }
 
 IXmlString::IXmlString(DOMString str)
@@ -509,36 +478,6 @@ IXmlString::operator DOMString() const
 IXmlString::operator bool() const
 {
     return m_String != nullptr;
-}
-
-std::string getFirstElementAttribute(IXmlNodeList& nodeList, const std::string& item, const std::string& attribute)
-{
-    std::string result;
-    
-    IXML_Element* pTmpNode = reinterpret_cast<IXML_Element*>(ixmlNodeList_item(nodeList, 0));
-    if (pTmpNode == nullptr)
-    {
-        throw std::logic_error("Failed to find XML element value: " + item);
-    }
-    
-    const char* pValue = ixmlElement_getAttribute(pTmpNode, attribute.c_str());
-    if (pValue)
-    {
-        result = pValue;
-    }
-    
-    return result;
-}
-
-std::string getFirstElementAttribute(IXmlDocument& doc, const std::string& item, const std::string& attribute)
-{
-    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
-    if (!nodeList)
-    {
-        throw std::logic_error("Failed to find element value in document: " + item);
-    }
-    
-    return getFirstElementAttribute(nodeList, item, attribute);
 }
 
 std::vector<std::string> getActionsFromDescription(IXmlDocument& doc)

@@ -127,7 +127,6 @@ IXmlDocument Client::sendAction(const Action& action) const
 {
     IXmlDocument result;
     throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &result));
-    log::debug(result.toString());
     
     return result;
 }
