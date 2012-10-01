@@ -74,7 +74,7 @@ const std::vector<Property>& ContentDirectory::getSortCapabilities() const
 void ContentDirectory::querySearchCapabilities()
 {
     Action action("GetSearchCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     auto caps = stringops::tokenize(result.getChildElementValueRecursive("SearchCaps"), ",");
     
     for (auto& cap : caps)
@@ -86,7 +86,7 @@ void ContentDirectory::querySearchCapabilities()
 void ContentDirectory::querySortCapabilities()
 {
     Action action("GetSortCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     auto caps = stringops::tokenize(result.getChildElementValueRecursive("SortCaps"), ",");
     
     for (auto& cap : caps)
@@ -98,7 +98,7 @@ void ContentDirectory::querySortCapabilities()
 void ContentDirectory::querySystemUpdateID()
 {
     Action action("GetSystemUpdateID", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     
     m_SystemUpdateId = result.getChildElementValueRecursive("Id");
 }
@@ -107,15 +107,15 @@ void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const s
 {
     ActionResult res;
 
-    IXmlDocument result = browseAction(item->getObjectId(), "BrowseMetadata", filter, 0, 0, "");
-    IXmlDocument browseResult = parseBrowseResult(result, res);
+    xml::Document result = browseAction(item->getObjectId(), "BrowseMetadata", filter, 0, 0, "");
+    xml::Document browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
         throw std::logic_error("Failed to browse meta data");
     }
     
 #ifdef DEBUG_CONTENT_BROWSING
-    log::debug(IXmlString(ixmlDocumenttoString(browseResult)));
+    log::debug(IXmlString(xml::DocumenttoString(browseResult)));
 #endif
     
     parseMetaData(browseResult, item);
@@ -126,8 +126,8 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
 {
     ActionResult res;
 
-    IXmlDocument result = browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
-    IXmlDocument browseResult = parseBrowseResult(result, res);
+    xml::Document result = browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
+    xml::Document browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
         throw std::logic_error("Failed to browse direct children");
@@ -172,10 +172,10 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
     action.addArgument("RequestedCount", numericops::toString(limit));
     action.addArgument("SortCriteria", sort);
     
-    IXmlDocument result = m_Client.sendAction(action);
+    xml::Document result = m_Client.sendAction(action);
     
     ActionResult searchResult;
-    IXmlDocument searchResultDoc = parseBrowseResult(result, searchResult);
+    xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
     if (!searchResultDoc)
     {
         throw std::logic_error("Failed to perform search");
@@ -212,7 +212,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
     }
 }
 
-IXmlDocument ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+xml::Document ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -231,31 +231,31 @@ IXmlDocument ContentDirectory::browseAction(const std::string& objectId, const s
     return m_Client.sendAction(browseAction);
 }
 
-IXmlDocument ContentDirectory::parseBrowseResult(IXmlDocument& doc, ActionResult& result)
+xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResult& result)
 {
     assert(doc && "ParseBrowseResult: Invalid document supplied");
     
-    IXmlDocument browseDoc(doc.getChildElementValueRecursive("Result"));
+    xml::Document browseDoc(doc.getChildElementValueRecursive("Result"));
     result.numberReturned = stringops::toNumeric<uint32_t>(doc.getChildElementValueRecursive("NumberReturned"));
     result.totalMatches = stringops::toNumeric<uint32_t>(doc.getChildElementValueRecursive("TotalMatches"));
     
     return browseDoc;
 }
 
-void ContentDirectory::parseMetaData(IXmlDocument& doc, const std::shared_ptr<Item>& item)
+void ContentDirectory::parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
     
     try
     {
-        IXmlElement containerElem = doc.getElementsByTagName("container").getNode(0);
+        xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
         return parseContainer(containerElem, item);
     }
     catch (std::exception&) {}
     
     try
     {
-        IXmlElement itemElem = doc.getElementsByTagName("item").getNode(0);
+        xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
         return parseItem(itemElem, item);
     }
     catch (std::exception&) {}
@@ -263,7 +263,7 @@ void ContentDirectory::parseMetaData(IXmlDocument& doc, const std::shared_ptr<It
     log::warn("No metadata could be retrieved");
 }
 
-void ContentDirectory::parseContainer(IXmlElement& containerElem, const std::shared_ptr<Item>& item)
+void ContentDirectory::parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item)
 {
     item->setObjectId(containerElem.getAttribute("id"));
     item->setParentId(containerElem.getAttribute("parentID"));
@@ -292,7 +292,7 @@ void ContentDirectory::parseContainer(IXmlElement& containerElem, const std::sha
     catch (std::exception&) {}
 }
 
-Resource ContentDirectory::parseResource(IXmlNamedNodeMap& nodeMap, const std::string& url)
+Resource ContentDirectory::parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
 {
     Resource res;
     res.setUrl(url);
@@ -302,7 +302,7 @@ Resource ContentDirectory::parseResource(IXmlNamedNodeMap& nodeMap, const std::s
     {
         try
         {
-            IXmlNode item = nodeMap.getNode(i);
+            xml::Node item = nodeMap.getNode(i);
             std::string key = item.getName();
             std::string value = item.getValue();
             
@@ -321,7 +321,7 @@ Resource ContentDirectory::parseResource(IXmlNamedNodeMap& nodeMap, const std::s
     return res;
 }
 
-void ContentDirectory::parseItem(IXmlElement& itemElem, const std::shared_ptr<Item>& item)
+void ContentDirectory::parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item)
 {
     item->setObjectId(itemElem.getAttribute("id"));
     item->setParentId(itemElem.getAttribute("parentID"));
@@ -329,13 +329,13 @@ void ContentDirectory::parseItem(IXmlElement& itemElem, const std::shared_ptr<It
 
     try
     {
-        IXmlNodeList children = itemElem.getChildNodes();
+        xml::NodeList children = itemElem.getChildNodes();
         uint64_t numChildren = children.size();
         for (uint64_t i = 0; i < numChildren && !m_Abort; ++i)
         {
             try
             {
-                IXmlElement elem = children.getNode(i);
+                xml::Element elem = children.getNode(i);
                 std::string key     = elem.getName();
                 std::string value   = elem.getValue();
                 
@@ -362,12 +362,12 @@ void ContentDirectory::parseItem(IXmlElement& itemElem, const std::shared_ptr<It
     }
 }
 
-std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocument& doc)
+std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(xml::Document& doc)
 {
     assert(doc && "ParseContainers: Invalid document supplied");
 
     std::vector<std::shared_ptr<Item>> containers;
-    IXmlNodeList containerList = doc.getElementsByTagName("container");
+    xml::NodeList containerList = doc.getElementsByTagName("container");
     uint64_t numContainers = containerList.size();
     containers.reserve(numContainers);
     
@@ -375,7 +375,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocumen
     {
         try
         {
-            IXmlElement elem = containerList.getNode(i);
+            xml::Element elem = containerList.getNode(i);
             
             auto item = std::make_shared<Item>();
             parseContainer(elem, item);
@@ -390,18 +390,18 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(IXmlDocumen
     return containers;
 }
 
-std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& doc)
+std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& doc)
 {
     assert(doc && "ParseItems: Invalid document supplied");
 
     std::vector<std::shared_ptr<Item>> items;
-    IXmlNodeList itemList = doc.getElementsByTagName("item");
+    xml::NodeList itemList = doc.getElementsByTagName("item");
     uint64_t numItems = itemList.size();
     for (uint64_t i = 0; i < numItems && !m_Abort; ++i)
     {
         try
         {
-            IXmlElement elem = itemList.getNode(i);
+            xml::Element elem = itemList.getNode(i);
         
             auto item = std::make_shared<Item>();
             parseItem(elem, item);
@@ -416,7 +416,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(IXmlDocument& do
     return items;
 }
 
-IXmlDocument ContentDirectory::sendAction(const Action& action)
+xml::Document ContentDirectory::sendAction(const Action& action)
 {
     try
     {
@@ -428,7 +428,7 @@ IXmlDocument ContentDirectory::sendAction(const Action& action)
     }
     
     assert(false);
-    return IXmlDocument();
+    return xml::Document();
 }
 
 void ContentDirectory::handleUPnPResult(int errorCode)

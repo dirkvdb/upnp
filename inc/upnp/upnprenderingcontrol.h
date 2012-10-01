@@ -76,7 +76,7 @@ private:
     void parseServiceDescription(const std::string& descriptionUrl);
     void eventOccurred(Upnp_Event* pEvent);
     
-    IXmlDocument executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
+    xml::Document executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
     static void handleUPnPResult(int errorCode);

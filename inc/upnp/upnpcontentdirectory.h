@@ -66,8 +66,8 @@ public:
     ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
             
 private:
-    IXmlDocument sendAction(const Action& action);
-    IXmlDocument browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    xml::Document sendAction(const Action& action);
+    xml::Document browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
 
     void querySearchCapabilities();
     void querySortCapabilities();
@@ -77,15 +77,15 @@ private:
     static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item);
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
     
-    IXmlDocument parseBrowseResult(IXmlDocument& doc, ActionResult& result);
-    void parseMetaData(IXmlDocument& doc, const std::shared_ptr<Item>& item);
+    xml::Document parseBrowseResult(xml::Document& doc, ActionResult& result);
+    void parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item);
     
-    void parseContainer(IXmlElement& containerElem, const std::shared_ptr<Item>& item);
-    void parseItem(IXmlElement& itemElem, const std::shared_ptr<Item>& item);
-    Resource parseResource(IXmlNamedNodeMap& nodeMap, const std::string& url);
+    void parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item);
+    void parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item);
+    Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
     
-    std::vector<std::shared_ptr<Item>> parseContainers(IXmlDocument& doc);
-    std::vector<std::shared_ptr<Item>> parseItems(IXmlDocument& doc);
+    std::vector<std::shared_ptr<Item>> parseContainers(xml::Document& doc);
+    std::vector<std::shared_ptr<Item>> parseItems(xml::Document& doc);
     
     void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 

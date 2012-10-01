@@ -123,17 +123,17 @@ void Client::unsubscribeFromService(const Upnp_SID subscriptionId) const
     }
 }
 
-IXmlDocument Client::sendAction(const Action& action) const
+xml::Document Client::sendAction(const Action& action) const
 {
-    IXmlDocument result;
+    xml::Document result;
     throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &result));
     
     return result;
 }
 
-IXmlDocument Client::downloadXmlDocument(const std::string& url) const
+xml::Document Client::downloadXmlDocument(const std::string& url) const
 {
-    IXmlDocument doc;
+    xml::Document doc;
     int ret = UpnpDownloadXmlDoc(url.c_str(), &doc);
     if (ret != UPNP_E_SUCCESS)
     {

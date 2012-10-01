@@ -23,12 +23,12 @@
 namespace upnp
 {
 
-inline IXmlDocument generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
+inline xml::Document generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
 {
     std::stringstream ss;
     ss << "<u:" << action << "Response xmlns:u=\"" << serviceTypeToUrnString(type) << "\"></u:" << action << "Response>";
     
-    return IXmlDocument(ss.str());
+    return xml::Document(ss.str());
 }
 
 }

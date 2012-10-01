@@ -36,7 +36,7 @@ public:
     
     void addArgument(const std::string& name, const std::string& value);
 
-    const IXmlDocument& getActionDocument() const;
+    const xml::Document& getActionDocument() const;
     
     std::string getName() const;
     std::string getUrl() const;
@@ -50,7 +50,7 @@ private:
     std::string                 m_Url;
     ServiceType                 m_ServiceType;
     
-    IXmlDocument                m_ActionDoc;
+    xml::Document                m_ActionDoc;
 }; 
     
 }

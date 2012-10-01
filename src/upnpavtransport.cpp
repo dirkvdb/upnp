@@ -116,7 +116,7 @@ void AVTransport::previous(const std::string& connectionId)
 
 AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& connectionId)
 {
-    IXmlDocument doc = executeAction(Action::GetTransportInfo, connectionId);
+    xml::Document doc = executeAction(Action::GetTransportInfo, connectionId);
     
     TransportInfo info;
     info.currentTransportState      = doc.getChildElementValue("CurrentTransportState");
@@ -128,7 +128,7 @@ AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& conn
 
 AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connectionId)
 {
-    IXmlDocument doc = executeAction(Action::GetPositionInfo, connectionId);
+    xml::Document doc = executeAction(Action::GetPositionInfo, connectionId);
     
     PositionInfo info;
     info.track          = doc.getChildElementValue("Track");
@@ -143,7 +143,7 @@ AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connec
     return info;
 }
 
-IXmlDocument AVTransport::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
+xml::Document AVTransport::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
 {
     upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, ServiceType::AVTransport);
     action.addArgument("InstanceID", connectionId);
@@ -163,12 +163,12 @@ IXmlDocument AVTransport::executeAction(Action actionType, const std::string& co
     }
     
     assert(false);
-    return IXmlDocument();
+    return xml::Document();
 }
 
 void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
 {
-    IXmlDocument doc = m_Client.downloadXmlDocument(descriptionUrl);
+    xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
     
     for (auto& action : getActionsFromDescription(doc))
     {
@@ -189,8 +189,8 @@ void AVTransport::eventOccurred(Upnp_Event* pEvent)
     {
         try
         {
-            IXmlDocument doc(pEvent->ChangedVariables, IXmlDocument::NoOwnership);
-            IXmlDocument changeDoc(doc.getChildElementValueRecursive("LastChange"));
+            xml::Document doc(pEvent->ChangedVariables, xml::Document::NoOwnership);
+            xml::Document changeDoc(doc.getChildElementValueRecursive("LastChange"));
             
             std::map<Variable, std::string> vars;
             auto values = getEventValues(changeDoc);

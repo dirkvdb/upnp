@@ -57,7 +57,7 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
     std::vector<ProtocolInfo> protocolInfo;
 
     upnp::Action action("GetProtocolInfo", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     
     auto infos = stringops::tokenize(result.getChildElementValueRecursive("Sink"), ",");
     for (auto& info : infos)
@@ -86,7 +86,7 @@ ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& proto
     action.addArgument("PeerConnectionID", peerConnectionId);
     action.addArgument("Direction", directionToString(direction));
     
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = result.getChildElementValue("ConnectionID");
@@ -108,7 +108,7 @@ std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
 {
     upnp::Action action("GetCurrentConnectionIDs", m_Service.m_ControlURL, ServiceType::ConnectionManager);
     
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     std::vector<std::string> ids = stringops::tokenize(result.getChildElementValue("ConnectionIDs"), ",");
     
     return ids;
@@ -119,7 +119,7 @@ ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& co
     upnp::Action action("GetCurrentConnectionInfo", m_Service.m_ControlURL, ServiceType::ConnectionManager);
 	action.addArgument("ConnectionID", connectionId);
     
-    IXmlDocument result = sendAction(action);
+    xml::Document result = sendAction(action);
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
@@ -136,7 +136,7 @@ ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& co
 
 void ConnectionManager::parseServiceDescription(const std::string& descriptionUrl)
 {
-    IXmlDocument doc;
+    xml::Document doc;
     
     int ret = UpnpDownloadXmlDoc(descriptionUrl.c_str(), &doc);
     if (ret != UPNP_E_SUCCESS)
@@ -186,7 +186,7 @@ void ConnectionManager::handleUPnPResult(int errorCode)
     }
 }
 
-IXmlDocument ConnectionManager::sendAction(const upnp::Action& action)
+xml::Document ConnectionManager::sendAction(const upnp::Action& action)
 {
     try
     {
@@ -198,7 +198,7 @@ IXmlDocument ConnectionManager::sendAction(const upnp::Action& action)
     }
     
     assert(false);
-    return IXmlDocument();
+    return xml::Document();
 }
 
 }

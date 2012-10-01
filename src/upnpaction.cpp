@@ -38,7 +38,7 @@ void Action::addArgument(const std::string& name, const std::string& value)
     }
 }
 
-const IXmlDocument& Action::getActionDocument() const
+const xml::Document& Action::getActionDocument() const
 {
     return m_ActionDoc;
 }

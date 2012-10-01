@@ -123,7 +123,7 @@ protected:
                                                  { "Mute", mute, {{ "channel", "master" }} },
                                                  { "Volume", volume, {{ "channel", "master" }} } };
         
-        IXmlDocument doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
+        xml::Document doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
         
         Upnp_Event event;
         event.ChangedVariables = doc;

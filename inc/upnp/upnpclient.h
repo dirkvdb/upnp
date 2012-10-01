@@ -41,8 +41,8 @@ public:
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const;
     virtual void unsubscribeFromService(const Upnp_SID subscriptionId) const;
     
-    virtual IXmlDocument sendAction(const Action& action) const;
-    virtual IXmlDocument downloadXmlDocument(const std::string& url) const;
+    virtual xml::Document sendAction(const Action& action) const;
+    virtual xml::Document downloadXmlDocument(const std::string& url) const;
  
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);

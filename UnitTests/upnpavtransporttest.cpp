@@ -71,7 +71,7 @@ protected:
         
         // set a valid device
         EXPECT_CALL(client, downloadXmlDocument(g_serviceDescriptionUrl))
-            .WillOnce(Return(IXmlDocument(testxmls::avtransportServiceDescription)));
+            .WillOnce(Return(xml::Document(testxmls::avtransportServiceDescription)));
         avtransport->setDevice(device);
         
         subscribe();
@@ -148,7 +148,7 @@ protected:
                                                  { "A_ARG_TYPE_SeekTarget", "target" },
                                                  { "A_ARG_TYPE_InstanceID", "InstanceId" } };
         
-        IXmlDocument doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
+        xml::Document doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
         
         Upnp_Event event;
         event.ChangedVariables = doc;

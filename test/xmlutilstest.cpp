@@ -118,14 +118,14 @@ protected:
         doc = ixmlParseBuffer(testXML.c_str());
     }
 
-    IXmlDocument    doc;
+    xml::Document    doc;
 };
 
 TEST_F(XmlUtilsTest, documentGetChildElementValue)
 {
     const std::string xml = "<allowedValueRange>TestValue</allowedValueRange>";
         
-    IXmlDocument doc = ixmlParseBuffer(xml.c_str());
+    xml::Document doc = ixmlParseBuffer(xml.c_str());
     EXPECT_EQ(std::string("TestValue"), doc.getChildElementValue("allowedValueRange"));
 }
 
@@ -138,8 +138,8 @@ TEST_F(XmlUtilsTest, elementGetChildElementValue)
     "    <step>1</step>"
     "</allowedValueRange>";
     
-    IXmlDocument doc = ixmlParseBuffer(xml.c_str());
-    IXmlElement node = doc.getFirstChild();
+    xml::Document doc = ixmlParseBuffer(xml.c_str());
+    xml::Element node = doc.getFirstChild();
     EXPECT_EQ(std::string("0"),     node.getChildElementValue("minimum"));
     EXPECT_EQ(std::string("100"),   node.getChildElementValue("maximum"));
     EXPECT_EQ(std::string("1"),     node.getChildElementValue("step"));

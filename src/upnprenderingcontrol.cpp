@@ -74,7 +74,7 @@ bool RenderingControl::supportsAction(Action action)
     return m_SupportedActions.find(action) != m_SupportedActions.end();
 }
 
-IXmlDocument RenderingControl::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
+xml::Document RenderingControl::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
 {
     upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, ServiceType::RenderingControl);
     action.addArgument("InstanceID", connectionId);
@@ -94,7 +94,7 @@ IXmlDocument RenderingControl::executeAction(Action actionType, const std::strin
     }
     
     assert(false);
-    return IXmlDocument();
+    return xml::Document();
 }
 
 
@@ -120,7 +120,7 @@ void RenderingControl::parseServiceDescription(const std::string& descriptionUrl
 {
     try
     {
-        IXmlDocument doc = m_Client.downloadXmlDocument(descriptionUrl);
+        xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
         
         for (auto& action : getActionsFromDescription(doc))
         {
@@ -169,13 +169,13 @@ void RenderingControl::eventOccurred(Upnp_Event* pEvent)
     {
         try
         {
-            IXmlDocument doc(pEvent->ChangedVariables, IXmlDocument::NoOwnership);
-            IXmlDocument changeDoc(doc.getChildElementValueRecursive("LastChange"));
+            xml::Document doc(pEvent->ChangedVariables, xml::Document::NoOwnership);
+            xml::Document changeDoc(doc.getChildElementValueRecursive("LastChange"));
             
             //log::debug(doc.toString());
             
-            IXmlNode instanceNode = changeDoc.getElementsByTagName("InstanceID").getNode(0);
-            IXmlNodeList children = instanceNode.getChildNodes();
+            xml::Node instanceNode = changeDoc.getElementsByTagName("InstanceID").getNode(0);
+            xml::NodeList children = instanceNode.getChildNodes();
             
             std::map<Variable, std::string> vars;
             unsigned long numVars = children.size();
@@ -183,7 +183,7 @@ void RenderingControl::eventOccurred(Upnp_Event* pEvent)
             {
                 try
                 {
-                    IXmlElement elem = children.getNode(i);
+                    xml::Element elem = children.getNode(i);
                     vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
                 }
                 catch (std::exception& e)

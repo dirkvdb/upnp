@@ -61,7 +61,7 @@ public:
     ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
     
 private:
-    IXmlDocument sendAction(const upnp::Action& action);
+    xml::Document sendAction(const upnp::Action& action);
     void parseServiceDescription(const std::string& descriptionUrl);
     
     static Action actionFromString(const std::string& action);

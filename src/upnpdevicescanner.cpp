@@ -147,47 +147,30 @@ std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
     return m_Devices;
 }
 
-std::string DeviceScanner::getFirstDocumentItem(IXmlDocument& doc, const std::string& item)
+std::string DeviceScanner::getFirstDocumentItem(xml::Document& doc, const std::string& item)
 {
-    std::string result;
-    
-    IXmlNodeList nodeList = ixmlDocument_getElementsByTagName(doc, item.c_str());
-    if (nodeList)
-    {
-        IXML_Node* pTmpNode = ixmlNodeList_item(nodeList, 0);
-        if (pTmpNode)
-        {
-            IXML_Node* pTextNode = ixmlNode_getFirstChild(pTmpNode);
-            const char* pValue = ixmlNode_getNodeValue(pTextNode);
-            if (pValue)
-            {
-                result = pValue;
-            }
-        }
-    }
-    
-    return result;
+    return doc.getChildElementValueRecursive(item);
 }
 
-IXmlNodeList DeviceScanner::getFirstServiceList(IXmlDocument& doc)
+xml::NodeList DeviceScanner::getFirstServiceList(xml::Document& doc)
 {
-    IXmlNodeList serviceList;
+    xml::NodeList serviceList;
     
-    IXmlNodeList servlistNodelist = ixmlDocument_getElementsByTagName(doc, "serviceList");
-    if (servlistNodelist && ixmlNodeList_length(servlistNodelist))
+    xml::NodeList servlistNodelist = doc.getElementsByTagName("serviceList");
+    if (servlistNodelist.size() > 0)
     {
-        IXML_Node* pServlistNode = ixmlNodeList_item(servlistNodelist, 0);
-        serviceList = ixmlElement_getElementsByTagName(reinterpret_cast<IXML_Element*>(pServlistNode), "service");
+        xml::Element servlistElem = servlistNodelist.getNode(0);
+        return servlistElem.getElementsByTagName("service");
     }
     
     return serviceList;
 }
 
-bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType serviceType, std::shared_ptr<Device>& device)
+bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType serviceType, std::shared_ptr<Device>& device)
 {
     bool found = false;
     
-    IXmlNodeList serviceList = getFirstServiceList(doc);
+    xml::NodeList serviceList = getFirstServiceList(doc);
     if (!serviceList)
     {
         return found;
@@ -198,7 +181,7 @@ bool DeviceScanner::findAndParseService(IXmlDocument& doc, const ServiceType ser
     unsigned long numServices = serviceList.size();
     for (unsigned long i = 0; i < numServices; ++i)
     {
-        IXmlElement serviceElem = serviceList.getNode(i);
+        xml::Element serviceElem = serviceList.getNode(i);
         
         Service service;
         service.m_Type = stringToServiceTypeUrn(serviceElem.getChildElementValue("serviceType"));
@@ -270,7 +253,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         }
     }
     
-    IXmlDocument doc;
+    xml::Document doc;
     
     int ret = UpnpDownloadXmlDoc(pDiscovery->Location, &doc);
     if (ret != UPNP_E_SUCCESS)
