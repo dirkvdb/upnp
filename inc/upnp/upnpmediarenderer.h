@@ -80,10 +80,10 @@ public:
     utils::Signal<void(const std::set<Action>&)>    AvailableActionsChanged;
     
 private:
-    void onLastChanged(const std::map<AVTransport::Variable, std::string>& vars);
+    void onLastChanged(const std::map<AVTransportVariable, std::string>& vars);
     void updateAvailableActions(const std::string& actionList);
     
-    static MediaRenderer::Action transportActionToAction(AVTransport::Action action);
+    static MediaRenderer::Action transportActionToAction(AVTransportAction action);
     
     std::shared_ptr<Device>             m_Device;
     std::vector<ProtocolInfo>           m_ProtocolInfo;

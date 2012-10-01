@@ -197,15 +197,15 @@ bool MediaRenderer::isActionAvailable(Action action) const
     return m_AvailableActions.find(action) != m_AvailableActions.end();
 }
 
-void MediaRenderer::onLastChanged(const std::map<AVTransport::Variable, std::string>& vars)
+void MediaRenderer::onLastChanged(const std::map<AVTransportVariable, std::string>& vars)
 {
-    auto iter = vars.find(AVTransport::Variable::CurrentTrackURI);
+    auto iter = vars.find(AVTransportVariable::CurrentTrackURI);
     if (iter != vars.end())
     {
         log::info("Last changed:", iter->second);
     }
     
-    iter = vars.find(AVTransport::Variable::CurrentTransportActions);
+    iter = vars.find(AVTransportVariable::CurrentTransportActions);
     if (iter != vars.end())
     {
         updateAvailableActions(iter->second);
@@ -218,23 +218,23 @@ void MediaRenderer::updateAvailableActions(const std::string& actionList)
     
     m_AvailableActions.clear();
     std::for_each(actions.begin(), actions.end(), [this] (const std::string& action) {
-        try { m_AvailableActions.insert(transportActionToAction(AVTransport::actionFromString(action))); }
+        try { m_AvailableActions.insert(transportActionToAction(m_AVtransport->actionFromString(action))); }
         catch (std::exception& e) { log::warn(e.what()); }
     });
     
     AvailableActionsChanged(m_AvailableActions);
 }
 
-MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action action)
+MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransportAction action)
 {
     switch (action) {
-        case AVTransport::Action::Play:     return Action::Play;
-        case AVTransport::Action::Stop:     return Action::Stop;
-        case AVTransport::Action::Pause:    return Action::Pause;
-        case AVTransport::Action::Seek:     return Action::Seek;
-        case AVTransport::Action::Next:     return Action::Next;
-        case AVTransport::Action::Previous: return Action::Previous;
-        case AVTransport::Action::Record:   return Action::Record;
+        case AVTransportAction::Play:     return Action::Play;
+        case AVTransportAction::Stop:     return Action::Stop;
+        case AVTransportAction::Pause:    return Action::Pause;
+        case AVTransportAction::Seek:     return Action::Seek;
+        case AVTransportAction::Next:     return Action::Next;
+        case AVTransportAction::Previous: return Action::Previous;
+        case AVTransportAction::Record:   return Action::Record;
         default: throw std::logic_error("Invalid transport action");
     }
 }

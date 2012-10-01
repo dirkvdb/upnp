@@ -19,6 +19,7 @@
 
 #include "utils/signal.h"
 
+#include "upnp/upnpservicebase.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
@@ -32,63 +33,51 @@ namespace upnp
 
 class Action;
 class IClient;
+
+enum class RenderingControlAction
+{
+    ListPresets,
+    SelectPreset,
+    GetVolume,
+    SetVolume,
+    GetVolumeDB,
+    SetVolumeDB,
+    GetMute,
+    SetMute
+};
+
+enum class RenderingControlVariable
+{
+    PresetNameList,
+    Mute,
+    Volume,
+    VolumeDB,
+    LastChange //event
+};
     
-class RenderingControl
+class RenderingControl : public ServiceBase<RenderingControlAction, RenderingControlVariable>
 {
 public:
-    enum class Action
-    {
-        ListPresets,
-        SelectPreset,
-        GetVolume,
-        SetVolume,
-        GetVolumeDB,
-        SetVolumeDB,
-        GetMute,
-        SetMute
-    };
-    
-    enum class Variable
-    {
-        PresetNameList,
-        Mute,
-        Volume,
-        VolumeDB,
-        LastChange //event
-    };
-    
     RenderingControl(IClient& client);
-    
-    void setDevice(const std::shared_ptr<Device>& device);
-    
-    void subscribe();
-    void unsubscribe();
-    
-    bool supportsAction(Action action);
     
     void increaseVolume(const std::string& connectionId, uint32_t percentage);
     void decreaseVolume(const std::string& connectionId, uint32_t percentage);
     void setVolume(const std::string& connectionId, int32_t value);
     
-    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
+protected:
+    virtual ServiceType getType();
+    virtual int32_t getSubscriptionTimeout();
     
-private:
-    void parseServiceDescription(const std::string& descriptionUrl);
-    void eventOccurred(Upnp_Event* pEvent);
-    
-    xml::Document executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
-    
-    static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
-    static void handleUPnPResult(int errorCode);
-    static Action actionFromString(const std::string& action);
-    static std::string actionToString(Action action);
-    static Variable variableFromString(const std::string& var);
-    static std::string variableToString(Variable var);
+    virtual void parseServiceDescription(const std::string& descriptionUrl);
 
-    IClient&                    m_Client;
-    Service                     m_Service;
-    std::set<Action>            m_SupportedActions;
-    
+    virtual void handleLastChangeEvent(const std::map<RenderingControlVariable, std::string>& variables);
+    virtual void handleUPnPResult(int errorCode);
+    virtual RenderingControlAction actionFromString(const std::string& action);
+    virtual std::string actionToString(RenderingControlAction action);
+    virtual RenderingControlVariable variableFromString(const std::string& var);
+    virtual std::string variableToString(RenderingControlVariable var);
+
+private:
     uint32_t                    m_CurrentVolume;
     int32_t                     m_MinVolume;
     int32_t                     m_MaxVolume;

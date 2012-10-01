@@ -54,6 +54,8 @@
 		438A7A5A150E9B300093A521 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
 		439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */; };
 		43CC5A961617613F001B72D8 /* upnpavtransporttest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */; };
+		43CC5AB1161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
+		43CC5AB2161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
 		43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */; };
 /* End PBXBuildFile section */
 
@@ -173,6 +175,7 @@
 		439EBBCD1551BD48000177C5 /* upnpavtransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpavtransport.h; sourceTree = "<group>"; };
 		439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransport.cpp; path = src/upnpavtransport.cpp; sourceTree = "<group>"; };
 		43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpavtransporttest.cpp; sourceTree = "<group>"; };
+		43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpservicebase.h; sourceTree = "<group>"; };
 		43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpwebserver.h; sourceTree = "<group>"; };
 		43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpwebserver.cpp; path = src/upnpwebserver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -233,9 +236,8 @@
 			children = (
 				435654741613B6BF00868D6B /* libgmock.a */,
 				435654751613B6BF00868D6B /* libgtest.a */,
-				4336383F1562DECF0018D554 /* Utils.xcodeproj */,
-				4303F15E1612080E0057A64C /* UnitTests */,
 				4341AB371387B66600297297 /* Products */,
+				4303F15E1612080E0057A64C /* UnitTests */,
 				438A7A4C150E9B300093A521 /* upnp */,
 				4357AEF6154BFE900021F9BE /* upnpaction.cpp */,
 				439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */,
@@ -252,6 +254,7 @@
 				4357AEF3154BF7470021F9BE /* upnprenderingcontrol.cpp */,
 				43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */,
 				4357AF05154C81890021F9BE /* upnpxmlutils.cpp */,
+				4336383F1562DECF0018D554 /* Utils.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -277,26 +280,27 @@
 		438A7A4C150E9B300093A521 /* upnp */ = {
 			isa = PBXGroup;
 			children = (
+				4357AEF5154BFE7F0021F9BE /* upnpaction.h */,
+				439EBBCD1551BD48000177C5 /* upnpavtransport.h */,
+				432C62B2154EE9CC00068315 /* upnpclient.h */,
+				4356541A16137C1800868D6B /* upnpclientinterface.h */,
+				4357AEFC154C70FF0021F9BE /* upnpconnectionmanager.h */,
+				4357AF07154D20D50021F9BE /* upnpcontentdirectory.h */,
 				438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */,
 				438A7A50150E9B300093A521 /* upnpdevice.h */,
 				438A7A51150E9B300093A521 /* upnpdevicescanner.h */,
 				438A7A52150E9B300093A521 /* upnphttpget.h */,
 				438A7A53150E9B300093A521 /* upnpitem.h */,
-				4357AEF1154BF7280021F9BE /* upnprenderingcontrol.h */,
-				4357AEF5154BFE7F0021F9BE /* upnpaction.h */,
-				4357AEF8154C07540021F9BE /* upnputils.h */,
-				4357AEF9154C58AF0021F9BE /* upnpprotocolinfo.h */,
-				4357AEFC154C70FF0021F9BE /* upnpconnectionmanager.h */,
-				4357AEFF154C78D00021F9BE /* upnpxmlutils.h */,
 				4357AF02154C7C1C0021F9BE /* upnpmediarenderer.h */,
-				4357AF07154D20D50021F9BE /* upnpcontentdirectory.h */,
 				4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */,
-				4357AF0D154D58570021F9BE /* upnptypes.h */,
-				432C62B2154EE9CC00068315 /* upnpclient.h */,
-				439EBBCD1551BD48000177C5 /* upnpavtransport.h */,
-				43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */,
+				4357AEF9154C58AF0021F9BE /* upnpprotocolinfo.h */,
+				4357AEF1154BF7280021F9BE /* upnprenderingcontrol.h */,
+				43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */,
 				438A0265160DF89B00045136 /* upnpstatevariable.h */,
-				4356541A16137C1800868D6B /* upnpclientinterface.h */,
+				4357AF0D154D58570021F9BE /* upnptypes.h */,
+				4357AEF8154C07540021F9BE /* upnputils.h */,
+				43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */,
+				4357AEFF154C78D00021F9BE /* upnpxmlutils.h */,
 			);
 			name = upnp;
 			path = inc/upnp;
@@ -314,6 +318,7 @@
 				4303F210161216A80057A64C /* upnpdevicescanner.h in Headers */,
 				4303F211161216A80057A64C /* upnphttpget.h in Headers */,
 				4303F212161216A80057A64C /* upnpitem.h in Headers */,
+				43CC5AB2161A07F4001B72D8 /* upnpservicebase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +331,7 @@
 				438A7A58150E9B300093A521 /* upnpdevicescanner.h in Headers */,
 				438A7A59150E9B300093A521 /* upnphttpget.h in Headers */,
 				438A7A5A150E9B300093A521 /* upnpitem.h in Headers */,
+				43CC5AB1161A07F4001B72D8 /* upnpservicebase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

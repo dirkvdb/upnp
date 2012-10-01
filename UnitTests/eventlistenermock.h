@@ -30,8 +30,8 @@ namespace test
 class EventListenerMock
 {
 public:
-    MOCK_METHOD1(RenderingControlLastChangedEvent, void(const std::map<RenderingControl::Variable, std::string>&));
-    MOCK_METHOD1(AVTransportLastChangedEvent, void(const std::map<AVTransport::Variable, std::string>&));
+    MOCK_METHOD1(RenderingControlLastChangedEvent, void(const std::map<RenderingControlVariable, std::string>&));
+    MOCK_METHOD1(AVTransportLastChangedEvent, void(const std::map<AVTransportVariable, std::string>&));
 };
 
 }

@@ -139,27 +139,27 @@ protected:
 
 TEST_F(RenderingControlTest, supportedActions)
 {
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::GetVolume));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SetVolume));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::ListPresets));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SelectPreset));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::GetMute));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SetMute));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::GetVolume));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SetVolume));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::ListPresets));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SelectPreset));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::GetMute));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SetMute));
     
-    EXPECT_FALSE(renderingControl->supportsAction(RenderingControl::Action::GetVolumeDB));
-    EXPECT_FALSE(renderingControl->supportsAction(RenderingControl::Action::SetVolumeDB));
+    EXPECT_FALSE(renderingControl->supportsAction(RenderingControlAction::GetVolumeDB));
+    EXPECT_FALSE(renderingControl->supportsAction(RenderingControlAction::SetVolumeDB));
 }
 
 TEST_F(RenderingControlTest, lastChangeEvent)
 {
-    std::map<RenderingControl::Variable, std::string> lastChange;
+    std::map<RenderingControlVariable, std::string> lastChange;
     EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_)).WillOnce(SaveArg<0>(&lastChange));
     
     triggerLastChangeUpdate("0", "35");
     
-    EXPECT_EQ("FactoryDefaults, InstallationDefaults", lastChange[RenderingControl::Variable::PresetNameList]);
-    EXPECT_EQ("0", lastChange[RenderingControl::Variable::Mute]);
-    EXPECT_EQ("35", lastChange[RenderingControl::Variable::Volume]);
+    EXPECT_EQ("FactoryDefaults, InstallationDefaults", lastChange[RenderingControlVariable::PresetNameList]);
+    EXPECT_EQ("0", lastChange[RenderingControlVariable::Mute]);
+    EXPECT_EQ("35", lastChange[RenderingControlVariable::Volume]);
 }
 
 TEST_F(RenderingControlTest, increaseVolume)
@@ -199,7 +199,8 @@ TEST_F(RenderingControlTest, setVolume)
     EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_));
     triggerLastChangeUpdate("0", "35");
     
-    std::map<int32_t, std::string> values = { {69, "69"}, {110, "100"}, {-10, "0"} };
+    // the service description xml defines the volume range between 10 and 110
+    std::map<int32_t, std::string> values = { {69, "69"}, {120, "110"}, {0, "10"} };
     
     for (auto& value : values)
     {

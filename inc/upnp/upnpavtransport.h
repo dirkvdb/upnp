@@ -17,82 +17,72 @@
 #ifndef UPNP_AV_TRANSPORT_H
 #define UPNP_AV_TRANSPORT_H
 
-#include "upnp/upnpdevice.h"
-#include "upnp/upnpxmlutils.h"
-
-#include "utils/signal.h"
-
-#include <upnp/upnp.h>
-
-#include <set>
-#include <memory>
-#include <string>
+#include "upnp/upnpservicebase.h"
 
 namespace upnp
 {
     
-class IClient;
 class Item;
 class Action;
 
-class AVTransport
+enum class AVTransportAction
+{
+    SetAVTransportURI,
+    SetNextAVTransportURI, // Optional
+    GetMediaInfo,
+    GetTransportInfo,
+    GetPositionInfo,
+    GetDeviceCapabilities,
+    GetTransportSettings,
+    Stop,
+    Play,
+    Pause, // Optional
+    Record, // Optional
+    Seek,
+    Next,
+    Previous,
+    SetPlayMode, // Optional
+    SetRecordQualityMode, // Optional
+    GetCurrentTransportActions // Optional
+};
+
+enum class AVTransportVariable
+{
+    TransportState,
+    TransportStatus,
+    PlaybackStorageMedium,
+    PossiblePlaybackStorageMedia,
+    PossibleRecordStorageMedia,
+    CurrentPlayMode,
+    TransportPlaySpeed,
+    RecordStorageMedium,
+    RecordMediumWriteStatus,
+    PossibleRecordQualityModes,
+    CurrentRecordQualityMode,
+    NumberOfTracks,
+    CurrentTrack,
+    CurrentTrackDuration,
+    CurrentMediaDuration,
+    CurrentTrackURI,
+    CurrentTrackMetaData,
+    AVTransportURI,
+    AVTransportURIMetaData,
+    NextAVTransportURI,
+    NextAVTransportURIMetaData,
+    CurrentTransportActions,
+    RelativeTimePosition,
+    AbsoluteTimePosition,
+    RelativeCounterPosition,
+    AbsoluteCounterPosition,
+    ArgumentTypeSeekMode,
+    ArgumentTypeSeekTarget,
+    ArgumentTypeInstanceId,
+    LastChange //event
+};
+
+class AVTransport : public ServiceBase<AVTransportAction, AVTransportVariable>
 {
 public:
-    enum class Action
-    {
-        SetAVTransportURI,
-        SetNextAVTransportURI, // Optional
-        GetMediaInfo,
-        GetTransportInfo,
-        GetPositionInfo,
-        GetDeviceCapabilities,
-        GetTransportSettings,
-        Stop,
-        Play,
-        Pause, // Optional
-        Record, // Optional
-        Seek,
-        Next,
-        Previous,
-        SetPlayMode, // Optional
-        SetRecordQualityMode, // Optional
-        GetCurrentTransportActions // Optional
-    };
-    
-    enum class Variable
-    {
-        TransportState,
-        TransportStatus,
-        PlaybackStorageMedium,
-        PossiblePlaybackStorageMedia,
-        PossibleRecordStorageMedia,
-        CurrentPlayMode,
-        TransportPlaySpeed,
-        RecordStorageMedium,
-        RecordMediumWriteStatus,
-        PossibleRecordQualityModes,
-        CurrentRecordQualityMode,
-        NumberOfTracks,
-        CurrentTrack,
-        CurrentTrackDuration,
-        CurrentMediaDuration,
-        CurrentTrackURI,
-        CurrentTrackMetaData,
-        AVTransportURI,
-        AVTransportURIMetaData,
-        NextAVTransportURI,
-        NextAVTransportURIMetaData,
-        CurrentTransportActions,
-        RelativeTimePosition,
-        AbsoluteTimePosition,
-        RelativeCounterPosition,
-        AbsoluteCounterPosition,
-        ArgumentTypeSeekMode,
-        ArgumentTypeSeekTarget,
-        ArgumentTypeInstanceId,
-        LastChange //event 
-    };
-    
     enum class TransportState
     {
         Stopped,
@@ -124,13 +114,6 @@ public:
     };
 
     AVTransport(IClient& client);
-    ~AVTransport();
-    
-    void setDevice(const std::shared_ptr<Device>& device);
-    
-    bool supportsAction(Action action) const;
-    void subscribe();
-    void unsubscribe();
     
     void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");
     void play(const std::string& connectionId, const std::string& speed = "1");
@@ -141,24 +124,16 @@ public:
     PositionInfo getPositionInfo(const std::string& connectionId);
     TransportInfo getTransportInfo(const std::string& connectionId);
     
-    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangedEvent;
+    AVTransportAction actionFromString(const std::string& action);
+    std::string actionToString(AVTransportAction action);
+    AVTransportVariable variableFromString(const std::string& action);
+    std::string variableToString(AVTransportVariable var);
     
-    static Action actionFromString(const std::string& action);
+protected:
+    ServiceType getType();
+    int32_t getSubscriptionTimeout();
     
-private:
-    void parseServiceDescription(const std::string& descriptionUrl);
-    void eventOccurred(Upnp_Event* pEvent);
-    
-    xml::Document executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args = {});
-    
-    static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance);
-    static std::string actionToString(Action action);
-    static Variable variableFromString(const std::string& action);
-    static void handleUPnPResult(int errorCode);
-
-    IClient&                        m_Client;
-    Service                         m_Service;
-    std::set<Action>                m_SupportedActions;
+    void handleUPnPResult(int errorCode);
 };
     
 }

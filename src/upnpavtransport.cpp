@@ -30,93 +30,47 @@ using namespace std::placeholders;
 namespace upnp
 {
 
-static const int32_t defaultTimeout = 1801;
+static const int32_t g_subscriptionTimeout = 1801;
     
 AVTransport::AVTransport(IClient& client)
-: m_Client(client)
+: ServiceBase(client)
 {
-}
-
-AVTransport::~AVTransport()
-{
-    try
-    {
-        unsubscribe();
-    }
-    catch (std::exception& e)
-    {
-        log::error(e.what());
-    }
-}
-
-void AVTransport::setDevice(const std::shared_ptr<Device>& device)
-{
-    if (device->implementsService(ServiceType::AVTransport))
-    {
-        m_Service = device->m_Services[ServiceType::AVTransport];
-        parseServiceDescription(m_Service.m_SCPDUrl);
-    }
-}
-
-bool AVTransport::supportsAction(Action action) const
-{
-    return m_SupportedActions.find(action) != m_SupportedActions.end();
-}
-
-void AVTransport::subscribe()
-{
-    unsubscribe();
-    
-    m_Client.UPnPEventOccurredEvent.connect(std::bind(&AVTransport::eventOccurred, this, _1), this);
-    m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, defaultTimeout, &AVTransport::eventCb, this);
-}
-
-void AVTransport::unsubscribe()
-{
-    if (!m_Service.m_EventSubscriptionID.empty())
-    {
-        m_Client.UPnPEventOccurredEvent.disconnect(this);
-        m_Client.unsubscribeFromService(&(m_Service.m_EventSubscriptionID[0]));
-        m_Service.m_EventSubscriptionID.clear();
-    }
 }
 
 void AVTransport::setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData)
 {
-    std::map<std::string, std::string> args;
-    args.insert(std::make_pair("CurrentURI", uri));
-    args.insert(std::make_pair("CurrentURIMetaData", uriMetaData));
-    executeAction(Action::SetAVTransportURI, connectionId, args);
+    std::map<std::string, std::string> args = { { "CurrentURI", uri }, { "CurrentURIMetaData", uriMetaData } };
+    executeAction(AVTransportAction::SetAVTransportURI, connectionId, args);
 }
 
 void AVTransport::play(const std::string& connectionId, const std::string& speed)
 {
-    executeAction(Action::Play, connectionId, { {"Speed", speed} });
+    executeAction(AVTransportAction::Play, connectionId, { {"Speed", speed} });
 }
 
 void AVTransport::pause(const std::string& connectionId)
 {
-    executeAction(Action::Pause, connectionId);
+    executeAction(AVTransportAction::Pause, connectionId);
 }
 
 void AVTransport::stop(const std::string& connectionId)
 {
-    executeAction(Action::Stop, connectionId);
+    executeAction(AVTransportAction::Stop, connectionId);
 }
 
 void AVTransport::next(const std::string& connectionId)
 {
-    executeAction(Action::Next, connectionId);
+    executeAction(AVTransportAction::Next, connectionId);
 }
 
 void AVTransport::previous(const std::string& connectionId)
 {
-    executeAction(Action::Previous, connectionId);
+    executeAction(AVTransportAction::Previous, connectionId);
 }
 
 AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& connectionId)
 {
-    xml::Document doc = executeAction(Action::GetTransportInfo, connectionId);
+    xml::Document doc = executeAction(AVTransportAction::GetTransportInfo, connectionId);
     
     TransportInfo info;
     info.currentTransportState      = doc.getChildElementValue("CurrentTransportState");
@@ -128,7 +82,7 @@ AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& conn
 
 AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connectionId)
 {
-    xml::Document doc = executeAction(Action::GetPositionInfo, connectionId);
+    xml::Document doc = executeAction(AVTransportAction::GetPositionInfo, connectionId);
     
     PositionInfo info;
     info.track          = doc.getChildElementValue("Track");
@@ -143,224 +97,105 @@ AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connec
     return info;
 }
 
-xml::Document AVTransport::executeAction(Action actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
+ServiceType AVTransport::getType()
 {
-    upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, ServiceType::AVTransport);
-    action.addArgument("InstanceID", connectionId);
-    
-    for (auto& arg : args)
-    {
-        action.addArgument(arg.first, arg.second);
-    }
-    
-    try
-    {
-        return m_Client.sendAction(action);
-    }
-    catch (int32_t errorCode)
-    {
-        handleUPnPResult(errorCode);
-    }
-    
-    assert(false);
-    return xml::Document();
+    return ServiceType::AVTransport;
 }
 
-void AVTransport::parseServiceDescription(const std::string& descriptionUrl)
+int32_t AVTransport::getSubscriptionTimeout()
 {
-    xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
-    
-    for (auto& action : getActionsFromDescription(doc))
-    {
-        try
-        {
-            m_SupportedActions.insert(actionFromString(action));
-        }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
-    }
+    return g_subscriptionTimeout;
 }
-
-void AVTransport::eventOccurred(Upnp_Event* pEvent)
-{
-    if (pEvent->Sid == m_Service.m_EventSubscriptionID)
-    {
-        try
-        {
-            xml::Document doc(pEvent->ChangedVariables, xml::Document::NoOwnership);
-            xml::Document changeDoc(doc.getChildElementValueRecursive("LastChange"));
-            
-            std::map<Variable, std::string> vars;
-            auto values = getEventValues(changeDoc);
-            for (auto& i : values)
-            {
-                try
-                {
-                    vars[variableFromString(i.first)] = i.second;
-#ifdef DEBUG_AVTRANSPORT
-                    log::debug(i.first, i.second);
-#endif
-                }
-                catch (std::exception& e)
-                {
-                    log::warn("Unknown AVTransport event variable ignored:", i.first);
-                }
-            }
-            
-            LastChangedEvent(vars);
-        }
-        catch (std::exception& e)
-        {
-            log::error("Failed to parse AVTransport event variables:", e.what());
-        }
-    }
-}
-
-int AVTransport::eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
-{
-    AVTransport* av = reinterpret_cast<AVTransport*>(pInstance);
     
-    switch (eventType)
-    {
-    case UPNP_EVENT_SUBSCRIBE_COMPLETE:
-    {
-        Upnp_Event_Subscribe* pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
-        if (pSubEvent->ErrCode != UPNP_E_SUCCESS)
-        {
-            log::error("Error in Event Subscribe Callback:", pSubEvent->ErrCode);
-        }
-        else
-        {
-            if (pSubEvent->Sid)
-            {
-                av->m_Service.m_EventSubscriptionID = pSubEvent->Sid;
-            }
-            else
-            {
-                av->m_Service.m_EventSubscriptionID.clear();
-                log::error("Subscription id for device is empty");
-            }
-        }
-        break;
-    }
-    case UPNP_EVENT_AUTORENEWAL_FAILED:
-    case UPNP_EVENT_SUBSCRIPTION_EXPIRED:
-    {
-        Upnp_Event_Subscribe* pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
-        
-        try
-        {
-            Upnp_SID newSID;
-            int32_t timeout = defaultTimeout;
-            
-            av->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout, newSID);
-            av->m_Service.m_EventSubscriptionID = newSID;
-            
-            log::info("AVTransport subscription renewed: \n", newSID);
-        }
-        catch (std::exception& e)
-        {
-            log::error(std::string("Failed to renew AVTransport event subscription: ") + e.what());
-        }
-        
-        break;
-    }
-    case UPNP_EVENT_RENEWAL_COMPLETE:
-        log::info("AVTransport subscription renewal complete");
-        break;
-    default:
-        log::info("Unhandled action:", eventType);
-        break;
-    }
-    
-    return 0;
-}
-
-AVTransport::Action AVTransport::actionFromString(const std::string& action)
+AVTransportAction AVTransport::actionFromString(const std::string& action)
 {
-    if (action == "SetAVTransportURI")              return Action::SetAVTransportURI;
-    if (action == "SetNextAVTransportURI")          return Action::SetNextAVTransportURI;
-    if (action == "GetMediaInfo")                   return Action::GetMediaInfo;
-    if (action == "GetTransportInfo")               return Action::GetTransportInfo;
-    if (action == "GetPositionInfo")                return Action::GetPositionInfo;
-    if (action == "GetDeviceCapabilities")          return Action::GetDeviceCapabilities;
-    if (action == "GetTransportSettings")           return Action::GetTransportSettings;
-    if (action == "Stop")                           return Action::Stop;
-    if (action == "Play")                           return Action::Play;
-    if (action == "Pause")                          return Action::Pause;
-    if (action == "Record")                         return Action::Record;
-    if (action == "Seek")                           return Action::Seek;
-    if (action == "Next")                           return Action::Next;
-    if (action == "Previous")                       return Action::Previous;
-    if (action == "SetPlayMode")                    return Action::SetPlayMode;
-    if (action == "SetRecordQualityMode")           return Action::SetRecordQualityMode;
-    if (action == "GetCurrentTransportActions")     return Action::GetCurrentTransportActions;
+    if (action == "SetAVTransportURI")              return AVTransportAction::SetAVTransportURI;
+    if (action == "SetNextAVTransportURI")          return AVTransportAction::SetNextAVTransportURI;
+    if (action == "GetMediaInfo")                   return AVTransportAction::GetMediaInfo;
+    if (action == "GetTransportInfo")               return AVTransportAction::GetTransportInfo;
+    if (action == "GetPositionInfo")                return AVTransportAction::GetPositionInfo;
+    if (action == "GetDeviceCapabilities")          return AVTransportAction::GetDeviceCapabilities;
+    if (action == "GetTransportSettings")           return AVTransportAction::GetTransportSettings;
+    if (action == "Stop")                           return AVTransportAction::Stop;
+    if (action == "Play")                           return AVTransportAction::Play;
+    if (action == "Pause")                          return AVTransportAction::Pause;
+    if (action == "Record")                         return AVTransportAction::Record;
+    if (action == "Seek")                           return AVTransportAction::Seek;
+    if (action == "Next")                           return AVTransportAction::Next;
+    if (action == "Previous")                       return AVTransportAction::Previous;
+    if (action == "SetPlayMode")                    return AVTransportAction::SetPlayMode;
+    if (action == "SetRecordQualityMode")           return AVTransportAction::SetRecordQualityMode;
+    if (action == "GetCurrentTransportActions")     return AVTransportAction::GetCurrentTransportActions;
 
     throw std::logic_error("Unknown AVTransport action:" + action);
 }
 
-std::string AVTransport::actionToString(Action action)
+std::string AVTransport::actionToString(AVTransportAction action)
 {
     switch (action)
     {
-        case Action::SetAVTransportURI:             return "SetAVTransportURI";
-        case Action::SetNextAVTransportURI:         return "SetNextAVTransportURI";
-        case Action::GetMediaInfo:                  return "GetMediaInfo";
-        case Action::GetTransportInfo:              return "GetTransportInfo";
-        case Action::GetPositionInfo:               return "GetPositionInfo";
-        case Action::GetDeviceCapabilities:         return "GetDeviceCapabilities";
-        case Action::GetTransportSettings:          return "GetTransportSettings";
-        case Action::Stop:                          return "Stop";
-        case Action::Play:                          return "Play";
-        case Action::Pause:                         return "Pause";
-        case Action::Record:                        return "Record";
-        case Action::Seek:                          return "Seek";
-        case Action::Next:                          return "Next";
-        case Action::Previous:                      return "Previous";  
-        case Action::SetPlayMode:                   return "SetPlayMode";
-        case Action::SetRecordQualityMode:          return "SetRecordQualityMode";
-        case Action::GetCurrentTransportActions:    return "GetCurrentTransportActions";
+        case AVTransportAction::SetAVTransportURI:             return "SetAVTransportURI";
+        case AVTransportAction::SetNextAVTransportURI:         return "SetNextAVTransportURI";
+        case AVTransportAction::GetMediaInfo:                  return "GetMediaInfo";
+        case AVTransportAction::GetTransportInfo:              return "GetTransportInfo";
+        case AVTransportAction::GetPositionInfo:               return "GetPositionInfo";
+        case AVTransportAction::GetDeviceCapabilities:         return "GetDeviceCapabilities";
+        case AVTransportAction::GetTransportSettings:          return "GetTransportSettings";
+        case AVTransportAction::Stop:                          return "Stop";
+        case AVTransportAction::Play:                          return "Play";
+        case AVTransportAction::Pause:                         return "Pause";
+        case AVTransportAction::Record:                        return "Record";
+        case AVTransportAction::Seek:                          return "Seek";
+        case AVTransportAction::Next:                          return "Next";
+        case AVTransportAction::Previous:                      return "Previous";  
+        case AVTransportAction::SetPlayMode:                   return "SetPlayMode";
+        case AVTransportAction::SetRecordQualityMode:          return "SetRecordQualityMode";
+        case AVTransportAction::GetCurrentTransportActions:    return "GetCurrentTransportActions";
         default:
             throw std::logic_error("Invalid AVTransport action");
     }
 }
 
-AVTransport::Variable AVTransport::variableFromString(const std::string& var)
+AVTransportVariable AVTransport::variableFromString(const std::string& var)
 {
-    if (var == "TransportState")                 return Variable::TransportState;
-    if (var == "TransportStatus")                return Variable::TransportStatus;
-    if (var == "PlaybackStorageMedium")          return Variable::PlaybackStorageMedium;
-    if (var == "PossiblePlaybackStorageMedia")   return Variable::PossiblePlaybackStorageMedia;
-    if (var == "PossibleRecordStorageMedia")     return Variable::PossibleRecordStorageMedia;
-    if (var == "CurrentPlayMode")                return Variable::CurrentPlayMode;
-    if (var == "TransportPlaySpeed")             return Variable::TransportPlaySpeed;
-    if (var == "RecordStorageMedium")            return Variable::RecordStorageMedium;
-    if (var == "RecordMediumWriteStatus")        return Variable::RecordMediumWriteStatus;
-    if (var == "PossibleRecordQualityModes")     return Variable::PossibleRecordQualityModes;
-    if (var == "CurrentRecordQualityMode")       return Variable::CurrentRecordQualityMode;
-    if (var == "NumberOfTracks")                 return Variable::NumberOfTracks;
-    if (var == "CurrentTrack")                   return Variable::CurrentTrack;
-    if (var == "CurrentTrackDuration")           return Variable::CurrentTrackDuration;
-    if (var == "CurrentMediaDuration")           return Variable::CurrentMediaDuration;
-    if (var == "CurrentTrackURI")                return Variable::CurrentTrackURI;
-    if (var == "CurrentTrackMetaData")           return Variable::CurrentTrackMetaData;
-    if (var == "AVTransportURI")                 return Variable::AVTransportURI;
-    if (var == "AVTransportURIMetaData")         return Variable::AVTransportURIMetaData;
-    if (var == "NextAVTransportURI")             return Variable::NextAVTransportURI;
-    if (var == "NextAVTransportURIMetaData")     return Variable::NextAVTransportURIMetaData;
-    if (var == "CurrentTransportActions")        return Variable::CurrentTransportActions;
-    if (var == "RelativeTimePosition")           return Variable::RelativeTimePosition;
-    if (var == "AbsoluteTimePosition")           return Variable::AbsoluteTimePosition;
-    if (var == "RelativeCounterPosition")        return Variable::RelativeCounterPosition;
-    if (var == "AbsoluteCounterPosition")        return Variable::AbsoluteCounterPosition;
-    if (var == "A_ARG_TYPE_SeekMode")            return Variable::ArgumentTypeSeekMode;
-    if (var == "A_ARG_TYPE_SeekTarget")          return Variable::ArgumentTypeSeekTarget;
-    if (var == "A_ARG_TYPE_InstanceID")          return Variable::ArgumentTypeInstanceId;
-    if (var == "LastChange")                     return Variable::LastChange;
+    if (var == "TransportState")                 return AVTransportVariable::TransportState;
+    if (var == "TransportStatus")                return AVTransportVariable::TransportStatus;
+    if (var == "PlaybackStorageMedium")          return AVTransportVariable::PlaybackStorageMedium;
+    if (var == "PossiblePlaybackStorageMedia")   return AVTransportVariable::PossiblePlaybackStorageMedia;
+    if (var == "PossibleRecordStorageMedia")     return AVTransportVariable::PossibleRecordStorageMedia;
+    if (var == "CurrentPlayMode")                return AVTransportVariable::CurrentPlayMode;
+    if (var == "TransportPlaySpeed")             return AVTransportVariable::TransportPlaySpeed;
+    if (var == "RecordStorageMedium")            return AVTransportVariable::RecordStorageMedium;
+    if (var == "RecordMediumWriteStatus")        return AVTransportVariable::RecordMediumWriteStatus;
+    if (var == "PossibleRecordQualityModes")     return AVTransportVariable::PossibleRecordQualityModes;
+    if (var == "CurrentRecordQualityMode")       return AVTransportVariable::CurrentRecordQualityMode;
+    if (var == "NumberOfTracks")                 return AVTransportVariable::NumberOfTracks;
+    if (var == "CurrentTrack")                   return AVTransportVariable::CurrentTrack;
+    if (var == "CurrentTrackDuration")           return AVTransportVariable::CurrentTrackDuration;
+    if (var == "CurrentMediaDuration")           return AVTransportVariable::CurrentMediaDuration;
+    if (var == "CurrentTrackURI")                return AVTransportVariable::CurrentTrackURI;
+    if (var == "CurrentTrackMetaData")           return AVTransportVariable::CurrentTrackMetaData;
+    if (var == "AVTransportURI")                 return AVTransportVariable::AVTransportURI;
+    if (var == "AVTransportURIMetaData")         return AVTransportVariable::AVTransportURIMetaData;
+    if (var == "NextAVTransportURI")             return AVTransportVariable::NextAVTransportURI;
+    if (var == "NextAVTransportURIMetaData")     return AVTransportVariable::NextAVTransportURIMetaData;
+    if (var == "CurrentTransportActions")        return AVTransportVariable::CurrentTransportActions;
+    if (var == "RelativeTimePosition")           return AVTransportVariable::RelativeTimePosition;
+    if (var == "AbsoluteTimePosition")           return AVTransportVariable::AbsoluteTimePosition;
+    if (var == "RelativeCounterPosition")        return AVTransportVariable::RelativeCounterPosition;
+    if (var == "AbsoluteCounterPosition")        return AVTransportVariable::AbsoluteCounterPosition;
+    if (var == "A_ARG_TYPE_SeekMode")            return AVTransportVariable::ArgumentTypeSeekMode;
+    if (var == "A_ARG_TYPE_SeekTarget")          return AVTransportVariable::ArgumentTypeSeekTarget;
+    if (var == "A_ARG_TYPE_InstanceID")          return AVTransportVariable::ArgumentTypeInstanceId;
+    if (var == "LastChange")                     return AVTransportVariable::LastChange;
     
     throw std::logic_error("Unknown AVTransport variable:" + var);
+}
+
+std::string AVTransport::variableToString(AVTransportVariable var)
+{
+    assert(false);
+    throw std::logic_error("Unknown AVTransport variable");
 }
 
 void AVTransport::handleUPnPResult(int errorCode)
