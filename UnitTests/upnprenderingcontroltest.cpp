@@ -168,10 +168,10 @@ TEST_F(RenderingControlTest, increaseVolume)
     triggerLastChangeUpdate("0", "35");
 
     Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
-    expectedAction.addArgument("InstanceID", g_connectionId);
     expectedAction.addArgument("Channel", "Master");
     expectedAction.addArgument("DesiredVolume", "40");
-    
+    expectedAction.addArgument("InstanceID", g_connectionId);
+        
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
     
@@ -184,9 +184,9 @@ TEST_F(RenderingControlTest, decreaseVolume)
     triggerLastChangeUpdate("0", "35");
     
     Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
-    expectedAction.addArgument("InstanceID", g_connectionId);
     expectedAction.addArgument("Channel", "Master");
     expectedAction.addArgument("DesiredVolume", "30");
+    expectedAction.addArgument("InstanceID", g_connectionId);
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
@@ -205,10 +205,10 @@ TEST_F(RenderingControlTest, setVolume)
     for (auto& value : values)
     {
         Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
-        expectedAction.addArgument("InstanceID", g_connectionId);
         expectedAction.addArgument("Channel", "Master");
         expectedAction.addArgument("DesiredVolume", value.second);
-        
+        expectedAction.addArgument("InstanceID", g_connectionId);
+                
         EXPECT_CALL(client, sendAction(expectedAction))
             .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
         

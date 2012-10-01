@@ -50,8 +50,13 @@ private:
     std::string                 m_Url;
     ServiceType                 m_ServiceType;
     
-    xml::Document                m_ActionDoc;
-}; 
+    xml::Document               m_ActionDoc;
+};
+
+inline std::ostream& operator<< (std::ostream& os, const Action& action)
+{
+    return os << action.getActionDocument().toString();
+}
     
 }
 

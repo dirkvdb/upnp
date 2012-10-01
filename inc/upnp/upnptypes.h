@@ -83,6 +83,16 @@ enum class ConnectionStatus
     Unknown
 };
 
+class UPnPException : public std::exception
+{
+public:
+    UPnPException(int32_t errorCode) : m_ErrorCode(errorCode) {}
+    int32_t getErrorCode() { return m_ErrorCode; }
+    
+private:
+    int32_t     m_ErrorCode;
+};
+
 struct ConnectionInfo
 {
     std::string         connectionId;

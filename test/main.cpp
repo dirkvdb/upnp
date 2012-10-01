@@ -14,14 +14,10 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <clocale>
 
 using namespace testing;
-
-#include "testenvironment.h"
-
-upnp::test::TestEnvironment* g_Env;
 
 int main(int argc, char **argv)
 {
@@ -31,8 +27,6 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    InitGoogleTest(&argc, argv);
-
-    //g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
+    InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 }

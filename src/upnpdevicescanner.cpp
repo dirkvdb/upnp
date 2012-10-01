@@ -147,11 +147,6 @@ std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
     return m_Devices;
 }
 
-std::string DeviceScanner::getFirstDocumentItem(xml::Document& doc, const std::string& item)
-{
-    return doc.getChildElementValueRecursive(item);
-}
-
 xml::NodeList DeviceScanner::getFirstServiceList(xml::Document& doc)
 {
     xml::NodeList serviceList;
@@ -253,32 +248,24 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         }
     }
     
-    xml::Document doc;
-    
-    int ret = UpnpDownloadXmlDoc(pDiscovery->Location, &doc);
-    if (ret != UPNP_E_SUCCESS)
+    try
     {
-        log::error("Error obtaining device description from", pDiscovery->Location, " error =", ret);
-        return;
-    }
-
-    auto device = std::make_shared<Device>();
-    
-    device->m_Location      = pDiscovery->Location;
-    device->m_UDN           = getFirstDocumentItem(doc, "UDN");
-    device->m_Type          = Device::stringToDeviceType(getFirstDocumentItem(doc, "deviceType"));
-    device->m_TimeoutTime   = system_clock::now() + seconds(pDiscovery->Expires);
-    
-    if (device->m_UDN.empty() || device->m_Type != m_Type)
-    {
-        return;
-    }
-    
-    
-    {
-        device->m_FriendlyName   = getFirstDocumentItem(doc, "friendlyName");
-        device->m_BaseURL        = getFirstDocumentItem(doc, "URLBase");
-        device->m_RelURL         = getFirstDocumentItem(doc, "presentationURL");
+        xml::Document doc = m_Client.downloadXmlDocument(pDiscovery->Location);
+        auto device = std::make_shared<Device>();
+        
+        device->m_Location      = pDiscovery->Location;
+        device->m_UDN           = doc.getChildElementValueRecursive("UDN");
+        device->m_Type          = Device::stringToDeviceType(doc.getChildElementValueRecursive("deviceType"));
+        device->m_TimeoutTime   = system_clock::now() + seconds(pDiscovery->Expires);
+        
+        if (device->m_UDN.empty() || device->m_Type != m_Type)
+        {
+            return;
+        }
+        
+        device->m_FriendlyName   = doc.getChildElementValueRecursive("friendlyName");
+        try { device->m_BaseURL  = doc.getChildElementValueRecursive("URLBase"); } catch (std::exception&) {}
+        try { device->m_RelURL   = doc.getChildElementValueRecursive("presentationURL"); } catch (std::exception&) {}
         
         char presURL[200];
         int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : pDiscovery->Location), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
@@ -324,6 +311,10 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
                 DeviceDiscoveredEvent(device);
             }
         }
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
     }
 }
 

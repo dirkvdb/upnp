@@ -26,6 +26,7 @@
 #include "eventlistenermock.h"
 #include "testxmls.h"
 #include "testutils.h"
+#include "upnpobjectprinter.h"
 
 #include "upnp/upnpaction.h"
 #include "upnp/upnpavtransport.h"
@@ -229,7 +230,7 @@ TEST_F(AVTransportTest, playDefaultSpeed)
     expectedAction.addArgument("Speed", "1");
     
     EXPECT_CALL(client, sendAction(expectedAction))
-    .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
+        .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
     
     avtransport->play(g_connectionId);
 }

@@ -17,42 +17,44 @@
 #ifndef UPNP_CONNECTION_MANAGER_H
 #define UPNP_CONNECTION_MANAGER_H
 
-#include <set>
-#include <string>
-#include <vector>
-#include <memory>
-
-#include "upnp/upnptypes.h"
-#include "upnp/upnpdevice.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnpservicebase.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
 {
 
 class Action;
-class IClient;
+
+enum class ConnectionManagerAction
+{
+    GetProtocolInfo,
+    PrepareForConnection, // Optional
+    ConnectionComplete, // Optional
+    GetCurrentConnectionIDs,
+    GetCurrentConnectionInfo
+};
+
+enum class ConnectionManagerVariable
+{
+    SourceProtocolInfo,
+    SinkProtocolInfo,
+    CurrentConnectionIds,
+    ArgumentTypeConnectionStatus,
+    ArgumentTypeConnectionManager,
+    ArgumentTypeDirection,
+    ArgumentTypeProtocolInfo,
+    ArgumentTypeConnectionId,
+    ArgumentTypeAVTransportId,
+    ArgumentTypeRecourceId
+};
     
-class ConnectionManager
+class ConnectionManager : public ServiceBase<ConnectionManagerAction, ConnectionManagerVariable>
 {
 public:    
-    enum class Action
-    {
-        GetProtocolInfo,
-        PrepareForConnection, // Optional
-        ConnectionComplete, // Optional
-        GetCurrentConnectionIDs,
-        GetCurrentConnectionInfo
-    };
-    
     static std::string UnknownConnectionId;
     static std::string DefaultConnectionId;
 
-    ConnectionManager(IClient& cp);
-    
-    void setDevice(const std::shared_ptr<Device>& device);
-    
-    bool supportsAction(Action action) const;
+    ConnectionManager(IClient& client);
     
     std::vector<ProtocolInfo> getProtocolInfo();
     ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, const std::string& peerConnectionId, Direction direction);
@@ -60,16 +62,16 @@ public:
     std::vector<std::string> getCurrentConnectionIds();
     ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
     
-private:
-    xml::Document sendAction(const upnp::Action& action);
-    void parseServiceDescription(const std::string& descriptionUrl);
+protected:
+    ServiceType getType();
+    int32_t getSubscriptionTimeout();
     
-    static Action actionFromString(const std::string& action);
-    static void handleUPnPResult(int errorCode);
+    void handleUPnPResult(int errorCode);
     
-    IClient&                    m_Client;
-    Service                     m_Service;
-    std::set<Action>            m_SupportedActions;
+    ConnectionManagerAction actionFromString(const std::string& action);
+    std::string actionToString(ConnectionManagerAction action);
+    ConnectionManagerVariable variableFromString(const std::string& var);
+    std::string variableToString(ConnectionManagerVariable var);
 };
     
 }

@@ -30,35 +30,21 @@ using namespace utils;
 namespace upnp
 {
 
+static const int32_t g_subscriptionTimeout = 1801;
+
 std::string ConnectionManager::UnknownConnectionId = "-1";
 std::string ConnectionManager::DefaultConnectionId = "0";
 
 ConnectionManager::ConnectionManager(IClient& client)
-: m_Client(client)
+: ServiceBase(client)
 {
-}
-
-void ConnectionManager::setDevice(const std::shared_ptr<Device>& device)
-{
-    if (device->implementsService(ServiceType::ConnectionManager))
-    {
-        m_Service = device->m_Services[ServiceType::ConnectionManager];
-        parseServiceDescription(m_Service.m_SCPDUrl);
-    }
-}
-
-bool ConnectionManager::supportsAction(Action action) const
-{
-    return m_SupportedActions.find(action) != m_SupportedActions.end();
 }
 
 std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
 {
-    std::vector<ProtocolInfo> protocolInfo;
-
-    upnp::Action action("GetProtocolInfo", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-    xml::Document result = sendAction(action);
+    xml::Document result = executeAction(ConnectionManagerAction::GetProtocolInfo);
     
+    std::vector<ProtocolInfo> protocolInfo;
     auto infos = stringops::tokenize(result.getChildElementValueRecursive("Sink"), ",");
     for (auto& info : infos)
     {
@@ -80,14 +66,11 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
 
 ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionId, const std::string& peerConnectionManager, Direction direction)
 {
-    upnp::Action action("PrepareForConnection", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-	action.addArgument("RemoteProtocolInfo", protocolInfo.toString());
-    action.addArgument("PeerConnectionManager", peerConnectionManager);
-    action.addArgument("PeerConnectionID", peerConnectionId);
-    action.addArgument("Direction", directionToString(direction));
-    
-    xml::Document result = sendAction(action);
-    
+    xml::Document result = executeAction(ConnectionManagerAction::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
+                                                                                          {"PeerConnectionManager", peerConnectionManager},
+                                                                                          {"PeerConnectionID", peerConnectionId},
+                                                                                          {"Direction", directionToString(direction)} });
+
     ConnectionInfo connInfo;
     connInfo.connectionId               = result.getChildElementValue("ConnectionID");
     connInfo.avTransportId              = result.getChildElementValue("AVTransportID");
@@ -98,28 +81,30 @@ ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& proto
 
 void ConnectionManager::connectionComplete(const ConnectionInfo& connectionInfo)
 {
-    upnp::Action action("ConnectionComplete", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-    action.addArgument("ConnectionID", connectionInfo.connectionId);
-    
-    sendAction(action);
+    executeAction(ConnectionManagerAction::ConnectionComplete, { {"ConnectionID", connectionInfo.connectionId} });
 }
 
 std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
 {
-    upnp::Action action("GetCurrentConnectionIDs", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-    
-    xml::Document result = sendAction(action);
+    xml::Document result = executeAction(ConnectionManagerAction::GetCurrentConnectionIDs);
     std::vector<std::string> ids = stringops::tokenize(result.getChildElementValue("ConnectionIDs"), ",");
     
     return ids;
 }
 
+ServiceType ConnectionManager::getType()
+{
+    return ServiceType::ConnectionManager;
+}
+
+int32_t ConnectionManager::getSubscriptionTimeout()
+{
+    return g_subscriptionTimeout;
+}
+
 ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& connectionId)
 {
-    upnp::Action action("GetCurrentConnectionInfo", m_Service.m_ControlURL, ServiceType::ConnectionManager);
-	action.addArgument("ConnectionID", connectionId);
-    
-    xml::Document result = sendAction(action);
+    xml::Document result = executeAction(ConnectionManagerAction::GetCurrentConnectionInfo, { {"ConnectionID", connectionId} });
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
@@ -132,41 +117,6 @@ ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& co
     connInfo.connectionStatus           = connectionStatusFromString(result.getChildElementValue("Status"));
     
     return connInfo;
-}
-
-void ConnectionManager::parseServiceDescription(const std::string& descriptionUrl)
-{
-    xml::Document doc;
-    
-    int ret = UpnpDownloadXmlDoc(descriptionUrl.c_str(), &doc);
-    if (ret != UPNP_E_SUCCESS)
-    {
-        log::error("Error obtaining device description from", descriptionUrl, " error =", ret);
-        return;
-    }
-    
-    for (auto& action : getActionsFromDescription(doc))
-    {
-        try
-        {
-            m_SupportedActions.insert(actionFromString(action));
-        }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
-    }
-}
-
-ConnectionManager::Action ConnectionManager::actionFromString(const std::string& action)
-{
-    if (action == "GetProtocolInfo")            return Action::GetProtocolInfo;
-    if (action == "PrepareForConnection")       return Action::PrepareForConnection;
-    if (action == "ConnectionComplete")         return Action::ConnectionComplete;
-    if (action == "GetCurrentConnectionIDs")    return Action::GetCurrentConnectionIDs;
-    if (action == "GetCurrentConnectionInfo")   return Action::GetCurrentConnectionInfo;
-    
-    throw std::logic_error("Unknown ConnectionManager action:" + action);
 }
 
 void ConnectionManager::handleUPnPResult(int errorCode)
@@ -186,19 +136,64 @@ void ConnectionManager::handleUPnPResult(int errorCode)
     }
 }
 
-xml::Document ConnectionManager::sendAction(const upnp::Action& action)
+ConnectionManagerAction ConnectionManager::actionFromString(const std::string& action)
 {
-    try
-    {
-        return m_Client.sendAction(action);
-    }
-    catch (int32_t errorCode)
-    {
-        handleUPnPResult(errorCode);
-    }
+    if (action == "GetProtocolInfo")            return ConnectionManagerAction::GetProtocolInfo;
+    if (action == "PrepareForConnection")       return ConnectionManagerAction::PrepareForConnection;
+    if (action == "ConnectionComplete")         return ConnectionManagerAction::ConnectionComplete;
+    if (action == "GetCurrentConnectionIDs")    return ConnectionManagerAction::GetCurrentConnectionIDs;
+    if (action == "GetCurrentConnectionInfo")   return ConnectionManagerAction::GetCurrentConnectionInfo;
     
-    assert(false);
-    return xml::Document();
+    throw std::logic_error("Unknown ConnectionManager action:" + action);
+}
+
+std::string ConnectionManager::actionToString(ConnectionManagerAction action)
+{
+    switch (action)
+    {
+        case ConnectionManagerAction::GetProtocolInfo:                return "GetProtocolInfo";
+        case ConnectionManagerAction::PrepareForConnection:           return "PrepareForConnection";
+        case ConnectionManagerAction::ConnectionComplete:             return "ConnectionComplete";
+        case ConnectionManagerAction::GetCurrentConnectionIDs:        return "GetCurrentConnectionIDs";
+        case ConnectionManagerAction::GetCurrentConnectionInfo:       return "GetCurrentConnectionInfo";
+
+        default: throw std::logic_error("Unknown ConnectionManager action");
+    }
+}
+
+ConnectionManagerVariable ConnectionManager::variableFromString(const std::string& var)
+{
+    if (var == "SourceProtocolInfo")            return ConnectionManagerVariable::SourceProtocolInfo;
+    if (var == "SinkProtocolInfo")              return ConnectionManagerVariable::SinkProtocolInfo;
+    if (var == "CurrentConnectionIDs")          return ConnectionManagerVariable::CurrentConnectionIds;
+    if (var == "A_ARG_TYPE_ConnectionStatus")   return ConnectionManagerVariable::ArgumentTypeConnectionStatus;
+    if (var == "A_ARG_TYPE_ConnectionManager")  return ConnectionManagerVariable::ArgumentTypeConnectionManager;
+    if (var == "A_ARG_TYPE_Direction")          return ConnectionManagerVariable::ArgumentTypeDirection;
+    if (var == "A_ARG_TYPE_ProtocolInfo")       return ConnectionManagerVariable::ArgumentTypeProtocolInfo;
+    if (var == "A_ARG_TYPE_ConnectionID")       return ConnectionManagerVariable::ArgumentTypeConnectionId;
+    if (var == "A_ARG_TYPE_AVTransportID")      return ConnectionManagerVariable::ArgumentTypeAVTransportId;
+    if (var == "A_ARG_TYPE_RcsID")              return ConnectionManagerVariable::ArgumentTypeRecourceId;
+    
+    throw std::logic_error("Unknown ConnectionManager variable:" + var);
+}
+
+std::string ConnectionManager::variableToString(ConnectionManagerVariable var)
+{
+    switch (var)
+    {
+        case ConnectionManagerVariable::SourceProtocolInfo:             return "SourceProtocolInfo";
+        case ConnectionManagerVariable::SinkProtocolInfo:               return "SinkProtocolInfo";
+        case ConnectionManagerVariable::CurrentConnectionIds:           return "CurrentConnectionIDs";
+        case ConnectionManagerVariable::ArgumentTypeConnectionStatus:   return "A_ARG_TYPE_ConnectionStatus";
+        case ConnectionManagerVariable::ArgumentTypeConnectionManager:  return "A_ARG_TYPE_ConnectionManager";
+        case ConnectionManagerVariable::ArgumentTypeDirection:          return "A_ARG_TYPE_Direction";
+        case ConnectionManagerVariable::ArgumentTypeProtocolInfo:       return "A_ARG_TYPE_ProtocolInfo";
+        case ConnectionManagerVariable::ArgumentTypeConnectionId:       return "A_ARG_TYPE_ConnectionID";
+        case ConnectionManagerVariable::ArgumentTypeAVTransportId:      return "A_ARG_TYPE_AVTransportID";
+        case ConnectionManagerVariable::ArgumentTypeRecourceId:         return "A_ARG_TYPE_RcsID";
+            
+        default: throw std::logic_error("Unknown ConnectionManager action");
+    }
 }
 
 }

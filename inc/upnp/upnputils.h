@@ -41,6 +41,10 @@ inline void handleUPnPResult(int errorCode)
     {
         return;
     }
+    else if (UPNP_E_SOCKET_CONNECT == errorCode)
+    {
+        throw std::logic_error("Could not connect to the device");
+    }
     else if (401 == errorCode)
     {
         throw std::logic_error("Failed to connect");

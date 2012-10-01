@@ -176,6 +176,7 @@
 		439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransport.cpp; path = src/upnpavtransport.cpp; sourceTree = "<group>"; };
 		43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpavtransporttest.cpp; sourceTree = "<group>"; };
 		43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpservicebase.h; sourceTree = "<group>"; };
+		43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpobjectprinter.h; sourceTree = "<group>"; };
 		43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpwebserver.h; sourceTree = "<group>"; };
 		43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpwebserver.cpp; path = src/upnpwebserver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -219,6 +220,7 @@
 				4356547D1613B9B200868D6B /* upnprenderingcontroltest.cpp */,
 				435654821614D10100868D6B /* testxmls.h */,
 				43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */,
+				43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */,
 			);
 			path = UnitTests;
 			sourceTree = "<group>";

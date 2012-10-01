@@ -39,38 +39,40 @@ AVTransport::AVTransport(IClient& client)
 
 void AVTransport::setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData)
 {
-    std::map<std::string, std::string> args = { { "CurrentURI", uri }, { "CurrentURIMetaData", uriMetaData } };
-    executeAction(AVTransportAction::SetAVTransportURI, connectionId, args);
+    executeAction(AVTransportAction::SetAVTransportURI, { {"InstanceID", connectionId},
+                                                          {"CurrentURI", uri},
+                                                          {"CurrentURIMetaData", uriMetaData} });
 }
 
 void AVTransport::play(const std::string& connectionId, const std::string& speed)
 {
-    executeAction(AVTransportAction::Play, connectionId, { {"Speed", speed} });
+    executeAction(AVTransportAction::Play, { {"InstanceID", connectionId},
+                                             {"Speed", speed} });
 }
 
 void AVTransport::pause(const std::string& connectionId)
 {
-    executeAction(AVTransportAction::Pause, connectionId);
+    executeAction(AVTransportAction::Pause, { {"InstanceID", connectionId} });
 }
 
 void AVTransport::stop(const std::string& connectionId)
 {
-    executeAction(AVTransportAction::Stop, connectionId);
+    executeAction(AVTransportAction::Stop, { {"InstanceID", connectionId} });
 }
 
 void AVTransport::next(const std::string& connectionId)
 {
-    executeAction(AVTransportAction::Next, connectionId);
+    executeAction(AVTransportAction::Next, { {"InstanceID", connectionId} });
 }
 
 void AVTransport::previous(const std::string& connectionId)
 {
-    executeAction(AVTransportAction::Previous, connectionId);
+    executeAction(AVTransportAction::Previous, { {"InstanceID", connectionId} });
 }
 
 AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& connectionId)
 {
-    xml::Document doc = executeAction(AVTransportAction::GetTransportInfo, connectionId);
+    xml::Document doc = executeAction(AVTransportAction::GetTransportInfo, { {"InstanceID", connectionId} });
     
     TransportInfo info;
     info.currentTransportState      = doc.getChildElementValue("CurrentTransportState");
@@ -82,7 +84,7 @@ AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& conn
 
 AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connectionId)
 {
-    xml::Document doc = executeAction(AVTransportAction::GetPositionInfo, connectionId);
+    xml::Document doc = executeAction(AVTransportAction::GetPositionInfo, { {"InstanceID", connectionId} });
     
     PositionInfo info;
     info.track          = doc.getChildElementValue("Track");

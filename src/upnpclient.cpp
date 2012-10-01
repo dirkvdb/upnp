@@ -192,7 +192,7 @@ void Client::throwOnUPnPError(int32_t errorCode)
 {
     if (errorCode != UPNP_E_SUCCESS)
     {
-        throw errorCode;
+        throw UPnPException(errorCode);
     }
 }
 

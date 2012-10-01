@@ -86,7 +86,7 @@ public:
         }
     }
     
-    bool supportsAction(ActionType action)
+    bool supportsAction(ActionType action) const
     {
         return m_SupportedActions.find(action) != m_SupportedActions.end();
     }
@@ -162,16 +162,14 @@ protected:
         }
     }
     
-    xml::Document executeAction(ActionType actionType, const std::string& connectionId)
+    xml::Document executeAction(ActionType actionType)
     {
-        return executeAction(actionType, connectionId, {});
+        return executeAction(actionType, {});
     }
     
-    xml::Document executeAction(ActionType actionType, const std::string& connectionId, const std::map<std::string, std::string>& args)
+    xml::Document executeAction(ActionType actionType, const std::map<std::string, std::string>& args)
     {
-        upnp::Action action(actionToString(actionType), m_Service.m_ControlURL, getType());
-        action.addArgument("InstanceID", connectionId);
-        
+        Action action(actionToString(actionType), m_Service.m_ControlURL, getType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
@@ -181,9 +179,9 @@ protected:
         {
             return m_Client.sendAction(action);
         }
-        catch (int32_t errorCode)
+        catch (UPnPException& e)
         {
-            handleUPnPResult(errorCode);
+            handleUPnPResult(e.getErrorCode());
         }
         
         assert(false);

@@ -53,7 +53,6 @@ public:
     void onDeviceDissapeared(const std::string& deviceId);
     
 private:
-    static std::string getFirstDocumentItem(xml::Document& doc, const std::string& item);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
     static bool findAndParseService(xml::Document& doc, ServiceType serviceType, std::shared_ptr<Device>& device);
     

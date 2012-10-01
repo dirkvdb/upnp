@@ -51,7 +51,7 @@ void ControlPoint::setWebserver(WebServer& webServer)
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
     m_Renderer.setDevice(dev);
-    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
+    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManagerAction::PrepareForConnection);
     m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
 }
 
@@ -82,7 +82,7 @@ void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& it
     
     if (m_RendererSupportsPrepareForConnection)
     {
-        if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
+        if (server.connectionManager().supportsAction(ConnectionManagerAction::PrepareForConnection))
         {
             m_ConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
                                                                          ConnectionManager::UnknownConnectionId,

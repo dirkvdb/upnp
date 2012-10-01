@@ -116,7 +116,7 @@ const std::vector<Property>& MediaServer::getSortCapabilities() const
 
 std::string MediaServer::getPeerConnectionId() const
 {
-    if (!m_ConnectionMgr.supportsAction(upnp::ConnectionManager::Action::PrepareForConnection))
+    if (!m_ConnectionMgr.supportsAction(ConnectionManagerAction::PrepareForConnection))
     {
         return ConnectionManager::UnknownConnectionId;
     }

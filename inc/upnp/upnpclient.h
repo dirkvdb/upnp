@@ -21,7 +21,7 @@
 
 namespace upnp
 {
-    
+
 class Client : public IClient
 {
 public:

@@ -228,7 +228,17 @@ xml::Document ContentDirectory::browseAction(const std::string& objectId, const 
     browseAction.addArgument("RequestedCount", numericops::toString(limit));
     browseAction.addArgument("SortCriteria", sort);
     
-    return m_Client.sendAction(browseAction);
+    try
+    {
+        return m_Client.sendAction(browseAction);
+    }
+    catch (UPnPException& e)
+    {
+        handleUPnPResult(e.getErrorCode());
+    }
+    
+    assert(false);
+    return xml::Document();
 }
 
 xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResult& result)
@@ -422,9 +432,9 @@ xml::Document ContentDirectory::sendAction(const Action& action)
     {
         return m_Client.sendAction(action);
     }
-    catch (int32_t errorCode)
+    catch (UPnPException& e)
     {
-        handleUPnPResult(errorCode);
+        handleUPnPResult(e.getErrorCode());
     }
     
     assert(false);

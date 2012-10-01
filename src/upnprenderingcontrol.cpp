@@ -59,7 +59,9 @@ void RenderingControl::decreaseVolume(const std::string& connectionId, uint32_t 
 void RenderingControl::setVolume(const std::string& connectionId, int32_t value)
 {
     numericops::clip(value, m_MinVolume, m_MaxVolume);
-    executeAction(RenderingControlAction::SetVolume, connectionId, { {"Channel", "Master"}, { "DesiredVolume", numericops::toString(value)} });
+    executeAction(RenderingControlAction::SetVolume, { {"InstanceID", connectionId},
+                                                       {"Channel", "Master"},
+                                                       {"DesiredVolume", numericops::toString(value)} });
 }
 
 ServiceType RenderingControl::getType()
