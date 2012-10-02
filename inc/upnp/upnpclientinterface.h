@@ -41,9 +41,9 @@ public:
     
     virtual void searchDevices(Device::Type type, int timeout) const = 0;
     
-    virtual void subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const = 0;
+    virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const = 0;
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const = 0;
-    virtual void unsubscribeFromService(const Upnp_SID subscriptionId) const = 0;
+    virtual void unsubscribeFromService(const std::string& subscriptionId) const = 0;
     
     virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;

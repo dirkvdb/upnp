@@ -110,9 +110,7 @@ protected:
     
     void unsubscribe()
     {
-        EXPECT_CALL(client, unsubscribeFromService(_)).WillOnce(Invoke([] (const Upnp_SID id) {
-            EXPECT_STREQ(g_subscriptionId, id);
-        }));
+        EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
         
         avtransport->LastChangedEvent.disconnect(this);
         avtransport->unsubscribe();

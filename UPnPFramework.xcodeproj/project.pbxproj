@@ -56,6 +56,7 @@
 		43CC5A961617613F001B72D8 /* upnpavtransporttest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */; };
 		43CC5AB1161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
 		43CC5AB2161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
+		43CC5ABA161B6576001B72D8 /* upnpservicebasetest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CC5AB9161B6576001B72D8 /* upnpservicebasetest.cpp */; };
 		43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */; };
 /* End PBXBuildFile section */
 
@@ -177,6 +178,7 @@
 		43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpavtransporttest.cpp; sourceTree = "<group>"; };
 		43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpservicebase.h; sourceTree = "<group>"; };
 		43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpobjectprinter.h; sourceTree = "<group>"; };
+		43CC5AB9161B6576001B72D8 /* upnpservicebasetest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpservicebasetest.cpp; sourceTree = "<group>"; };
 		43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpwebserver.h; sourceTree = "<group>"; };
 		43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpwebserver.cpp; path = src/upnpwebserver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -221,6 +223,7 @@
 				435654821614D10100868D6B /* testxmls.h */,
 				43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */,
 				43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */,
+				43CC5AB9161B6576001B72D8 /* upnpservicebasetest.cpp */,
 			);
 			path = UnitTests;
 			sourceTree = "<group>";
@@ -450,6 +453,7 @@
 				435654811613BC3500868D6B /* upnprenderingcontroltest.cpp in Sources */,
 				4303F18B161208630057A64C /* main.cpp in Sources */,
 				4303F18C161208630057A64C /* xmlutilstest.cpp in Sources */,
+				43CC5ABA161B6576001B72D8 /* upnpservicebasetest.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,7 +560,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/modules/utils/inc";
-				VALID_ARCHS = "i386 x86_64";
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -589,7 +593,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/modules/utils/inc";
-				VALID_ARCHS = "i386 x86_64";
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
@@ -597,7 +601,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
@@ -615,7 +619,7 @@
 				SDKROOT = macosx;
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "x86_64 i386";
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -623,7 +627,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DSTROOT = /tmp/UPnPFramework.dst;
@@ -641,7 +645,7 @@
 				SDKROOT = macosx;
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "x86_64 i386";
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};

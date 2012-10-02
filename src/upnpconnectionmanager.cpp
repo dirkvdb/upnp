@@ -51,7 +51,9 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
         try
         {
             protocolInfo.push_back(ProtocolInfo(info));
+#ifdef DEBUG_CONNECTION_MANAGER
             log::debug(info);
+#endif
         }
         catch (std::exception& e)
         {
@@ -132,6 +134,7 @@ void ConnectionManager::handleUPnPResult(int errorCode)
         case 705: throw std::logic_error("Access denied");
         case 706: throw std::logic_error("Invalid connection reference");
         case 707: throw std::logic_error("Managers are not part of the same network");
+        
         default: upnp::handleUPnPResult(errorCode);
     }
 }

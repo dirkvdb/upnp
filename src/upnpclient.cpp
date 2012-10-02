@@ -92,15 +92,18 @@ void Client::searchDevices(Device::Type type, int timeout) const
     }
 }
 
-void Client::subscribeToService(const std::string& publisherUrl, int32_t& timeout, Upnp_SID subscriptionId) const
+std::string Client::subscribeToService(const std::string& publisherUrl, int32_t& timeout) const
 {
     log::debug("Subscribe to service:", publisherUrl);
     
+    Upnp_SID subscriptionId;
     int ret = UpnpSubscribe(m_Client, publisherUrl.c_str(), &timeout, subscriptionId);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error("Failed to subscribe to UPnP device service");
     }
+    
+    return subscriptionId;
 }
 
 void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const
@@ -114,9 +117,16 @@ void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout
     }
 }
 
-void Client::unsubscribeFromService(const Upnp_SID subscriptionId) const
+void Client::unsubscribeFromService(const std::string& subscriptionId) const
 {
-    int ret = UpnpUnSubscribe(m_Client, subscriptionId);
+    Upnp_SID id;
+    if (subscriptionId.size() >= sizeof(id))
+    {
+        throw std::logic_error("Invalid subscription Id");
+    }
+    
+    strcpy(id, subscriptionId.c_str());
+    int ret = UpnpUnSubscribe(m_Client, id);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error("Failed to unsubscribe from UPnP device service");

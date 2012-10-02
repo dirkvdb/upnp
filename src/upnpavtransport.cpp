@@ -224,6 +224,7 @@ void AVTransport::handleUPnPResult(int errorCode)
         case 716: throw std::logic_error("Resource not found");
         case 717: throw std::logic_error("Play speed not supported");
         case 718: throw std::logic_error("Invalid instance id");
+        
         default: upnp::handleUPnPResult(errorCode);
     }
 }

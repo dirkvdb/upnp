@@ -500,10 +500,10 @@ std::vector<std::string> getActionsFromDescription(Document& doc)
     std::vector<std::string> actions;
     
     NodeList nodeList = doc.getElementsByTagName("action");
-    unsigned long numActions = nodeList.size();
+    uint64_t numActions = nodeList.size();
     actions.reserve(numActions);
     
-    for (unsigned long i = 0; i < numActions; ++i)
+    for (uint64_t i = 0; i < numActions; ++i)
     {
         Element actionElem = nodeList.getNode(i);
         actions.push_back(actionElem.getChildElementValue("name"));
@@ -517,10 +517,10 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
     std::vector<StateVariable> variables;
     
     NodeList nodeList = doc.getElementsByTagName("stateVariable");
-    unsigned long numVariables = nodeList.size();
+    uint64_t numVariables = nodeList.size();
     variables.reserve(numVariables);
     
-    for (unsigned long i = 0; i < numVariables; ++i)
+    for (uint64_t i = 0; i < numVariables; ++i)
     {
         Element elem = nodeList.getNode(i);
         
@@ -562,8 +562,8 @@ std::map<std::string, std::string> getEventValues(Document& doc)
     NodeList nodeList = doc.getElementsByTagName("InstanceID");
     NodeList children = nodeList.getNode(0).getChildNodes();
     
-    unsigned long numVars = children.size();
-    for (unsigned long i = 0; i < numVars; ++i)
+    uint64_t numVars = children.size();
+    for (uint64_t i = 0; i < numVars; ++i)
     {
         Element elem = children.getNode(i);
         values.insert(std::make_pair(elem.getName(), elem.getAttribute("val")));

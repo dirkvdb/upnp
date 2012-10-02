@@ -23,6 +23,45 @@ namespace test
 {
 namespace testxmls
 {
+
+static std::string simpleServiceDescription =
+"<?xml version=\"1.0\"?>"
+"<scpd"
+"  xmlns=\"urn:schemas-upnp-org:service-1-0\">"
+"	<specVersion>"
+"		<major>1</major>"
+"		<minor>0</minor>"
+"	</specVersion>"
+"	<actionList>"
+"		<action>"
+"			<name>Action1</name>"
+"			<argumentList>"
+"				<argument>"
+"					<name>Var</name>"
+"					<direction>in</direction>"
+"					<relatedStateVariable>Variable1</relatedStateVariable>"
+"				</argument>"
+"			</argumentList>"
+"		</action>"
+"		<action>"
+"			<name>Action2</name>"
+"			<argumentList>"
+"				<argument>"
+"					<name>Var</name>"
+"					<direction>in</direction>"
+"					<relatedStateVariable>Variable1</relatedStateVariable>"
+"				</argument>"
+"			</argumentList>"
+"		</action>"
+"	</actionList>"
+"	<serviceStateTable>"
+"		<stateVariable sendEvents=\"no\">"
+"			<name>Variable1</name>"
+"			<dataType>ui4</dataType>"
+"		</stateVariable>"
+"	</serviceStateTable>"
+"</scpd>";
+
     
 static std::string renderingServiceDescription =
 "<?xml version=\"1.0\"?>"

@@ -222,13 +222,10 @@ protected:
                 
                 try
                 {
-                    Upnp_SID newSID;
                     int32_t timeout = rc->getSubscriptionTimeout();
+                    rc->m_SubscriptionId = rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout);
                     
-                    rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout, newSID);
-                    rc->m_SubscriptionId = newSID;
-                    
-                    utils::log::debug("RenderingControl subscription renewed: \n", newSID);
+                    utils::log::debug("Service subscription renewed: ", rc->m_SubscriptionId);
                 }
                 catch (std::exception& e)
                 {
