@@ -21,6 +21,7 @@
 
 #include "upnpavtransport.h"
 #include "upnprenderingcontrol.h"
+#include "upnpcontentdirectory.h"
 
 namespace upnp
 {
@@ -32,6 +33,7 @@ class EventListenerMock
 public:
     MOCK_METHOD1(RenderingControlLastChangedEvent, void(const std::map<RenderingControlVariable, std::string>&));
     MOCK_METHOD1(AVTransportLastChangedEvent, void(const std::map<AVTransportVariable, std::string>&));
+    MOCK_METHOD1(ContentDirectoryLastChangedEvent, void(const std::map<ContentDirectoryVariable, std::string>&));
 };
 
 }

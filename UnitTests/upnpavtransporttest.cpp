@@ -63,7 +63,7 @@ protected:
         Service service;
         service.m_Type                  = ServiceType::AVTransport;
         service.m_ControlURL            = g_controlUrl;
-        service.m_EventSubscriptionURL  = g_subscriptionUrl;bool supportsAction(Action action);
+        service.m_EventSubscriptionURL  = g_subscriptionUrl;
         service.m_SCPDUrl               = g_serviceDescriptionUrl;
         
         auto device = std::make_shared<Device>();
@@ -83,6 +83,7 @@ protected:
     void TearDown()
     {
         Mock::VerifyAndClearExpectations(&client);
+
         unsubscribe();
         Mock::VerifyAndClearExpectations(&client);
         

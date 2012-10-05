@@ -32,8 +32,10 @@ using namespace utils;
 namespace upnp
 {
 
+static const int32_t g_subscriptionTimeout = 1801;
+
 ContentDirectory::ContentDirectory(IClient& client)
-: m_Client(client)
+: ServiceBase(client)
 , m_Abort(false)
 {
     ixmlRelaxParser(1);
@@ -41,10 +43,11 @@ ContentDirectory::ContentDirectory(IClient& client)
 
 void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)
 {
+    ServiceBase::setDevice(device);
+
     m_SearchCaps.clear();
     m_SortCaps.clear();
     m_SystemUpdateId.clear();
-    m_Service = device->m_Services[ServiceType::ContentDirectory];
     
     try { querySearchCapabilities(); }
     catch (std::exception& e) { log::error("Failed to obtain search capabilities:", e.what()); }
@@ -73,8 +76,7 @@ const std::vector<Property>& ContentDirectory::getSortCapabilities() const
 
 void ContentDirectory::querySearchCapabilities()
 {
-    Action action("GetSearchCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    xml::Document result = sendAction(action);
+    xml::Document result = executeAction(ContentDirectoryAction::GetSearchCapabilities);
     auto caps = stringops::tokenize(result.getChildElementValueRecursive("SearchCaps"), ",");
     
     for (auto& cap : caps)
@@ -85,8 +87,7 @@ void ContentDirectory::querySearchCapabilities()
 
 void ContentDirectory::querySortCapabilities()
 {
-    Action action("GetSortCapabilities", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    xml::Document result = sendAction(action);
+    xml::Document result = executeAction(ContentDirectoryAction::GetSortCapabilities);
     auto caps = stringops::tokenize(result.getChildElementValueRecursive("SortCaps"), ",");
     
     for (auto& cap : caps)
@@ -97,9 +98,7 @@ void ContentDirectory::querySortCapabilities()
 
 void ContentDirectory::querySystemUpdateID()
 {
-    Action action("GetSystemUpdateID", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    xml::Document result = sendAction(action);
-    
+    xml::Document result = executeAction(ContentDirectoryAction::GetSystemUpdateID);
     m_SystemUpdateId = result.getChildElementValueRecursive("Id");
 }
 
@@ -164,15 +163,12 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
 {
     m_Abort = false;
     
-    Action action("Search", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    action.addArgument("ObjectID", objectId);
-    action.addArgument("SearchCriteria", criteria);
-    action.addArgument("Filter", filter);
-    action.addArgument("StartingIndex", numericops::toString(startIndex));
-    action.addArgument("RequestedCount", numericops::toString(limit));
-    action.addArgument("SortCriteria", sort);
-    
-    xml::Document result = m_Client.sendAction(action);
+    xml::Document result = executeAction(ContentDirectoryAction::Search, { {"ObjectID", objectId},
+                                                                           {"SearchCriteria", criteria},
+                                                                           {"Filter", filter},
+                                                                           {"StartingIndex", numericops::toString(startIndex)},
+                                                                           {"RequestedCount", numericops::toString(limit)},
+                                                                           {"SortCriteria", sort} });
     
     ActionResult searchResult;
     xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
@@ -220,25 +216,12 @@ xml::Document ContentDirectory::browseAction(const std::string& objectId, const 
     log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
 #endif
     
-    Action browseAction("Browse", m_Service.m_ControlURL, ServiceType::ContentDirectory);
-    browseAction.addArgument("ObjectID", objectId);
-    browseAction.addArgument("BrowseFlag", flag);
-    browseAction.addArgument("Filter", filter);
-    browseAction.addArgument("StartingIndex", numericops::toString(startIndex));
-    browseAction.addArgument("RequestedCount", numericops::toString(limit));
-    browseAction.addArgument("SortCriteria", sort);
-    
-    try
-    {
-        return m_Client.sendAction(browseAction);
-    }
-    catch (UPnPException& e)
-    {
-        handleUPnPResult(e.getErrorCode());
-    }
-    
-    assert(false);
-    return xml::Document();
+    return executeAction(ContentDirectoryAction::Browse, { {"ObjectID", objectId},
+                                                           {"BrowseFlag", flag},
+                                                           {"Filter", filter},
+                                                           {"StartingIndex", numericops::toString(startIndex)},
+                                                           {"RequestedCount", numericops::toString(limit)},
+                                                           {"SortCriteria", sort} });
 }
 
 xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResult& result)
@@ -426,21 +409,6 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& d
     return items;
 }
 
-xml::Document ContentDirectory::sendAction(const Action& action)
-{
-    try
-    {
-        return m_Client.sendAction(action);
-    }
-    catch (UPnPException& e)
-    {
-        handleUPnPResult(e.getErrorCode());
-    }
-    
-    assert(false);
-    return xml::Document();
-}
-
 void ContentDirectory::handleUPnPResult(int errorCode)
 {
     if (errorCode == UPNP_E_SUCCESS) return;
@@ -494,6 +462,86 @@ void ContentDirectory::addPropertyToList(const std::string& propertyName, std::v
     {
         log::warn("Unknown property:", propertyName);
     }
+}
+
+ContentDirectoryAction ContentDirectory::actionFromString(const std::string& action)
+{
+    if (action == "GetSearchCapabilities")  return ContentDirectoryAction::GetSearchCapabilities;
+    if (action == "GetSortCapabilities")    return ContentDirectoryAction::GetSortCapabilities;
+    if (action == "GetSystemUpdateID")      return ContentDirectoryAction::GetSystemUpdateID;
+    if (action == "Browse")                 return ContentDirectoryAction::Browse;
+    if (action == "Search")                 return ContentDirectoryAction::Search;
+    
+    throw std::logic_error("Unknown ContentDirectory action:" + action);
+}
+
+std::string ContentDirectory::actionToString(ContentDirectoryAction action)
+{
+    switch (action)
+    {
+        case ContentDirectoryAction::GetSearchCapabilities:     return "GetSearchCapabilities";
+        case ContentDirectoryAction::GetSortCapabilities:       return "GetSortCapabilities";
+        case ContentDirectoryAction::GetSystemUpdateID:         return "GetSystemUpdateID";
+        case ContentDirectoryAction::Browse:                    return "Browse";
+        case ContentDirectoryAction::Search:                    return "Search";
+            
+        default:
+            throw std::logic_error("Unknown ContentDirectory action");
+    }
+}
+
+ContentDirectoryVariable ContentDirectory::variableFromString(const std::string& var)
+{
+    if (var == "ContainerUpdateIDs")                return ContentDirectoryVariable::ContainerUpdateIDs;
+    if (var == "TransferIDs")                       return ContentDirectoryVariable::TransferIDs;
+    if (var == "SystemUpdateID")                    return ContentDirectoryVariable::SystemUpdateID;
+    if (var == "A_ARG_TYPE_ObjectID")               return ContentDirectoryVariable::ArgumentTypeObjectID;
+    if (var == "A_ARG_TYPE_Result")                 return ContentDirectoryVariable::ArgumentTypeResult;
+    if (var == "A_ARG_TYPE_SearchCriteria")         return ContentDirectoryVariable::ArgumentTypeSearchCriteria;
+    if (var == "A_ARG_TYPE_Flag")                   return ContentDirectoryVariable::ArgumentTypeBrowseFlag;
+    if (var == "A_ARG_TYPE_Filter")                 return ContentDirectoryVariable::ArgumentTypeFilter;
+    if (var == "A_ARG_TYPE_SortCriteria")           return ContentDirectoryVariable::ArgumentTypeSortCriteria;
+    if (var == "A_ARG_TYPE_Index")                  return ContentDirectoryVariable::ArgumentTypeIndex;
+    if (var == "A_ARG_TYPE_Count")                  return ContentDirectoryVariable::ArgumentTypeCount;
+    if (var == "A_ARG_TYPE_UpdateID")               return ContentDirectoryVariable::ArgumentTypeUpdateID;
+    if (var == "A_ARG_TYPE_SearchCapabilities")     return ContentDirectoryVariable::ArgumentTypeSearchCapabilities;
+    if (var == "A_ARG_TYPE_SortCapabilities")       return ContentDirectoryVariable::ArgumentTypeSortCapabilities;
+
+    throw std::logic_error("Unknown ContentDirectory variable:" + var);
+}
+
+std::string ContentDirectory::variableToString(ContentDirectoryVariable var)
+{
+    switch (var)
+    {
+        case ContentDirectoryVariable::ContainerUpdateIDs:                  return "ContainerUpdateIDs";
+        case ContentDirectoryVariable::TransferIDs:                         return "TransferIDs";
+        case ContentDirectoryVariable::SystemUpdateID:                      return "SystemUpdateID";
+        case ContentDirectoryVariable::ArgumentTypeObjectID:                return "A_ARG_TYPE_ObjectID";
+        case ContentDirectoryVariable::ArgumentTypeResult:                  return "A_ARG_TYPE_Result";
+        case ContentDirectoryVariable::ArgumentTypeSearchCriteria:          return "A_ARG_TYPE_SearchCriteria";
+        case ContentDirectoryVariable::ArgumentTypeBrowseFlag:              return "A_ARG_TYPE_Flag";
+        case ContentDirectoryVariable::ArgumentTypeFilter:                  return "A_ARG_TYPE_Filter";
+        case ContentDirectoryVariable::ArgumentTypeSortCriteria:            return "A_ARG_TYPE_SortCriteria";
+        case ContentDirectoryVariable::ArgumentTypeIndex:                   return "A_ARG_TYPE_Index";
+        case ContentDirectoryVariable::ArgumentTypeCount:                   return "A_ARG_TYPE_Count";
+        case ContentDirectoryVariable::ArgumentTypeUpdateID:                return "A_ARG_TYPE_UpdateID";
+        case ContentDirectoryVariable::ArgumentTypeSearchCapabilities:      return "A_ARG_TYPE_SearchCapabilities";
+        case ContentDirectoryVariable::ArgumentTypeSortCapabilities:        return "A_ARG_TYPE_SortCapabilities";
+        
+        default:
+            throw std::logic_error("Unknown ContentDirectory variable");
+    }
+}
+
+ServiceType ContentDirectory::getType()
+{
+    return ServiceType::ContentDirectory;
+}
+
+int32_t ContentDirectory::getSubscriptionTimeout()
+{
+    return g_subscriptionTimeout;
 }
 
 }

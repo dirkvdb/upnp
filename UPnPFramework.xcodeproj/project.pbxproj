@@ -53,6 +53,7 @@
 		438A7A59150E9B300093A521 /* upnphttpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A52150E9B300093A521 /* upnphttpget.h */; };
 		438A7A5A150E9B300093A521 /* upnpitem.h in Headers */ = {isa = PBXBuildFile; fileRef = 438A7A53150E9B300093A521 /* upnpitem.h */; };
 		439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */; };
+		43ADACBB161F4C4100FE5F44 /* upnpcontentdirectorytest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43ADACBA161F4C4100FE5F44 /* upnpcontentdirectorytest.cpp */; };
 		43CC5A961617613F001B72D8 /* upnpavtransporttest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */; };
 		43CC5AB1161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
 		43CC5AB2161A07F4001B72D8 /* upnpservicebase.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */; };
@@ -175,6 +176,7 @@
 		438A7A53150E9B300093A521 /* upnpitem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpitem.h; sourceTree = "<group>"; };
 		439EBBCD1551BD48000177C5 /* upnpavtransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpavtransport.h; sourceTree = "<group>"; };
 		439EBBCF1551BD90000177C5 /* upnpavtransport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransport.cpp; path = src/upnpavtransport.cpp; sourceTree = "<group>"; };
+		43ADACBA161F4C4100FE5F44 /* upnpcontentdirectorytest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpcontentdirectorytest.cpp; sourceTree = "<group>"; };
 		43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpavtransporttest.cpp; sourceTree = "<group>"; };
 		43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpservicebase.h; sourceTree = "<group>"; };
 		43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpobjectprinter.h; sourceTree = "<group>"; };
@@ -224,6 +226,7 @@
 				43CC5A9416176125001B72D8 /* upnpavtransporttest.cpp */,
 				43CC5AB7161A428E001B72D8 /* upnpobjectprinter.h */,
 				43CC5AB9161B6576001B72D8 /* upnpservicebasetest.cpp */,
+				43ADACBA161F4C4100FE5F44 /* upnpcontentdirectorytest.cpp */,
 			);
 			path = UnitTests;
 			sourceTree = "<group>";
@@ -454,6 +457,7 @@
 				4303F18B161208630057A64C /* main.cpp in Sources */,
 				4303F18C161208630057A64C /* xmlutilstest.cpp in Sources */,
 				43CC5ABA161B6576001B72D8 /* upnpservicebasetest.cpp in Sources */,
+				43ADACBB161F4C4100FE5F44 /* upnpcontentdirectorytest.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

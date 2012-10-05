@@ -59,7 +59,7 @@ public:
         }
     }
     
-    void setDevice(const std::shared_ptr<Device>& device)
+    virtual void setDevice(const std::shared_ptr<Device>& device)
     {
         if (device->implementsService(getType()))
         {

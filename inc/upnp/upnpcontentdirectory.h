@@ -17,14 +17,8 @@
 #ifndef UPNP_CONTENT_DIRECTORY_H
 #define UPNP_CONTENT_DIRECTORY_H
 
-#include <string>
-#include <memory>
-
-#include <upnp/upnp.h>
 #include "upnp/upnpitem.h"
-#include "upnp/upnpdevice.h"
-#include "upnp/upnptypes.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnpservicebase.h"
 
 #include "utils/subscriber.h"
 
@@ -36,7 +30,34 @@ class Action;
 class Device;
 class IClient;
 
-class ContentDirectory
+enum class ContentDirectoryAction
+{
+    GetSearchCapabilities,
+    GetSortCapabilities,
+    GetSystemUpdateID,
+    Browse,
+    Search
+};
+
+enum class ContentDirectoryVariable
+{
+    ContainerUpdateIDs,
+    TransferIDs,
+    SystemUpdateID,
+    ArgumentTypeObjectID,
+    ArgumentTypeResult,
+    ArgumentTypeSearchCriteria,
+    ArgumentTypeBrowseFlag,
+    ArgumentTypeFilter,
+    ArgumentTypeSortCriteria,
+    ArgumentTypeIndex,
+    ArgumentTypeCount,
+    ArgumentTypeUpdateID,
+    ArgumentTypeSearchCapabilities,
+    ArgumentTypeSortCapabilities
+};
+
+class ContentDirectory : public ServiceBase<ContentDirectoryAction, ContentDirectoryVariable>
 {
 public:
     enum BrowseType
@@ -64,16 +85,25 @@ public:
     void browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter);
     ActionResult browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    
+    virtual ContentDirectoryAction actionFromString(const std::string& action);
+    virtual std::string actionToString(ContentDirectoryAction action);
+    virtual ContentDirectoryVariable variableFromString(const std::string& var);
+    virtual std::string variableToString(ContentDirectoryVariable var);
+    
+protected:
+    virtual ServiceType getType();
+    virtual int32_t getSubscriptionTimeout();
+    virtual void handleLastChangeEvent(const std::map<ContentDirectoryVariable, std::string>& variables) {}
+    virtual void handleUPnPResult(int errorCode);
             
 private:
-    xml::Document sendAction(const Action& action);
     xml::Document browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
 
     void querySearchCapabilities();
     void querySortCapabilities();
     void querySystemUpdateID();
     
-    static void handleUPnPResult(int errorCode);
     static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item);
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
     
@@ -89,9 +119,6 @@ private:
     
     void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
 
-    IClient&                    m_Client;
-    Service                     m_Service;
-    
     std::vector<Property>       m_SearchCaps;
     std::vector<Property>       m_SortCaps;
     std::string                 m_SystemUpdateId;
