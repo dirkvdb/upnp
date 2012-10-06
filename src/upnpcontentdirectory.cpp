@@ -29,6 +29,8 @@
 
 using namespace utils;
 
+//#define DEBUG_CONTENT_BROWSING
+
 namespace upnp
 {
 
@@ -38,7 +40,7 @@ ContentDirectory::ContentDirectory(IClient& client)
 : ServiceBase(client)
 , m_Abort(false)
 {
-    ixmlRelaxParser(1);
+    //ixmlRelaxParser(1);
 }
 
 void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)
@@ -77,9 +79,9 @@ const std::vector<Property>& ContentDirectory::getSortCapabilities() const
 void ContentDirectory::querySearchCapabilities()
 {
     xml::Document result = executeAction(ContentDirectoryAction::GetSearchCapabilities);
-    auto caps = stringops::tokenize(result.getChildElementValueRecursive("SearchCaps"), ",");
-    
-    for (auto& cap : caps)
+    xml::Element elem = result.getFirstChild();
+
+    for (auto& cap : stringops::tokenize(elem.getChildElementValue("SearchCaps"), ","))
     {
         addPropertyToList(cap, m_SearchCaps);
     }
@@ -88,9 +90,9 @@ void ContentDirectory::querySearchCapabilities()
 void ContentDirectory::querySortCapabilities()
 {
     xml::Document result = executeAction(ContentDirectoryAction::GetSortCapabilities);
-    auto caps = stringops::tokenize(result.getChildElementValueRecursive("SortCaps"), ",");
+    xml::Element elem = result.getFirstChild();
     
-    for (auto& cap : caps)
+    for (auto& cap : stringops::tokenize(elem.getChildElementValue("SortCaps"), ","))
     {
         addPropertyToList(cap, m_SortCaps);
     }
@@ -99,7 +101,8 @@ void ContentDirectory::querySortCapabilities()
 void ContentDirectory::querySystemUpdateID()
 {
     xml::Document result = executeAction(ContentDirectoryAction::GetSystemUpdateID);
-    m_SystemUpdateId = result.getChildElementValueRecursive("Id");
+    xml::Element elem = result.getFirstChild();
+    m_SystemUpdateId = elem.getChildElementValue("Id");
 }
 
 void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter)
@@ -114,7 +117,7 @@ void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const s
     }
     
 #ifdef DEBUG_CONTENT_BROWSING
-    log::debug(IXmlString(xml::DocumenttoString(browseResult)));
+    log::debug(browseResult.toString());
 #endif
     
     parseMetaData(browseResult, item);
@@ -226,13 +229,32 @@ xml::Document ContentDirectory::browseAction(const std::string& objectId, const 
 
 xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResult& result)
 {
+    std::string browseResult;
+
     assert(doc && "ParseBrowseResult: Invalid document supplied");
     
-    xml::Document browseDoc(doc.getChildElementValueRecursive("Result"));
-    result.numberReturned = stringops::toNumeric<uint32_t>(doc.getChildElementValueRecursive("NumberReturned"));
-    result.totalMatches = stringops::toNumeric<uint32_t>(doc.getChildElementValueRecursive("TotalMatches"));
+    for (xml::Element elem : doc.getFirstChild().getChildNodes())
+    {
+        if (elem.getName() == "Result")
+        {
+            browseResult = elem.getValue();
+        }
+        else if (elem.getName() == "NumberReturned")
+        {
+            result.numberReturned = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+        else if (elem.getName() == "TotalMatches")
+        {
+            result.totalMatches = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+    }
     
-    return browseDoc;
+    if (browseResult.empty())
+    {
+        throw std::logic_error("Failed to obtain browse result");
+    }
+    
+    return xml::Document(browseResult);
 }
 
 void ContentDirectory::parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item)
@@ -260,29 +282,25 @@ void ContentDirectory::parseContainer(xml::Element& containerElem, const std::sh
 {
     item->setObjectId(containerElem.getAttribute("id"));
     item->setParentId(containerElem.getAttribute("parentID"));
+    item->setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
     
-    try
+    for (xml::Element elem : containerElem.getChildNodes())
     {
-        item->setChildCount(stringops::toNumeric<uint32_t>(containerElem.getAttribute("childCount")));
+        Property prop = propertyFromString(elem.getName());
+        if (prop == Property::Unknown)
+        {
+            log::warn("Unknown property", elem.getName());
+            continue;
+        }
+        
+        item->addMetaData(prop, elem.getValue());
     }
-    catch (std::exception&) { /* Childcount attribute is not obligated */ }
     
-    // required properties
-    item->setTitle(containerElem.getChildElementValue("dc:title"));
-    item->addMetaData(Property::Class, containerElem.getChildElementValue("upnp:class"));
-    
-    // optional properties
-    try
+    // check required properties
+    if (item->getTitle().empty())
     {
-        item->addMetaData(Property::AlbumArt, containerElem.getChildElementValue("upnp:albumArtURI"));
+        throw std::logic_error("No title found in item");
     }
-    catch (std::exception&) {}
-    
-    try
-    {
-        item->addMetaData(Property::Artist, containerElem.getChildElementValue("upnp:artist"));
-    }
-    catch (std::exception&) {}
 }
 
 Resource ContentDirectory::parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
@@ -290,14 +308,12 @@ Resource ContentDirectory::parseResource(xml::NamedNodeMap& nodeMap, const std::
     Resource res;
     res.setUrl(url);
     
-    uint64_t numAttributes = nodeMap.size();
-    for (uint64_t i = 0; i < numAttributes && !m_Abort; ++i)
+    for (auto& node : nodeMap)
     {
         try
         {
-            xml::Node item = nodeMap.getNode(i);
-            std::string key = item.getName();
-            std::string value = item.getValue();
+            std::string key = node.getName();
+            std::string value = node.getValue();
             
             if (key == "protocolInfo")
             {
@@ -318,17 +334,13 @@ void ContentDirectory::parseItem(xml::Element& itemElem, const std::shared_ptr<I
 {
     item->setObjectId(itemElem.getAttribute("id"));
     item->setParentId(itemElem.getAttribute("parentID"));
-    item->setTitle(itemElem.getChildElementValue("dc:title"));
 
     try
     {
-        xml::NodeList children = itemElem.getChildNodes();
-        uint64_t numChildren = children.size();
-        for (uint64_t i = 0; i < numChildren && !m_Abort; ++i)
+        for (xml::Element elem : itemElem.getChildNodes())
         {
             try
             {
-                xml::Element elem = children.getNode(i);
                 std::string key     = elem.getName();
                 std::string value   = elem.getValue();
                 
@@ -360,16 +372,10 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(xml::Docume
     assert(doc && "ParseContainers: Invalid document supplied");
 
     std::vector<std::shared_ptr<Item>> containers;
-    xml::NodeList containerList = doc.getElementsByTagName("container");
-    uint64_t numContainers = containerList.size();
-    containers.reserve(numContainers);
-    
-    for (uint64_t i = 0; i < numContainers && !m_Abort; ++i)
+    for (xml::Element elem : doc.getElementsByTagName("container"))
     {
         try
         {
-            xml::Element elem = containerList.getNode(i);
-            
             auto item = std::make_shared<Item>();
             parseContainer(elem, item);
             containers.push_back(item);
@@ -388,14 +394,10 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& d
     assert(doc && "ParseItems: Invalid document supplied");
 
     std::vector<std::shared_ptr<Item>> items;
-    xml::NodeList itemList = doc.getElementsByTagName("item");
-    uint64_t numItems = itemList.size();
-    for (uint64_t i = 0; i < numItems && !m_Abort; ++i)
+    for (xml::Element elem : doc.getElementsByTagName("item"))
     {
         try
         {
-            xml::Element elem = itemList.getNode(i);
-        
             auto item = std::make_shared<Item>();
             parseItem(elem, item);
             items.push_back(item);

@@ -72,7 +72,7 @@ public:
     
     virtual ~ServiceImplMock() {}
 
-    MOCK_METHOD1(OnLastChangedEvent, void(const std::map<ServiceImplVariable, std::string>&));
+    MOCK_METHOD2(onStateVariableEvent, void(ServiceImplVariable, const std::map<ServiceImplVariable, std::string>&));
 
     MOCK_METHOD1(actionFromString, ServiceImplAction(const std::string&));
     MOCK_METHOD1(actionToString, std::string(ServiceImplAction));
@@ -81,7 +81,7 @@ public:
     
     MOCK_METHOD0(getType, ServiceType());
     MOCK_METHOD0(getSubscriptionTimeout, int32_t());
-    MOCK_METHOD1(handleLastChangeEvent, void(const std::map<ServiceImplVariable, std::string>&));
+    MOCK_METHOD2(handleStateVariableEvent, void(ServiceImplVariable, const std::map<ServiceImplVariable, std::string>&));
     MOCK_METHOD1(handleUPnPResult, void(int));
     
     xml::Document doExecuteAction(ServiceImplAction actionType, const std::map<std::string, std::string>& args)
@@ -132,14 +132,14 @@ protected:
         EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _, service.get()))
             .WillOnce(SaveArgPointee<2>(&subscriptionCallback));
     
-        service->LastChangedEvent.connect(std::bind(&ServiceImplMock::OnLastChangedEvent, service.get(), _1), service.get());
+        service->StateVariableEvent.connect(std::bind(&ServiceImplMock::onStateVariableEvent, service.get(), _1, _2), service.get());
         service->subscribe();
         triggerSubscriptionComplete();
     }
     
     void unsubscribe()
     {
-        service->LastChangedEvent.disconnect(service.get());
+        service->StateVariableEvent.disconnect(service.get());
         service->unsubscribe();
     }
     
@@ -156,7 +156,7 @@ protected:
     void triggerLastChangeUpdate()
     {
         std::vector<testxmls::EventValue> ev = { { "Variable1", "VarValue"} };
-        xml::Document doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
+        xml::Document doc(testxmls::generateStateVariableChangeEvent("Variable2", g_eventNameSpaceId, ev));
         
         Upnp_Event event;
         event.ChangedVariables = doc;
@@ -218,14 +218,16 @@ TEST_F(ServiceBaseTest, executeAction)
     EXPECT_EQ(expectedDoc.toString(), doc.toString());
 }
 
-TEST_F(ServiceBaseTest, lastChangeEvent)
+TEST_F(ServiceBaseTest, stateVariableEvent)
 {
     subscribe();
 
     std::map<ServiceImplVariable, std::string> lastChange;
+    InSequence seq;
+    EXPECT_CALL(*service, variableFromString("Variable2")).WillOnce(Return(ServiceImplVariable::Var2));
     EXPECT_CALL(*service, variableFromString("Variable1")).WillOnce(Return(ServiceImplVariable::Var1));
-    EXPECT_CALL(*service, handleLastChangeEvent(_));
-    EXPECT_CALL(*service, OnLastChangedEvent(_)).WillOnce(SaveArg<0>(&lastChange));
+    EXPECT_CALL(*service, handleStateVariableEvent(ServiceImplVariable::Var2, _));
+    EXPECT_CALL(*service, onStateVariableEvent(ServiceImplVariable::Var2, _)).WillOnce(SaveArg<1>(&lastChange));
     
     triggerLastChangeUpdate();
     

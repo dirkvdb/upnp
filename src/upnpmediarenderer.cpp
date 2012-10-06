@@ -168,7 +168,7 @@ void MediaRenderer::activateEvents()
 
         if (m_AVtransport)
         {
-            m_AVtransport->LastChangedEvent.connect(std::bind(&MediaRenderer::onLastChanged, this, _1), this);
+            m_AVtransport->StateVariableEvent.connect(std::bind(&MediaRenderer::onAVTransportVariableChanged, this, _1, _2), this);
             m_AVtransport->subscribe();
         }
         
@@ -184,7 +184,7 @@ void MediaRenderer::deactivateEvents()
     
         if (m_AVtransport)
         {
-            m_AVtransport->LastChangedEvent.disconnect(this);
+            m_AVtransport->StateVariableEvent.disconnect(this);
             m_AVtransport->unsubscribe();
         }
         
@@ -197,18 +197,21 @@ bool MediaRenderer::isActionAvailable(Action action) const
     return m_AvailableActions.find(action) != m_AvailableActions.end();
 }
 
-void MediaRenderer::onLastChanged(const std::map<AVTransportVariable, std::string>& vars)
+void MediaRenderer::onAVTransportVariableChanged(AVTransportVariable var, const std::map<AVTransportVariable, std::string>& vars)
 {
-    auto iter = vars.find(AVTransportVariable::CurrentTrackURI);
-    if (iter != vars.end())
+    if (var == AVTransportVariable::LastChange)
     {
-        log::info("Last changed:", iter->second);
-    }
-    
-    iter = vars.find(AVTransportVariable::CurrentTransportActions);
-    if (iter != vars.end())
-    {
-        updateAvailableActions(iter->second);
+        auto iter = vars.find(AVTransportVariable::CurrentTrackURI);
+        if (iter != vars.end())
+        {
+            log::info("Last changed:", iter->second);
+        }
+        
+        iter = vars.find(AVTransportVariable::CurrentTransportActions);
+        if (iter != vars.end())
+        {
+            updateAvailableActions(iter->second);
+        }
     }
 }
 

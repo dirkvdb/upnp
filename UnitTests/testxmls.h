@@ -951,12 +951,12 @@ void addValue(std::stringstream& ss, const EventValue& event)
     
 }
 
-inline std::string generateLastChangeEvent(const std::string& namespaceId, const std::vector<EventValue>& values)
+inline std::string generateStateVariableChangeEvent(const std::string& changedVar, const std::string& namespaceId, const std::vector<EventValue>& values)
 {
     std::stringstream ss;
     ss << "<e:propertyset xmlns:e=\"urn:schemas-upnp-org:event-1-0\">" << std::endl
        << "<e:property>" << std::endl
-       << "    <LastChange>&lt;Event xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/" << namespaceId << "/&quot;&gt;" << std::endl
+       << "    <" << changedVar << ">&lt;Event xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/" << namespaceId << "/&quot;&gt;" << std::endl
        << "        &lt;InstanceID val=&quot;0&quot;&gt;" << std::endl;
 
     for (auto& value : values)
@@ -965,7 +965,7 @@ inline std::string generateLastChangeEvent(const std::string& namespaceId, const
     }
     
     ss << "        &lt;/InstanceID&gt;" << std::endl;
-    ss << "    &lt;/Event&gt;</LastChange>" << std::endl;
+    ss << "    &lt;/Event&gt;</" << changedVar << ">" << std::endl;
     ss << "</e:property>" << std::endl;
     ss << "</e:propertyset>" << std::endl;
     

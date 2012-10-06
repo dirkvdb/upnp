@@ -91,12 +91,15 @@ void RenderingControl::parseServiceDescription(const std::string& descriptionUrl
     }
 }
 
-void RenderingControl::handleLastChangeEvent(const std::map<RenderingControlVariable, std::string>& variables)
+void RenderingControl::handleStateVariableEvent(RenderingControlVariable var, const std::map<RenderingControlVariable, std::string>& variables)
 {
-    auto iter = variables.find(RenderingControlVariable::Volume);
-    if (iter != variables.end())
+    if (var == RenderingControlVariable::LastChange)
     {
-        m_CurrentVolume = stringops::toNumeric<uint32_t>(iter->second);
+        auto iter = variables.find(RenderingControlVariable::Volume);
+        if (iter != variables.end())
+        {
+            m_CurrentVolume = stringops::toNumeric<uint32_t>(iter->second);
+        }
     }
 }
 

@@ -98,7 +98,7 @@ protected:
         EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _, pCookie))
             .WillOnce(SaveArgPointee<2>(&callback));
         
-        avtransport->LastChangedEvent.connect(std::bind(&EventListenerMock::AVTransportLastChangedEvent, &eventListener, _1), this);
+        avtransport->StateVariableEvent.connect(std::bind(&EventListenerMock::AVTransportLastChangedEvent, &eventListener, _1, _2), this);
         avtransport->subscribe();
         
         Upnp_Event_Subscribe event;
@@ -113,7 +113,7 @@ protected:
     {
         EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
         
-        avtransport->LastChangedEvent.disconnect(this);
+        avtransport->StateVariableEvent.disconnect(this);
         avtransport->unsubscribe();
     }
     
@@ -148,7 +148,7 @@ protected:
                                                  { "A_ARG_TYPE_SeekTarget", "target" },
                                                  { "A_ARG_TYPE_InstanceID", "InstanceId" } };
         
-        xml::Document doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
+        xml::Document doc(testxmls::generateStateVariableChangeEvent("LastChange", g_eventNameSpaceId, ev));
         
         Upnp_Event event;
         event.ChangedVariables = doc;
@@ -187,7 +187,8 @@ TEST_F(AVTransportTest, supportedActions)
 TEST_F(AVTransportTest, lastChangeEvent)
 {
     std::map<AVTransportVariable, std::string> lastChange;
-    EXPECT_CALL(eventListener, AVTransportLastChangedEvent(_)).WillOnce(SaveArg<0>(&lastChange));
+    EXPECT_CALL(eventListener, AVTransportLastChangedEvent(AVTransportVariable::LastChange, _))
+        .WillOnce(SaveArg<1>(&lastChange));
     
     triggerLastChangeUpdate();
     

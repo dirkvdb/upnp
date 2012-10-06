@@ -80,7 +80,7 @@ public:
     utils::Signal<void(const std::set<Action>&)>    AvailableActionsChanged;
     
 private:
-    void onLastChanged(const std::map<AVTransportVariable, std::string>& vars);
+    void onAVTransportVariableChanged(AVTransportVariable, const std::map<AVTransportVariable, std::string>& vars);
     void updateAvailableActions(const std::string& actionList);
     
     static MediaRenderer::Action transportActionToAction(AVTransportAction action);

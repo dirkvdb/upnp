@@ -96,7 +96,7 @@ protected:
         EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _, pCookie))
             .WillOnce(SaveArgPointee<2>(&callback));
         
-        renderingControl->LastChangedEvent.connect(std::bind(&EventListenerMock::RenderingControlLastChangedEvent, &eventListener, _1), this);
+        renderingControl->StateVariableEvent.connect(std::bind(&EventListenerMock::RenderingControlLastChangedEvent, &eventListener, _1, _2), this);
         renderingControl->subscribe();
         
         Upnp_Event_Subscribe event;
@@ -111,7 +111,7 @@ protected:
     {
         EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
     
-        renderingControl->LastChangedEvent.disconnect(this);
+        renderingControl->StateVariableEvent.disconnect(this);
         renderingControl->unsubscribe();
     }
     
@@ -121,7 +121,7 @@ protected:
                                                  { "Mute", mute, {{ "channel", "master" }} },
                                                  { "Volume", volume, {{ "channel", "master" }} } };
         
-        xml::Document doc(testxmls::generateLastChangeEvent(g_eventNameSpaceId, ev));
+        xml::Document doc(testxmls::generateStateVariableChangeEvent("LastChange", g_eventNameSpaceId, ev));
         
         Upnp_Event event;
         event.ChangedVariables = doc;
@@ -151,7 +151,7 @@ TEST_F(RenderingControlTest, supportedActions)
 TEST_F(RenderingControlTest, lastChangeEvent)
 {
     std::map<RenderingControlVariable, std::string> lastChange;
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_)).WillOnce(SaveArg<0>(&lastChange));
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _)).WillOnce(SaveArg<1>(&lastChange));
     
     triggerLastChangeUpdate("0", "35");
     
@@ -162,7 +162,7 @@ TEST_F(RenderingControlTest, lastChangeEvent)
 
 TEST_F(RenderingControlTest, increaseVolume)
 {
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_));
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
     triggerLastChangeUpdate("0", "35");
 
     Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
@@ -178,7 +178,7 @@ TEST_F(RenderingControlTest, increaseVolume)
 
 TEST_F(RenderingControlTest, decreaseVolume)
 {
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_));
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
     triggerLastChangeUpdate("0", "35");
     
     Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
@@ -194,7 +194,7 @@ TEST_F(RenderingControlTest, decreaseVolume)
 
 TEST_F(RenderingControlTest, setVolume)
 {
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(_));
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
     triggerLastChangeUpdate("0", "35");
     
     // the service description xml defines the volume range between 10 and 110

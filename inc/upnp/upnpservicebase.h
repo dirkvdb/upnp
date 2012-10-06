@@ -40,7 +40,7 @@ template <typename ActionType, typename VariableType>
 class ServiceBase
 {
 public:
-    utils::Signal<void(const std::map<VariableType, std::string>&)> LastChangedEvent;
+    utils::Signal<void(VariableType, const std::map<VariableType, std::string>&)> StateVariableEvent;
 
     ServiceBase(IClient& client)
     : m_Client(client)
@@ -129,31 +129,38 @@ protected:
             try
             {
                 xml::Document doc(pEvent->ChangedVariables, xml::Document::NoOwnership);
-                xml::Document changeDoc(doc.getChildElementValueRecursive("LastChange"));
-                
-                xml::Node instanceNode = changeDoc.getElementsByTagName("InstanceID").getNode(0);
-                xml::NodeList children = instanceNode.getChildNodes();
-                
-                std::map<VariableType, std::string> vars;
-                uint64_t numVars = children.size();
-                for (uint64_t i = 0; i < numVars; ++i)
+                xml::Element propertySet = doc.getFirstChild();
+                for (xml::Element property : propertySet.getChildNodes())
                 {
-                    try
+                    for (xml::Element var : property.getChildNodes())
                     {
-                        xml::Element elem = children.getNode(i);
-                        vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
-                    }
-                    catch (std::exception& e)
-                    {
-                        utils::log::warn("Unknown event variable ignored:", e.what());
+                        try
+                        {
+                            VariableType changedVar = variableFromString(var.getName());
+                            
+                            xml::Document changeDoc(var.getValue());
+                            xml::Element eventNode = changeDoc.getFirstChild();
+                            xml::Element instanceIDNode = eventNode.getChildElement("InstanceID");
+                            
+                            std::map<VariableType, std::string> vars;
+                            for (xml::Element elem : instanceIDNode.getChildNodes())
+                            {
+                                utils::log::debug(elem.getName(), elem.getAttribute("val"));
+                                vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
+                            }
+                            
+                            // let the service implementation process the event if necessary
+                            handleStateVariableEvent(changedVar, vars);
+                            
+                            // notify clients
+                            StateVariableEvent(changedVar, vars);
+                        }
+                        catch (std::exception& e)
+                        {
+                            utils::log::warn("Unknown event variable ignored:", e.what());
+                        }
                     }
                 }
-                
-                // let the service implementation process the event if necessary
-                handleLastChangeEvent(vars);
-                
-                // notify clients
-                LastChangedEvent(vars);
             }
             catch (std::exception& e)
             {
@@ -206,6 +213,10 @@ protected:
                     if (pSubEvent->Sid)
                     {
                         rc->m_SubscriptionId = pSubEvent->Sid;
+                        
+#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
+                        utils::log::debug("Subscription complete:", rc->m_SubscriptionId);
+#endif
                     }
                     else
                     {
@@ -224,8 +235,10 @@ protected:
                 {
                     int32_t timeout = rc->getSubscriptionTimeout();
                     rc->m_SubscriptionId = rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout);
-                    
-                    utils::log::debug("Service subscription renewed: ", rc->m_SubscriptionId);
+
+#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
+                    utils::log::debug("Service subscription renewed:", rc->m_SubscriptionId);
+#endif
                 }
                 catch (std::exception& e)
                 {
@@ -234,7 +247,9 @@ protected:
                 break;
             }
             case UPNP_EVENT_RENEWAL_COMPLETE:
+#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
                 utils::log::debug("Event subscription renewal complete");
+#endif
                 break;
             default:
                 utils::log::info("Unhandled action:", eventType);
@@ -246,7 +261,7 @@ protected:
     
     virtual ServiceType getType() = 0;
     virtual int32_t getSubscriptionTimeout() = 0;
-    virtual void handleLastChangeEvent(const std::map<VariableType, std::string>& variables) {}
+    virtual void handleStateVariableEvent(VariableType changedVariable, const std::map<VariableType, std::string>& variables) {}
     virtual void handleUPnPResult(int errorCode) = 0;
     
     std::vector<StateVariable>              m_StateVariables;

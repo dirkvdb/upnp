@@ -94,7 +94,6 @@ public:
 protected:
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();
-    virtual void handleLastChangeEvent(const std::map<ContentDirectoryVariable, std::string>& variables) {}
     virtual void handleUPnPResult(int errorCode);
             
 private:

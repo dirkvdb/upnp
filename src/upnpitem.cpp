@@ -107,9 +107,9 @@ void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)
-, m_Title(title)
 , m_ChildCount(0)
 {
+    setTitle(title);
 }
 
 Item::Item(const Item& other)
@@ -168,9 +168,10 @@ const std::string& Item::getParentId() const
     return m_ParentId;
 }
 
-const std::string& Item::getTitle() const
+const std::string Item::getTitle() const
 {
-    return m_Title;
+    auto iter = m_MetaData.find(Property::Title);
+    return (iter == m_MetaData.end()) ? "" : iter->second;
 }
 
 const std::vector<Resource>& Item::getResources() const
@@ -251,7 +252,7 @@ void Item::setParentId(const std::string& id)
 
 void Item::setTitle(const std::string& title)
 {
-    m_Title = title;
+    m_MetaData[Property::Title] = title;
 }
 
 void Item::setChildCount(uint32_t count)
@@ -281,6 +282,11 @@ std::string Item::getMetaData(Property prop) const
     }
     
     return "";
+}
+
+std::map<Property, std::string> Item::getMetaData() const
+{
+    return m_MetaData;
 }
 
 }

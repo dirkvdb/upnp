@@ -20,10 +20,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include <upnp/upnp.h>
 
 #include "upnp/upnpstatevariable.h"
+#include "utils/stringoperations.h"
 
 namespace upnp
 {
@@ -33,17 +35,79 @@ namespace xml
 class NodeList;
 class NamedNodeMap;
 
+class String
+{
+public:
+    String(DOMString str);
+    String(const String& str) = delete;
+    ~String();
+    
+    String& operator= (const String& other) = delete;
+    
+    operator std::string() const;
+    operator DOMString() const;
+    operator bool() const;
+    
+private:
+    DOMString   m_String;
+};
+
+template <class Container, class Type>
+class Iterator
+{
+public:
+    Iterator(const Container& container, uint64_t index)
+    : m_Container(container)
+    , m_Index(index)
+    {}
+    
+    Iterator& operator ++()
+    {
+        ++m_Index;
+        return *this;
+    }
+    
+    Iterator& operator --()
+    {
+        assert(m_Index > 0);
+        
+        --m_Index;
+        return *this;
+    }
+    
+    bool operator ==(const Iterator& other) const
+    {
+        return m_Index == other.m_Index;
+    }
+    
+    bool operator !=(const Iterator& other) const
+    {
+        return m_Index != other.m_Index;
+    }
+    
+    const Type operator *()
+    {
+        return m_Container[m_Index];
+    }
+    
+private:
+    const Container&    m_Container;
+    uint64_t            m_Index;
+};
+
 class Node
 {
 public:
     Node();
     Node(IXML_Node* pNode);
-    Node(const Node& node) = delete;
+    Node(const Node& node);
     Node(Node&& node);
     virtual ~Node();
     
     operator IXML_Node*() const;
     virtual operator bool() const;
+    bool operator == (const Node& other) const;
+    bool operator != (const Node& other) const;
     
     virtual std::string getName() const;
     virtual std::string getValue() const;
@@ -101,6 +165,7 @@ class Element : public Node
 public:
     Element();
     Element(IXML_Element* pElement);
+    Element(const Node& node);
     Element(Node&& node);
     Element(const Element& node) = delete;
     Element(Element&& node);
@@ -113,14 +178,28 @@ public:
     std::string getName();
     std::string getValue();
     std::string getAttribute(const std::string& attr);
+    std::string getAttributeOptional(const std::string& attr, const std::string& defaultValue = "");
+    
+    template <typename T>
+    T getAttributeAsNumeric(const std::string& attr)
+    {
+        return utils::stringops::toNumeric<T>(getAttribute(attr));
+    }
+    
+    template <typename T>
+    T getAttributeAsNumericOptional(const std::string& attr, T defaultValue)
+    {
+        const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
+        return pAttr ? utils::stringops::toNumeric<T>(pAttr) : defaultValue;
+    }
     
     NodeList getElementsByTagName(const std::string& tagName);
+    Element getChildElement(const std::string& tagName);
     std::string getChildElementValue(const std::string& tagName);
     
 private:
     IXML_Element*  m_pElement;
 };
-
 
 class NodeList
 {
@@ -133,6 +212,7 @@ public:
     
     NodeList& operator= (const NodeList& other) = delete;
     NodeList& operator= (IXML_NodeList* pList);
+    Node operator[] (uint64_t index) const;
     
     operator IXML_NodeList*() const;
     operator bool() const;
@@ -143,7 +223,6 @@ public:
 private:
     IXML_NodeList*  m_pList;
 };
-
 
 class NamedNodeMap
 {
@@ -159,28 +238,25 @@ public:
     
     operator IXML_NamedNodeMap*() const;
     operator bool() const;
+    Node operator[] (uint64_t index) const;
     
 private:
     IXML_NamedNodeMap*  m_pNodeMap;
 };
 
-
-class String
+// support for range for loops
+template <typename Iterable>
+inline Iterator<Iterable, Node> begin(const Iterable& iterable)
 {
-public:
-    String(DOMString str);
-    String(const String& str) = delete;
-    ~String();
-    
-    String& operator= (const String& other) = delete;
-    
-    operator std::string() const;
-    operator DOMString() const;
-    operator bool() const;
-    
-private:
-    DOMString   m_String;
-};
+    return Iterator<Iterable, Node>(iterable, 0);
+}
+
+template <typename Iterable>
+inline Iterator<Iterable, Node> end(const Iterable& iterable)
+{
+    return Iterator<Iterable, Node>(iterable, iterable.size());
+}
+
 
 std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);

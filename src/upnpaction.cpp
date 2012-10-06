@@ -69,7 +69,7 @@ bool Action::operator==(const Action& other) const
     {
         return false;
     }
-
+    
     return m_ActionDoc.toString() == other.m_ActionDoc.toString();
 }
     

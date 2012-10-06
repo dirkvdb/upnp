@@ -70,7 +70,7 @@ protected:
     
     virtual void parseServiceDescription(const std::string& descriptionUrl);
 
-    virtual void handleLastChangeEvent(const std::map<RenderingControlVariable, std::string>& variables);
+    virtual void handleStateVariableEvent(RenderingControlVariable var, const std::map<RenderingControlVariable, std::string>& variables);
     virtual void handleUPnPResult(int errorCode);
     virtual RenderingControlAction actionFromString(const std::string& action);
     virtual std::string actionToString(RenderingControlAction action);

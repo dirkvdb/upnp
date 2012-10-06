@@ -87,7 +87,7 @@ public:
         
     const std::string& getObjectId() const;
     const std::string& getParentId() const;
-    const std::string& getTitle() const;
+    const std::string getTitle() const;
     const std::vector<Resource>& getResources() const;
     
     uint32_t getChildCount() const;
@@ -103,13 +103,13 @@ public:
     void addResource(const Resource& resource);
     
     std::string getMetaData(Property prop) const;
+    std::map<Property, std::string> getMetaData() const;
     
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
     
 private:
     std::string                     m_ObjectId;
     std::string                     m_ParentId;
-    std::string                     m_Title;
     
     std::map<Property, std::string> m_MetaData;
     std::vector<Resource>           m_Resources;

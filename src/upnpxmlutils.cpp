@@ -39,6 +39,11 @@ Node::Node(IXML_Node* pNode)
 {
 }
 
+Node::Node(const Node& node)
+: m_pNode(node.m_pNode)
+{
+}
+
 Node::Node(Node&& node)
 : m_pNode(std::move(node.m_pNode))
 {
@@ -56,6 +61,16 @@ Node::operator IXML_Node*() const
 Node::operator bool() const
 {
     return m_pNode != nullptr;
+}
+
+bool Node::operator == (const Node& other) const
+{
+    return m_pNode == other.m_pNode;
+}
+
+bool Node::operator != (const Node& other) const
+{
+    return m_pNode != other.m_pNode;
 }
 
 std::string Node::getName() const
@@ -276,6 +291,11 @@ NodeList::operator IXML_NodeList*() const
     return m_pList;
 }
 
+Node NodeList::operator[] (uint64_t index) const
+{
+    return getNode(index);
+}
+
 NodeList::operator bool() const
 {
     return m_pList != nullptr;
@@ -381,6 +401,11 @@ NamedNodeMap::operator bool() const
     return m_pNodeMap != nullptr;
 }
 
+Node NamedNodeMap::operator[] (uint64_t index) const
+{
+    return getNode(index);
+}
+
 Element::Element()
 : m_pElement(nullptr)
 {
@@ -389,6 +414,12 @@ Element::Element()
 Element::Element(IXML_Element* pElement)
 : Node(reinterpret_cast<IXML_Node*>(pElement))
 , m_pElement(pElement)
+{
+}
+
+Element::Element(const Node& node)
+: Node(node)
+, m_pElement(reinterpret_cast<IXML_Element*>(static_cast<IXML_Node*>(*this)))
 {
 }
 
@@ -443,6 +474,12 @@ std::string Element::getAttribute(const std::string& attr)
     return pAttr;
 }
 
+std::string Element::getAttributeOptional(const std::string& attr, const std::string& defaultValue)
+{
+    const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
+    return pAttr ? pAttr : defaultValue;
+}
+
 NodeList Element::getElementsByTagName(const std::string& tagName)
 {
     NodeList list = ixmlElement_getElementsByTagName(m_pElement, tagName.c_str());
@@ -454,20 +491,22 @@ NodeList Element::getElementsByTagName(const std::string& tagName)
     return list;
 }
 
-std::string Element::getChildElementValue(const std::string& tagName)
+Element Element::getChildElement(const std::string& tagName)
 {
-    NodeList list = getChildNodes();
-    uint64_t size = list.size();
-    for (uint64_t i = 0; i < size; ++i)
+    for (Element elem : getChildNodes())
     {
-        Node node = list.getNode(i);
-        if (node.getName() == tagName)
+        if (elem.getName() == tagName)
         {
-            return node.getFirstChild().getValue();
+            return elem;
         }
     }
     
-    throw std::logic_error(std::string("No child element found with name ") + tagName);
+    throw std::logic_error(std::string("No child element found with name: " + tagName));
+}
+
+std::string Element::getChildElementValue(const std::string& tagName)
+{
+    return getChildElement(tagName).getValue();
 }
 
 String::String(DOMString str)
