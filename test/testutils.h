@@ -32,6 +32,7 @@ namespace
 
 inline void addResponseHeader(std::ostream& ss, const std::string& action, ServiceType type)
 {
+    ss << "<?xml version=\"1.0\"?>" << std::endl;
     ss << "<u:" << action << "Response xmlns:u=\"" << serviceTypeToUrnString(type) << "\">" << std::endl;
 }
 

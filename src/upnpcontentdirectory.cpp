@@ -81,7 +81,7 @@ void ContentDirectory::querySearchCapabilities()
     xml::Document result = executeAction(ContentDirectoryAction::GetSearchCapabilities);
     xml::Element elem = result.getFirstChild();
 
-    for (auto& cap : stringops::tokenize(elem.getChildElementValue("SearchCaps"), ","))
+    for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SearchCaps"), ","))
     {
         addPropertyToList(cap, m_SearchCaps);
     }
@@ -92,7 +92,7 @@ void ContentDirectory::querySortCapabilities()
     xml::Document result = executeAction(ContentDirectoryAction::GetSortCapabilities);
     xml::Element elem = result.getFirstChild();
     
-    for (auto& cap : stringops::tokenize(elem.getChildElementValue("SortCaps"), ","))
+    for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
     {
         addPropertyToList(cap, m_SortCaps);
     }
@@ -102,7 +102,7 @@ void ContentDirectory::querySystemUpdateID()
 {
     xml::Document result = executeAction(ContentDirectoryAction::GetSystemUpdateID);
     xml::Element elem = result.getFirstChild();
-    m_SystemUpdateId = elem.getChildElementValue("Id");
+    m_SystemUpdateId = elem.getChildNodeValue("Id");
 }
 
 void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter)

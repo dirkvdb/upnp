@@ -45,7 +45,7 @@ std::vector<ProtocolInfo> ConnectionManager::getProtocolInfo()
     xml::Document result = executeAction(ConnectionManagerAction::GetProtocolInfo);
     
     std::vector<ProtocolInfo> protocolInfo;
-    auto infos = stringops::tokenize(result.getChildElementValueRecursive("Sink"), ",");
+    auto infos = stringops::tokenize(result.getChildNodeValueRecursive("Sink"), ",");
     for (auto& info : infos)
     {
         try
@@ -74,9 +74,9 @@ ConnectionInfo ConnectionManager::prepareForConnection(const ProtocolInfo& proto
                                                                                           {"Direction", directionToString(direction)} });
 
     ConnectionInfo connInfo;
-    connInfo.connectionId               = result.getChildElementValue("ConnectionID");
-    connInfo.avTransportId              = result.getChildElementValue("AVTransportID");
-    connInfo.renderingControlServiceId  = result.getChildElementValue("RcsID");
+    connInfo.connectionId               = result.getChildNodeValue("ConnectionID");
+    connInfo.avTransportId              = result.getChildNodeValue("AVTransportID");
+    connInfo.renderingControlServiceId  = result.getChildNodeValue("RcsID");
     
     return connInfo;
 }
@@ -89,7 +89,7 @@ void ConnectionManager::connectionComplete(const ConnectionInfo& connectionInfo)
 std::vector<std::string> ConnectionManager::getCurrentConnectionIds()
 {
     xml::Document result = executeAction(ConnectionManagerAction::GetCurrentConnectionIDs);
-    std::vector<std::string> ids = stringops::tokenize(result.getChildElementValue("ConnectionIDs"), ",");
+    std::vector<std::string> ids = stringops::tokenize(result.getChildNodeValue("ConnectionIDs"), ",");
     
     return ids;
 }
@@ -110,13 +110,13 @@ ConnectionInfo ConnectionManager::getCurrentConnectionInfo(const std::string& co
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
-    connInfo.avTransportId              = result.getChildElementValue("AVTransportID");
-    connInfo.renderingControlServiceId  = result.getChildElementValue("RcsID");
-    connInfo.protocolInfo               = ProtocolInfo(result.getChildElementValue("ProtocolInfo"));
-    connInfo.peerConnectionManager      = result.getChildElementValue("PeerConnectionManager");
-    connInfo.peerConnectionId           = result.getChildElementValue("PeerConnectionID");
-    connInfo.direction                  = directionFromString(result.getChildElementValue("Direction"));
-    connInfo.connectionStatus           = connectionStatusFromString(result.getChildElementValue("Status"));
+    connInfo.avTransportId              = result.getChildNodeValue("AVTransportID");
+    connInfo.renderingControlServiceId  = result.getChildNodeValue("RcsID");
+    connInfo.protocolInfo               = ProtocolInfo(result.getChildNodeValue("ProtocolInfo"));
+    connInfo.peerConnectionManager      = result.getChildNodeValue("PeerConnectionManager");
+    connInfo.peerConnectionId           = result.getChildNodeValue("PeerConnectionID");
+    connInfo.direction                  = directionFromString(result.getChildNodeValue("Direction"));
+    connInfo.connectionStatus           = connectionStatusFromString(result.getChildNodeValue("Status"));
     
     return connInfo;
 }

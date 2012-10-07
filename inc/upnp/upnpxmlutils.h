@@ -106,6 +106,7 @@ public:
     
     operator IXML_Node*() const;
     virtual operator bool() const;
+    Node& operator= (Node&& other);
     bool operator == (const Node& other) const;
     bool operator != (const Node& other) const;
     
@@ -116,6 +117,8 @@ public:
     
     Node getFirstChild() const;
     NodeList getChildNodes() const;
+    Node getChildNode(const std::string& tagName) const;
+    std::string getChildNodeValue(const std::string& tagName) const;
     
     virtual std::string toString();
 
@@ -143,6 +146,7 @@ public:
     ~Document();
 
     Document& operator= (const Document& other) = delete;
+    Document& operator= (Document&& other);
     Document& operator= (IXML_Document* pDoc);
 
     operator IXML_Document*() const;
@@ -150,8 +154,7 @@ public:
     IXML_Document** operator &();
     
     NodeList getElementsByTagName(const std::string& tagName) const;
-    std::string getChildElementValue(const std::string& tagName) const;
-    std::string getChildElementValueRecursive(const std::string& tagName) const;
+    std::string getChildNodeValueRecursive(const std::string& tagName) const;
     
     std::string toString() const;
 
@@ -195,7 +198,6 @@ public:
     
     NodeList getElementsByTagName(const std::string& tagName);
     Element getChildElement(const std::string& tagName);
-    std::string getChildElementValue(const std::string& tagName);
     
 private:
     IXML_Element*  m_pElement;

@@ -73,11 +73,15 @@ void AVTransport::previous(const std::string& connectionId)
 AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& connectionId)
 {
     xml::Document doc = executeAction(AVTransportAction::GetTransportInfo, { {"InstanceID", connectionId} });
+    xml::Element response = doc.getFirstChild();
     
     TransportInfo info;
-    info.currentTransportState      = doc.getChildElementValue("CurrentTransportState");
-    info.currentTransportStatus     = doc.getChildElementValue("CurrentTransportStatus");
-    info.currentSpeed               = doc.getChildElementValue("CurrentSpeed");
+    for (xml::Element elem : response.getChildNodes())
+    {
+             if (elem.getName() == "CurrentTransportState")   info.currentTransportState    = elem.getValue();
+        else if (elem.getName() == "CurrentTransportStatus")  info.currentTransportStatus   = elem.getValue();
+        else if (elem.getName() == "CurrentSpeed")            info.currentSpeed             = elem.getValue();
+    }
     
     return info;
 }
@@ -85,16 +89,20 @@ AVTransport::TransportInfo AVTransport::getTransportInfo(const std::string& conn
 AVTransport::PositionInfo AVTransport::getPositionInfo(const std::string& connectionId)
 {
     xml::Document doc = executeAction(AVTransportAction::GetPositionInfo, { {"InstanceID", connectionId} });
+    xml::Element response = doc.getFirstChild();
     
     PositionInfo info;
-    info.track          = doc.getChildElementValue("Track");
-    info.trackDuration  = doc.getChildElementValue("TrackDuration");
-    info.trackMetaData  = doc.getChildElementValue("TrackMetaData");
-    info.trackURI       = doc.getChildElementValue("TrackURI");
-    info.relTime        = doc.getChildElementValue("RelTime");
-    info.absTime        = doc.getChildElementValue("AbsTime");
-    info.relCount       = doc.getChildElementValue("RelCount");
-    info.absCount       = doc.getChildElementValue("AbsCount");
+    for (xml::Element elem : response.getChildNodes())
+    {
+             if (elem.getName() == "Track")          info.track          = elem.getValue();
+        else if (elem.getName() == "TrackDuration")  info.trackDuration  = elem.getValue();
+        else if (elem.getName() == "TrackMetaData")  info.trackMetaData  = elem.getValue();
+        else if (elem.getName() == "TrackURI")       info.trackURI       = elem.getValue();
+        else if (elem.getName() == "RelTime")        info.relTime        = elem.getValue();
+        else if (elem.getName() == "AbsTime")        info.absTime        = elem.getValue();
+        else if (elem.getName() == "RelCount")       info.relCount       = elem.getValue();
+        else if (elem.getName() == "AbsCount")       info.absCount       = elem.getValue();
+    }
     
     return info;
 }

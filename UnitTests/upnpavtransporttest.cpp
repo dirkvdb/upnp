@@ -291,5 +291,49 @@ TEST_F(AVTransportTest, next)
     avtransport->next(g_connectionId);
 }
 
+TEST_F(AVTransportTest, getTransportInfo)
+{
+    Action expectedAction("GetTransportInfo", g_controlUrl, ServiceType::AVTransport);
+    expectedAction.addArgument("InstanceID",    g_connectionId);
+    
+    EXPECT_CALL(client, sendAction(expectedAction))
+        .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
+                                                { "CurrentTransportState",  "Transport state" },
+                                                { "CurrentTransportStatus", "Transport status" },
+                                                { "CurrentSpeed",           "Speed"} } )));
+    
+    AVTransport::TransportInfo info = avtransport->getTransportInfo(g_connectionId);
+    EXPECT_EQ(info.currentTransportState,       "Transport state");
+    EXPECT_EQ(info.currentTransportStatus,      "Transport status");
+    EXPECT_EQ(info.currentSpeed,                "Speed");
+}
+
+TEST_F(AVTransportTest, getPositionInfo)
+{
+    Action expectedAction("GetPositionInfo", g_controlUrl, ServiceType::AVTransport);
+    expectedAction.addArgument("InstanceID",    g_connectionId);
+    
+    EXPECT_CALL(client, sendAction(expectedAction))
+        .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
+                                                { "AbsCount",      "Absolute count" },
+                                                { "AbsTime",       "Absolute Time" },
+                                                { "RelTime",       "Relative Time" },
+                                                { "RelCount",      "Relative Count" },
+                                                { "Track",         "The Track" },
+                                                { "TrackDuration", "Duration" },
+                                                { "TrackMetaData", "Meta" },
+                                                { "TrackURI",      "URI"} } )));
+    
+    AVTransport::PositionInfo info = avtransport->getPositionInfo(g_connectionId);
+    EXPECT_EQ(info.absCount,        "Absolute count");
+    EXPECT_EQ(info.absTime,         "Absolute Time");
+    EXPECT_EQ(info.relTime,         "Relative Time");
+    EXPECT_EQ(info.relCount,        "Relative Count");
+    EXPECT_EQ(info.track,           "The Track");
+    EXPECT_EQ(info.trackDuration,   "Duration");
+    EXPECT_EQ(info.trackMetaData,   "Meta");
+    EXPECT_EQ(info.trackURI,        "URI");
+}
+
 }
 }

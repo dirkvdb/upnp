@@ -63,19 +63,36 @@ Node::operator bool() const
     return m_pNode != nullptr;
 }
 
-bool Node::operator == (const Node& other) const
+Node& Node::operator= (Node&& other)
+{
+    if (this != &other)
+    {
+        m_pNode = std::move(other.m_pNode);
+    }
+    
+    log::debug(__FUNCTION__, m_pNode);
+    return *this;
+}
+
+bool Node::operator== (const Node& other) const
 {
     return m_pNode == other.m_pNode;
 }
 
-bool Node::operator != (const Node& other) const
+bool Node::operator!= (const Node& other) const
 {
     return m_pNode != other.m_pNode;
 }
 
 std::string Node::getName() const
 {
-    return ixmlNode_getNodeName(m_pNode);
+    const char* pStr = ixmlNode_getNodeName(m_pNode);
+    if (!pStr)
+    {
+        throw std::logic_error("Failed to get node name");
+    }
+    
+    return pStr;
 }
 
 std::string Node::getValue() const
@@ -83,10 +100,55 @@ std::string Node::getValue() const
     const char* pStr = ixmlNode_getNodeValue(m_pNode);
     if (!pStr)
     {
-        throw std::logic_error(std::string("Failed to get node value: ") + getName());
+        throw std::logic_error("Failed to get node value");
     }
     
     return pStr;
+}
+
+Node Node::getParent() const
+{
+    return ixmlNode_getParentNode(m_pNode);
+}
+
+Node Node::getFirstChild() const
+{
+    Node node = ixmlNode_getFirstChild(m_pNode);
+    if (!node)
+    {
+        throw std::logic_error("Failed to get first child node from node");
+    }
+    
+    return node;
+}
+
+NodeList Node::getChildNodes() const
+{
+    NodeList children = ixmlNode_getChildNodes(m_pNode);
+    if (!children)
+    {
+        throw std::logic_error(std::string("Failed to get childNodes from node: ") + getName());
+    }
+    
+    return children;
+}
+
+Node Node::getChildNode(const std::string& tagName) const
+{
+    for (auto& node : getChildNodes())
+    {
+        if (node.getName() == tagName)
+        {
+            return node;
+        }
+    }
+    
+    throw std::logic_error(std::string("No child node found with name ") + tagName);
+}
+
+std::string Node::getChildNodeValue(const std::string& tagName) const
+{
+    return getChildNode(tagName).getFirstChild().getValue();
 }
 
 std::string Node::toString()
@@ -144,19 +206,16 @@ Document::Document(const Document& doc)
         //m_Ownership = NoOwnership;
         //return;
     
-        //log::warn("Document copy constructor is implmented for gmock compatibility, should not get executed in code for performance reaseons");
-        
         m_pDoc = ixmlDocument_createDocument();
         setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
         
+        //log::warn("Document copy constructor is implmented for gmock compatibility, should not get executed in code for performance reaseons", m_pDoc);
+        
         try
         {
-            NodeList nodeList = doc.getChildNodes();
-            uint64_t size = nodeList.size();
-            for (uint64_t i = 0; i < size; ++i)
+            for (auto& node : doc.getChildNodes())
             {
                 IXML_Node* pNode = nullptr;
-                Node node = nodeList.getNode(i);
                 if (IXML_SUCCESS != ixmlDocument_importNode(m_pDoc, node, TRUE, &pNode))
                 {
                     throw std::logic_error("Failed to clone xml document");
@@ -175,19 +234,30 @@ Document::Document(const Document& doc)
 }
 
 Document::Document(Document&& doc)
-: Node(std::forward<Node>(doc))
+: Node(std::move(doc))
 , m_pDoc(std::move(doc.m_pDoc))
 , m_Ownership(TakeOwnership)
 {
+    doc.m_Ownership = NoOwnership;
 }
 
 Document::~Document()
 {
     if (TakeOwnership == m_Ownership)
     {
-        //log::debug(toString());
-        //ixmlDocument_free(m_pDoc);
+        ixmlDocument_free(m_pDoc);
+        m_pDoc = nullptr;
     }
+}
+
+Document& Document::operator= (Document&& other)
+{
+    Node::operator=(std::forward<Node>(other));
+    m_pDoc = std::move(other.m_pDoc);
+    m_Ownership = std::move(other.m_Ownership);
+    other.m_Ownership = NoOwnership;
+    
+    return *this;
 }
 
 Document& Document::operator= (IXML_Document* pDoc)
@@ -223,22 +293,7 @@ NodeList Document::getElementsByTagName(const std::string& tagName) const
     return nodeList;
 }
 
-std::string Document::getChildElementValue(const std::string& tagName) const
-{
-    NodeList list = getChildNodes();
-    for (uint64_t i = 0; i < list.size(); ++i)
-    {
-        Node node = list.getNode(i);
-        if (node.getName() == tagName)
-        {
-            return node.getFirstChild().getValue();
-        }
-    }
-    
-    throw std::logic_error(std::string("No child element found in document with name ") + tagName);
-}
-
-std::string Document::getChildElementValueRecursive(const std::string& tagName) const
+std::string Document::getChildNodeValueRecursive(const std::string& tagName) const
 {
     NodeList nodeList = getElementsByTagName(tagName);
     if (nodeList.size() == 0)
@@ -248,6 +303,7 @@ std::string Document::getChildElementValueRecursive(const std::string& tagName) 
     
     return nodeList.getNode(0).getFirstChild().getValue();
 }
+
 
 std::string Document::toString() const
 {
@@ -326,33 +382,6 @@ NamedNodeMap Node::getAttributes() const
     }
     
     return nodeMap;
-}
-
-Node Node::getParent() const
-{
-    return ixmlNode_getParentNode(m_pNode);
-}
-
-Node Node::getFirstChild() const
-{
-    Node node = ixmlNode_getFirstChild(m_pNode);
-    if (!node)
-    {
-        throw std::logic_error(std::string("Failed to get first child node from node: ") + getName());
-    }
-    
-    return node;
-}
-
-NodeList Node::getChildNodes() const
-{
-    NodeList children = ixmlNode_getChildNodes(m_pNode);
-    if (!children)
-    {
-        throw std::logic_error(std::string("Failed to get childNodes from node: ") + getName());
-    }
-    
-    return children;
 }
 
 NamedNodeMap::NamedNodeMap()
@@ -493,20 +522,7 @@ NodeList Element::getElementsByTagName(const std::string& tagName)
 
 Element Element::getChildElement(const std::string& tagName)
 {
-    for (Element elem : getChildNodes())
-    {
-        if (elem.getName() == tagName)
-        {
-            return elem;
-        }
-    }
-    
-    throw std::logic_error(std::string("No child element found with name: " + tagName));
-}
-
-std::string Element::getChildElementValue(const std::string& tagName)
-{
-    return getChildElement(tagName).getValue();
+    return getChildNode(tagName);
 }
 
 String::String(DOMString str)
@@ -545,7 +561,7 @@ std::vector<std::string> getActionsFromDescription(Document& doc)
     for (uint64_t i = 0; i < numActions; ++i)
     {
         Element actionElem = nodeList.getNode(i);
-        actions.push_back(actionElem.getChildElementValue("name"));
+        actions.push_back(actionElem.getChildNodeValue("name"));
     }
     
     return actions;
@@ -567,17 +583,17 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
         {
             StateVariable var;
             var.sendsEvents = elem.getAttribute("sendEvents") == "yes";
-            var.name        = elem.getChildElementValue("name");
-            var.dataType    = elem.getChildElementValue("dataType");
+            var.name        = elem.getChildNodeValue("name");
+            var.dataType    = elem.getChildNodeValue("dataType");
             
             try
             {
                 Element rangeElement = elem.getElementsByTagName("allowedValueRange").getNode(0);
                 std::unique_ptr<StateVariable::ValueRange> range(new StateVariable::ValueRange());
                 
-                range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("minimum"));
-                range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("maximum"));
-                range->step            = stringops::toNumeric<uint32_t>(rangeElement.getChildElementValue("step"));
+                range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("minimum"));
+                range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("maximum"));
+                range->step            = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("step"));
                 
                 var.valueRange = std::move(range);
             }
@@ -598,8 +614,7 @@ std::map<std::string, std::string> getEventValues(Document& doc)
 {
     std::map<std::string, std::string> values;
     
-    NodeList nodeList = doc.getElementsByTagName("InstanceID");
-    NodeList children = nodeList.getNode(0).getChildNodes();
+    NodeList children = doc.getChildNode("InstanceID").getChildNodes();
     
     uint64_t numVars = children.size();
     for (uint64_t i = 0; i < numVars; ++i)

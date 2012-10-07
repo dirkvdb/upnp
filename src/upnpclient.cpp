@@ -141,14 +141,14 @@ xml::Document Client::sendAction(const Action& action) const
     log::debug("Execute action:", action.getActionDocument().toString());
 #endif
 
-    xml::Document result;
-    throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &result));
+    IXML_Document* pDoc = nullptr;
+    throwOnUPnPError(UpnpSendAction(m_Client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &pDoc));
     
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
 #endif
     
-    return result;
+    return xml::Document(pDoc);
 }
 
 xml::Document Client::downloadXmlDocument(const std::string& url) const

@@ -314,7 +314,7 @@ TEST_F(ContentDirectoryTest, browseAction)
     }
 }
 
-TEST_F(ContentDirectoryTest, performanceTestAll)
+TEST_F(ContentDirectoryTest, DISABLED_performanceTestAll)
 {
     const uint32_t size = 10000;
     ItemSubscriber subscriber;
@@ -339,7 +339,7 @@ TEST_F(ContentDirectoryTest, performanceTestAll)
     log::info("Performance test finished: took", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f, "ms");
 }
 
-TEST_F(ContentDirectoryTest, performanceTestContainersOnly)
+TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
 {
     const uint32_t size = 10000;
     ItemSubscriber subscriber;

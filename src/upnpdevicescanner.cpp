@@ -179,13 +179,13 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
         xml::Element serviceElem = serviceList.getNode(i);
         
         Service service;
-        service.m_Type = stringToServiceTypeUrn(serviceElem.getChildElementValue("serviceType"));
+        service.m_Type = stringToServiceTypeUrn(serviceElem.getChildNodeValue("serviceType"));
         if (service.m_Type == serviceType)
         {
-            service.m_Id                    = serviceElem.getChildElementValue("serviceId");
-            std::string relControlURL       = serviceElem.getChildElementValue("controlURL");
-            std::string relEventURL         = serviceElem.getChildElementValue("eventSubURL");
-            std::string scpURL              = serviceElem.getChildElementValue("SCPDURL");
+            service.m_Id                    = serviceElem.getChildNodeValue("serviceId");
+            std::string relControlURL       = serviceElem.getChildNodeValue("controlURL");
+            std::string relEventURL         = serviceElem.getChildNodeValue("eventSubURL");
+            std::string scpURL              = serviceElem.getChildNodeValue("SCPDURL");
             
             char url[512];
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
@@ -254,8 +254,8 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
         auto device = std::make_shared<Device>();
         
         device->m_Location      = pDiscovery->Location;
-        device->m_UDN           = doc.getChildElementValueRecursive("UDN");
-        device->m_Type          = Device::stringToDeviceType(doc.getChildElementValueRecursive("deviceType"));
+        device->m_UDN           = doc.getChildNodeValueRecursive("UDN");
+        device->m_Type          = Device::stringToDeviceType(doc.getChildNodeValueRecursive("deviceType"));
         device->m_TimeoutTime   = system_clock::now() + seconds(pDiscovery->Expires);
         
         if (device->m_UDN.empty() || device->m_Type != m_Type)
@@ -263,9 +263,9 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
             return;
         }
         
-        device->m_FriendlyName   = doc.getChildElementValueRecursive("friendlyName");
-        try { device->m_BaseURL  = doc.getChildElementValueRecursive("URLBase"); } catch (std::exception&) {}
-        try { device->m_RelURL   = doc.getChildElementValueRecursive("presentationURL"); } catch (std::exception&) {}
+        device->m_FriendlyName   = doc.getChildNodeValueRecursive("friendlyName");
+        try { device->m_BaseURL  = doc.getChildNodeValueRecursive("URLBase"); } catch (std::exception&) {}
+        try { device->m_RelURL   = doc.getChildNodeValueRecursive("presentationURL"); } catch (std::exception&) {}
         
         char presURL[200];
         int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : pDiscovery->Location), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
