@@ -267,11 +267,6 @@ Document& Document::operator= (IXML_Document* pDoc)
     return *this;
 }
 
-IXML_Document** Document::operator &()
-{
-    return &m_pDoc;
-}
-
 Document::operator IXML_Document*() const
 {
     return m_pDoc;

@@ -32,7 +32,8 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
 
 void Action::addArgument(const std::string& name, const std::string& value)
 {
-    if (UPNP_E_SUCCESS != UpnpAddToAction(&m_ActionDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
+    IXML_Document* pDoc = static_cast<IXML_Document*>(m_ActionDoc);
+    if (UPNP_E_SUCCESS != UpnpAddToAction(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
     {
         throw std::logic_error("Failed to add action to UPnP request: " + name);
     }

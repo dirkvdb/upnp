@@ -151,7 +151,6 @@ public:
 
     operator IXML_Document*() const;
     operator bool() const;
-    IXML_Document** operator &();
     
     NodeList getElementsByTagName(const std::string& tagName) const;
     std::string getChildNodeValueRecursive(const std::string& tagName) const;

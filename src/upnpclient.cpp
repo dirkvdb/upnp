@@ -153,14 +153,14 @@ xml::Document Client::sendAction(const Action& action) const
 
 xml::Document Client::downloadXmlDocument(const std::string& url) const
 {
-    xml::Document doc;
-    int ret = UpnpDownloadXmlDoc(url.c_str(), &doc);
+    IXML_Document* pDoc;
+    int ret = UpnpDownloadXmlDoc(url.c_str(), &pDoc);
     if (ret != UPNP_E_SUCCESS)
     {
         throw std::logic_error(std::string("Error downloading xml document from ") + url);
     }
     
-    return doc;
+    return xml::Document(pDoc);
 }
 
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
