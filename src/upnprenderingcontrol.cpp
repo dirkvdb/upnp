@@ -38,30 +38,26 @@ static const int32_t g_subscriptionTimeout = 1801;
 
 RenderingControl::RenderingControl(IClient& client)
 : ServiceBase(client)
-, m_CurrentVolume(0)
 , m_MinVolume(0)
 , m_MaxVolume(100)
 {
 }
 
-void RenderingControl::increaseVolume(const std::string& connectionId, uint32_t percentage)
-{
-    int32_t vol = m_CurrentVolume + ((m_MaxVolume * percentage) / 100);
-    setVolume(connectionId, vol);
-}
-
-void RenderingControl::decreaseVolume(const std::string& connectionId, uint32_t percentage)
-{
-    int32_t vol = m_CurrentVolume - ((m_MaxVolume * percentage) / 100);
-    setVolume(connectionId, vol);
-}
-
-void RenderingControl::setVolume(const std::string& connectionId, int32_t value)
+void RenderingControl::setVolume(const std::string& connectionId, uint32_t value)
 {
     numericops::clip(value, m_MinVolume, m_MaxVolume);
     executeAction(RenderingControlAction::SetVolume, { {"InstanceID", connectionId},
                                                        {"Channel", "Master"},
                                                        {"DesiredVolume", numericops::toString(value)} });
+}
+
+uint32_t RenderingControl::getVolume(const std::string& connectionId)
+{
+    xml::Document doc = executeAction(RenderingControlAction::GetVolume, { {"InstanceID", connectionId},
+                                                                           {"Channel", "Master"} });
+    
+    xml::Element response = doc.getFirstChild();
+    return stringops::toNumeric<uint32_t>(response.getChildNodeValue("CurrentVolume"));
 }
 
 ServiceType RenderingControl::getType()
@@ -95,11 +91,7 @@ void RenderingControl::handleStateVariableEvent(RenderingControlVariable var, co
 {
     if (var == RenderingControlVariable::LastChange)
     {
-        auto iter = variables.find(RenderingControlVariable::Volume);
-        if (iter != variables.end())
-        {
-            m_CurrentVolume = stringops::toNumeric<uint32_t>(iter->second);
-        }
+        LastChangeEvent(variables);
     }
 }
 

@@ -68,6 +68,9 @@ public:
     void getAllInContainer              (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getAllInContainerAsync         (const std::shared_ptr<Item>& container, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
+    std::vector<std::shared_ptr<Item>> search (const std::shared_ptr<Item>& container, const std::string& criteria);
+    std::vector<std::shared_ptr<Item>> search (const std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria);
+    
     uint32_t search (const std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     void searchAsync(const std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
     uint32_t search (const std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);

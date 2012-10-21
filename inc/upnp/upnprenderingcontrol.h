@@ -60,9 +60,10 @@ class RenderingControl : public ServiceBase<RenderingControlAction, RenderingCon
 public:
     RenderingControl(IClient& client);
     
-    void increaseVolume(const std::string& connectionId, uint32_t percentage);
-    void decreaseVolume(const std::string& connectionId, uint32_t percentage);
-    void setVolume(const std::string& connectionId, int32_t value);
+    void setVolume(const std::string& connectionId, uint32_t value);
+    uint32_t getVolume(const std::string& connectionId);
+    
+    utils::Signal<void(const std::map<RenderingControlVariable, std::string>&)> LastChangeEvent;
     
 protected:
     virtual ServiceType getType();
@@ -78,9 +79,8 @@ protected:
     virtual std::string variableToString(RenderingControlVariable var);
 
 private:
-    uint32_t                    m_CurrentVolume;
-    int32_t                     m_MinVolume;
-    int32_t                     m_MaxVolume;
+    uint32_t                    m_MinVolume;
+    uint32_t                    m_MaxVolume;
 };
 
 }

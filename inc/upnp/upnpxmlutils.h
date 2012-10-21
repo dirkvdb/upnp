@@ -101,12 +101,12 @@ public:
     Node();
     Node(IXML_Node* pNode);
     Node(const Node& node);
-    Node(Node&& node);
+    Node(Node&& node) = default;
     virtual ~Node();
     
     operator IXML_Node*() const;
     virtual operator bool() const;
-    Node& operator= (Node&& other);
+    Node& operator= (Node&& other) = default;
     bool operator == (const Node& other) const;
     bool operator != (const Node& other) const;
     
@@ -170,7 +170,7 @@ public:
     Element(const Node& node);
     Element(Node&& node);
     Element(const Element& node) = delete;
-    Element(Element&& node);
+    Element(Element&& node) = default;
     
     Element& operator= (Node& node);
     
@@ -208,7 +208,7 @@ public:
     NodeList();
     NodeList(IXML_NodeList* pList);
     NodeList(const NodeList& list) = delete;
-    NodeList(NodeList&& list);
+    NodeList(NodeList&& list) = default;
     ~NodeList();
     
     NodeList& operator= (const NodeList& other) = delete;
@@ -231,7 +231,7 @@ public:
     NamedNodeMap();
     NamedNodeMap(IXML_NamedNodeMap* pNode);
     NamedNodeMap(const NamedNodeMap& node) = delete;
-    NamedNodeMap(NamedNodeMap&& node);
+    NamedNodeMap(NamedNodeMap&& node) = default;
     ~NamedNodeMap();
     
     uint64_t size() const;

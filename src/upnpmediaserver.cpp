@@ -187,6 +187,27 @@ void MediaServer::getAllInContainerAsync(const std::shared_ptr<Item>& container,
     m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::All, container, std::ref(subscriber), offset, limit, sort, sortMode));
 }
 
+std::vector<std::shared_ptr<Item>> MediaServer::search (const std::shared_ptr<Item>& container, const std::string& criteria)
+{
+    std::vector<std::shared_ptr<Item>> items;
+    VectorSubscriber sub(items);
+    
+    search(container, criteria, sub);
+    
+    return items;
+}
+
+std::vector<std::shared_ptr<Item>> MediaServer::search (const std::shared_ptr<Item>& container, const std::map<Property, std::string>& criteria)
+{
+    std::vector<std::shared_ptr<Item>> items;
+    VectorSubscriber sub(items);
+    
+    search(container, criteria, sub);
+    
+    return items;
+}
+    
+
 uint32_t MediaServer::search(const std::shared_ptr<Item>& container, const std::string& criteria, utils::ISubscriber<std::shared_ptr<Item>>& subscriber)
 {
     m_Abort = false;

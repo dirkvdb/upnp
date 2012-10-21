@@ -60,11 +60,13 @@ enum class Property
     Artist,
     Album,
     AlbumArt,
+    Icon,
     Genre,
     TrackNumber,
     Actor,
     All,
     Description,
+    StorageUsed,
     Unknown
 };
 
@@ -166,9 +168,11 @@ inline Property propertyFromString(const std::string& name)
     if (name == "upnp:artist")              return Property::Artist;
     if (name == "upnp:album")               return Property::Album;
     if (name == "upnp:albumArtURI")         return Property::AlbumArt;
+    if (name == "upnp:icon")                return Property::Icon;
     if (name == "upnp:genre")               return Property::Genre;
     if (name == "upnp:originalTrackNumber") return Property::TrackNumber;
     if (name == "upnp:actor")               return Property::Actor;
+    if (name == "upnp:storageUsed")         return Property::StorageUsed;
     if (name == "*")                        return Property::All;
     
     return Property::Unknown;
@@ -196,9 +200,11 @@ inline std::string propertyToString(Property prop)
     case Property::Artist:            return "upnp:artist";
     case Property::Album:             return "upnp:album";
     case Property::AlbumArt:          return "upnp:albumArtURI";
+    case Property::Icon:              return "upnp:icon";
     case Property::Genre:             return "upnp:genre";
     case Property::TrackNumber:       return "upnp:originalTrackNumber";
     case Property::Actor:             return "upnp:actor";
+    case Property::StorageUsed:       return "upnp:storageUsed";
     case Property::All:               return "*";
     case Property::Unknown:
     default:                          return "";

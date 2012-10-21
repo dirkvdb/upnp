@@ -158,6 +158,7 @@ protected:
                         catch (std::exception& e)
                         {
                             utils::log::warn("Unknown event variable ignored:", e.what());
+                            utils::log::debug(var.toString());
                         }
                     }
                 }

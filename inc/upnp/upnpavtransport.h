@@ -17,6 +17,7 @@
 #ifndef UPNP_AV_TRANSPORT_H
 #define UPNP_AV_TRANSPORT_H
 
+#include "utils/signal.h"
 #include "upnp/upnpservicebase.h"
 
 namespace upnp
@@ -129,7 +130,11 @@ public:
     AVTransportVariable variableFromString(const std::string& action);
     std::string variableToString(AVTransportVariable var);
     
+    utils::Signal<void(const std::map<AVTransportVariable, std::string>&)> LastChangeEvent;
+    
 protected:
+    void handleStateVariableEvent(AVTransportVariable var, const std::map<AVTransportVariable, std::string>& variables);
+
     ServiceType getType();
     int32_t getSubscriptionTimeout();
     

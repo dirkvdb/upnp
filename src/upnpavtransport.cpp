@@ -116,6 +116,14 @@ int32_t AVTransport::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
 }
+
+void AVTransport::handleStateVariableEvent(AVTransportVariable var, const std::map<AVTransportVariable, std::string>& variables)
+{
+    if (var == AVTransportVariable::LastChange)
+    {
+        LastChangeEvent(variables);
+    }
+}
     
 AVTransportAction AVTransport::actionFromString(const std::string& action)
 {

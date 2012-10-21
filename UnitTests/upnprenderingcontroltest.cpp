@@ -160,38 +160,6 @@ TEST_F(RenderingControlTest, lastChangeEvent)
     EXPECT_EQ("35", lastChange[RenderingControlVariable::Volume]);
 }
 
-TEST_F(RenderingControlTest, increaseVolume)
-{
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
-    triggerLastChangeUpdate("0", "35");
-
-    Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
-    expectedAction.addArgument("Channel", "Master");
-    expectedAction.addArgument("DesiredVolume", "40");
-    expectedAction.addArgument("InstanceID", g_connectionId);
-        
-    EXPECT_CALL(client, sendAction(expectedAction))
-        .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
-    renderingControl->increaseVolume(g_connectionId, 5);
-}
-
-TEST_F(RenderingControlTest, decreaseVolume)
-{
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
-    triggerLastChangeUpdate("0", "35");
-    
-    Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
-    expectedAction.addArgument("Channel", "Master");
-    expectedAction.addArgument("DesiredVolume", "30");
-    expectedAction.addArgument("InstanceID", g_connectionId);
-    
-    EXPECT_CALL(client, sendAction(expectedAction))
-        .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
-    renderingControl->decreaseVolume(g_connectionId, 5);
-}
-
 TEST_F(RenderingControlTest, setVolume)
 {
     EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));

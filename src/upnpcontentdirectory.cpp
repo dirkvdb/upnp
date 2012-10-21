@@ -80,6 +80,8 @@ void ContentDirectory::querySearchCapabilities()
 {
     xml::Document result = executeAction(ContentDirectoryAction::GetSearchCapabilities);
     xml::Element elem = result.getFirstChild();
+    
+    // TODO: don't fail if the search caps is an empty list
 
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SearchCaps"), ","))
     {
@@ -92,8 +94,11 @@ void ContentDirectory::querySortCapabilities()
     xml::Document result = executeAction(ContentDirectoryAction::GetSortCapabilities);
     xml::Element elem = result.getFirstChild();
     
+    // TODO: don't fail if the sort caps is an empty list
+    
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
     {
+        log::debug(cap);
         addPropertyToList(cap, m_SortCaps);
     }
 }

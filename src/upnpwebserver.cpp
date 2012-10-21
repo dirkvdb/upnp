@@ -163,7 +163,7 @@ int WebServer::seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int orig
     switch (origin)
     {
         case SEEK_CUR:
-            newPosition += offset;
+            newPosition = pHandle->offset + offset;
             break;
         case SEEK_END:
             newPosition = iter->second.size() - offset;

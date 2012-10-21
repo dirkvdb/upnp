@@ -62,6 +62,7 @@ public:
     
     ConnectionManager& connectionManager();
 
+    // AV Transport
     void setTransportItem(const ConnectionInfo& info, Resource& resource);
     void play(const ConnectionInfo& info);
     void pause(const ConnectionInfo& info);
@@ -69,32 +70,44 @@ public:
     void next(const ConnectionInfo& info);
     void previous(const ConnectionInfo& info);
     
-    void increaseVolume(const ConnectionInfo& info, uint32_t percentage);
-    void decreaseVolume(const ConnectionInfo& info, uint32_t percentage);
+    std::string getCurrentTrackURI() const;
+    std::string getCurrentTrackDuration() const;
+    Item getCurrentTrackInfo() const;
+    std::set<Action> getAvailableActions() const;
+    bool isActionAvailable(Action action) const;
+    
+    
+    // Rendering control
+    void setVolume(const ConnectionInfo& info, uint32_t value);
+    uint32_t getVolume();
     
     void activateEvents();
     void deactivateEvents();
     
-    bool isActionAvailable(Action action) const;
-    
-    utils::Signal<void(const std::set<Action>&)>    AvailableActionsChanged;
+    utils::Signal<void(uint32_t)>                   VolumeChanged;
+    utils::Signal<void()>                           MediaInfoChanged;
     
 private:
-    void onAVTransportVariableChanged(AVTransportVariable, const std::map<AVTransportVariable, std::string>& vars);
-    void updateAvailableActions(const std::string& actionList);
+    void calculateAvailableActions();
+    void onRenderingControlLastChangeEvent(const std::map<RenderingControlVariable, std::string>&);
+    void onAVTransportLastChangeEvent(const std::map<AVTransportVariable, std::string>& vars);
+    
     
     static MediaRenderer::Action transportActionToAction(AVTransportAction action);
     
-    std::shared_ptr<Device>             m_Device;
-    std::vector<ProtocolInfo>           m_ProtocolInfo;
-    std::set<Action>                    m_AvailableActions;
+    std::shared_ptr<Device>                         m_Device;
+    std::vector<ProtocolInfo>                       m_ProtocolInfo;
     
-    IClient&                            m_Client;
-    ConnectionManager                   m_ConnectionMgr;
-    RenderingControl                    m_RenderingControl;
-    std::unique_ptr<AVTransport>        m_AVtransport;
+    IClient&                                        m_Client;
+    ConnectionManager                               m_ConnectionMgr;
+    RenderingControl                                m_RenderingControl;
+    std::unique_ptr<AVTransport>                    m_AVtransport;
     
-    bool                                m_Active;
+    bool                                            m_Active;
+    uint32_t                                        m_CurrentVolume;
+    
+    std::set<Action>                                m_AvailableActions;
+    std::map<AVTransportVariable, std::string>      m_AvTransportInfo;
 };
 
 }

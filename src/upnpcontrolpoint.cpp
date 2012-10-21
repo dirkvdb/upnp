@@ -156,8 +156,6 @@ void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item
     m_pWebServer->clearFiles();
     m_pWebServer->addFile(filename, playlist.str());
     
-    log::debug("Playlist:", playlist.str());
-    
     auto playlistItem = createPlaylistItem(filename);
     playItem(server, playlistItem);
 }
@@ -202,20 +200,17 @@ void ControlPoint::previous()
     }
 }
 
-void ControlPoint::increaseVolume(uint32_t percentage)
+void ControlPoint::setVolume(uint32_t value)
 {
     if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.increaseVolume(m_ConnInfo, percentage);
+        m_Renderer.setVolume(m_ConnInfo, value);
     }
 }
 
-void ControlPoint::decreaseVolume(uint32_t percentage)
+uint32_t ControlPoint::getVolume()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.decreaseVolume(m_ConnInfo, percentage);
-    }
+    return m_Renderer.getVolume();
 }
 
 void ControlPoint::stopPlaybackIfNecessary()

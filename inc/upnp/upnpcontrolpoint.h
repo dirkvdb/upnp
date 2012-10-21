@@ -60,8 +60,8 @@ public:
     void next();
     void previous();
     
-    void increaseVolume(uint32_t percentage);
-    void decreaseVolume(uint32_t percentage);
+    void setVolume(uint32_t value);
+    uint32_t getVolume();
     
 private:
     void throwOnMissingWebserver();

@@ -44,11 +44,6 @@ Node::Node(const Node& node)
 {
 }
 
-Node::Node(Node&& node)
-: m_pNode(std::move(node.m_pNode))
-{
-}
-
 Node::~Node()
 {
 }
@@ -61,17 +56,6 @@ Node::operator IXML_Node*() const
 Node::operator bool() const
 {
     return m_pNode != nullptr;
-}
-
-Node& Node::operator= (Node&& other)
-{
-    if (this != &other)
-    {
-        m_pNode = std::move(other.m_pNode);
-    }
-    
-    log::debug(__FUNCTION__, m_pNode);
-    return *this;
 }
 
 bool Node::operator== (const Node& other) const
@@ -246,7 +230,6 @@ Document::~Document()
     if (TakeOwnership == m_Ownership)
     {
         ixmlDocument_free(m_pDoc);
-        m_pDoc = nullptr;
     }
 }
 
@@ -279,19 +262,13 @@ Document::operator bool() const
 
 NodeList Document::getElementsByTagName(const std::string& tagName) const
 {
-    NodeList nodeList = ixmlDocument_getElementsByTagName(m_pDoc, tagName.c_str());
-    if (!nodeList)
-    {
-        throw std::logic_error(std::string("Failed to find tags in document with name: ") + tagName);
-    }
-    
-    return nodeList;
+    return NodeList(ixmlDocument_getElementsByTagName(m_pDoc, tagName.c_str()));
 }
 
 std::string Document::getChildNodeValueRecursive(const std::string& tagName) const
 {
     NodeList nodeList = getElementsByTagName(tagName);
-    if (nodeList.size() == 0)
+    if (!nodeList || nodeList.size() == 0)
     {
         throw std::logic_error(std::string("Failed to get document subelement value with tag: ") + tagName);
     }
@@ -318,11 +295,6 @@ NodeList::NodeList()
 
 NodeList::NodeList(IXML_NodeList* pList)
 : m_pList(pList)
-{
-}
-
-NodeList::NodeList(NodeList&& doc)
-: m_pList(std::move(doc.m_pList))
 {
 }
 
@@ -389,11 +361,6 @@ NamedNodeMap::NamedNodeMap(IXML_NamedNodeMap* pNodeMap)
 {
 }
 
-NamedNodeMap::NamedNodeMap(NamedNodeMap&& nodeMap)
-: m_pNodeMap(std::move(nodeMap.m_pNodeMap))
-{
-}
-
 NamedNodeMap::~NamedNodeMap()
 {
     ixmlNamedNodeMap_free(m_pNodeMap);
@@ -451,11 +418,6 @@ Element::Element(const Node& node)
 Element::Element(Node&& node)
 : Node(std::forward<Node>(node))
 , m_pElement(reinterpret_cast<IXML_Element*>(static_cast<IXML_Node*>(*this)))
-{
-}
-
-Element::Element(Element&& node)
-: m_pElement(std::move(node.m_pElement))
 {
 }
 
@@ -565,15 +527,8 @@ std::vector<std::string> getActionsFromDescription(Document& doc)
 std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
 {
     std::vector<StateVariable> variables;
-    
-    NodeList nodeList = doc.getElementsByTagName("stateVariable");
-    uint64_t numVariables = nodeList.size();
-    variables.reserve(numVariables);
-    
-    for (uint64_t i = 0; i < numVariables; ++i)
+    for (Element elem : doc.getElementsByTagName("stateVariable"))
     {
-        Element elem = nodeList.getNode(i);
-        
         try
         {
             StateVariable var;
@@ -608,13 +563,8 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
 std::map<std::string, std::string> getEventValues(Document& doc)
 {
     std::map<std::string, std::string> values;
-    
-    NodeList children = doc.getChildNode("InstanceID").getChildNodes();
-    
-    uint64_t numVars = children.size();
-    for (uint64_t i = 0; i < numVars; ++i)
+    for (Element elem : doc.getChildNode("InstanceID").getChildNodes())
     {
-        Element elem = children.getNode(i);
         values.insert(std::make_pair(elem.getName(), elem.getAttribute("val")));
     }
     
