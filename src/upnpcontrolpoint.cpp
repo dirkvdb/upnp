@@ -135,13 +135,13 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
     playItem(server, playlistItem);
 }
 
-void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item>& item)
+void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item>& container)
 {
     throwOnMissingWebserver();
     
     stopPlaybackIfNecessary();
 
-    auto items = server.getItemsInContainer(item);
+    auto items = server.getItemsInContainer(container);
     std::stringstream playlist;
     for (auto& item : items)
     {
