@@ -212,8 +212,41 @@ AVTransportVariable AVTransport::variableFromString(const std::string& var)
 
 std::string AVTransport::variableToString(AVTransportVariable var)
 {
-    assert(false);
-    throw std::logic_error("Unknown AVTransport variable");
+    switch (var)
+    {
+    case AVTransportVariable::TransportState:                   return "TransportState";
+    case AVTransportVariable::TransportStatus:                  return "TransportStatus";
+    case AVTransportVariable::PlaybackStorageMedium:            return "PlaybackStorageMedium";
+    case AVTransportVariable::PossiblePlaybackStorageMedia:     return "PossiblePlaybackStorageMedia";
+    case AVTransportVariable::PossibleRecordStorageMedia:       return "PossibleRecordStorageMedia";
+    case AVTransportVariable::CurrentPlayMode:                  return "CurrentPlayMode";
+    case AVTransportVariable::TransportPlaySpeed:               return "TransportPlaySpeed";
+    case AVTransportVariable::RecordStorageMedium:              return "RecordStorageMedium";
+    case AVTransportVariable::RecordMediumWriteStatus:          return "RecordMediumWriteStatus";
+    case AVTransportVariable::PossibleRecordQualityModes:       return "PossibleRecordQualityModes";
+    case AVTransportVariable::CurrentRecordQualityMode:         return "CurrentRecordQualityMode";
+    case AVTransportVariable::NumberOfTracks:                   return "NumberOfTracks";
+    case AVTransportVariable::CurrentTrack:                     return "CurrentTrack";
+    case AVTransportVariable::CurrentTrackDuration:             return "CurrentTrackDuration";
+    case AVTransportVariable::CurrentMediaDuration:             return "CurrentMediaDuration";
+    case AVTransportVariable::CurrentTrackURI:                  return "CurrentTrackURI";
+    case AVTransportVariable::CurrentTrackMetaData:             return "CurrentTrackMetaData";
+    case AVTransportVariable::AVTransportURI:                   return "AVTransportURI";
+    case AVTransportVariable::AVTransportURIMetaData:           return "AVTransportURIMetaData";
+    case AVTransportVariable::NextAVTransportURI:               return "NextAVTransportURI";
+    case AVTransportVariable::NextAVTransportURIMetaData:       return "NextAVTransportURIMetaData";
+    case AVTransportVariable::CurrentTransportActions:          return "CurrentTransportActions";
+    case AVTransportVariable::RelativeTimePosition:             return "RelativeTimePosition";
+    case AVTransportVariable::AbsoluteTimePosition:             return "AbsoluteTimePosition";
+    case AVTransportVariable::RelativeCounterPosition:          return "RelativeCounterPosition";
+    case AVTransportVariable::AbsoluteCounterPosition:          return "AbsoluteCounterPosition";
+    case AVTransportVariable::ArgumentTypeSeekMode:             return "ArgumentTypeSeekMode";
+    case AVTransportVariable::ArgumentTypeSeekTarget:           return "ArgumentTypeSeekTarget";
+    case AVTransportVariable::ArgumentTypeInstanceId:           return "ArgumentTypeInstanceId";
+    case AVTransportVariable::LastChange:                       return "LastChange";
+    default:
+        throw std::logic_error("Unknown AVTransport variable");
+    }    
 }
 
 void AVTransport::handleUPnPResult(int errorCode)

@@ -50,7 +50,7 @@ HttpGet::HttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t
 	char* pContentType = nullptr;
 	int32_t httpStatus = 0;
 
-	int32_t ret = UpnpOpenHttpGetEx(url.c_str(), &m_pHandle, &pContentType, &m_ContentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size), timeout);
+	int32_t ret = UpnpOpenHttpGetEx(url.c_str(), &m_pHandle, &pContentType, &m_ContentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size - 1), timeout);
 	if (ret != UPNP_E_SUCCESS)
 	{
 		UpnpCloseHttpGet(m_pHandle);

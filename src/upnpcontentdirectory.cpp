@@ -40,7 +40,7 @@ ContentDirectory::ContentDirectory(IClient& client)
 : ServiceBase(client)
 , m_Abort(false)
 {
-    //ixmlRelaxParser(1);
+    ixmlRelaxParser(1);
 }
 
 void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)

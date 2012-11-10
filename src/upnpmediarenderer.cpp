@@ -155,18 +155,24 @@ void MediaRenderer::previous(const ConnectionInfo& info)
 
 std::string MediaRenderer::getCurrentTrackURI() const
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    
     auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackURI);
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
 
 std::string MediaRenderer::getCurrentTrackDuration() const
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    
     auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackDuration);
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
 
 Item MediaRenderer::getCurrentTrackInfo() const
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    
     Item item;
 
     auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackDuration);
@@ -180,6 +186,7 @@ Item MediaRenderer::getCurrentTrackInfo() const
 
 bool MediaRenderer::isActionAvailable(Action action) const
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     return m_AvailableActions.find(action) != m_AvailableActions.end();
 }
 
@@ -238,6 +245,8 @@ void MediaRenderer::calculateAvailableActions()
         return;
     }
     
+    m_AvailableActions.clear();
+    
     auto actionsStrings = stringops::tokenize(iter->second, ",");
     std::for_each(actionsStrings.begin(), actionsStrings.end(), [&] (const std::string& action) {
         try { m_AvailableActions.insert(transportActionToAction(m_AVtransport->actionFromString(action))); }
@@ -247,6 +256,8 @@ void MediaRenderer::calculateAvailableActions()
 
 void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControlVariable, std::string>& vars)
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    
     auto iter = vars.find(RenderingControlVariable::Volume);
     if (iter != vars.end())
     {
@@ -257,8 +268,18 @@ void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingCo
 
 void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransportVariable, std::string>& vars)
 {
-    m_AvTransportInfo = vars;
-    calculateAvailableActions();
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    
+    for (auto& pair : vars)
+    {
+        m_AvTransportInfo[pair.first] = pair.second;
+    }
+
+    if (vars.find(AVTransportVariable::CurrentTransportActions) != vars.end())
+    {
+        calculateAvailableActions();
+    }
+    
     MediaInfoChanged();
 }
 

@@ -53,7 +53,7 @@ void Client::initialize(const char* interfaceName, int port)
     rc = UpnpRegisterClient(upnpCallback, this, &m_Client);
     if (UPNP_E_SUCCESS == rc)
     {
-        UpnpSetMaxContentLength(512 * 1024);
+        UpnpSetMaxContentLength(1024 * 1024);
     }
     else if (UPNP_E_ALREADY_REGISTERED == rc)
     {

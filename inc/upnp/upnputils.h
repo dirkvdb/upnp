@@ -45,6 +45,10 @@ inline void handleUPnPResult(int errorCode)
     {
         throw std::logic_error("Could not connect to the device");
     }
+    else if (UPNP_E_BAD_RESPONSE == errorCode)
+    {
+        throw std::logic_error("Bad response from the server");
+    }
     else if (401 == errorCode)
     {
         throw std::logic_error("Failed to connect");

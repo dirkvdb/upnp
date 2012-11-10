@@ -41,6 +41,7 @@ enum class RenderingControlAction
     GetVolume,
     SetVolume,
     GetVolumeDB,
+    GetVolumeDBRange,
     SetVolumeDB,
     GetMute,
     SetMute

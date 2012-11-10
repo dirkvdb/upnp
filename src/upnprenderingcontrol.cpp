@@ -113,6 +113,7 @@ RenderingControlAction RenderingControl::actionFromString(const std::string& act
     if (action == "GetVolume")                  return RenderingControlAction::GetVolume;
     if (action == "SetVolume")                  return RenderingControlAction::SetVolume;
     if (action == "GetVolumeDB")                return RenderingControlAction::GetVolumeDB;
+    if (action == "GetVolumeDBRange")           return RenderingControlAction::GetVolumeDBRange;
     if (action == "SetVolumeDB")                return RenderingControlAction::SetVolumeDB;
     if (action == "GetMute")                    return RenderingControlAction::GetMute;
     if (action == "SetMute")                    return RenderingControlAction::SetMute;
@@ -129,6 +130,7 @@ std::string RenderingControl::actionToString(RenderingControlAction action)
     case RenderingControlAction::GetVolume:             return "GetVolume";
     case RenderingControlAction::SetVolume:             return "SetVolume";
     case RenderingControlAction::GetVolumeDB:           return "GetVolumeDB";
+    case RenderingControlAction::GetVolumeDBRange:      return "GetVolumeDBRange";
     case RenderingControlAction::SetVolumeDB:           return "SetVolumeDB";
     case RenderingControlAction::GetMute:               return "GetMute";
     case RenderingControlAction::SetMute:               return "SetMute";

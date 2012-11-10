@@ -128,7 +128,6 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
     m_pWebServer->addFile(filename, playlist.str());
-    log::debug("Playlist:", playlist.str());
     
     auto playlistItem = createPlaylistItem(filename);
     

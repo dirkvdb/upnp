@@ -108,6 +108,8 @@ private:
     
     std::set<Action>                                m_AvailableActions;
     std::map<AVTransportVariable, std::string>      m_AvTransportInfo;
+    
+    mutable std::mutex                              m_Mutex;
 };
 
 }
