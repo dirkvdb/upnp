@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4301D335164EB48D002B1F9B /* upnpdlnainfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4301D333164EB48D002B1F9B /* upnpdlnainfo.cpp */; };
+		4301D336164EB48D002B1F9B /* upnpdlnainfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4301D333164EB48D002B1F9B /* upnpdlnainfo.cpp */; };
+		4301D337164EB48D002B1F9B /* upnpdlnainfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 4301D334164EB48D002B1F9B /* upnpdlnainfo.h */; };
+		4301D338164EB48D002B1F9B /* upnpdlnainfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 4301D334164EB48D002B1F9B /* upnpdlnainfo.h */; };
 		4303F18B161208630057A64C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4303F188161208630057A64C /* main.cpp */; };
 		4303F18C161208630057A64C /* xmlutilstest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4303F18A161208630057A64C /* xmlutilstest.cpp */; };
 		4303F1FC161216A80057A64C /* upnpcontrolpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */; };
@@ -129,6 +133,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4301D333164EB48D002B1F9B /* upnpdlnainfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = upnpdlnainfo.cpp; sourceTree = "<group>"; };
+		4301D334164EB48D002B1F9B /* upnpdlnainfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdlnainfo.h; sourceTree = "<group>"; };
 		4303F15C1612080E0057A64C /* UPnPUnitTests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = UPnPUnitTests; sourceTree = BUILT_PRODUCTS_DIR; };
 		4303F188161208630057A64C /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = test/main.cpp; sourceTree = SOURCE_ROOT; };
 		4303F189161208630057A64C /* testutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testutils.h; path = test/testutils.h; sourceTree = SOURCE_ROOT; };
@@ -318,6 +324,8 @@
 				4357AEF8154C07540021F9BE /* upnputils.h */,
 				43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */,
 				4357AEFF154C78D00021F9BE /* upnpxmlutils.h */,
+				4301D333164EB48D002B1F9B /* upnpdlnainfo.cpp */,
+				4301D334164EB48D002B1F9B /* upnpdlnainfo.h */,
 			);
 			name = upnp;
 			path = inc/upnp;
@@ -336,6 +344,7 @@
 				4303F211161216A80057A64C /* upnphttpget.h in Headers */,
 				4303F212161216A80057A64C /* upnpitem.h in Headers */,
 				43CC5AB2161A07F4001B72D8 /* upnpservicebase.h in Headers */,
+				4301D338164EB48D002B1F9B /* upnpdlnainfo.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -349,6 +358,7 @@
 				438A7A59150E9B300093A521 /* upnphttpget.h in Headers */,
 				438A7A5A150E9B300093A521 /* upnpitem.h in Headers */,
 				43CC5AB1161A07F4001B72D8 /* upnpservicebase.h in Headers */,
+				4301D337164EB48D002B1F9B /* upnpdlnainfo.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,6 +500,7 @@
 				4303F208161216A80057A64C /* upnpclient.cpp in Sources */,
 				4303F209161216A80057A64C /* upnpavtransport.cpp in Sources */,
 				4303F20A161216A80057A64C /* upnpwebserver.cpp in Sources */,
+				4301D336164EB48D002B1F9B /* upnpdlnainfo.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,6 +523,7 @@
 				432C62B5154EEA2A00068315 /* upnpclient.cpp in Sources */,
 				439EBBD01551BD90000177C5 /* upnpavtransport.cpp in Sources */,
 				43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */,
+				4301D335164EB48D002B1F9B /* upnpdlnainfo.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -733,7 +745,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "armv7 x86_64 i386";
+				VALID_ARCHS = "armv7 armv7s x86_64 i386";
 			};
 			name = Debug;
 		};
@@ -760,7 +772,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "armv7 x86_64 i386";
+				VALID_ARCHS = "armv7 armv7s x86_64 i386";
 			};
 			name = Release;
 		};

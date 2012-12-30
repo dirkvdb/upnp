@@ -6,9 +6,39 @@
 //  Copyright (c) 2012 None. All rights reserved.
 //
 
-#ifndef __UPnPFramework__upnpdlnainfo__
-#define __UPnPFramework__upnpdlnainfo__
+#ifndef UPNP_DLNA_INFO
+#define UPNP_DLNA_INFO
 
-#include <iostream>
+#include <string>
 
-#endif /* defined(__UPnPFramework__upnpdlnainfo__) */
+namespace upnp
+{
+namespace dlna
+{
+
+enum class ContentType
+{
+    JpegThumbnail,
+    JpegSmall,
+    JpegMedium,
+    JpegLarge,
+    Unknown
+};
+
+class Info
+{
+public:
+    Info(const std::string& info);
+    
+    ContentType getContentType() const;
+    
+private:
+    static ContentType ContentTypeFromString(const std::string& contentType);
+    
+    ContentType     m_contentType;
+};
+
+}
+}
+
+#endif
