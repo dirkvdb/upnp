@@ -324,7 +324,7 @@ void MediaServer::performBrowseRequestThread(ContentDirectory::BrowseType type, 
     }
     catch(std::exception& e)
     {
-        log::error("Exception getting items and containers: %", e.what());
+        log::error("Exception getting items and containers: %s", e.what());
         subscriber.onError(e.what());
     }
 }
@@ -339,7 +339,7 @@ void MediaServer::searchThread(const std::shared_ptr<Item> container, const T& c
     }
     catch(std::exception& e)
     {
-        log::error("Exception performing search: %", e.what());
+        log::error("Exception performing search: %s", e.what());
         subscriber.onError(e.what());
     }
 }
@@ -353,7 +353,7 @@ void MediaServer::getMetaDataThread(const std::shared_ptr<Item> item, utils::ISu
     }
     catch(std::exception& e)
     {
-        log::error("Exception getting metadata: %", e.what());
+        log::error("Exception getting metadata: %s", e.what());
         subscriber.onError(e.what());
     }
 }
