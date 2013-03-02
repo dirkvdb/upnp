@@ -193,7 +193,7 @@ Document::Document(const Document& doc)
         m_pDoc = ixmlDocument_createDocument();
         setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
         
-        //log::warn("Document copy constructor is implmented for gmock compatibility, should not get executed in code for performance reaseons", m_pDoc);
+        //log::warn("Document copy constructor is implmented for gmock compatibility, should not get executed in code for performance reasons %", m_pDoc);
         
         try
         {
@@ -553,7 +553,7 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
         }
         catch(std::exception& e)
         {
-            log::warn("Failed to parse state variable, skipping:", e.what());
+            log::warn("Failed to parse state variable, skipping: %", e.what());
         }
     }
     

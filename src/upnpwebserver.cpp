@@ -83,7 +83,7 @@ void WebServer::stop()
 
 UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMode mode)
 {
-    utils::log::debug(__FUNCTION__, pFilename);
+    utils::log::debug("% %", __FUNCTION__, pFilename);
 
     if (mode == UPNP_WRITE)
     {
@@ -101,7 +101,7 @@ UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMod
 
 int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 {
-    utils::log::debug(__FUNCTION__, pFilename, pInfo);
+    utils::log::debug("% % %", __FUNCTION__, pFilename, pInfo);
     auto iter = m_ServedFiles.find(pFilename);
     if (iter != m_ServedFiles.end())
     {
@@ -138,7 +138,7 @@ int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t bufl
     memcpy(buf, &iter->second[pHandle->offset], buflen);
     pHandle->offset += buflen;
     
-    utils::log::debug(__FUNCTION__, "Read bytes:", buflen, "Offset:", pHandle->offset);
+    utils::log::debug("% Read bytes: % Offset: %", __FUNCTION__, buflen, pHandle->offset);
 
     return buflen;
 }
@@ -182,7 +182,7 @@ int WebServer::seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int orig
     
     pHandle->offset = newPosition;
     
-    utils::log::debug(__FUNCTION__, "new position:", pHandle->offset);
+    utils::log::debug("% new position: %", __FUNCTION__, pHandle->offset);
 
     return UPNP_E_SUCCESS;
 }

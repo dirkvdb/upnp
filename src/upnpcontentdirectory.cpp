@@ -52,13 +52,13 @@ void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)
     m_SystemUpdateId.clear();
     
     try { querySearchCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain search capabilities:", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain search capabilities: %", e.what()); }
     
     try { querySortCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain sort capabilities:", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain sort capabilities: %", e.what()); }
     
     try { querySystemUpdateID(); }
-    catch (std::exception& e) { log::error("Failed to obtain system update id:", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain system update id: %", e.what()); }
 }
 
 void ContentDirectory::abort()
@@ -209,7 +209,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
         if (m_Abort) break;
         
 #ifdef DEBUG_CONTENT_BROWSING
-        log::debug("Item:", item->getTitle());
+        log::debug("Item: %", item->getTitle());
 #endif
 
         subscriber.onItem(item);
@@ -221,7 +221,7 @@ xml::Document ContentDirectory::browseAction(const std::string& objectId, const 
     m_Abort = false;
     
 #ifdef DEBUG_CONTENT_BROWSING
-    log::debug("Browse:", objectId, flag, filter, startIndex, limit, sort);
+    log::debug("Browse: % % % % % %", objectId, flag, filter, startIndex, limit, sort);
 #endif
     
     return executeAction(ContentDirectoryAction::Browse, { {"ObjectID", objectId},
@@ -294,7 +294,7 @@ void ContentDirectory::parseContainer(xml::Element& containerElem, const std::sh
         Property prop = propertyFromString(elem.getName());
         if (prop == Property::Unknown)
         {
-            log::warn("Unknown property", elem.getName());
+            log::warn("Unknown property %", elem.getName());
             continue;
         }
         
@@ -359,7 +359,7 @@ void ContentDirectory::parseItem(xml::Element& itemElem, const std::shared_ptr<I
                     addPropertyToItem(key, value, item);
                 }
             }
-            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item:", e.what()); }
+            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: %", e.what()); }
         }
         
 #ifdef DEBUG_CONTENT_BROWSING
@@ -387,7 +387,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(xml::Docume
         }
         catch (std::exception& e)
         {
-            log::warn(std::string("Failed to parse container, skipping (") + e.what() + ")");
+            log::warn("Failed to parse container, skipping (%)", e.what());
         }
     }
     
@@ -409,7 +409,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& d
         }
         catch (std::exception& e)
         {
-            log::error(std::string("Failed to parse item, skipping (") + e.what() + ")");
+            log::error("Failed to parse item, skipping (%)", e.what());
         }
     }
     
@@ -454,7 +454,7 @@ void ContentDirectory::addPropertyToItem(const std::string& propertyName, const 
     }
     else
     {
-        log::warn("Unknown property:", propertyName);
+        log::warn("Unknown property: %", propertyName);
     }
 }
 
@@ -467,7 +467,7 @@ void ContentDirectory::addPropertyToList(const std::string& propertyName, std::v
     }
     else
     {
-        log::warn("Unknown property:", propertyName);
+        log::warn("Unknown property: %", propertyName);
     }
 }
 

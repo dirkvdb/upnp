@@ -336,7 +336,7 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestAll)
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test");
     contentDirectory->browseDirectChildren(ContentDirectory::All, subscriber, "ObjectId", "filter", 0, size*2, "sort");
-    log::info("Performance test finished: took", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f, "ms");
+    log::info("Performance test finished: took %ms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 
 TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
@@ -360,7 +360,7 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test containers only");
     contentDirectory->browseDirectChildren(ContentDirectory::ContainersOnly, subscriber, "ObjectId", "filter", 0, size, "sort");
-    log::info("Performance test finished: took", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f, "ms");
+    log::info("Performance test finished: took %ms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 
 
