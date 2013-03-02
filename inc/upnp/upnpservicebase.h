@@ -172,7 +172,7 @@ protected:
     
     xml::Document executeAction(ActionType actionType)
     {
-        return executeAction(actionType, {});
+        return executeAction(actionType, std::map<std::string, std::string> {});
     }
     
     xml::Document executeAction(ActionType actionType, const std::map<std::string, std::string>& args)
