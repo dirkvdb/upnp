@@ -20,15 +20,12 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <map>
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
 {
-
-typedef std::map<std::string, std::string> MetaMap;
 
 class Resource
 {

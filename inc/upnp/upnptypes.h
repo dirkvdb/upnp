@@ -17,12 +17,20 @@
 #ifndef UPNP_TYPES_H
 #define UPNP_TYPES_H
 
+#include <map>
+#include <string>
+#include <memory>
 #include <stdexcept>
 
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
 {
+    
+class Item;
+    
+typedef std::shared_ptr<Item> ItemPtr;
+typedef std::map<std::string, std::string> MetaMap;
 
 namespace
 {

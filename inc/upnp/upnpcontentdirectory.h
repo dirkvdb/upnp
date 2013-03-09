@@ -20,15 +20,14 @@
 #include "upnp/upnpitem.h"
 #include "upnp/upnpservicebase.h"
 
-#include "utils/subscriber.h"
-
-
 namespace upnp
 {
 
 class Action;
 class Device;
 class IClient;
+
+typedef std::function<void(const ItemPtr&)> ItemCb;
 
 enum class ContentDirectoryAction
 {
@@ -82,9 +81,9 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
     
-    void browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter);
-    ActionResult browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    ActionResult search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    void browseMetadata(const ItemPtr& item, const std::string& filter);
+    ActionResult browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    ActionResult search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     
     virtual ContentDirectoryAction actionFromString(const std::string& action);
     virtual std::string actionToString(ContentDirectoryAction action);
@@ -116,7 +115,7 @@ private:
     std::vector<std::shared_ptr<Item>> parseContainers(xml::Document& doc);
     std::vector<std::shared_ptr<Item>> parseItems(xml::Document& doc);
     
-    void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber);
+    void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem);
 
     std::vector<Property>       m_SearchCaps;
     std::vector<Property>       m_SortCaps;

@@ -17,6 +17,7 @@
 #include "upnp/upnpcontrolpoint.h"
 
 #include <chrono>
+#include <condition_variable>
 
 #include "upnp/upnpclient.h"
 #include "upnp/upnpmediaserver.h"

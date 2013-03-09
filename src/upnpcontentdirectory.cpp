@@ -110,7 +110,7 @@ void ContentDirectory::querySystemUpdateID()
     m_SystemUpdateId = elem.getChildNodeValue("Id");
 }
 
-void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const std::string& filter)
+void ContentDirectory::browseMetadata(const ItemPtr& item, const std::string& filter)
 {
     ActionResult res;
 
@@ -129,7 +129,7 @@ void ContentDirectory::browseMetadata(const std::shared_ptr<Item>& item, const s
 }
 
 
-ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType type, utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     ActionResult res;
 
@@ -149,7 +149,7 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
         try
         {
             auto containers = parseContainers(browseResult);
-            notifySubscriber(containers, subscriber);
+            notifySubscriber(containers, onItem);
         }
         catch (std::exception&e ) { log::warn(e.what()); }
     }
@@ -159,7 +159,7 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
         try
         {
             auto items = parseItems(browseResult);
-            notifySubscriber(items, subscriber);
+            notifySubscriber(items, onItem);
         }
         catch (std::exception& e) { log::warn(e.what()); }
     }
@@ -167,7 +167,7 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
     return res;
 }
 
-ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::shared_ptr<Item>>& subscriber, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ContentDirectory::ActionResult ContentDirectory::search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -188,21 +188,21 @@ ContentDirectory::ActionResult ContentDirectory::search(utils::ISubscriber<std::
     try
     {
         auto containers = parseContainers(searchResultDoc);
-        notifySubscriber(containers, subscriber);
+        notifySubscriber(containers, onItem);
     }
     catch (std::exception&e ) { log::warn(e.what()); }
     
     try
     {
         auto items = parseItems(searchResultDoc);
-        notifySubscriber(items, subscriber);
+        notifySubscriber(items, onItem);
     }
     catch (std::exception& e) { log::warn(e.what()); }
 
     return searchResult;
 }
 
-void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, utils::ISubscriber<std::shared_ptr<Item>>& subscriber)
+void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem)
 {
     for (auto& item : items)
     {
@@ -212,7 +212,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
         log::debug("Item: %s", item->getTitle());
 #endif
 
-        subscriber.onItem(item);
+        onItem(item);
     }
 }
 
