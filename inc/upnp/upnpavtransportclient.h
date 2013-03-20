@@ -1,0 +1,85 @@
+//    Copyright (C) 2012 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#ifndef UPNP_AV_TRANSPORT_CLIENT_H
+#define UPNP_AV_TRANSPORT_CLIENT_H
+
+#include "utils/signal.h"
+#include "upnp/upnpservicebase.h"
+#include "upnp/upnpavtransporttypes.h"
+
+namespace upnp
+{
+
+class Item;
+class Action;
+
+namespace AVTransport
+{
+    
+class Client : public ServiceBase<Action, Variable>
+{
+public:
+    struct PositionInfo
+    {
+        std::string track;
+        std::string trackDuration;
+        std::string trackMetaData;
+        std::string trackURI;
+        std::string relTime;
+        std::string absTime;
+        std::string relCount;
+        std::string absCount;
+    };
+    
+    struct TransportInfo
+    {
+        std::string currentTransportState;
+        std::string currentTransportStatus;
+        std::string currentSpeed;
+    };
+
+    Client(IClient& client);
+    
+    void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");
+    void play(const std::string& connectionId, const std::string& speed = "1");
+    void pause(const std::string& connectionId);
+    void stop(const std::string& connectionId);
+    void previous(const std::string& connectionId);
+    void next(const std::string& connectionId);
+    PositionInfo getPositionInfo(const std::string& connectionId);
+    TransportInfo getTransportInfo(const std::string& connectionId);
+    
+    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
+    
+    virtual Action actionFromString(const std::string& action);
+    virtual std::string actionToString(Action action);
+    virtual Variable variableFromString(const std::string& var);
+    virtual std::string variableToString(Variable var);
+
+protected:
+    void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
+
+    ServiceType getType();
+    int32_t getSubscriptionTimeout();
+    
+    void handleUPnPResult(int errorCode);
+};
+
+}
+}
+
+#endif

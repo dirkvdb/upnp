@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 None. All rights reserved.
 //
 
-#include "upnpdlnainfo.h"
+#include "upnp/upnpdlnainfo.h"
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"

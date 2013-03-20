@@ -35,6 +35,9 @@ public:
     virtual void destroy();
     virtual void reset();
     
+    virtual std::string getIpAddress() const;
+    virtual int32_t getPort() const;
+    
     virtual void searchDevices(Device::Type type, int timeout) const;
     
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const;

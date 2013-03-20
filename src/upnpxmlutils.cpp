@@ -135,7 +135,7 @@ std::string Node::getChildNodeValue(const std::string& tagName) const
     return getChildNode(tagName).getFirstChild().getValue();
 }
 
-std::string Node::toString()
+std::string Node::toString() const
 {
     String str(ixmlPrintNode(m_pNode));
     if (!str)
@@ -439,12 +439,12 @@ Element::operator bool() const
     return m_pElement != nullptr;
 }
 
-std::string Element::getName()
+std::string Element::getName() const
 {
     return ixmlElement_getTagName(m_pElement);
 }
 
-std::string Element::getValue()
+std::string Element::getValue() const
 {
     return getFirstChild().getValue();
 }

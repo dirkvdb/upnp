@@ -120,7 +120,7 @@ public:
     Node getChildNode(const std::string& tagName) const;
     std::string getChildNodeValue(const std::string& tagName) const;
     
-    virtual std::string toString();
+    virtual std::string toString() const;
 
 protected:
     void setNodePointer(IXML_Node* pNode);
@@ -155,7 +155,7 @@ public:
     NodeList getElementsByTagName(const std::string& tagName) const;
     std::string getChildNodeValueRecursive(const std::string& tagName) const;
     
-    std::string toString() const;
+    virtual std::string toString() const;
 
 private:
     IXML_Document*  m_pDoc;
@@ -177,8 +177,8 @@ public:
     operator IXML_Element*() const;
     operator bool() const;
     
-    std::string getName();
-    std::string getValue();
+    virtual std::string getName() const;
+    virtual std::string getValue() const;
     std::string getAttribute(const std::string& attr);
     std::string getAttributeOptional(const std::string& attr, const std::string& defaultValue = "");
     

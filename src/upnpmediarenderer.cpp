@@ -60,7 +60,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
         
         if (m_Device->implementsService(ServiceType::AVTransport))
         {
-            m_AVtransport.reset(new AVTransport(m_Client));
+            m_AVtransport.reset(new AVTransport::Client(m_Client));
             m_AVtransport->setDevice(device);
         }
         
@@ -157,7 +157,7 @@ std::string MediaRenderer::getCurrentTrackURI() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
-    auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackURI);
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackURI);
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
 
@@ -165,7 +165,7 @@ std::string MediaRenderer::getCurrentTrackDuration() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
-    auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackDuration);
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
 
@@ -175,7 +175,7 @@ Item MediaRenderer::getCurrentTrackInfo() const
     
     Item item;
 
-    auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTrackDuration);
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
     if (iter != m_AvTransportInfo.end())
     {
         log::warn("Meta parsing not implemented");
@@ -236,7 +236,7 @@ void MediaRenderer::deactivateEvents()
 
 void MediaRenderer::calculateAvailableActions()
 {
-    auto iter = m_AvTransportInfo.find(AVTransportVariable::CurrentTransportActions);
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTransportActions);
     if (iter == m_AvTransportInfo.end())
     {
         // no action info provided, allow everything
@@ -254,11 +254,11 @@ void MediaRenderer::calculateAvailableActions()
     });
 }
 
-void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControlVariable, std::string>& vars)
+void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
-    auto iter = vars.find(RenderingControlVariable::Volume);
+    auto iter = vars.find(RenderingControl::Variable::Volume);
     if (iter != vars.end())
     {
         m_CurrentVolume = utils::stringops::toNumeric<uint32_t>(iter->second);
@@ -266,7 +266,7 @@ void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingCo
     }
 }
 
-void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransportVariable, std::string>& vars)
+void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
@@ -275,7 +275,7 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransportVaria
         m_AvTransportInfo[pair.first] = pair.second;
     }
 
-    if (vars.find(AVTransportVariable::CurrentTransportActions) != vars.end())
+    if (vars.find(AVTransport::Variable::CurrentTransportActions) != vars.end())
     {
         calculateAvailableActions();
     }
@@ -283,21 +283,22 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransportVaria
     MediaInfoChanged();
 }
 
-MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransportAction action)
+MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action action)
 {
-    switch (action) {
-        case AVTransportAction::Play:     return Action::Play;
-        case AVTransportAction::Stop:     return Action::Stop;
-        case AVTransportAction::Pause:    return Action::Pause;
-        case AVTransportAction::Seek:     return Action::Seek;
-        case AVTransportAction::Next:     return Action::Next;
-        case AVTransportAction::Previous: return Action::Previous;
-        case AVTransportAction::Record:   return Action::Record;
+    switch (action)
+    {
+        case AVTransport::Action::Play:     return Action::Play;
+        case AVTransport::Action::Stop:     return Action::Stop;
+        case AVTransport::Action::Pause:    return Action::Pause;
+        case AVTransport::Action::Seek:     return Action::Seek;
+        case AVTransport::Action::Next:     return Action::Next;
+        case AVTransport::Action::Previous: return Action::Previous;
+        case AVTransport::Action::Record:   return Action::Record;
         default: throw std::logic_error("Invalid transport action");
     }
 }
 
-ConnectionManager& MediaRenderer::connectionManager()
+ConnectionManager::Client& MediaRenderer::connectionManager()
 {
     return m_ConnectionMgr;
 }

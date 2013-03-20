@@ -83,6 +83,16 @@ void Client::reset()
     destroy();
     initialize();
 }
+    
+std::string Client::getIpAddress() const
+{
+    return UpnpGetServerIpAddress();
+}
+
+int32_t Client::getPort() const
+{
+    return UpnpGetServerPort();
+}
 
 void Client::searchDevices(Device::Type type, int timeout) const
 {

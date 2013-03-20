@@ -60,7 +60,7 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device)
         
         if (m_Device->implementsService(ServiceType::AVTransport))
         {
-            m_AVTransport.reset(new AVTransport(m_Client));
+            m_AVTransport.reset(new AVTransport::Client(m_Client));
             m_AVTransport->setDevice(device);
         }
     }
@@ -116,7 +116,7 @@ const std::vector<Property>& MediaServer::getSortCapabilities() const
 
 std::string MediaServer::getPeerConnectionId() const
 {
-    if (!m_ConnectionMgr.supportsAction(ConnectionManagerAction::PrepareForConnection))
+    if (!m_ConnectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection))
     {
         return ConnectionManager::UnknownConnectionId;
     }
@@ -145,32 +145,32 @@ std::vector<ItemPtr> MediaServer::getItemsInContainer(const ItemPtr& container, 
 
 void MediaServer::getItemsInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::ItemsOnly, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode);
 }
 
 void MediaServer::getItemsInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ItemsOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getContainersInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::ContainersOnly, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode);
 }
 
 void MediaServer::getContainersInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::ContainersOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getAllInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::All, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode);
 }
 
 void MediaServer::getAllInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::All, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode));
 }
 
 std::vector<ItemPtr> MediaServer::search(const ItemPtr& container, const std::string& criteria)
@@ -200,7 +200,7 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::string& criter
 {
     m_Abort = false;
     uint32_t offset = 0;
-    ContentDirectory::ActionResult res {0, 0};
+    ContentDirectory::Client::ActionResult res {0, 0};
 
     do
     {
@@ -281,7 +281,7 @@ void MediaServer::setTransportItem(const ConnectionInfo& info, Resource& resourc
     }
 }
 
-void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
     m_Abort = false;
 
@@ -301,7 +301,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, const 
         }
         
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
-        ContentDirectory::ActionResult res = m_ContentDirectory.browseDirectChildren(type, onItem, container->getObjectId(), "*", curOffset, requestSize, ss.str());
+        ContentDirectory::Client::ActionResult res = m_ContentDirectory.browseDirectChildren(type, onItem, container->getObjectId(), "*", curOffset, requestSize, ss.str());
         itemsReceived += res.numberReturned;
         
         if (limit > 0)
@@ -320,7 +320,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::BrowseType type, const 
     }
 }
 
-void MediaServer::performBrowseRequestThread(ContentDirectory::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
     try
     {
@@ -371,7 +371,7 @@ void MediaServer::getMetaDataThread(const ItemPtr& item, const ItemCb& onItem)
     }
 }
 
-ConnectionManager& MediaServer::connectionManager()
+ConnectionManager::Client& MediaServer::connectionManager()
 {
     return m_ConnectionMgr;
 }

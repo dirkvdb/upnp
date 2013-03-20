@@ -179,7 +179,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
         xml::Element serviceElem = serviceList.getNode(i);
         
         Service service;
-        service.m_Type = stringToServiceTypeUrn(serviceElem.getChildNodeValue("serviceType"));
+        service.m_Type = serviceTypeUrnStringToService(serviceElem.getChildNodeValue("serviceType"));
         if (service.m_Type == serviceType)
         {
             service.m_Id                    = serviceElem.getChildNodeValue("serviceId");

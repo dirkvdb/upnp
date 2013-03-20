@@ -14,11 +14,12 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONTENT_DIRECTORY_H
-#define UPNP_CONTENT_DIRECTORY_H
+#ifndef UPNP_CONTENT_DIRECTORY_CLIENT_H
+#define UPNP_CONTENT_DIRECTORY_CLIENT_H
 
 #include "upnp/upnpitem.h"
 #include "upnp/upnpservicebase.h"
+#include "upnp/upnpcontentdirectorytypes.h"
 
 namespace upnp
 {
@@ -29,34 +30,10 @@ class IClient;
 
 typedef std::function<void(const ItemPtr&)> ItemCb;
 
-enum class ContentDirectoryAction
+namespace ContentDirectory
 {
-    GetSearchCapabilities,
-    GetSortCapabilities,
-    GetSystemUpdateID,
-    Browse,
-    Search
-};
 
-enum class ContentDirectoryVariable
-{
-    ContainerUpdateIDs,
-    TransferIDs,
-    SystemUpdateID,
-    ArgumentTypeObjectID,
-    ArgumentTypeResult,
-    ArgumentTypeSearchCriteria,
-    ArgumentTypeBrowseFlag,
-    ArgumentTypeFilter,
-    ArgumentTypeSortCriteria,
-    ArgumentTypeIndex,
-    ArgumentTypeCount,
-    ArgumentTypeUpdateID,
-    ArgumentTypeSearchCapabilities,
-    ArgumentTypeSortCapabilities
-};
-
-class ContentDirectory : public ServiceBase<ContentDirectoryAction, ContentDirectoryVariable>
+class Client : public ServiceBase<Action, Variable>
 {
 public:
     enum BrowseType
@@ -72,7 +49,7 @@ public:
         uint32_t numberReturned;
     };
 
-    ContentDirectory(IClient& client);
+    Client(IClient& client);
         
     void setDevice(const std::shared_ptr<Device>& device);
     
@@ -85,12 +62,12 @@ public:
     ActionResult browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     ActionResult search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     
-    virtual ContentDirectoryAction actionFromString(const std::string& action);
-    virtual std::string actionToString(ContentDirectoryAction action);
-    virtual ContentDirectoryVariable variableFromString(const std::string& var);
-    virtual std::string variableToString(ContentDirectoryVariable var);
-    
 protected:
+    virtual Action actionFromString(const std::string& action);
+    virtual std::string actionToString(Action action);
+    virtual Variable variableFromString(const std::string& var);
+    virtual std::string variableToString(Variable var);
+
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();
     virtual void handleUPnPResult(int errorCode);
@@ -124,6 +101,7 @@ private:
     bool                        m_Abort;
 };
 
+}
 }
 
 #endif

@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpcontentdirectory.h"
+#include "upnp/upnpcontentdirectoryclient.h"
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
@@ -33,17 +33,19 @@ using namespace utils;
 
 namespace upnp
 {
+namespace ContentDirectory
+{
 
 static const int32_t g_subscriptionTimeout = 1801;
 
-ContentDirectory::ContentDirectory(IClient& client)
+Client::Client(IClient& client)
 : ServiceBase(client)
 , m_Abort(false)
 {
     ixmlRelaxParser(1);
 }
 
-void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)
+void Client::setDevice(const std::shared_ptr<Device>& device)
 {
     ServiceBase::setDevice(device);
 
@@ -61,24 +63,24 @@ void ContentDirectory::setDevice(const std::shared_ptr<Device>& device)
     catch (std::exception& e) { log::error("Failed to obtain system update id: %s", e.what()); }
 }
 
-void ContentDirectory::abort()
+void Client::abort()
 {
     m_Abort = true;
 }
 
-const std::vector<Property>& ContentDirectory::getSearchCapabilities() const
+const std::vector<Property>& Client::getSearchCapabilities() const
 {
     return m_SearchCaps;
 }
 
-const std::vector<Property>& ContentDirectory::getSortCapabilities() const
+const std::vector<Property>& Client::getSortCapabilities() const
 {
     return m_SortCaps;
 }
 
-void ContentDirectory::querySearchCapabilities()
+void Client::querySearchCapabilities()
 {
-    xml::Document result = executeAction(ContentDirectoryAction::GetSearchCapabilities);
+    xml::Document result = executeAction(Action::GetSearchCapabilities);
     xml::Element elem = result.getFirstChild();
     
     // TODO: don't fail if the search caps is an empty list
@@ -89,9 +91,9 @@ void ContentDirectory::querySearchCapabilities()
     }
 }
 
-void ContentDirectory::querySortCapabilities()
+void Client::querySortCapabilities()
 {
-    xml::Document result = executeAction(ContentDirectoryAction::GetSortCapabilities);
+    xml::Document result = executeAction(Action::GetSortCapabilities);
     xml::Element elem = result.getFirstChild();
     
     // TODO: don't fail if the sort caps is an empty list
@@ -103,14 +105,14 @@ void ContentDirectory::querySortCapabilities()
     }
 }
 
-void ContentDirectory::querySystemUpdateID()
+void Client::querySystemUpdateID()
 {
-    xml::Document result = executeAction(ContentDirectoryAction::GetSystemUpdateID);
+    xml::Document result = executeAction(Action::GetSystemUpdateID);
     xml::Element elem = result.getFirstChild();
     m_SystemUpdateId = elem.getChildNodeValue("Id");
 }
 
-void ContentDirectory::browseMetadata(const ItemPtr& item, const std::string& filter)
+void Client::browseMetadata(const ItemPtr& item, const std::string& filter)
 {
     ActionResult res;
 
@@ -129,7 +131,7 @@ void ContentDirectory::browseMetadata(const ItemPtr& item, const std::string& fi
 }
 
 
-ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+Client::ActionResult Client::browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     ActionResult res;
 
@@ -167,16 +169,16 @@ ContentDirectory::ActionResult ContentDirectory::browseDirectChildren(BrowseType
     return res;
 }
 
-ContentDirectory::ActionResult ContentDirectory::search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+Client::ActionResult Client::search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
-    xml::Document result = executeAction(ContentDirectoryAction::Search, { {"ObjectID", objectId},
-                                                                           {"SearchCriteria", criteria},
-                                                                           {"Filter", filter},
-                                                                           {"StartingIndex", numericops::toString(startIndex)},
-                                                                           {"RequestedCount", numericops::toString(limit)},
-                                                                           {"SortCriteria", sort} });
+    xml::Document result = executeAction(Action::Search, { {"ObjectID", objectId},
+                                                           {"SearchCriteria", criteria},
+                                                           {"Filter", filter},
+                                                           {"StartingIndex", numericops::toString(startIndex)},
+                                                           {"RequestedCount", numericops::toString(limit)},
+                                                           {"SortCriteria", sort} });
     
     ActionResult searchResult;
     xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
@@ -202,7 +204,7 @@ ContentDirectory::ActionResult ContentDirectory::search(const ItemCb& onItem, co
     return searchResult;
 }
 
-void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem)
+void Client::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem)
 {
     for (auto& item : items)
     {
@@ -216,7 +218,7 @@ void ContentDirectory::notifySubscriber(std::vector<std::shared_ptr<Item>>& item
     }
 }
 
-xml::Document ContentDirectory::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+xml::Document Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -224,15 +226,15 @@ xml::Document ContentDirectory::browseAction(const std::string& objectId, const 
     log::debug("Browse: %s %s %s %d %d %s", objectId, flag, filter, startIndex, limit, sort);
 #endif
     
-    return executeAction(ContentDirectoryAction::Browse, { {"ObjectID", objectId},
-                                                           {"BrowseFlag", flag},
-                                                           {"Filter", filter},
-                                                           {"StartingIndex", numericops::toString(startIndex)},
-                                                           {"RequestedCount", numericops::toString(limit)},
-                                                           {"SortCriteria", sort} });
+    return executeAction(Action::Browse, { {"ObjectID", objectId},
+                                           {"BrowseFlag", flag},
+                                           {"Filter", filter},
+                                           {"StartingIndex", numericops::toString(startIndex)},
+                                           {"RequestedCount", numericops::toString(limit)},
+                                           {"SortCriteria", sort} });
 }
 
-xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResult& result)
+xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result)
 {
     std::string browseResult;
 
@@ -262,7 +264,7 @@ xml::Document ContentDirectory::parseBrowseResult(xml::Document& doc, ActionResu
     return xml::Document(browseResult);
 }
 
-void ContentDirectory::parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item)
+void Client::parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
     
@@ -283,7 +285,7 @@ void ContentDirectory::parseMetaData(xml::Document& doc, const std::shared_ptr<I
     log::warn("No metadata could be retrieved");
 }
 
-void ContentDirectory::parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item)
+void Client::parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item)
 {
     item->setObjectId(containerElem.getAttribute("id"));
     item->setParentId(containerElem.getAttribute("parentID"));
@@ -308,7 +310,7 @@ void ContentDirectory::parseContainer(xml::Element& containerElem, const std::sh
     }
 }
 
-Resource ContentDirectory::parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
+Resource Client::parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
 {
     Resource res;
     res.setUrl(url);
@@ -335,7 +337,7 @@ Resource ContentDirectory::parseResource(xml::NamedNodeMap& nodeMap, const std::
     return res;
 }
 
-void ContentDirectory::parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item)
+void Client::parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item)
 {
     item->setObjectId(itemElem.getAttribute("id"));
     item->setParentId(itemElem.getAttribute("parentID"));
@@ -372,7 +374,7 @@ void ContentDirectory::parseItem(xml::Element& itemElem, const std::shared_ptr<I
     }
 }
 
-std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(xml::Document& doc)
+std::vector<std::shared_ptr<Item>> Client::parseContainers(xml::Document& doc)
 {
     assert(doc && "ParseContainers: Invalid document supplied");
 
@@ -394,7 +396,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseContainers(xml::Docume
     return containers;
 }
 
-std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& doc)
+std::vector<std::shared_ptr<Item>> Client::parseItems(xml::Document& doc)
 {
     assert(doc && "ParseItems: Invalid document supplied");
 
@@ -416,7 +418,7 @@ std::vector<std::shared_ptr<Item>> ContentDirectory::parseItems(xml::Document& d
     return items;
 }
 
-void ContentDirectory::handleUPnPResult(int errorCode)
+void Client::handleUPnPResult(int errorCode)
 {
     if (errorCode == UPNP_E_SUCCESS) return;
 
@@ -445,7 +447,7 @@ void ContentDirectory::handleUPnPResult(int errorCode)
     }
 }
 
-void ContentDirectory::addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item)
+void Client::addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item)
 {
     Property prop = propertyFromString(propertyName);
     if (prop != Property::Unknown)
@@ -458,7 +460,7 @@ void ContentDirectory::addPropertyToItem(const std::string& propertyName, const 
     }
 }
 
-void ContentDirectory::addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
+void Client::addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
 {
     Property prop = propertyFromString(propertyName);
     if (prop != Property::Unknown)
@@ -471,85 +473,35 @@ void ContentDirectory::addPropertyToList(const std::string& propertyName, std::v
     }
 }
 
-ContentDirectoryAction ContentDirectory::actionFromString(const std::string& action)
+Action Client::actionFromString(const std::string& action)
 {
-    if (action == "GetSearchCapabilities")  return ContentDirectoryAction::GetSearchCapabilities;
-    if (action == "GetSortCapabilities")    return ContentDirectoryAction::GetSortCapabilities;
-    if (action == "GetSystemUpdateID")      return ContentDirectoryAction::GetSystemUpdateID;
-    if (action == "Browse")                 return ContentDirectoryAction::Browse;
-    if (action == "Search")                 return ContentDirectoryAction::Search;
-    
-    throw std::logic_error("Unknown ContentDirectory action:" + action);
+    return ContentDirectory::actionFromString(action);
 }
 
-std::string ContentDirectory::actionToString(ContentDirectoryAction action)
+std::string Client::actionToString(Action action)
 {
-    switch (action)
-    {
-        case ContentDirectoryAction::GetSearchCapabilities:     return "GetSearchCapabilities";
-        case ContentDirectoryAction::GetSortCapabilities:       return "GetSortCapabilities";
-        case ContentDirectoryAction::GetSystemUpdateID:         return "GetSystemUpdateID";
-        case ContentDirectoryAction::Browse:                    return "Browse";
-        case ContentDirectoryAction::Search:                    return "Search";
-            
-        default:
-            throw std::logic_error("Unknown ContentDirectory action");
-    }
+    return ContentDirectory::actionToString(action);
 }
 
-ContentDirectoryVariable ContentDirectory::variableFromString(const std::string& var)
+Variable Client::variableFromString(const std::string& var)
 {
-    if (var == "ContainerUpdateIDs")                return ContentDirectoryVariable::ContainerUpdateIDs;
-    if (var == "TransferIDs")                       return ContentDirectoryVariable::TransferIDs;
-    if (var == "SystemUpdateID")                    return ContentDirectoryVariable::SystemUpdateID;
-    if (var == "A_ARG_TYPE_ObjectID")               return ContentDirectoryVariable::ArgumentTypeObjectID;
-    if (var == "A_ARG_TYPE_Result")                 return ContentDirectoryVariable::ArgumentTypeResult;
-    if (var == "A_ARG_TYPE_SearchCriteria")         return ContentDirectoryVariable::ArgumentTypeSearchCriteria;
-    if (var == "A_ARG_TYPE_Flag")                   return ContentDirectoryVariable::ArgumentTypeBrowseFlag;
-    if (var == "A_ARG_TYPE_Filter")                 return ContentDirectoryVariable::ArgumentTypeFilter;
-    if (var == "A_ARG_TYPE_SortCriteria")           return ContentDirectoryVariable::ArgumentTypeSortCriteria;
-    if (var == "A_ARG_TYPE_Index")                  return ContentDirectoryVariable::ArgumentTypeIndex;
-    if (var == "A_ARG_TYPE_Count")                  return ContentDirectoryVariable::ArgumentTypeCount;
-    if (var == "A_ARG_TYPE_UpdateID")               return ContentDirectoryVariable::ArgumentTypeUpdateID;
-    if (var == "A_ARG_TYPE_SearchCapabilities")     return ContentDirectoryVariable::ArgumentTypeSearchCapabilities;
-    if (var == "A_ARG_TYPE_SortCapabilities")       return ContentDirectoryVariable::ArgumentTypeSortCapabilities;
-
-    throw std::logic_error("Unknown ContentDirectory variable:" + var);
+    return ContentDirectory::variableFromString(var);
 }
 
-std::string ContentDirectory::variableToString(ContentDirectoryVariable var)
+std::string Client::variableToString(Variable var)
 {
-    switch (var)
-    {
-        case ContentDirectoryVariable::ContainerUpdateIDs:                  return "ContainerUpdateIDs";
-        case ContentDirectoryVariable::TransferIDs:                         return "TransferIDs";
-        case ContentDirectoryVariable::SystemUpdateID:                      return "SystemUpdateID";
-        case ContentDirectoryVariable::ArgumentTypeObjectID:                return "A_ARG_TYPE_ObjectID";
-        case ContentDirectoryVariable::ArgumentTypeResult:                  return "A_ARG_TYPE_Result";
-        case ContentDirectoryVariable::ArgumentTypeSearchCriteria:          return "A_ARG_TYPE_SearchCriteria";
-        case ContentDirectoryVariable::ArgumentTypeBrowseFlag:              return "A_ARG_TYPE_Flag";
-        case ContentDirectoryVariable::ArgumentTypeFilter:                  return "A_ARG_TYPE_Filter";
-        case ContentDirectoryVariable::ArgumentTypeSortCriteria:            return "A_ARG_TYPE_SortCriteria";
-        case ContentDirectoryVariable::ArgumentTypeIndex:                   return "A_ARG_TYPE_Index";
-        case ContentDirectoryVariable::ArgumentTypeCount:                   return "A_ARG_TYPE_Count";
-        case ContentDirectoryVariable::ArgumentTypeUpdateID:                return "A_ARG_TYPE_UpdateID";
-        case ContentDirectoryVariable::ArgumentTypeSearchCapabilities:      return "A_ARG_TYPE_SearchCapabilities";
-        case ContentDirectoryVariable::ArgumentTypeSortCapabilities:        return "A_ARG_TYPE_SortCapabilities";
-        
-        default:
-            throw std::logic_error("Unknown ContentDirectory variable");
-    }
+    return ContentDirectory::variableToString(var);
 }
 
-ServiceType ContentDirectory::getType()
+ServiceType Client::getType()
 {
     return ServiceType::ContentDirectory;
 }
 
-int32_t ContentDirectory::getSubscriptionTimeout()
+int32_t Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
 }
 
 }
-
+}

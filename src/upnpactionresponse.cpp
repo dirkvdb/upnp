@@ -15,56 +15,50 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "utils/log.h"
-#include "upnp/upnpaction.h"
+#include "upnp/upnpactionresponse.h"
 
 #include <stdexcept>
 
 namespace upnp
 {
     
-Action::Action(const std::string& name, const std::string& url, ServiceType serviceType)
+ActionResponse::ActionResponse(const std::string& name, ServiceType serviceType)
 : m_Name(name)
-, m_Url(url)
 , m_ServiceType(serviceType)
 {
-    m_ActionDoc = UpnpMakeAction(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr);
+    m_ActionDoc = UpnpMakeActionResponse(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr);
 }
 
-void Action::addArgument(const std::string& name, const std::string& value)
+void ActionResponse::addArgument(const std::string& name, const std::string& value)
 {
     IXML_Document* pDoc = static_cast<IXML_Document*>(m_ActionDoc);
-    if (UPNP_E_SUCCESS != UpnpAddToAction(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
+    if (UPNP_E_SUCCESS != UpnpAddToActionResponse(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
     {
-        throw std::logic_error("Failed to add action to UPnP request: " + name);
+        throw std::logic_error("Failed to add action to UPnP response: " + name);
     }
 }
 
-const xml::Document& Action::getActionDocument() const
+const xml::Document& ActionResponse::getActionDocument() const
 {
     return m_ActionDoc;
 }
 
-std::string Action::getName() const
+std::string ActionResponse::getName() const
 {
     return m_Name;
 }
 
-std::string Action::getUrl() const
-{
-    return m_Url;
-}
-
-std::string Action::getServiceTypeUrn() const
+std::string ActionResponse::getServiceTypeUrn() const
 {
     return serviceTypeToUrnTypeString(m_ServiceType);
 }
 
-ServiceType Action::getServiceType() const
+ServiceType ActionResponse::getServiceType() const
 {
     return m_ServiceType;
 }
 
-bool Action::operator==(const Action& other) const
+bool ActionResponse::operator==(const ActionResponse& other) const
 {
     if (!m_ActionDoc && other.m_ActionDoc)
     {

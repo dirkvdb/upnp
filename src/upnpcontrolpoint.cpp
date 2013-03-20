@@ -23,7 +23,7 @@
 #include "upnp/upnpmediaserver.h"
 #include "upnp/upnpmediarenderer.h"
 #include "upnp/upnpprotocolinfo.h"
-#include "upnp/upnpconnectionmanager.h"
+#include "upnp/upnpconnectionmanagerclient.h"
 #include "upnp/upnpwebserver.h"
 
 #include "utils/log.h"
@@ -36,8 +36,7 @@ namespace upnp
 static const uint32_t maxPlaylistSize = 100;
     
 ControlPoint::ControlPoint(Client& client)
-: m_Client(client)
-, m_Renderer(client)
+: m_Renderer(client)
 , m_pWebServer(nullptr)
 , m_RendererSupportsPrepareForConnection(false)
 {
@@ -52,7 +51,7 @@ void ControlPoint::setWebserver(WebServer& webServer)
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
     m_Renderer.setDevice(dev);
-    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManagerAction::PrepareForConnection);
+    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
     m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
 }
 
@@ -83,7 +82,7 @@ void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& it
     
     if (m_RendererSupportsPrepareForConnection)
     {
-        if (server.connectionManager().supportsAction(ConnectionManagerAction::PrepareForConnection))
+        if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
         {
             m_ConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
                                                                          ConnectionManager::UnknownConnectionId,
@@ -128,7 +127,13 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
     
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
-    m_pWebServer->addFile(filename, playlist.str());
+    
+    HostedFile file;
+    file.filename = filename;
+    file.contentType = "audio/m3u";
+    file.fileContents = playlist.str();
+    
+    m_pWebServer->addFile("playlists", file);
     
     auto playlistItem = createPlaylistItem(filename);
     
@@ -154,7 +159,12 @@ void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item
     
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
-    m_pWebServer->addFile(filename, playlist.str());
+    
+    HostedFile file;
+    file.filename = filename;
+    file.contentType = "audio/m3u";
+    file.fileContents = playlist.str();
+    m_pWebServer->addFile("playlists", file);
     
     auto playlistItem = createPlaylistItem(filename);
     playItem(server, playlistItem);

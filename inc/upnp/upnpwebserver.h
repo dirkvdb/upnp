@@ -25,17 +25,24 @@
 
 namespace upnp
 {
+    
+struct HostedFile
+{
+    std::string     filename;
+    std::string     fileContents;
+    std::string     contentType;
+};
 
 class WebServer
 {
 public:
     WebServer(const std::string& webRoot);
     
-    void addFile(const std::string& filename, const std::string& fileContents);
+    void addFile(const std::string& virtualDirName, const HostedFile& file);
     void clearFiles();
     
-    void start();
-    void stop();
+    void addVirtualDirectory(const std::string& virtualDirName);
+    void removeVirtualDirectory(const std::string& virtualDirName);
 
     std::string getWebRootUrl();
     
@@ -48,16 +55,18 @@ private:
         size_t          offset;
     };
 
+    static HostedFile& getFileFromRequest(const std::string& uri);
+    
     static UpnpWebFileHandle openCallback(const char* pFilename, UpnpOpenFileMode mode);
     static int getInfoCallback(const char* pFilename, File_Info* pInfo);
     static int readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen);
     static int writeCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen);
     static int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin);
     static int closeCallback(UpnpWebFileHandle fileHandle);
-
-    std::string                                     m_WebRoot;
-    static std::map<std::string, std::string>       m_ServedFiles;
-    static std::vector<FileHandle>                  m_OpenHandles;
+    
+    std::string                                                         m_WebRoot;
+    static std::map<std::string, std::vector<HostedFile>>               m_ServedFiles;
+    static std::vector<FileHandle>                                      m_OpenHandles;
 };
 
 }

@@ -14,8 +14,8 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_RENDERING_CONTROL_H
-#define UPNP_RENDERING_CONTROL_H
+#ifndef UPNP_RENDERING_CONTROL_CLIENT_H
+#define UPNP_RENDERING_CONTROL_CLIENT_H
 
 #include "utils/signal.h"
 
@@ -23,6 +23,7 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
+#include "upnprenderingcontroltypes.h"
 
 #include <upnp/upnp.h>
 #include <set>
@@ -34,56 +35,39 @@ namespace upnp
 class Action;
 class IClient;
 
-enum class RenderingControlAction
+namespace RenderingControl
 {
-    ListPresets,
-    SelectPreset,
-    GetVolume,
-    SetVolume,
-    GetVolumeDB,
-    GetVolumeDBRange,
-    SetVolumeDB,
-    GetMute,
-    SetMute
-};
 
-enum class RenderingControlVariable
-{
-    PresetNameList,
-    Mute,
-    Volume,
-    VolumeDB,
-    LastChange //event
-};
-    
-class RenderingControl : public ServiceBase<RenderingControlAction, RenderingControlVariable>
+class Client : public ServiceBase<Action, Variable>
 {
 public:
-    RenderingControl(IClient& client);
+    Client(IClient& client);
     
     void setVolume(const std::string& connectionId, uint32_t value);
     uint32_t getVolume(const std::string& connectionId);
     
-    utils::Signal<void(const std::map<RenderingControlVariable, std::string>&)> LastChangeEvent;
+    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
     
 protected:
+    virtual Action actionFromString(const std::string& action);
+    virtual std::string actionToString(Action action);
+    virtual Variable variableFromString(const std::string& var);
+    virtual std::string variableToString(Variable var);
+
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();
     
     virtual void parseServiceDescription(const std::string& descriptionUrl);
 
-    virtual void handleStateVariableEvent(RenderingControlVariable var, const std::map<RenderingControlVariable, std::string>& variables);
+    virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
     virtual void handleUPnPResult(int errorCode);
-    virtual RenderingControlAction actionFromString(const std::string& action);
-    virtual std::string actionToString(RenderingControlAction action);
-    virtual RenderingControlVariable variableFromString(const std::string& var);
-    virtual std::string variableToString(RenderingControlVariable var);
 
 private:
     uint32_t                    m_MinVolume;
     uint32_t                    m_MaxVolume;
 };
 
+}
 }
 
 #endif

@@ -14,47 +14,25 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONNECTION_MANAGER_H
-#define UPNP_CONNECTION_MANAGER_H
+#ifndef UPNP_CONNECTION_MANAGER_CLIENT_H
+#define UPNP_CONNECTION_MANAGER_CLIENT_H
 
 #include "upnp/upnpservicebase.h"
 #include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnpconnectionmanagertypes.h"
 
 namespace upnp
 {
 
 class Action;
 
-enum class ConnectionManagerAction
+namespace ConnectionManager
 {
-    GetProtocolInfo,
-    PrepareForConnection, // Optional
-    ConnectionComplete, // Optional
-    GetCurrentConnectionIDs,
-    GetCurrentConnectionInfo
-};
 
-enum class ConnectionManagerVariable
-{
-    SourceProtocolInfo,
-    SinkProtocolInfo,
-    CurrentConnectionIds,
-    ArgumentTypeConnectionStatus,
-    ArgumentTypeConnectionManager,
-    ArgumentTypeDirection,
-    ArgumentTypeProtocolInfo,
-    ArgumentTypeConnectionId,
-    ArgumentTypeAVTransportId,
-    ArgumentTypeRecourceId
-};
-    
-class ConnectionManager : public ServiceBase<ConnectionManagerAction, ConnectionManagerVariable>
+class Client : public ServiceBase<Action, Variable>
 {
 public:    
-    static std::string UnknownConnectionId;
-    static std::string DefaultConnectionId;
-
-    ConnectionManager(IClient& client);
+    Client(IClient& client);
     
     std::vector<ProtocolInfo> getProtocolInfo();
     ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, const std::string& peerConnectionId, Direction direction);
@@ -63,17 +41,18 @@ public:
     ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
     
 protected:
+    virtual Action actionFromString(const std::string& action);
+    virtual std::string actionToString(Action action);
+    virtual Variable variableFromString(const std::string& var);
+    virtual std::string variableToString(Variable var);
+
     ServiceType getType();
     int32_t getSubscriptionTimeout();
     
     void handleUPnPResult(int errorCode);
-    
-    ConnectionManagerAction actionFromString(const std::string& action);
-    std::string actionToString(ConnectionManagerAction action);
-    ConnectionManagerVariable variableFromString(const std::string& var);
-    std::string variableToString(ConnectionManagerVariable var);
 };
     
+}
 }
 
 #endif

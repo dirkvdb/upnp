@@ -15,48 +15,30 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpwebserver.h"
+#include "upnp/upnputils.h"
 
 #include <upnp/upnp.h>
 #include <chrono>
 #include <sstream>
 
 #include "utils/log.h"
+#include "utils/stringoperations.h"
+#include "utils/fileoperations.h"
 
+using namespace utils;
 using namespace std::chrono;
 
 namespace upnp
 {
 
-std::map<std::string, std::string> WebServer::m_ServedFiles;
+std::map<std::string, std::vector<HostedFile>> WebServer::m_ServedFiles;
 std::vector<WebServer::FileHandle> WebServer::m_OpenHandles;
 
 WebServer::WebServer(const std::string& webRoot)
 : m_WebRoot(webRoot)
 {
-}
-
-std::string WebServer::getWebRootUrl()
-{
-    std::stringstream ss;
-    ss << "http://" << UpnpGetServerIpAddress() << ":" << UpnpGetServerPort() << "/medilna/";
-
-    return ss.str();
-}
-
-void WebServer::addFile(const std::string& filename, const std::string& fileContents)
-{
-    std::stringstream ss;
-    ss << "/medilna" << "/" << filename;
-    m_ServedFiles.insert(std::make_pair(ss.str(), fileContents));
-}
-
-void WebServer::clearFiles()
-{
-    m_ServedFiles.clear();
-}
-
-void WebServer::start()
-{
+    handleUPnPResult(UpnpSetWebServerRootDir(m_WebRoot.c_str()));
+    
     UpnpVirtualDirCallbacks cbs;
     cbs.get_info    = &WebServer::getInfoCallback;
     cbs.open        = &WebServer::openCallback;
@@ -69,22 +51,64 @@ void WebServer::start()
     {
         throw std::logic_error("Failed to create webserver");
     }
-    
-    if (UPNP_E_SUCCESS != UpnpAddVirtualDir("medilna"))
+}
+
+std::string WebServer::getWebRootUrl()
+{
+    return stringops::format("http://%s:%d:/", UpnpGetServerIpAddress(), UpnpGetServerPort());
+}
+
+void WebServer::addFile(const std::string& virtualDirName, const HostedFile& file)
+{
+    //auto path = stringops::format("/%s/%s/%s", m_WebRoot, virtualDirName, file.filename);
+    m_ServedFiles["/" + virtualDirName].push_back(file);
+}
+
+void WebServer::clearFiles()
+{
+    m_ServedFiles.clear();
+}
+
+void WebServer::addVirtualDirectory(const std::string& virtualDirName)
+{
+    if (UPNP_E_SUCCESS != UpnpAddVirtualDir(virtualDirName.c_str()))
     {
-        throw std::logic_error("Failed to create webserver");
+        throw std::logic_error("Failed to add virtual directory to webserver");
     }
 }
 
-void WebServer::stop()
+void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
 {
-    UpnpRemoveVirtualDir("medilna");
+    UpnpRemoveVirtualDir(virtualDirName.c_str());
+    m_ServedFiles.erase(virtualDirName);
 }
 
+HostedFile& WebServer::getFileFromRequest(const std::string& uri)
+{
+    std::string dir;
+    fileops::getPathFromFilepath(uri, dir);
+    auto filename = fileops::getFileName(uri);
+    
+    auto iter = m_ServedFiles.find(dir);
+    if (iter == m_ServedFiles.end())
+    {
+        throw std::logic_error("Virtual directory does not exist: " + dir);
+    }
+    
+    auto fileIter = std::find_if(iter->second.begin(), iter->second.end(), [&] (const HostedFile& file) {
+        return file.filename == filename;
+    });
+    
+    if (fileIter == iter->second.end())
+    {
+        throw std::logic_error("File is not hosted: " + filename);
+    }
+    
+    return *fileIter;
+}
+    
 UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMode mode)
 {
-    utils::log::debug("%s %s", __FUNCTION__, pFilename);
-
     if (mode == UPNP_WRITE)
     {
         // writing is not supported
@@ -101,15 +125,20 @@ UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMod
 
 int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 {
-    utils::log::debug("%s %s", __FUNCTION__, pFilename);
-    auto iter = m_ServedFiles.find(pFilename);
-    if (iter != m_ServedFiles.end())
+    try
     {
-        pInfo->file_length = iter->second.size();
+        auto& file = getFileFromRequest(pFilename);
+        
+        pInfo->file_length = file.fileContents.size();
         pInfo->last_modified = system_clock::to_time_t(system_clock::now());
         pInfo->is_directory = 0;
         pInfo->is_readable = 1;
-        pInfo->content_type = ixmlCloneDOMString("audio/m3u");
+        pInfo->content_type = ixmlCloneDOMString(file.contentType.c_str());
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+        return UPNP_E_INVALID_ARGUMENT;
     }
     
     return UPNP_E_SUCCESS;
@@ -118,29 +147,30 @@ int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen)
 {
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
-
-    auto iter = m_ServedFiles.find(pHandle->filename);
-    if (iter == m_ServedFiles.end())
+    
+    try
     {
+        auto& file = getFileFromRequest(pHandle->filename);
+        if (pHandle->offset == file.fileContents.size())
+        {
+            return 0;
+        }
+        
+        if (pHandle->offset + buflen > file.fileContents.size())
+        {
+            buflen = file.fileContents.size() - pHandle->offset;
+        }
+        
+        memcpy(buf, &file.fileContents[pHandle->offset], buflen);
+        pHandle->offset += buflen;
+        
+        return buflen;
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
         return UPNP_E_INVALID_ARGUMENT;
     }
-    
-    if (pHandle->offset == iter->second.size())
-    {
-        return 0;
-    }
-    
-    if (pHandle->offset + buflen > iter->second.size())
-    {
-        buflen = iter->second.size() - pHandle->offset;
-    }
-    
-    memcpy(buf, &iter->second[pHandle->offset], buflen);
-    pHandle->offset += buflen;
-    
-    utils::log::debug("%s Read bytes: %d Offset: %d", __FUNCTION__, buflen, pHandle->offset);
-
-    return buflen;
 }
     
 int WebServer::writeCallback(UpnpWebFileHandle /*fileHandle*/, char* /*buf*/, size_t /*buflen*/)
@@ -153,52 +183,56 @@ int WebServer::seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int orig
 {
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
     
-    auto iter = m_ServedFiles.find(pHandle->filename);
-    if (iter == m_ServedFiles.end())
+    try
     {
-        return UPNP_E_INVALID_ARGUMENT;
-    }
+        auto& file = getFileFromRequest(pHandle->filename);
 
-    int64_t newPosition;
-    switch (origin)
-    {
-        case SEEK_CUR:
-            newPosition = pHandle->offset + offset;
-            break;
-        case SEEK_END:
-            newPosition = iter->second.size() - offset;
-            break;
-        case SEEK_SET:
-            newPosition = offset;
-            break;
-        default:
+        int64_t newPosition;
+        switch (origin)
+        {
+            case SEEK_CUR:
+                newPosition = pHandle->offset + offset;
+                break;
+            case SEEK_END:
+                newPosition = file.fileContents.size() - offset;
+                break;
+            case SEEK_SET:
+                newPosition = offset;
+                break;
+            default:
+                return UPNP_E_INVALID_ARGUMENT;
+        }
+        
+        if (newPosition < 0 || newPosition >= file.fileContents.size())
+        {
             return UPNP_E_INVALID_ARGUMENT;
+        }
+        
+        pHandle->offset = newPosition;
+        
+        return UPNP_E_SUCCESS;
     }
-    
-    if (newPosition < 0 || newPosition >= iter->second.size())
+    catch (std::exception& e)
     {
+        log::error(e.what());
         return UPNP_E_INVALID_ARGUMENT;
     }
-    
-    pHandle->offset = newPosition;
-    
-    utils::log::debug("%s new position: %d", __FUNCTION__, pHandle->offset);
-
-    return UPNP_E_SUCCESS;
 }
     
 int WebServer::closeCallback(UpnpWebFileHandle fileHandle)
 {
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
     
-    auto iter = m_ServedFiles.find(pHandle->filename);
-    if (iter == m_ServedFiles.end())
+    try
     {
+        getFileFromRequest(pHandle->filename);
+        return UPNP_E_SUCCESS;
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
         return UPNP_E_INVALID_ARGUMENT;
     }
-
-    utils::log::debug(__FUNCTION__);
-    return UPNP_E_SUCCESS;
 }
 
 }

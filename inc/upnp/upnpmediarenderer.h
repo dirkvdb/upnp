@@ -19,20 +19,25 @@
 
 #include <memory>
 
-#include "upnp/upnpconnectionmanager.h"
-#include "upnp/upnprenderingcontrol.h"
-#include "upnp/upnpavtransport.h"
+#include "upnp/upnpconnectionmanagerclient.h"
+#include "upnp/upnprenderingcontrolclient.h"
+#include "upnp/upnpavtransportclient.h"
 
 #include "utils/workerthread.h"
 #include "utils/signal.h"
 
 namespace upnp
 {
+namespace AVTransport
+{
+
+class Client;
+
+}
 
 class Item;
 class Device;
 class Client;
-class AVTransport;
 class ProtocolInfo;
 class Resource;
 struct ConnectionInfo;
@@ -60,7 +65,7 @@ public:
     
     std::string getPeerConnectionId() const;
     
-    ConnectionManager& connectionManager();
+    ConnectionManager::Client& connectionManager();
 
     // AV Transport
     void setTransportItem(const ConnectionInfo& info, Resource& resource);
@@ -89,25 +94,25 @@ public:
     
 private:
     void calculateAvailableActions();
-    void onRenderingControlLastChangeEvent(const std::map<RenderingControlVariable, std::string>&);
-    void onAVTransportLastChangeEvent(const std::map<AVTransportVariable, std::string>& vars);
+    void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
+    void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
     
     
-    static MediaRenderer::Action transportActionToAction(AVTransportAction action);
+    static MediaRenderer::Action transportActionToAction(AVTransport::Action action);
     
     std::shared_ptr<Device>                         m_Device;
     std::vector<ProtocolInfo>                       m_ProtocolInfo;
     
     IClient&                                        m_Client;
-    ConnectionManager                               m_ConnectionMgr;
-    RenderingControl                                m_RenderingControl;
-    std::unique_ptr<AVTransport>                    m_AVtransport;
+    ConnectionManager::Client                       m_ConnectionMgr;
+    RenderingControl::Client                        m_RenderingControl;
+    std::unique_ptr<AVTransport::Client>            m_AVtransport;
     
     bool                                            m_Active;
     uint32_t                                        m_CurrentVolume;
     
     std::set<Action>                                m_AvailableActions;
-    std::map<AVTransportVariable, std::string>      m_AvTransportInfo;
+    std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
     
     mutable std::mutex                              m_Mutex;
 };

@@ -23,7 +23,7 @@
 
 #include "utils/signal.h"
 
-#include "upnp/upnpconnectionmanager.h"
+#include "upnp/upnpconnectionmanagerclient.h"
 #include "upnp/upnpmediarenderer.h"
 
 
@@ -69,7 +69,6 @@ private:
     std::string generatePlaylistFilename();
     std::shared_ptr<Item> createPlaylistItem(const std::string& filename);
 
-    Client&                             m_Client;
     MediaRenderer                       m_Renderer;
     WebServer*                          m_pWebServer;
     ConnectionInfo                      m_ConnInfo;

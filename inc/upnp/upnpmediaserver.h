@@ -20,9 +20,9 @@
 #include <memory>
 #include <vector>
 
-#include "upnp/upnpconnectionmanager.h"
-#include "upnp/upnpcontentdirectory.h"
-#include "upnp/upnpavtransport.h"
+#include "upnp/upnpconnectionmanagerclient.h"
+#include "upnp/upnpcontentdirectoryclient.h"
+#include "upnp/upnpavtransportclient.h"
 
 #include "utils/threadpool.h"
 
@@ -92,29 +92,29 @@ public:
     // AVTransport related methods
     void setTransportItem(const ConnectionInfo& info, Resource& resource);
     
-    ConnectionManager& connectionManager();
+    ConnectionManager::Client& connectionManager();
     
 private:
-    void performBrowseRequest(ContentDirectory::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void performBrowseRequestThread(ContentDirectory::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequest(ContentDirectory::Client::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     template <typename T>
     void searchThread(const ItemPtr& container, const ItemCb& onItem, const T& criteria);
     void getMetaDataThread(const ItemPtr& item, const ItemCb& onItem);
 
-    std::shared_ptr<Device>             m_Device;
-    std::vector<ProtocolInfo>           m_ProtocolInfo;
+    std::shared_ptr<Device>                 m_Device;
+    std::vector<ProtocolInfo>               m_ProtocolInfo;
     
-    IClient&                            m_Client;
-    ContentDirectory                    m_ContentDirectory;
-    ConnectionManager                   m_ConnectionMgr;
-    std::unique_ptr<AVTransport>        m_AVTransport;
+    IClient&                                m_Client;
+    ContentDirectory::Client                m_ContentDirectory;
+    ConnectionManager::Client               m_ConnectionMgr;
+    std::unique_ptr<AVTransport::Client>    m_AVTransport;
     
-    utils::ThreadPool                   m_ThreadPool;
-    bool                                m_Abort;
+    utils::ThreadPool                       m_ThreadPool;
+    bool                                    m_Abort;
     
-    ItemCb                              m_ItemCb;
-    CompletedCb                         m_CompletedCb;
-    ErrorCb                             m_ErrorCb;
+    ItemCb                                  m_ItemCb;
+    CompletedCb                             m_CompletedCb;
+    ErrorCb                                 m_ErrorCb;
 };
     
 }

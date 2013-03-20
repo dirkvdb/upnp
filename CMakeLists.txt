@@ -18,21 +18,40 @@ SET (UPNPFRAMEWORK_LIBRARY_DIRS
 SET (UPNPFRAMEWORK_LIBRARIES upnpframework ${UPNP_LIBRARIES} ${UTILS_LIBRARIES})
 
 ADD_LIBRARY(upnpframework STATIC
-    inc/upnp/upnpaction.h               src/upnpaction.cpp
-    inc/upnp/upnpavtransport.h          src/upnpavtransport.cpp
-    inc/upnp/upnpclient.h               src/upnpclient.cpp
-    inc/upnp/upnpconnectionmanager.h    src/upnpconnectionmanager.cpp
-    inc/upnp/upnpcontentdirectory.h     src/upnpcontentdirectory.cpp
-    inc/upnp/upnpcontrolpoint.h         src/upnpcontrolpoint.cpp
+    inc/upnp/upnpaction.h                       src/upnpaction.cpp
+    inc/upnp/upnpactionresponse.h               src/upnpactionresponse.cpp
+    inc/upnp/upnpavtransportclient.h            src/upnpavtransportclient.cpp
+    inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
+    inc/upnp/upnpavtransporttypes.h
+    inc/upnp/upnpclient.h                       src/upnpclient.cpp
+    inc/upnp/upnpclientinterface.h
+    inc/upnp/upnpconnectionmanagerclient.h      src/upnpconnectionmanagerclient.cpp
+    inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
+    inc/upnp/upnpconnectionmanagertypes.h
+    inc/upnp/upnpcontentdirectoryclient.h       src/upnpcontentdirectoryclient.cpp
+    inc/upnp/upnpcontentdirectorytypes.h
+    inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp
     inc/upnp/upnpdevice.h
-    inc/upnp/upnpdevicescanner.h        src/upnpdevicescanner.cpp
-    inc/upnp/upnphttpget.h              src/upnphttpget.cpp
-    inc/upnp/upnpitem.h                 src/upnpitem.cpp
-    inc/upnp/upnpmediarenderer.h        src/upnpmediarenderer.cpp
-    inc/upnp/upnpmediaserver.h          src/upnpmediaserver.cpp
-    inc/upnp/upnpprotocolinfo.h         src/upnpprotocolinfo.cpp
-    inc/upnp/upnprenderingcontrol.h     src/upnprenderingcontrol.cpp
-    inc/upnp/upnpxmlutils.h             src/upnpxmlutils.cpp
+    inc/upnp/upnpdeviceservice.h                src/upnpdeviceservice.cpp
+    inc/upnp/upnpdeviceserviceexceptions.h
+    inc/upnp/upnpdevicescanner.h                src/upnpdevicescanner.cpp
+    inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
+    inc/upnp/upnphttpget.h                      src/upnphttpget.cpp
+    inc/upnp/upnpitem.h                         src/upnpitem.cpp
+    inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp
+    inc/upnp/upnpmediarendererdevice.h          src/upnpmediarendererdevice.cpp
+    inc/upnp/upnpmediaserver.h                  src/upnpmediaserver.cpp
+    inc/upnp/upnpprotocolinfo.h                 src/upnpprotocolinfo.cpp
+    inc/upnp/upnprenderingcontrolclient.h       src/upnprenderingcontrolclient.cpp
+    inc/upnp/upnprenderingcontrolservice.h      src/upnprenderingcontrolservice.cpp
+    inc/upnp/upnprenderingcontroltypes.h
+    inc/upnp/upnprootdevice.h                   src/upnprootdevice.cpp
+    inc/upnp/upnpservicebase.h
+    inc/upnp/upnpstatevariable.h
+    inc/upnp/upnptypes.h
+    inc/upnp/upnputils.h
+    inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
+    inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
 )
 
 INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
