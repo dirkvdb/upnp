@@ -72,7 +72,7 @@ void Client::previous(const std::string& connectionId)
     executeAction(AVTransport::Action::Previous, { {"InstanceID", connectionId} });
 }
 
-Client::TransportInfo Client::getTransportInfo(const std::string& connectionId)
+TransportInfo Client::getTransportInfo(const std::string& connectionId)
 {
     xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", connectionId} });
     xml::Element response = doc.getFirstChild();
@@ -80,8 +80,8 @@ Client::TransportInfo Client::getTransportInfo(const std::string& connectionId)
     TransportInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
-             if (elem.getName() == "CurrentTransportState")   info.currentTransportState    = elem.getValue();
-        else if (elem.getName() == "CurrentTransportStatus")  info.currentTransportStatus   = elem.getValue();
+             if (elem.getName() == "CurrentTransportState")   info.currentTransportState    = stateFromString(elem.getValue());
+        else if (elem.getName() == "CurrentTransportStatus")  info.currentTransportStatus   = statusFromString(elem.getValue());
         else if (elem.getName() == "CurrentSpeed")            info.currentSpeed             = elem.getValue();
     }
     

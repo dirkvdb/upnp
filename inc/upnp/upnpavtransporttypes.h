@@ -88,6 +88,80 @@ enum class State
     NoMediaPresent
 };
 
+enum class Status
+{
+    Ok,
+    Error
+};
+
+enum class SeekMode
+{
+    TrackNumber,
+    AbsoluteTime,
+    RelativeTime,
+    AbsoluteCount,
+    RelativeCount,
+    ChannelFrequency,
+    TapeIndex,
+    Frame
+};
+
+enum class PlayMode
+{
+    Normal,
+    Shuffle,
+    RepeatOne,
+    RepeatAll,
+    Random,
+    Direct,
+    Intro
+};
+
+struct TransportInfo
+{
+    State       currentTransportState;
+    Status      currentTransportStatus;
+    std::string currentSpeed;
+};
+
+struct MediaInfo
+{
+    uint32_t    numberOfTracks;
+    std::string mediaDuration;
+    std::string currentURI;
+    std::string currentURIMetaData;
+    std::string nextURI;
+    std::string nextURIMetaData;
+    std::string playMedium;
+    std::string recordMedium;
+    std::string writeStatus;
+};
+
+struct PositionInfo
+{
+    uint32_t    track;
+    std::string trackDuration;
+    std::string trackMetaData;
+    std::string trackURI;
+    std::string relativeTime;
+    std::string absoluteTime;
+    int32_t     relativeCount;
+    int32_t     absoluteCount;
+};
+
+struct DeviceCapabilities
+{
+    std::string playMedia;
+    std::string recordMedia;
+    std::string recordQualityModes;
+};
+
+struct TransportSettings
+{
+    std::string playMode;
+    std::string recordQualityMode;
+};
+
 inline Action actionFromString(const std::string& action)
 {
     if (action == "SetAVTransportURI")              return Action::SetAVTransportURI;
@@ -210,6 +284,114 @@ inline std::string variableToString(Variable var)
     default:
         throw std::logic_error("Unknown AVTransport variable");
     }    
+}
+
+inline State stateFromString(const std::string& state)
+{
+    if (state == "STOPPED")             return State::Stopped;
+    if (state == "PLAYING")             return State::Playing;
+    if (state == "TRANSITIONING")       return State::Transitioning;
+    if (state == "PAUSED_PLAYBACK")     return State::PausedPlayback;
+    if (state == "PAUSED_RECORDING")    return State::PausedRecording;
+    if (state == "RECORDING")           return State::Recording;
+    if (state == "NO_MEDIA_PRESENT")    return State::NoMediaPresent;
+
+    throw std::logic_error("Unknown AVTransport state:" + state);
+}
+
+inline std::string stateToString(State state)
+{
+    switch (state)
+    {
+        case State::Stopped:            return "STOPPED";
+        case State::Playing:            return "PLAYING";
+        case State::Transitioning:      return "TRANSITIONING";
+        case State::PausedPlayback:     return "PAUSED_PLAYBACK";
+        case State::PausedRecording:    return "PAUSED_RECORDING";
+        case State::Recording:          return "RECORDING";
+        case State::NoMediaPresent:     return "NO_MEDIA_PRESENT";
+        default:
+            throw std::logic_error("Invalid AVTransport state");
+    }
+}
+
+inline Status statusFromString(const std::string& status)
+{
+    if (status == "OK")                 return Status::Ok;
+    if (status == "ERROR_OCCURRED")     return Status::Error;
+
+    throw std::logic_error("Unknown AVTransport status:" + status);
+}
+
+inline std::string statusToString(Status status)
+{
+    switch (status)
+    {
+        case Status::Ok:            return "OK";
+        case Status::Error:         return "ERROR_OCCURRED";
+        default:
+            throw std::logic_error("Invalid AVTransport status");
+    }
+}
+
+inline SeekMode seekModeFromString(const std::string& mode)
+{
+    if (mode == "TRACK_NR")        return SeekMode::TrackNumber;
+    if (mode == "ABS_TIME")        return SeekMode::AbsoluteTime;
+    if (mode == "REL_TIME")        return SeekMode::RelativeTime;
+    if (mode == "ABS_COUNT")       return SeekMode::AbsoluteCount;
+    if (mode == "REL_COUNT")       return SeekMode::RelativeCount;
+    if (mode == "CHANNEL_FREQ")    return SeekMode::ChannelFrequency;
+    if (mode == "TAPE-INDEX")      return SeekMode::TapeIndex;
+    if (mode == "FRAME")           return SeekMode::Frame;
+
+    throw std::logic_error("Unknown AVTransport seekmode:" + mode);
+}
+
+inline std::string seekModeToString(SeekMode mode)
+{
+    switch (mode)
+    {
+        case SeekMode::TrackNumber:         return "TRACK_NR";
+        case SeekMode::AbsoluteTime:        return "ABS_TIME";
+        case SeekMode::RelativeTime:        return "REL_TIME";
+        case SeekMode::AbsoluteCount:       return "ABS_COUNT";
+        case SeekMode::RelativeCount:       return "REL_COUNT";
+        case SeekMode::ChannelFrequency:    return "CHANNEL_FREQ";
+        case SeekMode::TapeIndex:           return "TAPE-INDEX";
+        case SeekMode::Frame:               return "FRAME";
+        default:
+            throw std::logic_error("Invalid AVTransport seekmode");
+    }
+}
+
+inline PlayMode playModeFromString(const std::string& mode)
+{
+    if (mode == "NORMAL")           return PlayMode::Normal;
+    if (mode == "SHUFFLE")          return PlayMode::Shuffle;
+    if (mode == "REPEAT_ONE")       return PlayMode::RepeatOne;
+    if (mode == "REPEAT_ALL")       return PlayMode::RepeatAll;
+    if (mode == "RANDOM")           return PlayMode::Random;
+    if (mode == "DIRECT_1")         return PlayMode::Direct;
+    if (mode == "INTRO")            return PlayMode::Intro;
+
+    throw std::logic_error("Unknown AVTransport playmode:" + mode);
+}
+
+inline std::string playModeToString(PlayMode mode)
+{
+    switch (mode)
+    {
+        case PlayMode::Normal:      return "NORMAL";
+        case PlayMode::Shuffle:     return "SHUFFLE";
+        case PlayMode::RepeatOne:   return "REPEAT_ONE";
+        case PlayMode::RepeatAll:   return "REPEAT_ALL";
+        case PlayMode::Random:      return "RANDOM";
+        case PlayMode::Direct:      return "DIRECT_1";
+        case PlayMode::Intro:       return "INTRO";
+        default:
+            throw std::logic_error("Invalid AVTransport playmode");
+    }
 }
 
 }

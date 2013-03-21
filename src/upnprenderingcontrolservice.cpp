@@ -39,18 +39,7 @@ ActionResponse RenderingControlService::onAction(const std::string& action, cons
 
 void RenderingControlService::listPresets(ActionResponse& response)
 {
-    std::stringstream ss;
-    for (auto& preset : m_renderingControl.ListPresets())
-    {
-        if (!ss.str().empty())
-        {
-            ss << ',';
-        }
-    
-        ss << preset;
-    }
- 
-    response.addArgument("CurrentPresetNameList", ss.str());
+    response.addArgument("CurrentPresetNameList", vectorToCSV(m_renderingControl.ListPresets()));
 }
 
 }

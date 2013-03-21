@@ -49,7 +49,7 @@ void MediaRendererDevice::onEventSubscriptionRequest(const std::string& udn, con
     }
 }
 
-void MediaRendererDevice::onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request)
+ActionResponse MediaRendererDevice::onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request)
 {
     log::debug("Renderer: action request: %s", request.actionName);
     log::debug(request.request.toString());
@@ -57,43 +57,12 @@ void MediaRendererDevice::onControlActionRequest(const std::string& udn, const s
     try
     {
         auto& service = m_Services.at(serviceIdUrnStringToService(serviceId));
-        //request.result = service->onAction(request.actionName).getActionDocument();
+        return service->onAction(request.actionName, request.request);
     }
     catch (std::out_of_range&)
     {
-        request.errorCode           = 401;
-        request.errorString         = "Invalid subscribtionId";
-    }
-    catch (ServiceException& e)
-    {
-        log::warn("Error processing request: %s", e.what());
-        request.errorCode           = e.errorCode();
-        request.errorString         = e.what();
+        throw ServiceException("Invalid subscribtionId", 401);
     }
 }
     
-//    if (!action_found) {
-//		ca_event->ActionResult = NULL;
-//		strcpy(ca_event->ErrStr, "Invalid Action");
-//		ca_event->ErrCode = 401;
-//	} else {
-//		if (retCode == UPNP_E_SUCCESS) {
-//			ca_event->ErrCode = UPNP_E_SUCCESS;
-//		} else {
-//			/* copy the error string */
-//			strcpy(ca_event->ErrStr, errorString);
-//			switch (retCode) {
-//			case UPNP_E_INVALID_PARAM:
-//				ca_event->ErrCode = 402;
-//				break;
-//			case UPNP_E_INTERNAL_ERROR:
-//			default:
-//				ca_event->ErrCode = 501;
-//				break;
-//			}
-//		}
-//	}
-//}
-
-
 }

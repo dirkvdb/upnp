@@ -45,13 +45,6 @@ public:
         std::string absCount;
     };
     
-    struct TransportInfo
-    {
-        std::string currentTransportState;
-        std::string currentTransportStatus;
-        std::string currentSpeed;
-    };
-
     Client(IClient& client);
     
     void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");

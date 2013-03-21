@@ -32,9 +32,6 @@ struct ActionRequest
 {
     std::string     actionName;
     xml::Document   request;
-    xml::Document   result;
-    int32_t         errorCode;          // fill this in when something goes wrong
-    std::string     errorString;        // fill this in when something goes wrong
 };
 
 class RootDevice
@@ -44,7 +41,7 @@ public:
     ~RootDevice();
     
     virtual void onEventSubscriptionRequest(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId) = 0;
-    virtual void onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request) = 0;
+    virtual ActionResponse onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request) = 0;
 
 protected:
     void AcceptSubscription(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId, const std::map<std::string, std::string>& vars);

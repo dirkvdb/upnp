@@ -25,8 +25,8 @@ namespace upnp
 ActionResponse::ActionResponse(const std::string& name, ServiceType serviceType)
 : m_Name(name)
 , m_ServiceType(serviceType)
+, m_ActionDoc(UpnpMakeActionResponse(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr), xml::Document::NoOwnership)
 {
-    m_ActionDoc = UpnpMakeActionResponse(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr);
 }
 
 void ActionResponse::addArgument(const std::string& name, const std::string& value)

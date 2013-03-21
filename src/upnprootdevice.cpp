@@ -17,6 +17,7 @@
 
 #include "upnp/upnprootdevice.h"
 #include "upnp/upnputils.h"
+#include "upnp/upnpdeviceserviceexceptions.h"
 #include <upnp/upnp.h>
 
 #include "utils/log.h"
@@ -92,13 +93,25 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
 		case UPNP_CONTROL_ACTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Action_Request*>(pEvent);
+        
+            try
+            {
+                ActionRequest req;
+                req.actionName  = request->ActionName;
+                req.request     = xml::Document(request->ActionRequest, xml::Document::NoOwnership);
+                
+                auto response = dev->onControlActionRequest(request->DevUDN, request->ServiceID, req);
+                request->ActionResult = response.getActionDocument();
+            }
+            catch (ServiceException& e)
+            {
+                assert(strlen(e.what()) < 180);
             
-            ActionRequest req;
-            req.actionName  = request->ActionName;
-            req.request     = xml::Document(request->ActionRequest, xml::Document::NoOwnership);
-            req.result      = xml::Document(request->ActionResult, xml::Document::NoOwnership);
+                log::warn("Error processing request: %s", e.what());
+                request->ErrCode = e.errorCode();
+                strcpy(request->ErrStr, e.what());
+            }
             
-            dev->onControlActionRequest(request->DevUDN, request->ServiceID, req);
 			break;
         }
 		default:

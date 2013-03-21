@@ -46,6 +46,39 @@ public:
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
 
 protected:
+    std::string vectorToCSV(const std::vector<std::string>& items)
+    {
+        std::stringstream ss;
+        for (auto& item : items)
+        {
+            if (!ss.str().empty())
+            {
+                ss << ',';
+            }
+        
+            ss << item;
+        }
+        
+        return ss.str();
+    }
+
+    template <typename T>
+    std::string vectorToCSV(const std::vector<T>& items, std::function<std::string(T)> toStringFunc)
+    {
+        std::stringstream ss;
+        for (auto& item : items)
+        {
+            if (!ss.str().empty())
+            {
+                ss << ',';
+            }
+        
+            ss << toStringFunc(item);
+        }
+        
+        return ss.str();
+    }
+
     ServiceType                             m_Type;
     std::map<std::string, std::string>      m_Variables;
 };

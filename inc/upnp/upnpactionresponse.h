@@ -33,6 +33,8 @@ class ActionResponse
 {
 public:
     ActionResponse(const std::string& name, ServiceType serviceType);
+    ActionResponse(const ActionResponse&) = delete;
+    ActionResponse(ActionResponse&& other) = default;
     
     void addArgument(const std::string& name, const std::string& value);
 

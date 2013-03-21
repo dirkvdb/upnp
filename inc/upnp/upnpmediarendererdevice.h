@@ -36,7 +36,7 @@ public:
     MediaRendererDevice(const MediaRendererDevice&) = delete;
     
     virtual void onEventSubscriptionRequest(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId);
-    virtual void onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request);
+    virtual ActionResponse onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request);
     
 private:
     mutable std::mutex                                      m_Mutex;
