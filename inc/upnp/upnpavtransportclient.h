@@ -47,14 +47,14 @@ public:
     
     Client(IClient& client);
     
-    void setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData = "");
-    void play(const std::string& connectionId, const std::string& speed = "1");
-    void pause(const std::string& connectionId);
-    void stop(const std::string& connectionId);
-    void previous(const std::string& connectionId);
-    void next(const std::string& connectionId);
-    PositionInfo getPositionInfo(const std::string& connectionId);
-    TransportInfo getTransportInfo(const std::string& connectionId);
+    void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
+    void play(int32_t connectionId, const std::string& speed = "1");
+    void pause(int32_t);
+    void stop(int32_t);
+    void previous(int32_t connectionId);
+    void next(int32_t connectionId);
+    PositionInfo getPositionInfo(int32_t connectionId);
+    TransportInfo getTransportInfo(int32_t connectionId);
     
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
     

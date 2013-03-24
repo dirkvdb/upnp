@@ -31,6 +31,7 @@ using namespace std::chrono;
 namespace upnp
 {
 
+std::mutex WebServer::m_Mutex;
 std::map<std::string, std::vector<HostedFile>> WebServer::m_ServedFiles;
 std::vector<WebServer::FileHandle> WebServer::m_OpenHandles;
 
@@ -60,17 +61,20 @@ std::string WebServer::getWebRootUrl()
 
 void WebServer::addFile(const std::string& virtualDirName, const HostedFile& file)
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     //auto path = stringops::format("/%s/%s/%s", m_WebRoot, virtualDirName, file.filename);
     m_ServedFiles["/" + virtualDirName].push_back(file);
 }
 
 void WebServer::clearFiles()
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_ServedFiles.clear();
 }
 
 void WebServer::addVirtualDirectory(const std::string& virtualDirName)
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     if (UPNP_E_SUCCESS != UpnpAddVirtualDir(virtualDirName.c_str()))
     {
         throw std::logic_error("Failed to add virtual directory to webserver");
@@ -79,6 +83,7 @@ void WebServer::addVirtualDirectory(const std::string& virtualDirName)
 
 void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     UpnpRemoveVirtualDir(virtualDirName.c_str());
     m_ServedFiles.erase(virtualDirName);
 }
@@ -89,6 +94,7 @@ HostedFile& WebServer::getFileFromRequest(const std::string& uri)
     fileops::getPathFromFilepath(uri, dir);
     auto filename = fileops::getFileName(uri);
     
+    std::lock_guard<std::mutex> lock(m_Mutex);
     auto iter = m_ServedFiles.find(dir);
     if (iter == m_ServedFiles.end())
     {
@@ -118,6 +124,7 @@ UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMod
     FileHandle handle;
     handle.filename = pFilename;
     
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_OpenHandles.push_back(handle);
     
     return &(m_OpenHandles.back());
@@ -125,6 +132,11 @@ UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMod
 
 int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 {
+    if (pFilename == nullptr || pInfo == nullptr)
+    {
+        return UPNP_E_INVALID_ARGUMENT;
+    }
+
     try
     {
         auto& file = getFileFromRequest(pFilename);
@@ -146,10 +158,16 @@ int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 
 int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen)
 {
+    if (buf == nullptr)
+    {
+        return UPNP_E_INVALID_ARGUMENT;
+    }
+
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
     
     try
     {
+        log::debug("Read callback: buflen %d", buflen);
         auto& file = getFileFromRequest(pHandle->filename);
         if (pHandle->offset == file.fileContents.size())
         {

@@ -45,17 +45,17 @@ Client::Client(IClient& client)
 {
 }
 
-void Client::setVolume(const std::string& connectionId, uint32_t value)
+void Client::setVolume(int32_t connectionId, uint32_t value)
 {
     numericops::clip(value, m_MinVolume, m_MaxVolume);
-    executeAction(Action::SetVolume, { {"InstanceID", connectionId},
+    executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
                                        {"DesiredVolume", numericops::toString(value)} });
 }
 
-uint32_t Client::getVolume(const std::string& connectionId)
+uint32_t Client::getVolume(int32_t connectionId)
 {
-    xml::Document doc = executeAction(Action::GetVolume, { {"InstanceID", connectionId},
+    xml::Document doc = executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
                                                            {"Channel", "Master"} });
     
     xml::Element response = doc.getFirstChild();
@@ -115,7 +115,7 @@ Action Client::actionFromString(const std::string& action)
 
 std::string Client::actionToString(Action action)
 {
-    return RenderingControl::actionToString(action);
+    return RenderingControl::toString(action);
 }
 
 Variable Client::variableFromString(const std::string& var)
@@ -125,7 +125,7 @@ Variable Client::variableFromString(const std::string& var)
 
 std::string Client::variableToString(Variable var)
 {
-    return RenderingControl::variableToString(var);
+    return RenderingControl::toString(var);
 }
 
 }

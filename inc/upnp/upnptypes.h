@@ -42,6 +42,10 @@ namespace
     static const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
     static const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
     static const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
+    
+    static const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
+    static const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
+    static const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 }
 
 enum class ServiceType
@@ -82,21 +86,6 @@ enum class Property
     Unknown
 };
 
-enum class Direction
-{
-    Input,
-    Output
-};
-
-enum class ConnectionStatus
-{
-    Ok,
-    ContentFormatMismatch,
-    InsufficientBandwith,
-    UnreliableChannel,
-    Unknown
-};
-
 class UPnPException : public std::exception
 {
 public:
@@ -105,18 +94,6 @@ public:
     
 private:
     int32_t     m_ErrorCode;
-};
-
-struct ConnectionInfo
-{
-    std::string         connectionId;
-    std::string         avTransportId;
-    std::string         renderingControlServiceId;
-    ProtocolInfo        protocolInfo;
-    std::string         peerConnectionManager;
-    std::string         peerConnectionId;
-    Direction           direction;
-    ConnectionStatus    connectionStatus;
 };
 
 inline ServiceType serviceTypeFromString(const std::string& name)
@@ -155,6 +132,15 @@ inline std::string serviceTypeToUrnIdString(ServiceType type)
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
+    
+    throw std::logic_error("Invalid service type received for id urn");
+}
+
+inline std::string serviceTypeToUrnMetadataString(ServiceType type)
+{
+    if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
+    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
+    if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
     
     throw std::logic_error("Invalid service type received for id urn");
 }
@@ -239,34 +225,6 @@ inline std::string propertyToString(Property prop)
     case Property::Unknown:
     default:                          return "";
     }
-}
-
-inline std::string directionToString(Direction direction)
-{
-    switch (direction)
-    {
-        case Direction::Input:      return "Input";
-        case Direction::Output:     return "Output";
-        default:                    throw std::logic_error("Invalid direction specified");
-    }
-}
-
-inline Direction directionFromString(const std::string& direction)
-{
-    if (direction == "Input")   return Direction::Input;
-    if (direction == "Output")  return Direction::Output;
-    
-    throw std::logic_error("Invalid direction received");
-}
-
-inline ConnectionStatus connectionStatusFromString(const std::string& status)
-{
-    if (status == "OK")                     return ConnectionStatus::Ok;
-    if (status == "ContentFormatMismatch")  return ConnectionStatus::ContentFormatMismatch;
-    if (status == "InsufficientBandwith")   return ConnectionStatus::InsufficientBandwith;
-    if (status == "UnreliableChannel")      return ConnectionStatus::UnreliableChannel;
-    
-    return ConnectionStatus::Unknown;
 }
 
 }

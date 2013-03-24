@@ -18,6 +18,8 @@
 #define UPNP_RENDERING_CONTROL_SERVICE_H
 
 #include "upnp/upnpdeviceservice.h"
+#include "upnp/upnplastchangevariable.h"
+#include "upnp/upnprenderingcontroltypes.h"
 
 #include <string>
 #include <vector>
@@ -26,84 +28,67 @@
 namespace upnp
 {
 
-enum class Channel
-{
-    Master
-};
-
 class IRenderingControl
 {
 public:
     virtual ~IRenderingControl() {}
     
     // Required
-    virtual std::vector<std::string> ListPresets() = 0;
-    virtual void SelectPreset(const std::string& name) = 0;
+    virtual void selectPreset(uint32_t instanceId, const std::string& name) = 0;
     
     // Optional
-    virtual uint16_t GetBrightness()                                        { throw InvalidActionException(); }
-    virtual void SetBrightness(uint16_t value)                              { throw InvalidActionException(); }
-    
-    virtual uint16_t GetContrast()                                          { throw InvalidActionException(); }
-    virtual void SetContrast(uint16_t value)                                { throw InvalidActionException(); }
-    
-    virtual uint16_t GetSharpness()                                         { throw InvalidActionException(); }
-    virtual void SetSharpness(uint16_t value)                               { throw InvalidActionException(); }
-    
-    virtual uint16_t GetRedVideoGain()                                      { throw InvalidActionException(); }
-    virtual void SetRedVideoGain(uint16_t value)                            { throw InvalidActionException(); }
-    
-    virtual uint16_t GetGreenVideoGain()                                    { throw InvalidActionException(); }
-    virtual void SetGreenVideoGain(uint16_t value)                          { throw InvalidActionException(); }
-    
-    virtual uint16_t GetBlueVideoGain()                                     { throw InvalidActionException(); }
-    virtual void SetBlueVideoGain(uint16_t value)                           { throw InvalidActionException(); }
-    
-    virtual uint16_t GetRedVideoBlackLevel()                                { throw InvalidActionException(); }
-    virtual void SetRedVideoBlackLevel(uint16_t value)                      { throw InvalidActionException(); }
-    
-    virtual uint16_t GetGreenVideoBlackLevel()                              { throw InvalidActionException(); }
-    virtual void SetGreenVideoBlackLevel(uint16_t value)                    { throw InvalidActionException(); }
-    
-    virtual uint16_t GetBlueVideoBlackLevel()                               { throw InvalidActionException(); }
-    virtual void SetBlueVideoBlackLevel(uint16_t value)                     { throw InvalidActionException(); }
-    
-    virtual uint16_t GetColorTemperature()                                  { throw InvalidActionException(); }
-    virtual void SetColorTemperature(uint16_t value)                        { throw InvalidActionException(); }
-    
-    virtual int16_t GetHorizontalKeystone()                                 { throw InvalidActionException(); }
-    virtual void SetHorizontalKeystone(int16_t value)                       { throw InvalidActionException(); }
-    
-    virtual int16_t GetVerticalKeystone()                                   { throw InvalidActionException(); }
-    virtual void SetVerticalKeystone(int16_t value)                         { throw InvalidActionException(); }
-    
-    virtual bool GetMute(Channel channel)                                   { throw InvalidActionException(); }
-    virtual void SetMute(Channel channel, bool enabled)                     { throw InvalidActionException(); }
-    
-    virtual uint16_t GetVolume(Channel channel)                             { throw InvalidActionException(); }
-    virtual void SetVolume(Channel channel, uint16_t value)                 { throw InvalidActionException(); }
-    
-    virtual int16_t SetVolumeDB(Channel channel)                            { throw InvalidActionException(); }
-    virtual void GetVolumeDB(Channel channel, int16_t value)                { throw InvalidActionException(); }
-    virtual std::pair<int16_t, int16_t> GetVolumeDBRange(Channel channel)   { throw InvalidActionException(); }
-    
-    virtual bool GetLoudness(Channel channel)                               { throw InvalidActionException(); }
-    virtual void SetLoudness(Channel channel, bool enabled)                 { throw InvalidActionException(); }
+    virtual void setBrightness(uint32_t instanceId, uint16_t)                                                    { throw InvalidActionException(); }
+    virtual void setContrast(uint32_t instanceId, uint16_t)                                                      { throw InvalidActionException(); }
+    virtual void setSharpness(uint32_t instanceId, uint16_t)                                                     { throw InvalidActionException(); }
+    virtual void setRedVideoGain(uint32_t instanceId, uint16_t)                                                  { throw InvalidActionException(); }
+    virtual void setGreenVideoGain(uint32_t instanceId, uint16_t)                                                { throw InvalidActionException(); }
+    virtual void setBlueVideoGain(uint32_t instanceId, uint16_t)                                                 { throw InvalidActionException(); }
+    virtual void setRedVideoBlackLevel(uint32_t instanceId, uint16_t)                                            { throw InvalidActionException(); }
+    virtual void setGreenVideoBlackLevel(uint32_t instanceId, uint16_t)                                          { throw InvalidActionException(); }
+    virtual void setBlueVideoBlackLevel(uint32_t instanceId, uint16_t)                                           { throw InvalidActionException(); }
+    virtual void setColorTemperature(uint32_t instanceId, uint16_t)                                              { throw InvalidActionException(); }
+    virtual void setHorizontalKeystone(uint32_t instanceId, int16_t)                                             { throw InvalidActionException(); }
+    virtual void setVerticalKeystone(uint32_t instanceId, int16_t)                                               { throw InvalidActionException(); }
+    virtual void setMute(uint32_t instanceId, RenderingControl::Channel channel, bool enabled)                   { throw InvalidActionException(); }
+    virtual void setVolume(uint32_t instanceId, RenderingControl::Channel channel, uint16_t value)               { throw InvalidActionException(); }
+    virtual int16_t setVolumeDB(uint32_t instanceId, RenderingControl::Channel channel, int16_t value)           { throw InvalidActionException(); }
+    virtual std::pair<int16_t, int16_t> getVolumeDBRange(uint32_t instanceId, RenderingControl::Channel channel) { throw InvalidActionException(); }
+    virtual void setLoudness(uint32_t instanceId, RenderingControl::Channel channel, bool enabled)               { throw InvalidActionException(); }
 };
 
-class RenderingControlService : public DeviceService
+namespace RenderingControl
+{
+
+class Service : public DeviceService<Variable>
 {
 public:
-    RenderingControlService(IRenderingControl& rc);
+    Service(IRootDevice& dev, IRenderingControl& rc);
+    ~Service();
     
+    void setMute(uint32_t instanceId, Channel channel, bool enabled);
+    void setLoudness(uint32_t instanceId, Channel channel, bool enabled);
+    void setVolume(uint32_t instanceId, Channel channel, uint16_t volume);
+    void setVolumeDB(uint32_t instanceId, Channel channel, int16_t volume);
+
+    virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
     
-private:
-    void listPresets(ActionResponse& response);
+protected:
+    virtual std::string variableToString(Variable type) const;
+    void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);
 
-    IRenderingControl&  m_renderingControl;
+private:
+    IRenderingControl&                                       m_RenderingControl;
+    LastChangeVariable                                       m_LastChange;
+    
+    // variables which are mapped per channel
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Mute;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Loudness;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Volumes;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_DBVolumes;
 };
 
+}
 }
 
 #endif

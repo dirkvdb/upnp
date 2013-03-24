@@ -60,7 +60,7 @@ public:
     bool canSortOnProperty(Property prop) const;
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
-    std::string getPeerConnectionId() const;
+    std::string getPeerConnectionManager() const;
     
     std::vector<ItemPtr> getItemsInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
@@ -90,7 +90,7 @@ public:
     
     
     // AVTransport related methods
-    void setTransportItem(const ConnectionInfo& info, Resource& resource);
+    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
     
     ConnectionManager::Client& connectionManager();
     

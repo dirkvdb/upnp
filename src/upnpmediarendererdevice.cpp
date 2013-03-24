@@ -27,42 +27,115 @@ using namespace std::placeholders;
 namespace upnp
 {
 
-MediaRendererDevice::MediaRendererDevice(const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, IConnectionManager& cm, IRenderingControl& rc)
-: RootDevice(descriptionXml, advertiseIntervalInSeconds)
+MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, IAVTransport& av)
+: m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
+, m_ConnectionManager(m_RootDevice, *this)
+, m_RenderingControl(m_RootDevice, *this)
+, m_AVTransport(m_RootDevice, av)
 {
-    m_Services.insert(std::make_pair(ServiceType::RenderingControl, std::unique_ptr<RenderingControlService>(new RenderingControlService(rc))));
-    m_Services.insert(std::make_pair(ServiceType::ConnectionManager, std::unique_ptr<ConnectionManagerService>(new ConnectionManagerService(cm))));
+    m_ConnectionManager.setVariable(ConnectionManager::Variable::SourceProtocolInfo, "");
+    m_ConnectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, ""
+        "http-get:*:audio/L16;rate=44100;channels=1:DLNA.ORG_PN=LPCM,"
+        "http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM,"
+        "http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM,"
+        "http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM,"
+        "http-get:*:audio/mpeg:DLNA.ORG_PN=MP3,"
+        "http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMABASE,"
+        "http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMAFULL,"
+        "http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO,"
+        "http-get:*:audio/3gpp:DLNA.ORG_PN=AAC_ISO,"
+        "http-get:*:audio/vnd.dlna.adts:DLNA.ORG_PN=AAC_ADTS_320,"
+        "http-wavetunes:*:audio/x-ms-wma:*,"
+        "http-get:*:audio/wav:*,"
+        "http-get:*:audio/x-wav:*,"
+        "http-get:*:audio/flac:*,"
+        "http-get:*:audio/x-flac:*");
+    
+    m_RenderingControl.setVariable(RenderingControl::Variable::PresetNameList, "FactoryDefaults");
+    m_RenderingControl.setInstanceVariable(0, RenderingControl::Variable::Volume, "50", "channel", RenderingControl::toString(RenderingControl::Channel::Master));
+}
+
+void MediaRendererDevice::start()
+{
+    m_RootDevice.ControlActionRequested.connect(std::bind(&MediaRendererDevice::onControlActionRequest, this, _1), this);
+    m_RootDevice.EventSubscriptionRequested.connect(std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1), this);
+
+    m_RootDevice.initialize();
+}
+
+void MediaRendererDevice::stop()
+{
+    m_RootDevice.ControlActionRequested.disconnect(this);
+    m_RootDevice.EventSubscriptionRequested.disconnect(this);
+
+    m_RootDevice.destroy();
 }
     
-void MediaRendererDevice::onEventSubscriptionRequest(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId)
+void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
 {
-    log::debug("Renderer: event subscription request %s", serviceId);
+    log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
     
-    try
+    switch (serviceIdUrnStringToService(pRequest->ServiceId))
     {
-        auto& service = m_Services.at(serviceIdUrnStringToService(serviceId));
-        AcceptSubscription(udn, serviceId, subscriptionId, service->getVariables());
-    }
-    catch (std::out_of_range&)
-    {
-        log::warn("Invalid event subscription request: %s", serviceId);
+    case ServiceType::AVTransport:              return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_AVTransport.getSubscriptionResponse());
+    case ServiceType::RenderingControl:         return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_RenderingControl.getSubscriptionResponse());
+    case ServiceType::ConnectionManager:        return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_ConnectionManager.getSubscriptionResponse());
+    default:
+        log::warn("Invalid event subscription request: %s", pRequest->ServiceId);
     }
 }
 
-ActionResponse MediaRendererDevice::onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request)
+void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
 {
-    log::debug("Renderer: action request: %s", request.actionName);
-    log::debug(request.request.toString());
+    //log::debug("Renderer: action request: %s", pRequest->ActionName);
     
-    try
+    xml::Document requestDoc(pRequest->ActionRequest, xml::Document::NoOwnership);
+    //log::debug(requestDoc.toString());
+    
+    switch (serviceIdUrnStringToService(pRequest->ServiceID))
     {
-        auto& service = m_Services.at(serviceIdUrnStringToService(serviceId));
-        return service->onAction(request.actionName, request.request);
-    }
-    catch (std::out_of_range&)
-    {
+    case ServiceType::AVTransport:
+        pRequest->ActionResult = m_AVTransport.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        break;
+    case ServiceType::RenderingControl:
+        pRequest->ActionResult = m_RenderingControl.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        break;
+    case ServiceType::ConnectionManager:
+        pRequest->ActionResult = m_ConnectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        break;
+    default:
         throw ServiceException("Invalid subscribtionId", 401);
     }
 }
-    
+
+void MediaRendererDevice::selectPreset(uint32_t instanceId, const std::string& name)
+{
+}
+
+void MediaRendererDevice::setVolume(uint32_t instanceId, upnp::RenderingControl::Channel channel, uint16_t value)
+{
+    log::info("Set volume: %s %d", upnp::RenderingControl::toString(channel), value);
+    m_RenderingControl.setVolume(instanceId, channel, value);
+}
+
+void MediaRendererDevice::setMute(uint32_t instanceId, upnp::RenderingControl::Channel channel, bool enabled)
+{
+    log::info("Set mute: %s %d", upnp::RenderingControl::toString(channel), enabled);
+    m_RenderingControl.setMute(instanceId, channel, enabled);
+}
+
+void MediaRendererDevice::prepareForConnection(const upnp::ProtocolInfo& protocolInfo, upnp::ConnectionManager::ConnectionInfo& info)
+{
+}
+
+void MediaRendererDevice::connectionComplete(int32_t connectionId)
+{
+}
+
+upnp::ConnectionManager::ConnectionInfo MediaRendererDevice::getCurrentConnectionInfo(int32_t connectionId)
+{
+    upnp::ConnectionManager::ConnectionInfo info;
+    return info;
+}
+
 }

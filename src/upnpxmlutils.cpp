@@ -135,6 +135,19 @@ std::string Node::getChildNodeValue(const std::string& tagName) const
     return getChildNode(tagName).getFirstChild().getValue();
 }
 
+Document Node::getOwnerDocument() const
+{
+    return Document(ixmlNode_getOwnerDocument(m_pNode), Document::NoOwnership);
+}
+
+void Node::appendChild(Node& node)
+{
+    if (IXML_SUCCESS != ixmlNode_appendChild(m_pNode, node))
+    {
+        throw std::logic_error("Failed to append child node: " + node.getName());
+    }
+}
+
 std::string Node::toString() const
 {
     String str(ixmlPrintNode(m_pNode));
@@ -152,9 +165,10 @@ void Node::setNodePointer(IXML_Node* pNode)
 }
 
 Document::Document()
-: m_pDoc(nullptr)
-, m_Ownership(NoOwnership)
+: m_pDoc(ixmlDocument_createDocument())
+, m_Ownership(TakeOwnership)
 {
+    setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
 }
 
 Document::Document(const std::string& xml)
@@ -276,10 +290,42 @@ std::string Document::getChildNodeValueRecursive(const std::string& tagName) con
     return nodeList.getNode(0).getFirstChild().getValue();
 }
 
+Node Document::createNode(const std::string& value)
+{
+    Node node(ixmlDocument_createTextNode(m_pDoc, value.c_str()));
+    if (!node)
+    {
+        throw std::logic_error("Failed to create document node: " + value);
+    }
+    
+    return node;
+}
+
+Element Document::createElement(const std::string& name)
+{
+    Element elem(ixmlDocument_createElement(m_pDoc, name.c_str()));
+    if (!elem)
+    {
+        throw std::logic_error("Failed to create document element: " + name);
+    }
+    
+    return elem;
+}
+
+Element Document::createElementNamespaced(const std::string& nameSpace, const std::string& name)
+{
+    Element elem(ixmlDocument_createElementNS(m_pDoc, nameSpace.c_str(), name.c_str()));
+    if (!elem)
+    {
+        throw std::logic_error("Failed to create namespaced document element: " + name);
+    }
+    
+    return elem;
+}
 
 std::string Document::toString() const
 {
-    String str(ixmlDocumenttoString(m_pDoc));
+    String str(ixmlPrintDocument(m_pDoc));
     if (!str)
     {
         throw std::logic_error("Failed to convert document to string");
@@ -464,6 +510,16 @@ std::string Element::getAttributeOptional(const std::string& attr, const std::st
 {
     const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
     return pAttr ? pAttr : defaultValue;
+}
+
+void Element::addAttribute(const std::string& name, const std::string& value)
+{
+    auto doc = getOwnerDocument();
+    auto attr = ixmlDocument_createAttribute(doc, name.c_str());
+    ixmlNode_setNodeValue(reinterpret_cast<IXML_Node*>(attr), value.c_str());
+    
+    IXML_Attr* pAttr;
+    ixmlElement_setAttributeNode(m_pElement, attr, &pAttr);
 }
 
 NodeList Element::getElementsByTagName(const std::string& tagName)

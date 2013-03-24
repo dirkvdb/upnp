@@ -97,7 +97,7 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
     return false;
 }
 
-std::string MediaRenderer::getPeerConnectionId() const
+std::string MediaRenderer::getPeerConnectionManager() const
 {
     std::stringstream ss;
     ss << m_Device->m_UDN << "/" << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
@@ -105,7 +105,7 @@ std::string MediaRenderer::getPeerConnectionId() const
     return ss.str();
 }
 
-void MediaRenderer::setTransportItem(const ConnectionInfo& info, Resource& resource)
+void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
 {
     if (m_AVtransport)
     {
@@ -113,7 +113,7 @@ void MediaRenderer::setTransportItem(const ConnectionInfo& info, Resource& resou
     }
 }
 
-void MediaRenderer::play(const ConnectionInfo& info)
+void MediaRenderer::play(const ConnectionManager::ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -121,7 +121,7 @@ void MediaRenderer::play(const ConnectionInfo& info)
     }
 }
 
-void MediaRenderer::pause(const ConnectionInfo& info)
+void MediaRenderer::pause(const ConnectionManager::ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -129,7 +129,7 @@ void MediaRenderer::pause(const ConnectionInfo& info)
     }
 }
 
-void MediaRenderer::stop(const ConnectionInfo& info)
+void MediaRenderer::stop(const ConnectionManager::ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -137,7 +137,7 @@ void MediaRenderer::stop(const ConnectionInfo& info)
     }
 }
 
-void MediaRenderer::next(const ConnectionInfo& info)
+void MediaRenderer::next(const ConnectionManager::ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -145,7 +145,7 @@ void MediaRenderer::next(const ConnectionInfo& info)
     }
 }
 
-void MediaRenderer::previous(const ConnectionInfo& info)
+void MediaRenderer::previous(const ConnectionManager::ConnectionInfo& info)
 {
     if (m_AVtransport)
     {
@@ -190,7 +190,7 @@ bool MediaRenderer::isActionAvailable(Action action) const
     return m_AvailableActions.find(action) != m_AvailableActions.end();
 }
 
-void MediaRenderer::setVolume(const ConnectionInfo& info, uint32_t value)
+void MediaRenderer::setVolume(const ConnectionManager::ConnectionInfo& info, uint32_t value)
 {
     m_RenderingControl.setVolume(info.connectionId, value);
 }
@@ -221,13 +221,29 @@ void MediaRenderer::deactivateEvents()
 {
     if (m_Active && m_Device)
     {
-        m_RenderingControl.StateVariableEvent.disconnect(this);
-        m_RenderingControl.unsubscribe();
-    
-        if (m_AVtransport)
+        try
         {
-            m_AVtransport->StateVariableEvent.disconnect(this);
-            m_AVtransport->unsubscribe();
+            m_RenderingControl.StateVariableEvent.disconnect(this);
+            m_RenderingControl.unsubscribe();
+        }
+        catch (std::logic_error& e)
+        {
+            // this can fail if the device disappeared
+            log::warn(e.what());
+        }
+    
+        try
+        {
+            if (m_AVtransport)
+            {
+                m_AVtransport->StateVariableEvent.disconnect(this);
+                m_AVtransport->unsubscribe();
+            }
+        }
+        catch (std::logic_error& e)
+        {
+            // this can fail if the device disappeared
+            log::warn(e.what());
         }
         
         m_Active = false;

@@ -19,6 +19,7 @@
 
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnpavtransporttypes.h"
+#include "upnp/upnplastchangevariable.h"
 
 #include <string>
 #include <vector>
@@ -33,11 +34,6 @@ public:
     virtual ~IAVTransport() {}
     
     virtual void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData) = 0;
-    virtual AVTransport::MediaInfo getMediaInfo(uint32_t instanceId) = 0;
-    virtual AVTransport::TransportInfo getTransportInfo(uint32_t instanceId) = 0;
-    virtual AVTransport::PositionInfo getPositionInfo(uint32_t instanceId) = 0;
-    virtual AVTransport::DeviceCapabilities getDeviceCapabilities(uint32_t instanceId) = 0;
-    virtual AVTransport::TransportSettings getTransportSettings(uint32_t instanceId) = 0;
     virtual void stop(uint32_t instanceId) = 0;
     virtual void play(uint32_t instanceId, const std::string& speed) = 0;
     virtual void seek(uint32_t instanceId, AVTransport::SeekMode mode, const std::string& target) = 0;
@@ -55,15 +51,21 @@ public:
 namespace AVTransport
 {
 
-class Service : public DeviceService
+class Service : public DeviceService<Variable>
 {
 public:
-    Service(IAVTransport& av);
+    Service(IRootDevice& dev, IAVTransport& av);
+    ~Service();
     
+    virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
     
+protected:
+    virtual std::string variableToString(Variable type) const;
+    
 private:
-    IAVTransport&  m_avTransport;
+    IAVTransport&                       m_avTransport;
+    LastChangeVariable                  m_LastChange;
 };
 
 }

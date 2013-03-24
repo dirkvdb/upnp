@@ -40,7 +40,8 @@ ControlPoint::ControlPoint(Client& client)
 , m_pWebServer(nullptr)
 , m_RendererSupportsPrepareForConnection(false)
 {
-    m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    m_ServerConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    m_RendererConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
 }
 
 void ControlPoint::setWebserver(WebServer& webServer)
@@ -52,7 +53,8 @@ void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
     m_Renderer.setDevice(dev);
     m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
-    m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+    m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+    m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
 }
 
 MediaRenderer& ControlPoint::getActiveRenderer()
@@ -84,25 +86,26 @@ void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& it
     {
         if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
         {
-            m_ConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                         ConnectionManager::UnknownConnectionId,
-                                                                         m_Renderer.getPeerConnectionId(),
-                                                                         Direction::Output);
+            m_ServerConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
+                                                                               m_Renderer.getPeerConnectionManager(),
+                                                                               ConnectionManager::UnknownConnectionId,
+                                                                               ConnectionManager::Direction::Output);
         }
         
-        m_ConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                         m_ConnInfo.connectionId,
-                                                                         server.getPeerConnectionId(),
-                                                                         Direction::Input);
+        m_RendererConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
+                                                                                 server.getPeerConnectionManager(),
+                                                                                 m_ServerConnInfo.connectionId,
+                                                                                 ConnectionManager::Direction::Input);
     }
     else
     {
-        m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
     }
     
-    server.setTransportItem(m_ConnInfo, resource);
-    m_Renderer.setTransportItem(m_ConnInfo, resource);
-    m_Renderer.play(m_ConnInfo);
+    server.setTransportItem(m_ServerConnInfo, resource);
+    m_Renderer.setTransportItem(m_RendererConnInfo, resource);
+    m_Renderer.play(m_RendererConnInfo);
 }
 
 void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item)
@@ -172,49 +175,49 @@ void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item
 
 void ControlPoint::resume()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.play(m_ConnInfo);
+        m_Renderer.play(m_RendererConnInfo);
     }
 }
 
 void ControlPoint::pause()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.pause(m_ConnInfo);
+        m_Renderer.pause(m_RendererConnInfo);
     }
 }
 
 void ControlPoint::stop()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.stop(m_ConnInfo);
+        m_Renderer.stop(m_RendererConnInfo);
     }
 }
 
 void ControlPoint::next()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.next(m_ConnInfo);
+        m_Renderer.next(m_RendererConnInfo);
     }
 }
 
 void ControlPoint::previous()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.previous(m_ConnInfo);
+        m_Renderer.previous(m_RendererConnInfo);
     }
 }
 
 void ControlPoint::setVolume(uint32_t value)
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
-        m_Renderer.setVolume(m_ConnInfo, value);
+        m_Renderer.setVolume(m_RendererConnInfo, value);
     }
 }
 
@@ -225,11 +228,11 @@ uint32_t ControlPoint::getVolume()
 
 void ControlPoint::stopPlaybackIfNecessary()
 {
-    if (m_ConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
     {
         if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
         {
-            m_Renderer.stop(m_ConnInfo);
+            m_Renderer.stop(m_RendererConnInfo);
         }
     }
 }

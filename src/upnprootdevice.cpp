@@ -27,52 +27,60 @@ using namespace utils;
 namespace upnp
 {
 
-RootDevice::RootDevice(const std::string& descriptionXml, int32_t advertiseIntervalInSeconds)
-: m_device(0)
+RootDevice::RootDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds)
+: m_Device(0)
+, m_Udn(udn)
+, m_DescriptionXml(descriptionXml)
+, m_AdvertiseInterval(advertiseIntervalInSeconds)
 {
-    handleUPnPResult(UpnpRegisterRootDevice2(UPNPREG_BUF_DESC, descriptionXml.c_str(), descriptionXml.size() + 1, 1, RootDevice::upnpCallback, this, &m_device));
-    handleUPnPResult(UpnpSendAdvertisement(m_device, advertiseIntervalInSeconds));
 }
     
 RootDevice::~RootDevice()
 {
-    if (m_device != 0)
+    try
     {
-        try
-        {
-            log::debug("Unregister root device");
-            handleUPnPResult(UpnpUnRegisterRootDevice(m_device));
-        }
-        catch (std::exception& e)
-        {
-            log::error("Failed to unregister root device: %s", e.what());
-        }
+        destroy();
+    }
+    catch (std::exception&) {}
+}
+
+void RootDevice::initialize()
+{
+    handleUPnPResult(UpnpRegisterRootDevice2(UPNPREG_BUF_DESC, m_DescriptionXml.c_str(), m_DescriptionXml.size() + 1, 1, RootDevice::upnpCallback, this, &m_Device));
+    handleUPnPResult(UpnpSendAdvertisement(m_Device, m_AdvertiseInterval));
+}
+
+void RootDevice::destroy()
+{
+    if (m_Device != 0)
+    {
+        log::debug("Unregister root device");
+        handleUPnPResult(UpnpUnRegisterRootDevice(m_Device));
+        m_Device = 0;
     }
 }
 
-void RootDevice::AcceptSubscription(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId, const std::map<std::string, std::string>& vars)
+std::string RootDevice::getUniqueDeviceName()
 {
-    const char** names = new const char*[vars.size()];
-    const char** values = new const char*[vars.size()];
-    
-    int32_t i = 0;
-    for (auto& iter : vars)
-    {
-        names[i]    = iter.first.c_str();
-        names[i++]  = iter.second.c_str();
-    }
-    
+    return m_Udn;
+}
+
+void RootDevice::acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response)
+{
     try
     {
-        handleUPnPResult(UpnpAcceptSubscription(m_device, udn.c_str(), serviceId.c_str(), names, values, vars.size(), subscriptionId.c_str()));
+                                                                                                         // UPnP API bug, should be const ([in] argument)
+        handleUPnPResult(UpnpAcceptSubscriptionExt(m_Device, m_Udn.c_str(), serviceId.c_str(), response, const_cast<char*>(subscriptionId.c_str())));
     }
     catch (std::exception& e)
     {
         log::warn("Failed to accept subscription: %s", e.what());
     }
-    
-    delete [] names;
-    delete [] values;
+}
+
+void RootDevice::notifyEvent(const std::string& serviceId, const xml::Document& event)
+{
+    handleUPnPResult(UpnpNotifyExt(m_Device, m_Udn.c_str(), serviceId.c_str(), event));
 }
                      
 int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
@@ -84,7 +92,13 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
 		case UPNP_EVENT_SUBSCRIPTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Subscription_Request*>(pEvent);
-            dev->onEventSubscriptionRequest(request->UDN, request->ServiceId, request->Sid);
+            if (request->UDN == nullptr || request->ServiceId == nullptr || request->Sid == nullptr)
+            {
+                log::warn("Invalid Event subscription request: NULL value provided");
+                return -1;
+            }
+            
+            dev->EventSubscriptionRequested(request);
 			break;
         }
 		case UPNP_CONTROL_GET_VAR_REQUEST:
@@ -96,12 +110,13 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
         
             try
             {
-                ActionRequest req;
-                req.actionName  = request->ActionName;
-                req.request     = xml::Document(request->ActionRequest, xml::Document::NoOwnership);
-                
-                auto response = dev->onControlActionRequest(request->DevUDN, request->ServiceID, req);
-                request->ActionResult = response.getActionDocument();
+                if (request->ActionName == nullptr)
+                {
+                    throw InvalidArgumentsException();
+                }
+            
+                // The appropriate service should fill in the result 
+                dev->ControlActionRequested(request);
             }
             catch (ServiceException& e)
             {

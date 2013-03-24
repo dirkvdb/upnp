@@ -71,7 +71,8 @@ private:
 
     MediaRenderer                       m_Renderer;
     WebServer*                          m_pWebServer;
-    ConnectionInfo                      m_ConnInfo;
+    ConnectionManager::ConnectionInfo   m_ServerConnInfo;
+    ConnectionManager::ConnectionInfo   m_RendererConnInfo;
     
     bool                                m_RendererSupportsPrepareForConnection;
 };

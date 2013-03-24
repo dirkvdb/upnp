@@ -29,18 +29,36 @@
 namespace upnp
 {
 
-class MediaRendererDevice : public RootDevice
+class MediaRendererDevice : public IConnectionManager
+                          , public IRenderingControl
 {
 public:
-    MediaRendererDevice(const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, IConnectionManager& cm, IRenderingControl& rc);
+    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, IAVTransport& av);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
     
-    virtual void onEventSubscriptionRequest(const std::string& udn, const std::string& serviceId, const std::string& subscriptionId);
-    virtual ActionResponse onControlActionRequest(const std::string& udn, const std::string& serviceId, ActionRequest& request);
+    void start();
+    void stop();
+    
+    /* Not for public use */
+    virtual void prepareForConnection(const ProtocolInfo& protocolInfo, ConnectionManager::ConnectionInfo& info);
+    virtual void connectionComplete(int32_t connectionId);
+    virtual ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId);
+    
+    virtual void selectPreset(uint32_t instanceId, const std::string& name);
+    virtual void setVolume(uint32_t instanceId, upnp::RenderingControl::Channel channel, uint16_t value);
+    virtual void setMute(uint32_t instanceId, upnp::RenderingControl::Channel channel, bool enabled);
     
 private:
-    mutable std::mutex                                      m_Mutex;
-    std::map<ServiceType, std::unique_ptr<DeviceService>>   m_Services;
+    void onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest);
+    void onControlActionRequest(Upnp_Action_Request* pRequest);
+
+
+    mutable std::mutex                  m_Mutex;
+    
+    RootDevice                          m_RootDevice;
+    ConnectionManager::Service          m_ConnectionManager;
+    RenderingControl::Service           m_RenderingControl;
+    AVTransport::Service                m_AVTransport;
 };
 
 }

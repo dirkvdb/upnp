@@ -35,10 +35,10 @@ public:
     Client(IClient& client);
     
     std::vector<ProtocolInfo> getProtocolInfo();
-    ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, const std::string& peerConnectionId, Direction direction);
+    ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction);
     void connectionComplete(const ConnectionInfo& connectionInfo);
     std::vector<std::string> getCurrentConnectionIds();
-    ConnectionInfo getCurrentConnectionInfo(const std::string& connectionId);
+    ConnectionInfo getCurrentConnectionInfo(int32_t connectionId);
     
 protected:
     virtual Action actionFromString(const std::string& action);

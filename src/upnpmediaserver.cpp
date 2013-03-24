@@ -114,13 +114,8 @@ const std::vector<Property>& MediaServer::getSortCapabilities() const
     return m_ContentDirectory.getSortCapabilities();
 }
 
-std::string MediaServer::getPeerConnectionId() const
+std::string MediaServer::getPeerConnectionManager() const
 {
-    if (!m_ConnectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection))
-    {
-        return ConnectionManager::UnknownConnectionId;
-    }
-    
     std::stringstream ss;
     ss << m_Device->m_UDN << "/";
     
@@ -273,7 +268,7 @@ void MediaServer::setErrorCallback(const ErrorCb& errorCb)
     m_ErrorCb = errorCb;
 }
 
-void MediaServer::setTransportItem(const ConnectionInfo& info, Resource& resource)
+void MediaServer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
 {
     if (m_AVTransport)
     {

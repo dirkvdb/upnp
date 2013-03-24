@@ -43,8 +43,8 @@ class Client : public ServiceBase<Action, Variable>
 public:
     Client(IClient& client);
     
-    void setVolume(const std::string& connectionId, uint32_t value);
-    uint32_t getVolume(const std::string& connectionId);
+    void setVolume(int32_t connectionId, uint32_t value);
+    uint32_t getVolume(int32_t connectionId);
     
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
     

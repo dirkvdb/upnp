@@ -39,42 +39,42 @@ Client::Client(IClient& client)
 {
 }
 
-void Client::setAVTransportURI(const std::string& connectionId, const std::string& uri, const std::string& uriMetaData)
+void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
 {
-    executeAction(Action::SetAVTransportURI, { {"InstanceID", connectionId},
+    executeAction(Action::SetAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
                                                {"CurrentURI", uri},
                                                {"CurrentURIMetaData", uriMetaData} });
 }
 
-void Client::play(const std::string& connectionId, const std::string& speed)
+void Client::play(int32_t connectionId, const std::string& speed)
 {
-    executeAction(AVTransport::Action::Play, { {"InstanceID", connectionId},
-                                             {"Speed", speed} });
+    executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},
+                                               {"Speed", speed} });
 }
 
-void Client::pause(const std::string& connectionId)
+void Client::pause(int32_t connectionId)
 {
-    executeAction(AVTransport::Action::Pause, { {"InstanceID", connectionId} });
+    executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} });
 }
 
-void Client::stop(const std::string& connectionId)
+void Client::stop(int32_t connectionId)
 {
-    executeAction(AVTransport::Action::Stop, { {"InstanceID", connectionId} });
+    executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} });
 }
 
-void Client::next(const std::string& connectionId)
+void Client::next(int32_t connectionId)
 {
-    executeAction(AVTransport::Action::Next, { {"InstanceID", connectionId} });
+    executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} });
 }
 
-void Client::previous(const std::string& connectionId)
+void Client::previous(int32_t connectionId)
 {
-    executeAction(AVTransport::Action::Previous, { {"InstanceID", connectionId} });
+    executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} });
 }
 
-TransportInfo Client::getTransportInfo(const std::string& connectionId)
+TransportInfo Client::getTransportInfo(int32_t connectionId)
 {
-    xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", connectionId} });
+    xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
     
     TransportInfo info;
@@ -88,9 +88,9 @@ TransportInfo Client::getTransportInfo(const std::string& connectionId)
     return info;
 }
 
-Client::PositionInfo Client::getPositionInfo(const std::string& connectionId)
+Client::PositionInfo Client::getPositionInfo(int32_t connectionId)
 {
-    xml::Document doc = executeAction(Action::GetPositionInfo, { {"InstanceID", connectionId} });
+    xml::Document doc = executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
     
     PositionInfo info;

@@ -22,8 +22,8 @@ namespace upnp
 namespace ConnectionManager
 {
 
-static std::string UnknownConnectionId = "-1";
-static std::string DefaultConnectionId = "0";
+static const int32_t UnknownConnectionId = -1;
+static const int32_t DefaultConnectionId = 0;
 
 
 enum class Action
@@ -49,6 +49,33 @@ enum class Variable
     ArgumentTypeRecourceId
 };
 
+enum class ConnectionStatus
+{
+    Ok,
+    ContentFormatMismatch,
+    InsufficientBandwith,
+    UnreliableChannel,
+    Unknown
+};
+
+enum class Direction
+{
+    Input,
+    Output
+};
+
+struct ConnectionInfo
+{
+    int32_t             connectionId;
+    int32_t             avTransportId;
+    int32_t             renderingControlServiceId;
+    ProtocolInfo        protocolInfo;
+    std::string         peerConnectionManager;
+    int32_t             peerConnectionId;
+    Direction           direction;
+    ConnectionStatus    connectionStatus;
+};
+
 inline Action actionFromString(const std::string& action)
 {
     if (action == "GetProtocolInfo")            return Action::GetProtocolInfo;
@@ -60,7 +87,7 @@ inline Action actionFromString(const std::string& action)
     throw std::logic_error("Unknown ConnectionManager action:" + action);
 }
 
-inline std::string actionToString(Action action)
+inline std::string toString(Action action)
 {
     switch (action)
     {
@@ -90,7 +117,7 @@ inline Variable variableFromString(const std::string& var)
     throw std::logic_error("Unknown ConnectionManager variable:" + var);
 }
 
-inline std::string variableToString(Variable var)
+inline std::string toString(Variable var)
 {
     switch (var)
     {
@@ -106,6 +133,49 @@ inline std::string variableToString(Variable var)
         case Variable::ArgumentTypeRecourceId:         return "A_ARG_TYPE_RcsID";
             
         default: throw std::logic_error("Unknown ConnectionManager action");
+    }
+}
+
+inline ConnectionStatus connectionStatusFromString(const std::string& status)
+{
+    if (status == "OK")                     return ConnectionStatus::Ok;
+    if (status == "ContentFormatMismatch")  return ConnectionStatus::ContentFormatMismatch;
+    if (status == "InsufficientBandwith")   return ConnectionStatus::InsufficientBandwith;
+    if (status == "UnreliableChannel")      return ConnectionStatus::UnreliableChannel;
+    
+    return ConnectionStatus::Unknown;
+}
+
+inline std::string toString(ConnectionStatus status)
+{
+    switch (status)
+    {
+        case ConnectionStatus::Ok:                      return "OK";
+        case ConnectionStatus::ContentFormatMismatch:   return "ContentFormatMismatch";
+        case ConnectionStatus::InsufficientBandwith:    return "InsufficientBandwith";
+        case ConnectionStatus::UnreliableChannel:       return "UnreliableChannel";
+        case ConnectionStatus::Unknown:                 return "Unknown";
+           
+        default: throw std::logic_error("Unknown ConnectionManager status");
+    }
+}
+
+inline Direction directionFromString(const std::string& direction)
+{
+    if (direction == "Input")            return Direction::Input;
+    if (direction == "Output")           return Direction::Output;
+    
+    throw std::logic_error("Unknown ConnectionManager direction:" + direction);
+}
+
+inline std::string toString(Direction direction)
+{
+    switch (direction)
+    {
+        case Direction::Input:             return "Input";
+        case Direction::Output:            return "Output";
+            
+        default: throw std::logic_error("Unknown ConnectionManager direction");
     }
 }
     

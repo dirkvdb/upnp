@@ -17,8 +17,9 @@
 #ifndef UPNP_WEBSERVER_H
 #define UPNP_WEBSERVER_H
 
-#include <string>
 #include <map>
+#include <mutex>
+#include <string>
 #include <vector>
 
 #include <upnp/upnp.h>
@@ -65,6 +66,7 @@ private:
     static int closeCallback(UpnpWebFileHandle fileHandle);
     
     std::string                                                         m_WebRoot;
+    static std::mutex                                                   m_Mutex;
     static std::map<std::string, std::vector<HostedFile>>               m_ServedFiles;
     static std::vector<FileHandle>                                      m_OpenHandles;
 };

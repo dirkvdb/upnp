@@ -30,9 +30,12 @@ namespace upnp
 {
 namespace AVTransport
 {
-
 class Client;
+}
 
+namespace ConnectionManager
+{
+struct ConnectionInfo;
 }
 
 class Item;
@@ -40,7 +43,6 @@ class Device;
 class Client;
 class ProtocolInfo;
 class Resource;
-struct ConnectionInfo;
 
 class MediaRenderer
 {
@@ -63,17 +65,17 @@ public:
     void setDevice(const std::shared_ptr<Device>& device);
     bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
     
-    std::string getPeerConnectionId() const;
+    std::string getPeerConnectionManager() const;
     
     ConnectionManager::Client& connectionManager();
 
     // AV Transport
-    void setTransportItem(const ConnectionInfo& info, Resource& resource);
-    void play(const ConnectionInfo& info);
-    void pause(const ConnectionInfo& info);
-    void stop(const ConnectionInfo& info);
-    void next(const ConnectionInfo& info);
-    void previous(const ConnectionInfo& info);
+    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    void play(const ConnectionManager::ConnectionInfo& info);
+    void pause(const ConnectionManager::ConnectionInfo& info);
+    void stop(const ConnectionManager::ConnectionInfo& info);
+    void next(const ConnectionManager::ConnectionInfo& info);
+    void previous(const ConnectionManager::ConnectionInfo& info);
     
     std::string getCurrentTrackURI() const;
     std::string getCurrentTrackDuration() const;
@@ -83,7 +85,7 @@ public:
     
     
     // Rendering control
-    void setVolume(const ConnectionInfo& info, uint32_t value);
+    void setVolume(const ConnectionManager::ConnectionInfo& info, uint32_t value);
     uint32_t getVolume();
     
     void activateEvents();

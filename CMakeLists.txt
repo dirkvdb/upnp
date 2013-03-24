@@ -32,12 +32,13 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpcontentdirectorytypes.h
     inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp
     inc/upnp/upnpdevice.h
-    inc/upnp/upnpdeviceservice.h                src/upnpdeviceservice.cpp
+    inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnpdevicescanner.h                src/upnpdevicescanner.cpp
     inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
     inc/upnp/upnphttpget.h                      src/upnphttpget.cpp
     inc/upnp/upnpitem.h                         src/upnpitem.cpp
+    inc/upnp/upnplastchangevariable.h           src/upnplastchangevariable.cpp
     inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp
     inc/upnp/upnpmediarendererdevice.h          src/upnpmediarendererdevice.cpp
     inc/upnp/upnpmediaserver.h                  src/upnpmediaserver.cpp
@@ -46,7 +47,9 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnprenderingcontrolservice.h      src/upnprenderingcontrolservice.cpp
     inc/upnp/upnprenderingcontroltypes.h
     inc/upnp/upnprootdevice.h                   src/upnprootdevice.cpp
+    inc/upnp/upnprootdeviceinterface.h
     inc/upnp/upnpservicebase.h
+    inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
     inc/upnp/upnptypes.h
     inc/upnp/upnputils.h

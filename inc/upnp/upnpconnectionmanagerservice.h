@@ -18,6 +18,7 @@
 #define UPNP_CONNECTION_MANAGER_SERVICE_H
 
 #include "upnp/upnpdeviceservice.h"
+#include "upnp/upnpconnectionmanagertypes.h"
 
 namespace upnp
 {
@@ -26,19 +27,30 @@ class IConnectionManager
 {
 public:
     virtual ~IConnectionManager() {}
+    virtual void prepareForConnection(const ProtocolInfo& protocolInfo, ConnectionManager::ConnectionInfo& info) = 0;
+    virtual void connectionComplete(int32_t connectionId) = 0;
+    virtual ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId) = 0;
 };
 
-class ConnectionManagerService : public DeviceService
+namespace ConnectionManager
+{
+
+class Service : public DeviceService<Variable>
 {
 public:
-    ConnectionManagerService(IConnectionManager& cm);
+    Service(IRootDevice& dev, IConnectionManager& cm);
     
+    virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
-    
+
+protected:
+    virtual std::string variableToString(Variable type) const;
+
 private:
     IConnectionManager&  m_connectionManager;
 };
 
+}
 }
 
 #endif

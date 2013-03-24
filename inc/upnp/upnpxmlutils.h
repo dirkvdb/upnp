@@ -32,6 +32,7 @@ namespace upnp
 namespace xml
 {
 
+class Document;
 class NodeList;
 class NamedNodeMap;
 
@@ -119,6 +120,9 @@ public:
     NodeList getChildNodes() const;
     Node getChildNode(const std::string& tagName) const;
     std::string getChildNodeValue(const std::string& tagName) const;
+    Document getOwnerDocument() const;
+    
+    void appendChild(Node& node);
     
     virtual std::string toString() const;
 
@@ -127,6 +131,47 @@ protected:
     
 private:
     IXML_Node*  m_pNode;
+};
+
+class Element : public Node
+{
+public:
+    Element();
+    Element(IXML_Element* pElement);
+    Element(const Node& node);
+    Element(Node&& node);
+    Element(const Element& node) = delete;
+    Element(Element&& node) = default;
+    
+    Element& operator= (Node& node);
+    
+    operator IXML_Element*() const;
+    operator bool() const;
+    
+    virtual std::string getName() const;
+    virtual std::string getValue() const;
+    std::string getAttribute(const std::string& attr);
+    std::string getAttributeOptional(const std::string& attr, const std::string& defaultValue = "");
+    void addAttribute(const std::string& name, const std::string& value);
+    
+    template <typename T>
+    T getAttributeAsNumeric(const std::string& attr)
+    {
+        return utils::stringops::toNumeric<T>(getAttribute(attr));
+    }
+    
+    template <typename T>
+    T getAttributeAsNumericOptional(const std::string& attr, T defaultValue)
+    {
+        const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
+        return pAttr ? utils::stringops::toNumeric<T>(pAttr) : defaultValue;
+    }
+    
+    NodeList getElementsByTagName(const std::string& tagName);
+    Element getChildElement(const std::string& tagName);
+    
+private:
+    IXML_Element*  m_pElement;
 };
 
 class Document : public Node
@@ -155,51 +200,15 @@ public:
     NodeList getElementsByTagName(const std::string& tagName) const;
     std::string getChildNodeValueRecursive(const std::string& tagName) const;
     
+    Node createNode(const std::string& value);
+    Element createElement(const std::string& name);
+    Element createElementNamespaced(const std::string& nameSpace, const std::string& name);
+    
     virtual std::string toString() const;
 
 private:
     IXML_Document*  m_pDoc;
     OwnershipType   m_Ownership;
-};
-
-class Element : public Node
-{
-public:
-    Element();
-    Element(IXML_Element* pElement);
-    Element(const Node& node);
-    Element(Node&& node);
-    Element(const Element& node) = delete;
-    Element(Element&& node) = default;
-    
-    Element& operator= (Node& node);
-    
-    operator IXML_Element*() const;
-    operator bool() const;
-    
-    virtual std::string getName() const;
-    virtual std::string getValue() const;
-    std::string getAttribute(const std::string& attr);
-    std::string getAttributeOptional(const std::string& attr, const std::string& defaultValue = "");
-    
-    template <typename T>
-    T getAttributeAsNumeric(const std::string& attr)
-    {
-        return utils::stringops::toNumeric<T>(getAttribute(attr));
-    }
-    
-    template <typename T>
-    T getAttributeAsNumericOptional(const std::string& attr, T defaultValue)
-    {
-        const char* pAttr = ixmlElement_getAttribute(m_pElement, attr.c_str());
-        return pAttr ? utils::stringops::toNumeric<T>(pAttr) : defaultValue;
-    }
-    
-    NodeList getElementsByTagName(const std::string& tagName);
-    Element getChildElement(const std::string& tagName);
-    
-private:
-    IXML_Element*  m_pElement;
 };
 
 class NodeList

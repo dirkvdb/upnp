@@ -65,24 +65,28 @@ std::vector<ProtocolInfo> Client::getProtocolInfo()
     return protocolInfo;
 }
 
-ConnectionInfo Client::prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionId, const std::string& peerConnectionManager, Direction direction)
+ConnectionInfo Client::prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction)
 {
     xml::Document result = executeAction(Action::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
                                                                          {"PeerConnectionManager", peerConnectionManager},
-                                                                         {"PeerConnectionID", peerConnectionId},
-                                                                         {"Direction", directionToString(direction)} });
+                                                                         {"PeerConnectionID", std::to_string(peerConnectionId)},
+                                                                         {"Direction", toString(direction)} });
 
     ConnectionInfo connInfo;
-    connInfo.connectionId               = result.getChildNodeValue("ConnectionID");
-    connInfo.avTransportId              = result.getChildNodeValue("AVTransportID");
-    connInfo.renderingControlServiceId  = result.getChildNodeValue("RcsID");
+    connInfo.peerConnectionManager      = peerConnectionManager;
+    connInfo.peerConnectionId           = peerConnectionId;
+    connInfo.protocolInfo               = protocolInfo;
+    connInfo.direction                  = direction;
+    connInfo.connectionId               = std::stoi(result.getChildNodeValue("ConnectionID"));
+    connInfo.avTransportId              = std::stoi(result.getChildNodeValue("AVTransportID"));
+    connInfo.renderingControlServiceId  = std::stoi(result.getChildNodeValue("RcsID"));
     
     return connInfo;
 }
 
 void Client::connectionComplete(const ConnectionInfo& connectionInfo)
 {
-    executeAction(Action::ConnectionComplete, { {"ConnectionID", connectionInfo.connectionId} });
+    executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} });
 }
 
 std::vector<std::string> Client::getCurrentConnectionIds()
@@ -103,17 +107,17 @@ int32_t Client::getSubscriptionTimeout()
     return g_subscriptionTimeout;
 }
 
-ConnectionInfo Client::getCurrentConnectionInfo(const std::string& connectionId)
+ConnectionInfo Client::getCurrentConnectionInfo(int32_t connectionId)
 {
-    xml::Document result = executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", connectionId} });
+    xml::Document result = executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} });
     
     ConnectionInfo connInfo;
     connInfo.connectionId               = connectionId;
-    connInfo.avTransportId              = result.getChildNodeValue("AVTransportID");
-    connInfo.renderingControlServiceId  = result.getChildNodeValue("RcsID");
+    connInfo.avTransportId              = std::stoi(result.getChildNodeValue("AVTransportID"));
+    connInfo.renderingControlServiceId  = std::stoi(result.getChildNodeValue("RcsID"));
     connInfo.protocolInfo               = ProtocolInfo(result.getChildNodeValue("ProtocolInfo"));
     connInfo.peerConnectionManager      = result.getChildNodeValue("PeerConnectionManager");
-    connInfo.peerConnectionId           = result.getChildNodeValue("PeerConnectionID");
+    connInfo.peerConnectionId           = std::stoi(result.getChildNodeValue("PeerConnectionID"));
     connInfo.direction                  = directionFromString(result.getChildNodeValue("Direction"));
     connInfo.connectionStatus           = connectionStatusFromString(result.getChildNodeValue("Status"));
     
@@ -145,7 +149,7 @@ Action Client::actionFromString(const std::string& action)
 
 std::string Client::actionToString(Action action)
 {
-    return ConnectionManager::actionToString(action);
+    return ConnectionManager::toString(action);
 }
 
 Variable Client::variableFromString(const std::string& var)
@@ -155,7 +159,7 @@ Variable Client::variableFromString(const std::string& var)
 
 std::string Client::variableToString(Variable var)
 {
-    return ConnectionManager::variableToString(var);
+    return ConnectionManager::toString(var);
 }
 
 }

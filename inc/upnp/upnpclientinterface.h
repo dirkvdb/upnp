@@ -18,10 +18,8 @@
 #define UPNP_CLIENT_INTERFACE_H
 
 #include <string>
-#include <mutex>
 #include <upnp/upnp.h>
 
-#include "utils/subscriber.h"
 #include "utils/signal.h"
 
 #include "upnp/upnptypes.h"

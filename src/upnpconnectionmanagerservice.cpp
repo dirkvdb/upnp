@@ -15,20 +15,102 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpconnectionmanagerservice.h"
+#include "utils/log.h"
+
+using namespace utils;
 
 namespace upnp
 {
+namespace ConnectionManager
+{
 
-ConnectionManagerService::ConnectionManagerService(IConnectionManager& cm)
-: DeviceService(ServiceType::ConnectionManager)
+Service::Service(IRootDevice& dev, IConnectionManager& cm)
+: DeviceService(dev, ServiceType::ConnectionManager)
 , m_connectionManager(cm)
 {
 }
 
-ActionResponse ConnectionManagerService::onAction(const std::string& action, const xml::Document& request)
+xml::Document Service::getSubscriptionResponse()
 {
-    ActionResponse response(action, ServiceType::AVTransport);
-    return response;
+    const std::string ns = "urn:schemas-upnp-org:event-1-0";
+
+    xml::Document doc;
+    auto propertySet    = doc.createElement("e:propertyset");
+    propertySet.addAttribute("xmlns:e", ns);
+
+    addPropertyToElement(0, Variable::SourceProtocolInfo, propertySet);
+    addPropertyToElement(0, Variable::SinkProtocolInfo, propertySet);
+    addPropertyToElement(0, Variable::CurrentConnectionIds, propertySet);
+    
+    doc.appendChild(propertySet);
+    
+    log::debug(doc.toString());
+    
+    return doc;
 }
 
+ActionResponse Service::onAction(const std::string& action, const xml::Document& request)
+{
+    try
+    {
+        ActionResponse response(action, ServiceType::ConnectionManager);
+    
+        switch (actionFromString(action))
+        {
+        case Action::GetProtocolInfo:
+            response.addArgument("Source",               getVariable(Variable::SourceProtocolInfo).getValue());
+            response.addArgument("Sink",                 getVariable(Variable::SinkProtocolInfo).getValue());
+            break;
+        case Action::PrepareForConnection:
+        {
+            ConnectionInfo connInfo;
+            connInfo.peerConnectionManager  = request.getChildNodeValue("PeerConnectionManager");
+            connInfo.peerConnectionId       = std::stoi(request.getChildNodeValue("PeerConnectionID"));
+            connInfo.direction              = directionFromString(request.getChildNodeValue("Direction"));
+            
+            ProtocolInfo protoInfo(request.getChildNodeValue("RemoteProtocolInfo"));;
+            m_connectionManager.prepareForConnection(protoInfo, connInfo);
+        
+            response.addArgument("ConnectionID",         std::to_string(connInfo.connectionId));
+            response.addArgument("AVTransportID",        std::to_string(connInfo.avTransportId));
+            response.addArgument("RcsID",                std::to_string(connInfo.renderingControlServiceId));
+            break;
+        }
+        case Action::ConnectionComplete:
+            m_connectionManager.connectionComplete(std::stoi(request.getChildNodeValue("ConnectionID")));
+            break;
+        case Action::GetCurrentConnectionIDs:
+            response.addArgument("ConnectionIDs",        getVariable(Variable::CurrentConnectionIds).getValue());
+            break;
+        case Action::GetCurrentConnectionInfo:
+        {
+            auto connInfo = m_connectionManager.getCurrentConnectionInfo(std::stoi(request.getChildNodeValue("ConnectionID")));
+            response.addArgument("RcsID",                   std::to_string(connInfo.renderingControlServiceId));
+            response.addArgument("AVTransportID",           std::to_string(connInfo.avTransportId));
+            response.addArgument("ProtocolInfo",            connInfo.protocolInfo.toString());
+            response.addArgument("PeerConnectionManager",   connInfo.peerConnectionManager);
+            response.addArgument("PeerConnectionID",        std::to_string(connInfo.peerConnectionId));
+            response.addArgument("Direction",               toString(connInfo.direction));
+            response.addArgument("Status",                  toString(connInfo.connectionStatus));
+            break;
+        }
+        default:
+            throw InvalidActionException();
+        }
+        
+        return response;
+    }
+    catch (std::exception& e)
+    {
+        log::error("Error processing ConnectionManager request: %s", e.what());
+        throw InvalidActionException();
+    }
+}
+
+std::string Service::variableToString(Variable type) const
+{
+    return ConnectionManager::toString(type);
+}
+
+}
 }
