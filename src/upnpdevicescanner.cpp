@@ -65,7 +65,7 @@ void DeviceScanner::start()
         return;
     }
     
-    log::debug("Start device scanner, known devices(%)", m_Devices.size());
+    log::debug("Start device scanner, known devices (%d)", m_Devices.size());
 
     m_Client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
     m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
@@ -94,7 +94,7 @@ void DeviceScanner::stop()
     m_Stop = false;
     m_Started = false;
     
-    log::debug("Stop device scanner, known devices(%d)", m_Devices.size());
+    log::debug("Stop device scanner, known devices (%d)", m_Devices.size());
 }
 
 void DeviceScanner::checkForTimeoutThread()
