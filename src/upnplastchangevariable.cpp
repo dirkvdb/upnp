@@ -27,7 +27,7 @@ using namespace utils;
 namespace upnp
 {
 
-LastChangeVariable::LastChangeVariable(ServiceType type, uint32_t minEventIntervalInMilliSecs)
+LastChangeVariable::LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventIntervalInMilliSecs)
 : m_Thread(std::bind(&LastChangeVariable::variableThread, this))
 , m_MinInterval(minEventIntervalInMilliSecs)
 , m_Stop(false)
@@ -131,7 +131,7 @@ void LastChangeVariable::variableThread()
         m_ChangedVariables.clear();
         
         // Wait at least MinInterval before a new update is sent or until a stop is requested
-        m_Condition.wait_for(lock, std::chrono::milliseconds(m_MinInterval), [this] { return m_Stop; });
+        m_Condition.wait_for(lock, m_MinInterval, [this] { return m_Stop; });
     }
 }
 

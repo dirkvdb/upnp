@@ -17,10 +17,15 @@
 #ifndef UPNP_AV_TRANSPORT_TYPES_H
 #define UPNP_AV_TRANSPORT_TYPES_H
 
+#include "upnp/upnpdeviceserviceexceptions.h"
+
 namespace upnp
 {
 namespace AVTransport
 {
+
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidInstanceIdExeption,        "Invalid instance id",      702)
+DEFINE_UPNP_SERVICE_EXCEPTION(IllegalMimeTypeExeption,          "Illegal MIME type",        714)
     
 enum class Action
 {

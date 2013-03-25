@@ -20,6 +20,7 @@
 #include <string>
 #include <cinttypes>
 #include <map>
+#include <chrono>
 #include <thread>
 #include <memory>
 #include <iostream>
@@ -35,7 +36,7 @@ namespace upnp
 class LastChangeVariable
 {
 public:
-    LastChangeVariable(ServiceType type, uint32_t minEventIntervalInMilliSecs);
+    LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventInterval);
     ~LastChangeVariable();
     
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
@@ -50,7 +51,7 @@ private:
     std::condition_variable                             m_Condition;
     std::thread                                         m_Thread;
     std::map<uint32_t, std::vector<ServiceVariable>>    m_ChangedVariables;
-    uint32_t                                            m_MinInterval;
+    std::chrono::milliseconds                           m_MinInterval;
     bool                                                m_Stop;
     std::string                                         m_EventMetaNamespace;
 };

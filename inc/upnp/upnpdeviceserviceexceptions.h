@@ -46,25 +46,18 @@ private:
     uint32_t    m_ErrorCode;
 };
 
-class InvalidActionException : public ServiceException
-{
-public:
-    InvalidActionException() : ServiceException("Invalid action", 401) {}
-};
+#define DEFINE_UPNP_SERVICE_EXCEPTION(name, msg, code) \
+class name : public ServiceException \
+{ \
+public: \
+    name() : ServiceException(msg, code) {} \
+}; \
 
-class InvalidArgumentsException : public ServiceException
-{
-public:
-    InvalidArgumentsException() : ServiceException("Invalid arguments", 402) {}
-};
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException, "Invalid action", 401)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsException, "Invalid arguments", 402)
+DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException, "Action failed", 501)
 
-class ActionFailedException : public ServiceException
-{
-public:
-    ActionFailedException() : ServiceException("Action failed", 501) {}
-};
-
-class InvalidNameException : public ServiceException
+/*class InvalidNameException : public ServiceException
 {
 public:
     InvalidNameException() : ServiceException("Invalid name", 701) {}
@@ -74,7 +67,7 @@ class InvalidInstanceIdException : public ServiceException
 {
 public:
     InvalidInstanceIdException() : ServiceException("Invalid InstanceID", 702) {}
-};
+};*/
 
 }
 

@@ -66,6 +66,12 @@ bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const
 
 std::string ProtocolInfo::toString() const
 {
+    if (m_Protocol.empty())
+    {
+        // empty string for default constructed object
+        return "";
+    }
+
     std::stringstream ss;
     ss << m_Protocol << ":" << m_Network << ":" << m_ContentFormat << ":" << m_AdditionalInfo;
     

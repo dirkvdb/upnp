@@ -27,7 +27,7 @@ namespace AVTransport
 Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, ServiceType::AVTransport)
 , m_avTransport(av)
-, m_LastChange(m_Type, 200)
+, m_LastChange(m_Type, std::chrono::milliseconds(200))
 {
     m_LastChange.LastChangeEvent.connect([this] (const xml::Document& doc) {
         m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);

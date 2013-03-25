@@ -40,7 +40,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpitem.h                         src/upnpitem.cpp
     inc/upnp/upnplastchangevariable.h           src/upnplastchangevariable.cpp
     inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp
-    inc/upnp/upnpmediarendererdevice.h          src/upnpmediarendererdevice.cpp
     inc/upnp/upnpmediaserver.h                  src/upnpmediaserver.cpp
     inc/upnp/upnpprotocolinfo.h                 src/upnpprotocolinfo.cpp
     inc/upnp/upnprenderingcontrolclient.h       src/upnprenderingcontrolclient.cpp

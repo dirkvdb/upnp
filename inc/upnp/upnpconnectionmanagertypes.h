@@ -17,6 +17,8 @@
 #ifndef UPNP_CONNECTION_MANAGER_TYPES_H
 #define UPNP_CONNECTION_MANAGER_TYPES_H
 
+#include "upnp/upnpdeviceserviceexceptions.h"
+
 namespace upnp
 {
 namespace ConnectionManager
@@ -25,6 +27,13 @@ namespace ConnectionManager
 static const int32_t UnknownConnectionId = -1;
 static const int32_t DefaultConnectionId = 0;
 
+DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleProtocolException,            "Incompatible protocol info",       701)
+DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleDirectionsException,          "Incompatible directions",          702)
+DEFINE_UPNP_SERVICE_EXCEPTION(InsufficientNetworkResourcesException,    "Insufficient network resources",   703)
+DEFINE_UPNP_SERVICE_EXCEPTION(LocalRestrictionsException,               "Local restrictions",               704)
+DEFINE_UPNP_SERVICE_EXCEPTION(AccessDeniedException,                    "Access denied",                    705)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidConnectionReferenceException,      "Invalid connection reference",     706)
+DEFINE_UPNP_SERVICE_EXCEPTION(NotInNetworkException,                    "Not in network",                   707)
 
 enum class Action
 {
@@ -66,14 +75,14 @@ enum class Direction
 
 struct ConnectionInfo
 {
-    int32_t             connectionId;
-    int32_t             avTransportId;
-    int32_t             renderingControlServiceId;
+    int32_t             connectionId = 0;
+    int32_t             avTransportId = 0;
+    int32_t             renderingControlServiceId = 0;
     ProtocolInfo        protocolInfo;
     std::string         peerConnectionManager;
-    int32_t             peerConnectionId;
+    int32_t             peerConnectionId = 0;
     Direction           direction;
-    ConnectionStatus    connectionStatus;
+    ConnectionStatus    connectionStatus = ConnectionStatus::Unknown;
 };
 
 inline Action actionFromString(const std::string& action)
