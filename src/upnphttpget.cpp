@@ -71,12 +71,28 @@ int32_t HttpGet::getContentLength()
 	return m_ContentLength;
 }
 
-void HttpGet::get(std::vector<uint8_t>& data)
+std::string HttpGet::getText()
 {
 	assert(m_pHandle);
-
+    
+    std::string data;
 	data.resize(m_ContentLength);
-	get(&(data[0]));
+	get(reinterpret_cast<uint8_t*>(&data.front()));
+    
+    assert(data[data.size()] == '\0');
+    
+    return data;
+}
+
+std::vector<uint8_t> HttpGet::get()
+{
+	assert(m_pHandle);
+    
+    std::vector<uint8_t> data;
+	data.resize(m_ContentLength);
+	get(data.data());
+    
+    return data;
 }
 
 void HttpGet::get(uint8_t* pData)

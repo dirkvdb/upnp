@@ -33,8 +33,9 @@ public:
 	~HttpGet();
 
 	int32_t getContentLength();
-	void get(std::vector<uint8_t>& data);
-	void get(uint8_t* pData);
+	std::string getText();
+    std::vector<uint8_t> get();
+    void get(uint8_t* pData);
 
 private:
 	void* 		m_pHandle;

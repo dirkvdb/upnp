@@ -24,8 +24,9 @@ namespace upnp
 namespace AVTransport
 {
 
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidInstanceIdExeption,        "Invalid instance id",      702)
-DEFINE_UPNP_SERVICE_EXCEPTION(IllegalMimeTypeExeption,          "Illegal MIME type",        714)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidInstanceIdException,       "Invalid instance id",      702)
+DEFINE_UPNP_SERVICE_EXCEPTION(IllegalMimeTypeException,         "Illegal MIME type",        714)
+DEFINE_UPNP_SERVICE_EXCEPTION(ResourceNotFoundException,        "Resource not found",       716)
     
 enum class Action
 {
