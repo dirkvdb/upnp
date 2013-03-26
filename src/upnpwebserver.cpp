@@ -56,7 +56,7 @@ WebServer::WebServer(const std::string& webRoot)
 
 std::string WebServer::getWebRootUrl()
 {
-    return stringops::format("http://%s:%d:/", UpnpGetServerIpAddress(), UpnpGetServerPort());
+    return stringops::format("http://%s:%d/", UpnpGetServerIpAddress(), UpnpGetServerPort());
 }
 
 void WebServer::addFile(const std::string& virtualDirName, const HostedFile& file)
