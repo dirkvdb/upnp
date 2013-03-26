@@ -47,6 +47,7 @@ ControlPoint::ControlPoint(Client& client)
 void ControlPoint::setWebserver(WebServer& webServer)
 {
     m_pWebServer = &webServer;
+    m_pWebServer->addVirtualDirectory("playlists");
 }
 
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
@@ -258,7 +259,7 @@ std::string ControlPoint::generatePlaylistFilename()
 std::shared_ptr<Item> ControlPoint::createPlaylistItem(const std::string& filename)
 {
     Resource res;
-    res.setUrl(m_pWebServer->getWebRootUrl() + filename);
+    res.setUrl(m_pWebServer->getWebRootUrl() + "playlists/" + filename);
     res.setProtocolInfo(ProtocolInfo("http-get:*:audio/m3u:*"));
     
     auto playlistItem = std::make_shared<Item>();

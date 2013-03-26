@@ -61,8 +61,6 @@
 		4354A8E416FF400700F7A88F /* upnpdeviceserviceexceptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */; };
 		4354A8E516FF400700F7A88F /* upnplastchangevariable.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C716FF400600F7A88F /* upnplastchangevariable.h */; };
 		4354A8E616FF400700F7A88F /* upnplastchangevariable.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C716FF400600F7A88F /* upnplastchangevariable.h */; };
-		4354A8E716FF400700F7A88F /* upnpmediarendererdevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C816FF400600F7A88F /* upnpmediarendererdevice.h */; };
-		4354A8E816FF400700F7A88F /* upnpmediarendererdevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C816FF400600F7A88F /* upnpmediarendererdevice.h */; };
 		4354A8E916FF400700F7A88F /* upnprenderingcontrolclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C916FF400600F7A88F /* upnprenderingcontrolclient.h */; };
 		4354A8EA16FF400700F7A88F /* upnprenderingcontrolclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C916FF400600F7A88F /* upnprenderingcontrolclient.h */; };
 		4354A8EB16FF400700F7A88F /* upnprenderingcontrolservice.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8CA16FF400600F7A88F /* upnprenderingcontrolservice.h */; };
@@ -96,9 +94,6 @@
 		4354A91216FF401700F7A88F /* upnplastchangevariable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FB16FF401600F7A88F /* upnplastchangevariable.cpp */; };
 		4354A91316FF401700F7A88F /* upnplastchangevariable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FB16FF401600F7A88F /* upnplastchangevariable.cpp */; };
 		4354A91416FF401700F7A88F /* upnplastchangevariable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FB16FF401600F7A88F /* upnplastchangevariable.cpp */; };
-		4354A91516FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FC16FF401600F7A88F /* upnpmediarendererdevice.cpp */; };
-		4354A91616FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FC16FF401600F7A88F /* upnpmediarendererdevice.cpp */; };
-		4354A91716FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FC16FF401600F7A88F /* upnpmediarendererdevice.cpp */; };
 		4354A91816FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FD16FF401700F7A88F /* upnprenderingcontrolclient.cpp */; };
 		4354A91916FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FD16FF401700F7A88F /* upnprenderingcontrolclient.cpp */; };
 		4354A91A16FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4354A8FD16FF401700F7A88F /* upnprenderingcontrolclient.cpp */; };
@@ -208,7 +203,6 @@
 		4354A8C516FF400500F7A88F /* upnpdeviceservice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdeviceservice.h; sourceTree = "<group>"; };
 		4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdeviceserviceexceptions.h; sourceTree = "<group>"; };
 		4354A8C716FF400600F7A88F /* upnplastchangevariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnplastchangevariable.h; sourceTree = "<group>"; };
-		4354A8C816FF400600F7A88F /* upnpmediarendererdevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpmediarendererdevice.h; sourceTree = "<group>"; };
 		4354A8C916FF400600F7A88F /* upnprenderingcontrolclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnprenderingcontrolclient.h; sourceTree = "<group>"; };
 		4354A8CA16FF400600F7A88F /* upnprenderingcontrolservice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnprenderingcontrolservice.h; sourceTree = "<group>"; };
 		4354A8CB16FF400600F7A88F /* upnprenderingcontroltypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnprenderingcontroltypes.h; sourceTree = "<group>"; };
@@ -222,7 +216,6 @@
 		4354A8F916FF401600F7A88F /* upnpconnectionmanagerservice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpconnectionmanagerservice.cpp; path = src/upnpconnectionmanagerservice.cpp; sourceTree = "<group>"; };
 		4354A8FA16FF401600F7A88F /* upnpcontentdirectoryclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpcontentdirectoryclient.cpp; path = src/upnpcontentdirectoryclient.cpp; sourceTree = "<group>"; };
 		4354A8FB16FF401600F7A88F /* upnplastchangevariable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnplastchangevariable.cpp; path = src/upnplastchangevariable.cpp; sourceTree = "<group>"; };
-		4354A8FC16FF401600F7A88F /* upnpmediarendererdevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpmediarendererdevice.cpp; path = src/upnpmediarendererdevice.cpp; sourceTree = "<group>"; };
 		4354A8FD16FF401700F7A88F /* upnprenderingcontrolclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnprenderingcontrolclient.cpp; path = src/upnprenderingcontrolclient.cpp; sourceTree = "<group>"; };
 		4354A8FE16FF401700F7A88F /* upnprenderingcontrolservice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnprenderingcontrolservice.cpp; path = src/upnprenderingcontrolservice.cpp; sourceTree = "<group>"; };
 		4354A8FF16FF401700F7A88F /* upnprootdevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnprootdevice.cpp; path = src/upnprootdevice.cpp; sourceTree = "<group>"; };
@@ -299,7 +292,6 @@
 				4354A8F916FF401600F7A88F /* upnpconnectionmanagerservice.cpp */,
 				4354A8FA16FF401600F7A88F /* upnpcontentdirectoryclient.cpp */,
 				4354A8FB16FF401600F7A88F /* upnplastchangevariable.cpp */,
-				4354A8FC16FF401600F7A88F /* upnpmediarendererdevice.cpp */,
 				4354A8FD16FF401700F7A88F /* upnprenderingcontrolclient.cpp */,
 				4354A8FE16FF401700F7A88F /* upnprenderingcontrolservice.cpp */,
 				4354A8FF16FF401700F7A88F /* upnprootdevice.cpp */,
@@ -386,7 +378,6 @@
 				4354A8C516FF400500F7A88F /* upnpdeviceservice.h */,
 				4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */,
 				4354A8C716FF400600F7A88F /* upnplastchangevariable.h */,
-				4354A8C816FF400600F7A88F /* upnpmediarendererdevice.h */,
 				4354A8C916FF400600F7A88F /* upnprenderingcontrolclient.h */,
 				4354A8CA16FF400600F7A88F /* upnprenderingcontrolservice.h */,
 				4354A8CB16FF400600F7A88F /* upnprenderingcontroltypes.h */,
@@ -442,7 +433,6 @@
 				4354A8E216FF400700F7A88F /* upnpdeviceservice.h in Headers */,
 				4354A8E416FF400700F7A88F /* upnpdeviceserviceexceptions.h in Headers */,
 				4354A8E616FF400700F7A88F /* upnplastchangevariable.h in Headers */,
-				4354A8E816FF400700F7A88F /* upnpmediarendererdevice.h in Headers */,
 				4354A8EA16FF400700F7A88F /* upnprenderingcontrolclient.h in Headers */,
 				4354A8EC16FF400700F7A88F /* upnprenderingcontrolservice.h in Headers */,
 				4354A8EE16FF400700F7A88F /* upnprenderingcontroltypes.h in Headers */,
@@ -475,7 +465,6 @@
 				4354A8E116FF400700F7A88F /* upnpdeviceservice.h in Headers */,
 				4354A8E316FF400700F7A88F /* upnpdeviceserviceexceptions.h in Headers */,
 				4354A8E516FF400700F7A88F /* upnplastchangevariable.h in Headers */,
-				4354A8E716FF400700F7A88F /* upnpmediarendererdevice.h in Headers */,
 				4354A8E916FF400700F7A88F /* upnprenderingcontrolclient.h in Headers */,
 				4354A8EB16FF400700F7A88F /* upnprenderingcontrolservice.h in Headers */,
 				4354A8ED16FF400700F7A88F /* upnprenderingcontroltypes.h in Headers */,
@@ -606,7 +595,6 @@
 				4354A90D16FF401700F7A88F /* upnpconnectionmanagerservice.cpp in Sources */,
 				4354A91016FF401700F7A88F /* upnpcontentdirectoryclient.cpp in Sources */,
 				4354A91316FF401700F7A88F /* upnplastchangevariable.cpp in Sources */,
-				4354A91616FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */,
 				4354A91916FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */,
 				4354A91C16FF401700F7A88F /* upnprenderingcontrolservice.cpp in Sources */,
 				4354A91F16FF401700F7A88F /* upnprootdevice.cpp in Sources */,
@@ -636,7 +624,6 @@
 				4354A90E16FF401700F7A88F /* upnpconnectionmanagerservice.cpp in Sources */,
 				4354A91116FF401700F7A88F /* upnpcontentdirectoryclient.cpp in Sources */,
 				4354A91416FF401700F7A88F /* upnplastchangevariable.cpp in Sources */,
-				4354A91716FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */,
 				4354A91A16FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */,
 				4354A91D16FF401700F7A88F /* upnprenderingcontrolservice.cpp in Sources */,
 				4354A92016FF401700F7A88F /* upnprootdevice.cpp in Sources */,
@@ -666,7 +653,6 @@
 				4354A90C16FF401700F7A88F /* upnpconnectionmanagerservice.cpp in Sources */,
 				4354A90F16FF401700F7A88F /* upnpcontentdirectoryclient.cpp in Sources */,
 				4354A91216FF401700F7A88F /* upnplastchangevariable.cpp in Sources */,
-				4354A91516FF401700F7A88F /* upnpmediarendererdevice.cpp in Sources */,
 				4354A91816FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */,
 				4354A91B16FF401700F7A88F /* upnprenderingcontrolservice.cpp in Sources */,
 				4354A91E16FF401700F7A88F /* upnprootdevice.cpp in Sources */,
