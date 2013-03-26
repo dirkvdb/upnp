@@ -140,12 +140,12 @@ xml::Document Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& request)
+ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
 {
     try
     {
         ActionResponse response(action, ServiceType::RenderingControl);
-        auto req = request.getFirstChild();
+        auto req = doc.getFirstChild();
         uint32_t id = std::stoul(req.getChildNodeValue("InstanceID"));
         
         switch (actionFromString(action))

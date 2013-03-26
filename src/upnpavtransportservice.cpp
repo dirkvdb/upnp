@@ -81,20 +81,21 @@ xml::Document Service::getSubscriptionResponse()
 }
 
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& request)
+ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
 {
     try
     {
         ActionResponse response(action, ServiceType::AVTransport);
-        uint32_t id = std::stoul(request.getChildNodeValueRecursive("InstanceID"));
-    
+        auto req = doc.getFirstChild();
+        uint32_t id = std::stoul(req.getChildNodeValue("InstanceID"));
+        
         switch (actionFromString(action))
         {
         case Action::SetAVTransportURI:
-            m_avTransport.setAVTransportURI(id, request.getChildNodeValue("CurrentURI"), request.getChildNodeValue("CurrentURIMetaData"));
+            m_avTransport.setAVTransportURI(id, req.getChildNodeValue("CurrentURI"), req.getChildNodeValue("CurrentURIMetaData"));
             break;
         case Action::SetNextAVTransportURI:
-            m_avTransport.setNextAVTransportURI(id, request.getChildNodeValue("NextURI"), request.getChildNodeValue("NextURIMetaData"));
+            m_avTransport.setNextAVTransportURI(id, req.getChildNodeValue("NextURI"), req.getChildNodeValue("NextURIMetaData"));
             break;
         case Action::GetMediaInfo:
         {
@@ -150,7 +151,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.stop(id);
             break;
         case Action::Play:
-            m_avTransport.play(id, request.getChildNodeValue("Speed"));
+            m_avTransport.play(id, req.getChildNodeValue("Speed"));
             break;
         case Action::Pause:
             m_avTransport.pause(id);
@@ -159,7 +160,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.record(id);
             break;
         case Action::Seek:
-            m_avTransport.seek(id, seekModeFromString(request.getChildNodeValue("Unit")), request.getChildNodeValue("Target"));
+            m_avTransport.seek(id, seekModeFromString(req.getChildNodeValue("Unit")), req.getChildNodeValue("Target"));
             break;
         case Action::Next:
             m_avTransport.next(id);
@@ -168,10 +169,10 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.previous(id);
             break;
         case Action::SetPlayMode:
-            m_avTransport.setPlayMode(id, playModeFromString(request.getChildNodeValue("NewPlayMode")));
+            m_avTransport.setPlayMode(id, playModeFromString(req.getChildNodeValue("NewPlayMode")));
             break;
         case Action::SetRecordQualityMode:
-            m_avTransport.setRecordQualityMode(id, request.getChildNodeValue("￼NewRecordQualityMode"));
+            m_avTransport.setRecordQualityMode(id, req.getChildNodeValue("￼NewRecordQualityMode"));
             break;
         default:
             throw InvalidActionException();

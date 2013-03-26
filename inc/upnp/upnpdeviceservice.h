@@ -136,7 +136,7 @@ protected:
         std::stringstream ss;
         for (auto& item : items)
         {
-            if (!ss.str().empty())
+            if (ss.tellp() > 0)
             {
                 ss << ',';
             }

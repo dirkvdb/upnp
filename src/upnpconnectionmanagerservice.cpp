@@ -49,11 +49,12 @@ xml::Document Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& request)
+ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
 {
     try
     {
         ActionResponse response(action, ServiceType::ConnectionManager);
+        auto request = doc.getFirstChild();
     
         switch (actionFromString(action))
         {

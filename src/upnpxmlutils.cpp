@@ -84,7 +84,7 @@ std::string Node::getValue() const
     const char* pStr = ixmlNode_getNodeValue(m_pNode);
     if (!pStr)
     {
-        throw std::logic_error("Failed to get node value");
+        return "";
     }
     
     return pStr;
@@ -100,7 +100,7 @@ Node Node::getFirstChild() const
     Node node = ixmlNode_getFirstChild(m_pNode);
     if (!node)
     {
-        throw std::logic_error("Failed to get first child node from node");
+        throw std::logic_error("Failed to get first child node from node: " + getName());
     }
     
     return node;
@@ -111,7 +111,7 @@ NodeList Node::getChildNodes() const
     NodeList children = ixmlNode_getChildNodes(m_pNode);
     if (!children)
     {
-        throw std::logic_error(std::string("Failed to get childNodes from node: ") + getName());
+        throw std::logic_error("Failed to get childNodes from node: " + getName());
     }
     
     return children;
@@ -127,12 +127,20 @@ Node Node::getChildNode(const std::string& tagName) const
         }
     }
     
-    throw std::logic_error(std::string("No child node found with name ") + tagName);
+    throw std::logic_error("No child node found with name " + tagName);
 }
 
 std::string Node::getChildNodeValue(const std::string& tagName) const
 {
-    return getChildNode(tagName).getFirstChild().getValue();
+    auto node = getChildNode(tagName);
+    Node textNode = ixmlNode_getFirstChild(node);
+    if (!textNode)
+    {
+        // No text node, so empty
+        return "";
+    }
+
+    return textNode.getValue();
 }
 
 Document Node::getOwnerDocument() const
