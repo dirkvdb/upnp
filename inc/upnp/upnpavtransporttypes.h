@@ -191,7 +191,7 @@ inline Action actionFromString(const std::string& action)
     throw std::logic_error("Unknown AVTransport action:" + action);
 }
 
-inline std::string actionToString(Action action)
+inline std::string toString(Action action)
 {
     switch (action)
     {
@@ -253,7 +253,7 @@ inline Variable variableFromString(const std::string& var)
     throw std::logic_error("Unknown AVTransport variable:" + var);
 }
 
-inline std::string variableToString(Variable var)
+inline std::string toString(Variable var)
 {
     switch (var)
     {
@@ -305,7 +305,7 @@ inline State stateFromString(const std::string& state)
     throw std::logic_error("Unknown AVTransport state:" + state);
 }
 
-inline std::string stateToString(State state)
+inline std::string toString(State state)
 {
     switch (state)
     {
@@ -329,7 +329,7 @@ inline Status statusFromString(const std::string& status)
     throw std::logic_error("Unknown AVTransport status:" + status);
 }
 
-inline std::string statusToString(Status status)
+inline std::string toString(Status status)
 {
     switch (status)
     {
@@ -354,7 +354,7 @@ inline SeekMode seekModeFromString(const std::string& mode)
     throw std::logic_error("Unknown AVTransport seekmode:" + mode);
 }
 
-inline std::string seekModeToString(SeekMode mode)
+inline std::string toString(SeekMode mode)
 {
     switch (mode)
     {
@@ -384,7 +384,7 @@ inline PlayMode playModeFromString(const std::string& mode)
     throw std::logic_error("Unknown AVTransport playmode:" + mode);
 }
 
-inline std::string playModeToString(PlayMode mode)
+inline std::string toString(PlayMode mode)
 {
     switch (mode)
     {

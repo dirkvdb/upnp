@@ -164,6 +164,10 @@ int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t bufl
     }
 
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
+    if (pHandle->filename.empty())
+    {
+        return UPNP_E_INVALID_ARGUMENT;
+    }
     
     try
     {
@@ -174,6 +178,7 @@ int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t bufl
             return 0;
         }
         
+        assert(pHandle->offset < file.fileContents.size());
         if (pHandle->offset + buflen > file.fileContents.size())
         {
             buflen = file.fileContents.size() - pHandle->offset;

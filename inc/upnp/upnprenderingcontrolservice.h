@@ -73,6 +73,8 @@ public:
     virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
     
+    virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
+    
 protected:
     virtual std::string variableToString(Variable type) const;
     void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);

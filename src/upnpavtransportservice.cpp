@@ -187,9 +187,25 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
 }
 
+void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& value)
+{
+    DeviceService::setInstanceVariable(id, var, value);
+
+    if (var == Variable::RelativeTimePosition ||
+        var == Variable::AbsoluteTimePosition ||
+        var == Variable::RelativeCounterPosition ||
+        var == Variable::AbsoluteCounterPosition)
+    {
+        // these variable are not added to the LastChange variable
+        return;
+    }
+    
+    m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
+}
+
 std::string Service::variableToString(Variable type) const
 {
-    return AVTransport::variableToString(type);
+    return AVTransport::toString(type);
 }
 
 }

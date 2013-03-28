@@ -112,7 +112,7 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
             {
                 if (request->ActionName == nullptr)
                 {
-                    throw InvalidArgumentsException();
+                    throw InvalidArgumentsServiceException();
                 }
             
                 // The appropriate service should fill in the result 

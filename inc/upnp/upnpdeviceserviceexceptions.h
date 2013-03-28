@@ -53,9 +53,9 @@ public: \
     name() : ServiceException(msg, code) {} \
 }; \
 
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException, "Invalid action", 401)
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsException, "Invalid arguments", 402)
-DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException, "Action failed", 501)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException,               "Invalid action",       401)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsServiceException,     "Invalid arguments",    402)
+DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                "Action failed",        501)
 
 /*class InvalidNameException : public ServiceException
 {

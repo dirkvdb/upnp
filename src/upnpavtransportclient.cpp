@@ -134,7 +134,7 @@ Action Client::actionFromString(const std::string& action)
 
 std::string Client::actionToString(Action action)
 {
-    return AVTransport::actionToString(action);
+    return AVTransport::toString(action);
 }
 
 Variable Client::variableFromString(const std::string& var)
@@ -144,7 +144,7 @@ Variable Client::variableFromString(const std::string& var)
 
 std::string Client::variableToString(Variable var)
 {
-    return AVTransport::variableToString(var);
+    return AVTransport::toString(var);
 }
     
 void Client::handleUPnPResult(int errorCode)

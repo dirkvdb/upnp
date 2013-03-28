@@ -60,6 +60,8 @@ public:
     virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
     
+    virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
+    
 protected:
     virtual std::string variableToString(Variable type) const;
     

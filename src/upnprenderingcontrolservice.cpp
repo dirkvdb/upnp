@@ -273,6 +273,12 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
 }
 
+void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& value)
+{
+    DeviceService::setInstanceVariable(id, var, value);
+    m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
+}
+
 std::string Service::variableToString(Variable type) const
 {
     return RenderingControl::toString(type);
