@@ -74,4 +74,4 @@ ENDIF (UNIX OR APPLE)
 #                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 #                   COMMENT "Generating tags" VERBATIM)
 
-#ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(test)

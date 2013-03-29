@@ -33,6 +33,8 @@ namespace upnp
 class IClient
 {
 public:
+    virtual ~IClient() {}
+
     virtual void initialize(const char* interfaceName = nullptr, int32_t port = 0) = 0;
     virtual void destroy() = 0;
     virtual void reset() = 0;

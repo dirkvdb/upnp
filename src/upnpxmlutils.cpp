@@ -20,6 +20,7 @@
 #include "utils/stringoperations.h"
 #include "utils/numericoperations.h"
 
+#include <cstring>
 #include <stdexcept>
 
 using namespace utils;

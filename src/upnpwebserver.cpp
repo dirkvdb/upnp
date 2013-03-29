@@ -19,6 +19,7 @@
 
 #include <upnp/upnp.h>
 #include <chrono>
+#include <cstring>
 #include <sstream>
 
 #include "utils/log.h"

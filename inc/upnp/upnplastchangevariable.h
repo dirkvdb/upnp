@@ -24,6 +24,7 @@
 #include <thread>
 #include <memory>
 #include <iostream>
+#include <condition_variable>
 
 #include "utils/signal.h"
 #include "upnp/upnptypes.h"
