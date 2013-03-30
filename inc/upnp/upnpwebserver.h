@@ -27,19 +27,15 @@
 namespace upnp
 {
     
-struct HostedFile
-{
-    std::string     filename;
-    std::string     fileContents;
-    std::string     contentType;
-};
-
 class WebServer
 {
 public:
     WebServer(const std::string& webRoot);
+    ~WebServer();
     
-    void addFile(const std::string& virtualDirName, const HostedFile& file);
+    void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data);
+    void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data);
+    
     void clearFiles();
     
     void addVirtualDirectory(const std::string& virtualDirName);
@@ -48,6 +44,13 @@ public:
     std::string getWebRootUrl();
     
 private:
+    struct HostedFile
+    {
+        std::string             filename;
+        std::vector<uint8_t>    fileContents;
+        std::string             contentType;
+    };
+
     struct FileHandle
     {
         FileHandle() : offset(0) {}

@@ -33,7 +33,7 @@ namespace upnp
 {
 
 std::mutex WebServer::m_Mutex;
-std::map<std::string, std::vector<HostedFile>> WebServer::m_ServedFiles;
+std::map<std::string, std::vector<WebServer::HostedFile>> WebServer::m_ServedFiles;
 std::vector<WebServer::FileHandle> WebServer::m_OpenHandles;
 
 WebServer::WebServer(const std::string& webRoot)
@@ -55,16 +55,43 @@ WebServer::WebServer(const std::string& webRoot)
     }
 }
 
+WebServer::~WebServer()
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_ServedFiles.clear();
+    m_OpenHandles.clear();
+    
+    UpnpRemoveAllVirtualDirs();
+    UpnpSetWebServerRootDir(nullptr);
+}
+
 std::string WebServer::getWebRootUrl()
 {
     return stringops::format("http://%s:%d/", UpnpGetServerIpAddress(), UpnpGetServerPort());
 }
 
-void WebServer::addFile(const std::string& virtualDirName, const HostedFile& file)
+void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data)
 {
+    HostedFile file;
+    file.filename       = filename;
+    file.contentType    = contentType;
+    
+    file.fileContents.resize(data.size());
+    memcpy(file.fileContents.data(), data.data(), data.size());
+    
     std::lock_guard<std::mutex> lock(m_Mutex);
-    //auto path = stringops::format("/%s/%s/%s", m_WebRoot, virtualDirName, file.filename);
-    m_ServedFiles["/" + virtualDirName].push_back(file);
+    m_ServedFiles["/" + virtualDir].push_back(file);
+}
+
+void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data)
+{
+    HostedFile file;
+    file.filename       = filename;
+    file.contentType    = contentType;
+    file.fileContents   = data;
+    
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_ServedFiles["/" + virtualDir].push_back(file);
 }
 
 void WebServer::clearFiles()
@@ -80,16 +107,18 @@ void WebServer::addVirtualDirectory(const std::string& virtualDirName)
     {
         throw std::logic_error("Failed to add virtual directory to webserver");
     }
+    
+    m_ServedFiles.insert(std::make_pair("/" + virtualDirName, std::vector<HostedFile>()));
 }
 
 void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     UpnpRemoveVirtualDir(virtualDirName.c_str());
-    m_ServedFiles.erase(virtualDirName);
+    m_ServedFiles.erase("/" + virtualDirName);
 }
 
-HostedFile& WebServer::getFileFromRequest(const std::string& uri)
+WebServer::HostedFile& WebServer::getFileFromRequest(const std::string& uri)
 {
     std::string dir;
     fileops::getPathFromFilepath(uri, dir);
@@ -172,7 +201,6 @@ int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t bufl
     
     try
     {
-        log::debug("Read callback: buflen %d", buflen);
         auto& file = getFileFromRequest(pHandle->filename);
         if (pHandle->offset == file.fileContents.size())
         {

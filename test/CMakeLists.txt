@@ -13,13 +13,16 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(upnptest
 	gmock-gtest-all.cc
-	devicediscover.h
 	main.cpp
+
+    devicediscover.h
+
     xmlutilstest.cpp
 	#mediarenderertest.cpp
 	#mediaservertest.cpp
 	#controlpointtest.cpp
 	testenvironment.h
+    webservertest.cpp
 )
 
 LINK_DIRECTORIES(

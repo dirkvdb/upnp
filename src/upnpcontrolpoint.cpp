@@ -131,13 +131,7 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
     
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
-    
-    HostedFile file;
-    file.filename = filename;
-    file.contentType = "audio/m3u";
-    file.fileContents = playlist.str();
-    
-    m_pWebServer->addFile("playlists", file);
+    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
     
     auto playlistItem = createPlaylistItem(filename);
     
@@ -163,12 +157,7 @@ void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item
     
     std::string filename = generatePlaylistFilename();
     m_pWebServer->clearFiles();
-    
-    HostedFile file;
-    file.filename = filename;
-    file.contentType = "audio/m3u";
-    file.fileContents = playlist.str();
-    m_pWebServer->addFile("playlists", file);
+    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
     
     auto playlistItem = createPlaylistItem(filename);
     playItem(server, playlistItem);

@@ -36,7 +36,8 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnpdevicescanner.h                src/upnpdevicescanner.cpp
     inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
-    inc/upnp/upnphttpget.h                      src/upnphttpget.cpp
+    inc/upnp/upnphttpclient.h                   src/upnphttpclient.cpp
+    inc/upnp/upnphttpreader.h                   src/upnphttpreader.cpp
     inc/upnp/upnpitem.h                         src/upnpitem.cpp
     inc/upnp/upnplastchangevariable.h           src/upnplastchangevariable.cpp
     inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp

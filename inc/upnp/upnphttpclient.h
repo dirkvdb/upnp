@@ -14,8 +14,8 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_HTTP_GET_H
-#define UPNP_HTTP_GET_H
+#ifndef UPNP_HTTP_CLIENT_H
+#define UPNP_HTTP_CLIENT_H
 
 #include <string>
 #include <vector>
@@ -25,21 +25,27 @@
 namespace upnp
 {
 
-class HttpGet
+class HttpClient
 {
 public:
-	HttpGet(const std::string& url, int32_t timeout);
-	HttpGet(const std::string& url, uint32_t offset, uint32_t size, int32_t timeout);
-	~HttpGet();
-
-	int32_t getContentLength();
-	std::string getText();
-    std::vector<uint8_t> get();
-    void get(uint8_t* pData);
-
+	HttpClient(int32_t commandTimeout);
+    HttpClient(const HttpClient&) = delete;
+    
+    size_t getContentLength(const std::string& url);
+    std::string getText(const std::string& url);
+    
+    std::vector<uint8_t> getData(const std::string& url);
+    std::vector<uint8_t> getData(const std::string& url, uint32_t offset, uint32_t size);
+    
+    void getData(const std::string& url, uint8_t* pData);
+    void getData(const std::string& url, uint8_t* pData, uint32_t offset, uint32_t size);
+	
 private:
-	void* 		m_pHandle;
-	int32_t		m_ContentLength;
+    void* open(const std::string& url, int& contentLength, int32_t& httpStatus);
+    void* open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint32_t offset, uint32_t size);
+    void read(void* pHandle, uint8_t* pData, size_t dataSize);
+    void throwOnBadHttpStatus(const std::string& url, int32_t status);
+    
 	int32_t		m_Timeout;
 };
 
