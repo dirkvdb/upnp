@@ -120,8 +120,7 @@ void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
 
 WebServer::HostedFile& WebServer::getFileFromRequest(const std::string& uri)
 {
-    std::string dir;
-    fileops::getPathFromFilepath(uri, dir);
+    std::string dir = fileops::getPathFromFilepath(uri);
     auto filename = fileops::getFileName(uri);
     
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -166,7 +165,7 @@ int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
     {
         return UPNP_E_INVALID_ARGUMENT;
     }
-
+    
     try
     {
         auto& file = getFileFromRequest(pFilename);
