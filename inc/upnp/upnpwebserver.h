@@ -21,8 +21,12 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <memory>
 
+extern "C"
+{
 #include <upnp/upnp.h>
+}
 
 namespace upnp
 {
@@ -55,6 +59,7 @@ private:
     {
         FileHandle() : offset(0) {}
     
+        uint64_t		id;
         std::string     filename;
         size_t          offset;
     };
@@ -68,10 +73,11 @@ private:
     static int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin);
     static int closeCallback(UpnpWebFileHandle fileHandle);
     
-    std::string                                                         m_WebRoot;
-    static std::mutex                                                   m_Mutex;
-    static std::map<std::string, std::vector<HostedFile>>               m_ServedFiles;
-    static std::vector<FileHandle>                                      m_OpenHandles;
+    std::string                                                         		m_WebRoot;
+    static std::mutex                                                   		m_Mutex;
+    static uint64_t																m_CurrentRequestId;
+    static std::map<std::string, std::vector<std::unique_ptr<HostedFile>>>      m_ServedFiles;
+    static std::vector<std::unique_ptr<FileHandle>>                     		m_OpenHandles;
 };
 
 }
