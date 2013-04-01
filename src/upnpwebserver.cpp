@@ -58,9 +58,7 @@ WebServer::WebServer(const std::string& webRoot)
 
 WebServer::~WebServer()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ServedFiles.clear();
-    m_OpenHandles.clear();
+    clearFiles();
     
     UpnpRemoveAllVirtualDirs();
     UpnpSetWebServerRootDir(nullptr);
@@ -98,6 +96,7 @@ void WebServer::clearFiles()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_ServedFiles.clear();
+    m_OpenHandles.clear();
 }
 
 void WebServer::addVirtualDirectory(const std::string& virtualDirName)
