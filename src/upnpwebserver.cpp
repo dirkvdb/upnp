@@ -33,8 +33,9 @@ namespace upnp
 {
 
 std::mutex WebServer::m_Mutex;
-std::map<std::string, std::vector<WebServer::HostedFile>> WebServer::m_ServedFiles;
-std::vector<WebServer::FileHandle> WebServer::m_OpenHandles;
+uint64_t WebServer::m_CurrentRequestId = 0;
+std::map<std::string, std::vector<std::unique_ptr<WebServer::HostedFile>>> WebServer::m_ServedFiles;
+std::vector<std::unique_ptr<WebServer::FileHandle>> WebServer::m_OpenHandles;
 
 WebServer::WebServer(const std::string& webRoot)
 : m_WebRoot(webRoot)
@@ -72,26 +73,25 @@ std::string WebServer::getWebRootUrl()
 
 void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data)
 {
-    HostedFile file;
-    file.filename       = filename;
-    file.contentType    = contentType;
-    
-    file.fileContents.resize(data.size());
-    memcpy(file.fileContents.data(), data.data(), data.size());
+	std::unique_ptr<HostedFile> file(new HostedFile());
+	file->filename       = filename;
+	file->contentType    = contentType;
+	file->fileContents.resize(data.size());
+    memcpy(file->fileContents.data(), data.data(), data.size());
     
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ServedFiles["/" + virtualDir].push_back(file);
+    m_ServedFiles["/" + virtualDir].push_back(std::move(file));
 }
 
 void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data)
 {
-    HostedFile file;
-    file.filename       = filename;
-    file.contentType    = contentType;
-    file.fileContents   = data;
+	std::unique_ptr<HostedFile> file(new HostedFile());
+    file->filename       = filename;
+    file->contentType    = contentType;
+    file->fileContents   = data;
     
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ServedFiles["/" + virtualDir].push_back(file);
+    m_ServedFiles["/" + virtualDir].push_back(std::move(file));
 }
 
 void WebServer::clearFiles()
@@ -102,13 +102,14 @@ void WebServer::clearFiles()
 
 void WebServer::addVirtualDirectory(const std::string& virtualDirName)
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+	std::lock_guard<std::mutex> lock(m_Mutex);
+
     if (UPNP_E_SUCCESS != UpnpAddVirtualDir(virtualDirName.c_str()))
     {
         throw std::logic_error("Failed to add virtual directory to webserver");
     }
-    
-    m_ServedFiles.insert(std::make_pair("/" + virtualDirName, std::vector<HostedFile>()));
+
+    m_ServedFiles.insert(std::make_pair("/" + virtualDirName, std::vector<std::unique_ptr<HostedFile>>()));
 }
 
 void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
@@ -120,19 +121,16 @@ void WebServer::removeVirtualDirectory(const std::string& virtualDirName)
 
 WebServer::HostedFile& WebServer::getFileFromRequest(const std::string& uri)
 {
-    std::string dir;
-    fileops::getPathFromFilepath(uri, dir);
+	std::string dir = fileops::getPathFromFilepath(uri);
     auto filename = fileops::getFileName(uri);
-    
-    std::lock_guard<std::mutex> lock(m_Mutex);
     auto iter = m_ServedFiles.find(dir);
     if (iter == m_ServedFiles.end())
     {
         throw std::logic_error("Virtual directory does not exist: " + dir);
     }
     
-    auto fileIter = std::find_if(iter->second.begin(), iter->second.end(), [&] (const HostedFile& file) {
-        return file.filename == filename;
+    auto fileIter = std::find_if(iter->second.begin(), iter->second.end(), [&] (const std::unique_ptr<HostedFile>& file) {
+        return file->filename == filename;
     });
     
     if (fileIter == iter->second.end())
@@ -140,9 +138,9 @@ WebServer::HostedFile& WebServer::getFileFromRequest(const std::string& uri)
         throw std::logic_error("File is not hosted: " + filename);
     }
     
-    return *fileIter;
+    return (*(*fileIter).get());
 }
-    
+
 UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMode mode)
 {
     if (mode == UPNP_WRITE)
@@ -151,13 +149,15 @@ UpnpWebFileHandle WebServer::openCallback(const char* pFilename, UpnpOpenFileMod
         return nullptr;
     }
 
-    FileHandle handle;
-    handle.filename = pFilename;
+    std::unique_ptr<FileHandle> handle(new FileHandle());
+    handle->filename = pFilename;
+    handle->offset = 0;
+    handle->id = ++m_CurrentRequestId;
     
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_OpenHandles.push_back(handle);
+    m_OpenHandles.push_back(std::move(handle));
     
-    return &(m_OpenHandles.back());
+    return m_OpenHandles.back().get();
 }
 
 int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
@@ -166,9 +166,10 @@ int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
     {
         return UPNP_E_INVALID_ARGUMENT;
     }
-
+    
     try
     {
+    	std::lock_guard<std::mutex> lock(m_Mutex);
         auto& file = getFileFromRequest(pFilename);
         
         pInfo->file_length = file.fileContents.size();
@@ -188,6 +189,8 @@ int WebServer::getInfoCallback(const char* pFilename, File_Info* pInfo)
 
 int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen)
 {
+	std::lock_guard<std::mutex> lock(m_Mutex);
+
     if (buf == nullptr)
     {
         return UPNP_E_INVALID_ARGUMENT;
@@ -233,6 +236,7 @@ int WebServer::writeCallback(UpnpWebFileHandle /*fileHandle*/, char* /*buf*/, si
     
 int WebServer::seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin)
 {
+	std::lock_guard<std::mutex> lock(m_Mutex);
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
     
     try
@@ -273,11 +277,15 @@ int WebServer::seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int orig
     
 int WebServer::closeCallback(UpnpWebFileHandle fileHandle)
 {
+	std::lock_guard<std::mutex> lock(m_Mutex);
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
     
     try
     {
-        getFileFromRequest(pHandle->filename);
+		m_OpenHandles.erase(std::remove_if(m_OpenHandles.begin(), m_OpenHandles.end(), [&] (const std::unique_ptr<FileHandle>& file) {
+			return file->id == pHandle->id;
+		}), m_OpenHandles.end());
+
         return UPNP_E_SUCCESS;
     }
     catch (std::exception& e)

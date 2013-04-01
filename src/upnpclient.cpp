@@ -72,10 +72,14 @@ void Client::initialize(const char* interfaceName, int port)
 
 void Client::destroy()
 {
-    UpnpUnRegisterClient(m_Client);
-    UpnpFinish();
-    
-    log::debug("Destroyed UPnP SDK");
+	if (m_Client)
+    {
+		UpnpUnRegisterClient(m_Client);
+		UpnpFinish();
+		m_Client = 0;
+
+		log::debug("Destroyed UPnP SDK");
+    }
 }
 
 void Client::reset()

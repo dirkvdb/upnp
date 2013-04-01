@@ -63,7 +63,7 @@ protected:
     std::string createTextFile()
     {
         std::stringstream ss;
-        for (int32_t i = 0; i < 1000000; ++i)
+        for (int32_t i = 0; i < 10000; ++i)
         {
             ss << i << ";";
         }
@@ -74,7 +74,7 @@ protected:
     std::vector<uint8_t> createBinaryFile()
     {
         std::vector<uint8_t> data;
-        for (int32_t i = 0; i < 100000; ++i)
+        for (int32_t i = 0; i < 10000; ++i)
         {
             data.push_back(i + 1);
         }

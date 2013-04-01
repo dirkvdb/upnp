@@ -40,7 +40,7 @@ public:
     : m_RootDevice(dev)
     , m_Type(type)
     {
-        m_Variables.emplace(0, std::map<VariableType, ServiceVariable>());
+        m_Variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
     }
     
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
@@ -50,7 +50,7 @@ public:
         std::map<std::string, std::string> vars;
         for (auto& var : m_Variables.at(0))
         {
-            vars.emplace(variableToString(var.first), var.second);
+            vars.insert(std::make_pair(variableToString(var.first), var.second));
         }
         
         return vars;
