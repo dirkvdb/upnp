@@ -241,10 +241,11 @@ Document::Document(const Document& doc)
 }
 
 Document::Document(Document&& doc)
-: Node(std::move(doc))
-, m_pDoc(std::move(doc.m_pDoc))
-, m_Ownership(TakeOwnership)
+: Node(reinterpret_cast<IXML_Node*>(doc.m_pDoc))
+, m_pDoc(doc.m_pDoc)
+, m_Ownership(doc.m_Ownership)
 {
+	doc.m_pDoc = nullptr;
     doc.m_Ownership = NoOwnership;
 }
 
@@ -258,10 +259,12 @@ Document::~Document()
 
 Document& Document::operator= (Document&& other)
 {
-    Node::operator=(std::forward<Node>(other));
-    m_pDoc = std::move(other.m_pDoc);
-    m_Ownership = std::move(other.m_Ownership);
-    other.m_Ownership = NoOwnership;
+    m_pDoc 				= other.m_pDoc;
+    m_Ownership 		= other.m_Ownership;
+    other.m_pDoc		= nullptr;
+    other.m_Ownership 	= NoOwnership;
+
+    setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
     
     return *this;
 }
