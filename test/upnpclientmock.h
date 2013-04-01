@@ -17,7 +17,7 @@
 #ifndef UPNP_CLIENT_MOCK_H
 #define UPNP_CLIENT_MOCK_H
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include "upnpclientinterface.h"
 
@@ -35,6 +35,8 @@ public:
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(reset, void());
     
+    MOCK_CONST_METHOD0(getIpAddress, std::string());
+    MOCK_CONST_METHOD0(getPort, int32_t());
     MOCK_CONST_METHOD2(searchDevices, void(Device::Type, int));
     
     MOCK_CONST_METHOD2(subscribeToService, std::string(const std::string&, int32_t&));

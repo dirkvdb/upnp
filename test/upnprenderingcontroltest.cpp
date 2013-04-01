@@ -17,7 +17,8 @@
 #include "utils/signal.h"
 #include "utils/log.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -28,7 +29,7 @@
 #include "testutils.h"
 
 #include "upnp/upnpaction.h"
-#include "upnp/upnprenderingcontrol.h"
+#include "upnp/upnprenderingcontrolclient.h"
 
 
 using namespace utils;
@@ -46,7 +47,7 @@ static const std::string g_controlUrl               = "ControlUrl";
 static const std::string g_subscriptionUrl          = "SubscriptionUrl";
 static const std::string g_serviceDescriptionUrl    = "ServiceDescriptionUrl";
 static const std::string g_eventNameSpaceId         = "RCS";
-static const std::string g_connectionId             = "0";
+static const uint32_t g_connectionId                = 0;
 static const uint32_t g_defaultTimeout              = 1801;
 static const Upnp_SID g_subscriptionId              = "subscriptionId";
 
@@ -59,7 +60,7 @@ public:
 protected:
     void SetUp()
     {
-        renderingControl.reset(new RenderingControl(client));
+        renderingControl.reset(new RenderingControl::Client(client));
         
         Service service;
         service.m_Type = ServiceType::RenderingControl;
@@ -130,39 +131,39 @@ protected:
         client.UPnPEventOccurredEvent(&event);
     }
     
-    std::unique_ptr<RenderingControl>       renderingControl;
-    StrictMock<ClientMock>                  client;
-    StrictMock<EventListenerMock>           eventListener;
+    std::unique_ptr<RenderingControl::Client>   renderingControl;
+    StrictMock<ClientMock>                      client;
+    StrictMock<EventListenerMock>               eventListener;
 };
 
 TEST_F(RenderingControlTest, supportedActions)
 {
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::GetVolume));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SetVolume));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::ListPresets));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SelectPreset));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::GetMute));
-    EXPECT_TRUE(renderingControl->supportsAction(RenderingControlAction::SetMute));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::GetVolume));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SetVolume));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::ListPresets));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SelectPreset));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::GetMute));
+    EXPECT_TRUE(renderingControl->supportsAction(RenderingControl::Action::SetMute));
     
-    EXPECT_FALSE(renderingControl->supportsAction(RenderingControlAction::GetVolumeDB));
-    EXPECT_FALSE(renderingControl->supportsAction(RenderingControlAction::SetVolumeDB));
+    EXPECT_FALSE(renderingControl->supportsAction(RenderingControl::Action::GetVolumeDB));
+    EXPECT_FALSE(renderingControl->supportsAction(RenderingControl::Action::SetVolumeDB));
 }
 
 TEST_F(RenderingControlTest, lastChangeEvent)
 {
-    std::map<RenderingControlVariable, std::string> lastChange;
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _)).WillOnce(SaveArg<1>(&lastChange));
+    std::map<RenderingControl::Variable, std::string> lastChange;
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControl::Variable::LastChange, _)).WillOnce(SaveArg<1>(&lastChange));
     
     triggerLastChangeUpdate("0", "35");
     
-    EXPECT_EQ("FactoryDefaults, InstallationDefaults", lastChange[RenderingControlVariable::PresetNameList]);
-    EXPECT_EQ("0", lastChange[RenderingControlVariable::Mute]);
-    EXPECT_EQ("35", lastChange[RenderingControlVariable::Volume]);
+    EXPECT_EQ("FactoryDefaults, InstallationDefaults", lastChange[RenderingControl::Variable::PresetNameList]);
+    EXPECT_EQ("0", lastChange[RenderingControl::Variable::Mute]);
+    EXPECT_EQ("35", lastChange[RenderingControl::Variable::Volume]);
 }
 
 TEST_F(RenderingControlTest, setVolume)
 {
-    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControlVariable::LastChange, _));
+    EXPECT_CALL(eventListener, RenderingControlLastChangedEvent(RenderingControl::Variable::LastChange, _));
     triggerLastChangeUpdate("0", "35");
     
     // the service description xml defines the volume range between 10 and 110

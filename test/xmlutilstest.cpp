@@ -16,7 +16,7 @@
 
 #include "utils/signal.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <iostream>
 #include <algorithm>
 

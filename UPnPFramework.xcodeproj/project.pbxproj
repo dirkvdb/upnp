@@ -34,7 +34,6 @@
 		434203C11633E55F0058A49A /* upnpcontentdirectorytest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BC1633E55F0058A49A /* upnpcontentdirectorytest.cpp */; };
 		434203C21633E55F0058A49A /* upnprenderingcontroltest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BE1633E55F0058A49A /* upnprenderingcontroltest.cpp */; };
 		434203C31633E55F0058A49A /* upnpservicebasetest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BF1633E55F0058A49A /* upnpservicebasetest.cpp */; };
-		434203C61633E70E0058A49A /* gmock-gtest-all.cc in Sources */ = {isa = PBXBuildFile; fileRef = 434203C51633E70E0058A49A /* gmock-gtest-all.cc */; };
 		4354A8CF16FF400700F7A88F /* upnpactionresponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8BC16FF400400F7A88F /* upnpactionresponse.h */; };
 		4354A8D016FF400700F7A88F /* upnpactionresponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8BC16FF400400F7A88F /* upnpactionresponse.h */; };
 		4354A8D116FF400700F7A88F /* upnpavtransportclient.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8BD16FF400400F7A88F /* upnpavtransportclient.h */; };
@@ -119,6 +118,10 @@
 		43CD846817072E6A00C5B1AB /* upnphttpreader.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CD846617072E6A00C5B1AB /* upnphttpreader.h */; };
 		43CD846B17072E7C00C5B1AB /* upnphttpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846917072E7C00C5B1AB /* upnphttpclient.cpp */; };
 		43CD846C17072E7C00C5B1AB /* upnphttpreader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846A17072E7C00C5B1AB /* upnphttpreader.cpp */; };
+		43CD846E1709815100C5B1AB /* webservertest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846D1709815100C5B1AB /* webservertest.cpp */; };
+		43CD8473170987AE00C5B1AB /* gmock-gtest-all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD8472170987AE00C5B1AB /* gmock-gtest-all.cpp */; };
+		43CD8474170989E100C5B1AB /* upnphttpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846917072E7C00C5B1AB /* upnphttpclient.cpp */; };
+		43CD8475170989E100C5B1AB /* upnphttpreader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846A17072E7C00C5B1AB /* upnphttpreader.cpp */; };
 		43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */; };
 /* End PBXBuildFile section */
 
@@ -135,6 +138,13 @@
 			containerPortal = 4354A92116FF407B00F7A88F /* Utils.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4336380A1562DE440018D554;
+			remoteInfo = Utils;
+		};
+		43CD847617098A0100C5B1AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4354A92116FF407B00F7A88F /* Utils.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 433638091562DE440018D554;
 			remoteInfo = Utils;
 		};
 /* End PBXContainerItemProxy section */
@@ -246,6 +256,8 @@
 		43CD846617072E6A00C5B1AB /* upnphttpreader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnphttpreader.h; sourceTree = "<group>"; };
 		43CD846917072E7C00C5B1AB /* upnphttpclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnphttpclient.cpp; path = src/upnphttpclient.cpp; sourceTree = "<group>"; };
 		43CD846A17072E7C00C5B1AB /* upnphttpreader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnphttpreader.cpp; path = src/upnphttpreader.cpp; sourceTree = "<group>"; };
+		43CD846D1709815100C5B1AB /* webservertest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = webservertest.cpp; path = test/webservertest.cpp; sourceTree = "<group>"; };
+		43CD8472170987AE00C5B1AB /* gmock-gtest-all.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "gmock-gtest-all.cpp"; path = "test/gmock-gtest-all.cpp"; sourceTree = "<group>"; };
 		43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpwebserver.h; sourceTree = "<group>"; };
 		43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpwebserver.cpp; path = src/upnpwebserver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -322,6 +334,8 @@
 		434203B71633E1BB0058A49A /* test */ = {
 			isa = PBXGroup;
 			children = (
+				43CD8472170987AE00C5B1AB /* gmock-gtest-all.cpp */,
+				43CD846D1709815100C5B1AB /* webservertest.cpp */,
 				434203C41633E70E0058A49A /* gmock */,
 				4356547B1613B95700868D6B /* Mocks */,
 				434203B91633E55F0058A49A /* testxmls.h */,
@@ -492,6 +506,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				43CD847717098A0100C5B1AB /* PBXTargetDependency */,
 				4303F219161216C30057A64C /* PBXTargetDependency */,
 			);
 			name = UPnPUnitTests;
@@ -590,7 +605,6 @@
 				434203C11633E55F0058A49A /* upnpcontentdirectorytest.cpp in Sources */,
 				434203C21633E55F0058A49A /* upnprenderingcontroltest.cpp in Sources */,
 				434203C31633E55F0058A49A /* upnpservicebasetest.cpp in Sources */,
-				434203C61633E70E0058A49A /* gmock-gtest-all.cc in Sources */,
 				432013B7169065B100FDFD3C /* upnpdlnainfo.cpp in Sources */,
 				4354A90116FF401700F7A88F /* upnpactionresponse.cpp in Sources */,
 				4354A90416FF401700F7A88F /* upnpavtransportclient.cpp in Sources */,
@@ -602,6 +616,8 @@
 				4354A91916FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */,
 				4354A91C16FF401700F7A88F /* upnprenderingcontrolservice.cpp in Sources */,
 				4354A91F16FF401700F7A88F /* upnprootdevice.cpp in Sources */,
+				43CD846E1709815100C5B1AB /* webservertest.cpp in Sources */,
+				43CD8473170987AE00C5B1AB /* gmock-gtest-all.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -609,6 +625,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43CD8474170989E100C5B1AB /* upnphttpclient.cpp in Sources */,
+				43CD8475170989E100C5B1AB /* upnphttpreader.cpp in Sources */,
 				4303F1FC161216A80057A64C /* upnpcontrolpoint.cpp in Sources */,
 				4303F1FD161216A80057A64C /* upnpdevicescanner.cpp in Sources */,
 				4303F1FF161216A80057A64C /* upnpitem.cpp in Sources */,
@@ -671,6 +689,11 @@
 			target = 4303F1F7161216A80057A64C /* UPnPFrameworkNative */;
 			targetProxy = 4303F218161216C30057A64C /* PBXContainerItemProxy */;
 		};
+		43CD847717098A0100C5B1AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Utils;
+			targetProxy = 43CD847617098A0100C5B1AB /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -708,7 +731,7 @@
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/modules/utils/inc";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/../utils/inc $(SRCROOT)/test";
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
@@ -743,7 +766,7 @@
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/modules/utils/inc";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/inc $(SRCROOT)/../utils/inc $(SRCROOT)/test";
 				VALID_ARCHS = x86_64;
 			};
 			name = Release;
@@ -772,7 +795,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				TEST_AFTER_BUILD = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../utils/inc $(SRCROOT)/inc";
 				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
@@ -802,7 +825,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				TEST_AFTER_BUILD = NO;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/modules/utils/inc $(SRCROOT)/inc";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../utils/inc $(SRCROOT)/inc";
 				VALID_ARCHS = x86_64;
 			};
 			name = Release;

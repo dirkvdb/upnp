@@ -16,8 +16,8 @@
 
 #include "utils/signal.h"
 #include "utils/log.h"
+#include "gtest/gtest.h"
 
-#include <gtest/gtest.h>
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -29,7 +29,7 @@
 #include "upnpobjectprinter.h"
 
 #include "upnp/upnpaction.h"
-#include "upnp/upnpavtransport.h"
+#include "upnp/upnpavtransportclient.h"
 #include "upnp/upnpxmlutils.h"
 
 using namespace utils;
@@ -45,7 +45,7 @@ static const std::string g_controlUrl               = "ControlUrl";
 static const std::string g_subscriptionUrl          = "SubscriptionUrl";
 static const std::string g_serviceDescriptionUrl    = "ServiceDescriptionUrl";
 static const std::string g_eventNameSpaceId         = "AVS";
-static const std::string g_connectionId             = "0";
+static const uint32_t g_connectionId                = 0;
 static const uint32_t g_defaultTimeout              = 1801;
 static const Upnp_SID g_subscriptionId              = "subscriptionId";
 
@@ -58,7 +58,7 @@ public:
 protected:
     void SetUp()
     {
-        avtransport.reset(new AVTransport(client));
+        avtransport.reset(new AVTransport::Client(client));
         
         Service service;
         service.m_Type                  = ServiceType::AVTransport;
@@ -157,69 +157,69 @@ protected:
         client.UPnPEventOccurredEvent(&event);
     }
     
-    std::unique_ptr<AVTransport>            avtransport;
+    std::unique_ptr<AVTransport::Client>    avtransport;
     StrictMock<ClientMock>                  client;
     StrictMock<EventListenerMock>           eventListener;
 };
 
 TEST_F(AVTransportTest, supportedActions)
 {
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetCurrentTransportActions));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetDeviceCapabilities));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetMediaInfo));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetPositionInfo));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetTransportInfo));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::GetTransportSettings));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Next));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Pause));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Play));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Previous));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Seek));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::SetAVTransportURI));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::SetPlayMode));
-    EXPECT_TRUE(avtransport->supportsAction(AVTransportAction::Stop));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetCurrentTransportActions));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetDeviceCapabilities));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetMediaInfo));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetPositionInfo));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetTransportInfo));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::GetTransportSettings));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Next));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Pause));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Play));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Previous));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Seek));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::SetAVTransportURI));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::SetPlayMode));
+    EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Stop));
     
-    EXPECT_FALSE(avtransport->supportsAction(AVTransportAction::Record));
-    EXPECT_FALSE(avtransport->supportsAction(AVTransportAction::SetRecordQualityMode));
-    EXPECT_FALSE(avtransport->supportsAction(AVTransportAction::SetNextAVTransportURI));
+    EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::Record));
+    EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::SetRecordQualityMode));
+    EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::SetNextAVTransportURI));
 }
 
 TEST_F(AVTransportTest, lastChangeEvent)
 {
-    std::map<AVTransportVariable, std::string> lastChange;
-    EXPECT_CALL(eventListener, AVTransportLastChangedEvent(AVTransportVariable::LastChange, _))
+    std::map<AVTransport::Variable, std::string> lastChange;
+    EXPECT_CALL(eventListener, AVTransportLastChangedEvent(AVTransport::Variable::LastChange, _))
         .WillOnce(SaveArg<1>(&lastChange));
     
     triggerLastChangeUpdate();
     
-    EXPECT_EQ("PLAYING",            lastChange[AVTransportVariable::TransportState]);
-    EXPECT_EQ("OK",                 lastChange[AVTransportVariable::TransportStatus]);
-    EXPECT_EQ("NETWORK",            lastChange[AVTransportVariable::PlaybackStorageMedium]);
-    EXPECT_EQ("01:05",              lastChange[AVTransportVariable::CurrentTrackDuration]);
-    EXPECT_EQ("http://someurl.mp3", lastChange[AVTransportVariable::AVTransportURI]);
-    EXPECT_EQ("media",              lastChange[AVTransportVariable::PossiblePlaybackStorageMedia]);
-    EXPECT_EQ("NORMAL",             lastChange[AVTransportVariable::CurrentPlayMode]);
-    EXPECT_EQ("1",                  lastChange[AVTransportVariable::TransportPlaySpeed]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::RecordMediumWriteStatus]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::RecordStorageMedium]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::CurrentRecordQualityMode]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::PossibleRecordQualityModes]);
-    EXPECT_EQ("1",                  lastChange[AVTransportVariable::NumberOfTracks]);
-    EXPECT_EQ("1",                  lastChange[AVTransportVariable::CurrentTrack]);
-    EXPECT_EQ("01:06",              lastChange[AVTransportVariable::CurrentMediaDuration]);
-    EXPECT_EQ("Metadata",           lastChange[AVTransportVariable::CurrentTrackMetaData]);
-    EXPECT_EQ("http://trackurl.mp3",lastChange[AVTransportVariable::CurrentTrackURI]);
-    EXPECT_EQ("AVmetadata",         lastChange[AVTransportVariable::AVTransportURIMetaData]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::NextAVTransportURI]);
-    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransportVariable::NextAVTransportURIMetaData]);
-    EXPECT_EQ("00:30",              lastChange[AVTransportVariable::RelativeTimePosition]);
-    EXPECT_EQ("00:10",              lastChange[AVTransportVariable::AbsoluteTimePosition]);
-    EXPECT_EQ("4",                  lastChange[AVTransportVariable::RelativeCounterPosition]);
-    EXPECT_EQ("1",                  lastChange[AVTransportVariable::AbsoluteCounterPosition]);
-    EXPECT_EQ("Prev,Next,Stop",     lastChange[AVTransportVariable::CurrentTransportActions]);
-    EXPECT_EQ("TRACK_NR",           lastChange[AVTransportVariable::ArgumentTypeSeekMode]);
-    EXPECT_EQ("target",             lastChange[AVTransportVariable::ArgumentTypeSeekTarget]);
-    EXPECT_EQ("InstanceId",         lastChange[AVTransportVariable::ArgumentTypeInstanceId]);
+    EXPECT_EQ("PLAYING",            lastChange[AVTransport::Variable::TransportState]);
+    EXPECT_EQ("OK",                 lastChange[AVTransport::Variable::TransportStatus]);
+    EXPECT_EQ("NETWORK",            lastChange[AVTransport::Variable::PlaybackStorageMedium]);
+    EXPECT_EQ("01:05",              lastChange[AVTransport::Variable::CurrentTrackDuration]);
+    EXPECT_EQ("http://someurl.mp3", lastChange[AVTransport::Variable::AVTransportURI]);
+    EXPECT_EQ("media",              lastChange[AVTransport::Variable::PossiblePlaybackStorageMedia]);
+    EXPECT_EQ("NORMAL",             lastChange[AVTransport::Variable::CurrentPlayMode]);
+    EXPECT_EQ("1",                  lastChange[AVTransport::Variable::TransportPlaySpeed]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::RecordMediumWriteStatus]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::RecordStorageMedium]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::CurrentRecordQualityMode]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::PossibleRecordQualityModes]);
+    EXPECT_EQ("1",                  lastChange[AVTransport::Variable::NumberOfTracks]);
+    EXPECT_EQ("1",                  lastChange[AVTransport::Variable::CurrentTrack]);
+    EXPECT_EQ("01:06",              lastChange[AVTransport::Variable::CurrentMediaDuration]);
+    EXPECT_EQ("Metadata",           lastChange[AVTransport::Variable::CurrentTrackMetaData]);
+    EXPECT_EQ("http://trackurl.mp3",lastChange[AVTransport::Variable::CurrentTrackURI]);
+    EXPECT_EQ("AVmetadata",         lastChange[AVTransport::Variable::AVTransportURIMetaData]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::NextAVTransportURI]);
+    EXPECT_EQ("NOT_IMPLEMENTED",    lastChange[AVTransport::Variable::NextAVTransportURIMetaData]);
+    EXPECT_EQ("00:30",              lastChange[AVTransport::Variable::RelativeTimePosition]);
+    EXPECT_EQ("00:10",              lastChange[AVTransport::Variable::AbsoluteTimePosition]);
+    EXPECT_EQ("4",                  lastChange[AVTransport::Variable::RelativeCounterPosition]);
+    EXPECT_EQ("1",                  lastChange[AVTransport::Variable::AbsoluteCounterPosition]);
+    EXPECT_EQ("Prev,Next,Stop",     lastChange[AVTransport::Variable::CurrentTransportActions]);
+    EXPECT_EQ("TRACK_NR",           lastChange[AVTransport::Variable::ArgumentTypeSeekMode]);
+    EXPECT_EQ("target",             lastChange[AVTransport::Variable::ArgumentTypeSeekTarget]);
+    EXPECT_EQ("InstanceId",         lastChange[AVTransport::Variable::ArgumentTypeInstanceId]);
     
 }
 
@@ -298,14 +298,14 @@ TEST_F(AVTransportTest, getTransportInfo)
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
-                                                { "CurrentTransportState",  "Transport state" },
-                                                { "CurrentTransportStatus", "Transport status" },
+                                                { "CurrentTransportState",  "PLAYING" },
+                                                { "CurrentTransportStatus", "OK" },
                                                 { "CurrentSpeed",           "Speed"} } )));
     
     AVTransport::TransportInfo info = avtransport->getTransportInfo(g_connectionId);
-    EXPECT_EQ(info.currentTransportState,       "Transport state");
-    EXPECT_EQ(info.currentTransportStatus,      "Transport status");
-    EXPECT_EQ(info.currentSpeed,                "Speed");
+    EXPECT_EQ(AVTransport::State::Playing,      info.currentTransportState);
+    EXPECT_EQ(AVTransport::Status::Ok,          info.currentTransportStatus);
+    EXPECT_STREQ("Speed",                       info.currentSpeed.c_str());
 }
 
 TEST_F(AVTransportTest, getPositionInfo)
@@ -324,7 +324,7 @@ TEST_F(AVTransportTest, getPositionInfo)
                                                 { "TrackMetaData", "Meta" },
                                                 { "TrackURI",      "URI"} } )));
     
-    AVTransport::PositionInfo info = avtransport->getPositionInfo(g_connectionId);
+    AVTransport::Client::PositionInfo info = avtransport->getPositionInfo(g_connectionId);
     EXPECT_EQ(info.absCount,        "Absolute count");
     EXPECT_EQ(info.absTime,         "Absolute Time");
     EXPECT_EQ(info.relTime,         "Relative Time");

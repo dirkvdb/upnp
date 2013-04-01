@@ -18,7 +18,8 @@
 #include "utils/log.h"
 #include "utils/timeoperations.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -30,7 +31,7 @@
 #include "testutils.h"
 
 #include "upnp/upnpaction.h"
-#include "upnp/upnpcontentdirectory.h"
+#include "upnp/upnpcontentdirectoryclient.h"
 
 
 using namespace utils;
@@ -52,12 +53,10 @@ static const std::string g_connectionId             = "0";
 static const uint32_t g_defaultTimeout              = 1801;
 static const Upnp_SID g_subscriptionId              = "subscriptionId";
 
-class ItemSubscriber : public utils::ISubscriber<std::shared_ptr<Item>>
+class ItemSubscriber
 {
 public:
-    MOCK_METHOD2(onItem, void(std::shared_ptr<Item>, void*));
-    MOCK_METHOD1(finalItemReceived, void(void*));
-    MOCK_METHOD1(onError, void(std::string&));
+    MOCK_METHOD1(onItem, void(const std::shared_ptr<Item>&));
 };
 
 
@@ -69,7 +68,7 @@ public:
 protected:
     void SetUp()
     {
-        contentDirectory.reset(new ContentDirectory(client));
+        contentDirectory.reset(new ContentDirectory::Client(client));
         
         Service service;
         service.m_Type = ServiceType::ContentDirectory;
@@ -202,9 +201,9 @@ protected:
         return items;
     }
     
-    std::unique_ptr<ContentDirectory>       contentDirectory;
-    StrictMock<ClientMock>                  client;
-    StrictMock<EventListenerMock>           eventListener;
+    std::unique_ptr<ContentDirectory::Client>   contentDirectory;
+    StrictMock<ClientMock>                      client;
+    StrictMock<EventListenerMock>               eventListener;
 };
 
 TEST_F(ContentDirectoryTest, getSearchCapabilities)
@@ -228,11 +227,11 @@ TEST_F(ContentDirectoryTest, getSortCapabilities)
 
 TEST_F(ContentDirectoryTest, supportedActions)
 {
-    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectoryAction::GetSearchCapabilities));
-    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectoryAction::GetSortCapabilities));
-    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectoryAction::GetSystemUpdateID));
-    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectoryAction::Browse));
-    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectoryAction::Search));
+    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectory::Action::GetSearchCapabilities));
+    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectory::Action::GetSortCapabilities));
+    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectory::Action::GetSystemUpdateID));
+    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectory::Action::Browse));
+    EXPECT_TRUE(contentDirectory->supportsAction(ContentDirectory::Action::Search));
 }
 
 TEST_F(ContentDirectoryTest, browseAction)
@@ -254,13 +253,13 @@ TEST_F(ContentDirectoryTest, browseAction)
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem"))));
-    EXPECT_CALL(subscriber, onItem(_, _))
+    EXPECT_CALL(subscriber, onItem(_))
         .Times(static_cast<int>(size * 2))
-        .WillRepeatedly(Invoke([&] (std::shared_ptr<Item> item, void*) {
+        .WillRepeatedly(Invoke([&] (const std::shared_ptr<Item>& item) {
             receivedItems.push_back(item);
         }));
 
-    auto result = contentDirectory->browseDirectChildren(ContentDirectory::All, subscriber, "ObjectId", "filter", 0, 100, "sort");
+    auto result = contentDirectory->browseDirectChildren(ContentDirectory::Client::All, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, 100, "sort");
     EXPECT_EQ(size, result.totalMatches);
     EXPECT_EQ(size, result.numberReturned);
     
@@ -331,11 +330,11 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestAll)
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem"))));
-    EXPECT_CALL(subscriber, onItem(_, _)).Times(static_cast<int>(size * 2));
+    EXPECT_CALL(subscriber, onItem(_)).Times(static_cast<int>(size * 2));
     
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test");
-    contentDirectory->browseDirectChildren(ContentDirectory::All, subscriber, "ObjectId", "filter", 0, size*2, "sort");
+    contentDirectory->browseDirectChildren(ContentDirectory::Client::All, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, size*2, "sort");
     log::info("Performance test finished: took %dms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 
@@ -355,11 +354,11 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
     InSequence seq;
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"), {})));
-    EXPECT_CALL(subscriber, onItem(_, _)).Times(static_cast<int>(size));
+    EXPECT_CALL(subscriber, onItem(_)).Times(static_cast<int>(size));
     
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test containers only");
-    contentDirectory->browseDirectChildren(ContentDirectory::ContainersOnly, subscriber, "ObjectId", "filter", 0, size, "sort");
+    contentDirectory->browseDirectChildren(ContentDirectory::Client::ContainersOnly, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, size, "sort");
     log::info("Performance test finished: took %dms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 

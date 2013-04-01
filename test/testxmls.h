@@ -917,9 +917,14 @@ static const std::string contentDirectoryServiceDescription =
 
 struct EventValue
 {
-    EventValue(const std::string& name, const std::string& value, const std::map<std::string, std::string>& attrs = {})
-    : name(name)
-    , value(value)
+    EventValue(const std::string& eventName, const std::string& eventValue)
+    : name(eventName)
+    , value(eventValue)
+    {}
+
+    EventValue(const std::string& eventName, const std::string& eventValue, const std::map<std::string, std::string>& attrs)
+    : name(eventName)
+    , value(eventValue)
     , attributes(attrs)
     {}
 

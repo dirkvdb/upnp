@@ -17,11 +17,11 @@
 #ifndef EVENT_LISTENER_MOCK_H
 #define EVENT_LISTENER_MOCK_H
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
-#include "upnpavtransport.h"
-#include "upnprenderingcontrol.h"
-#include "upnpcontentdirectory.h"
+#include "upnpavtransportclient.h"
+#include "upnprenderingcontrolclient.h"
+#include "upnpcontentdirectoryclient.h"
 
 namespace upnp
 {
@@ -31,9 +31,9 @@ namespace test
 class EventListenerMock
 {
 public:
-    MOCK_METHOD2(RenderingControlLastChangedEvent, void(RenderingControlVariable, const std::map<RenderingControlVariable, std::string>&));
-    MOCK_METHOD2(AVTransportLastChangedEvent, void(AVTransportVariable, const std::map<AVTransportVariable, std::string>&));
-    MOCK_METHOD2(ContentDirectoryLastChangedEvent, void(ContentDirectoryVariable, const std::map<ContentDirectoryVariable, std::string>&));
+    MOCK_METHOD2(RenderingControlLastChangedEvent, void(RenderingControl::Variable, const std::map<RenderingControl::Variable, std::string>&));
+    MOCK_METHOD2(AVTransportLastChangedEvent, void(AVTransport::Variable, const std::map<AVTransport::Variable, std::string>&));
+    MOCK_METHOD2(ContentDirectoryLastChangedEvent, void(ContentDirectory::Variable, const std::map<ContentDirectory::Variable, std::string>&));
 };
 
 }

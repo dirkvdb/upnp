@@ -16,8 +16,8 @@
 
 #include "utils/signal.h"
 #include "utils/log.h"
+#include "gtest/gtest.h"
 
-#include <gtest/gtest.h>
 #include <iostream>
 #include <algorithm>
 #include <memory>
