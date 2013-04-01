@@ -226,7 +226,7 @@ TEST_F(AVTransportTest, lastChangeEvent)
 TEST_F(AVTransportTest, playDefaultSpeed)
 {
     Action expectedAction("Play", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     expectedAction.addArgument("Speed", "1");
     
     EXPECT_CALL(client, sendAction(expectedAction))
@@ -238,7 +238,7 @@ TEST_F(AVTransportTest, playDefaultSpeed)
 TEST_F(AVTransportTest, play)
 {
     Action expectedAction("Play", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     expectedAction.addArgument("Speed", "2");
     
     EXPECT_CALL(client, sendAction(expectedAction))
@@ -250,7 +250,7 @@ TEST_F(AVTransportTest, play)
 TEST_F(AVTransportTest, stop)
 {
     Action expectedAction("Stop", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
@@ -261,7 +261,7 @@ TEST_F(AVTransportTest, stop)
 TEST_F(AVTransportTest, pause)
 {
     Action expectedAction("Pause", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
@@ -272,7 +272,7 @@ TEST_F(AVTransportTest, pause)
 TEST_F(AVTransportTest, previous)
 {
     Action expectedAction("Previous", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
@@ -283,7 +283,7 @@ TEST_F(AVTransportTest, previous)
 TEST_F(AVTransportTest, next)
 {
     Action expectedAction("Next", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID", g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
@@ -294,7 +294,7 @@ TEST_F(AVTransportTest, next)
 TEST_F(AVTransportTest, getTransportInfo)
 {
     Action expectedAction("GetTransportInfo", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID",    g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
@@ -311,7 +311,7 @@ TEST_F(AVTransportTest, getTransportInfo)
 TEST_F(AVTransportTest, getPositionInfo)
 {
     Action expectedAction("GetPositionInfo", g_controlUrl, ServiceType::AVTransport);
-    expectedAction.addArgument("InstanceID",    g_connectionId);
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {

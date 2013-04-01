@@ -182,5 +182,30 @@ TEST_F(WebServerTest, addRemoveVirtualDir)
     EXPECT_THROW(httpClient.getContentLength(url), std::logic_error);
 }
 
+TEST_F(WebServerTest, restartServer)
+{
+    auto file = createTextFile();
+    webserver->addVirtualDirectory("virtualDir");
+    webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);
+    
+    std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
+
+    EXPECT_EQ(file.size(), httpClient.getContentLength(url));
+    EXPECT_EQ(file, httpClient.getText(url));
+
+    webserver.reset();
+    client.destroy();
+    client.initialize();
+    webserver.reset(new WebServer("/"));
+
+    webserver->addVirtualDirectory("virtualDir");
+    webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);
+    
+    url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
+
+    EXPECT_EQ(file.size(), httpClient.getContentLength(url));
+    EXPECT_EQ(file, httpClient.getText(url));
+}
+
 }
 }

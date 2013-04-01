@@ -19,9 +19,9 @@
 
 #include "gtest/gtest.h"
 
-#include "upnpavtransportclient.h"
-#include "upnprenderingcontrolclient.h"
-#include "upnpcontentdirectoryclient.h"
+#include "upnp/upnpavtransportclient.h"
+#include "upnp/upnprenderingcontrolclient.h"
+#include "upnp/upnpcontentdirectoryclient.h"
 
 namespace upnp
 {

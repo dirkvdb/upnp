@@ -19,7 +19,7 @@
 
 #include "gmock/gmock.h"
 
-#include "upnpclientinterface.h"
+#include "upnp/upnpclientinterface.h"
 
 using namespace testing;
 

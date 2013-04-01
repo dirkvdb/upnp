@@ -174,7 +174,7 @@ TEST_F(RenderingControlTest, setVolume)
         Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
         expectedAction.addArgument("Channel", "Master");
         expectedAction.addArgument("DesiredVolume", value.second);
-        expectedAction.addArgument("InstanceID", g_connectionId);
+        expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
                 
         EXPECT_CALL(client, sendAction(expectedAction))
             .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
