@@ -50,6 +50,10 @@ void RootDevice::initialize()
 {
     handleUPnPResult(UpnpRegisterRootDevice2(UPNPREG_BUF_DESC, m_DescriptionXml.c_str(), m_DescriptionXml.size() + 1, 1, RootDevice::upnpCallback, this, &m_Device));
     handleUPnPResult(UpnpSendAdvertisement(m_Device, m_AdvertiseInterval));
+    
+    m_AdvertiseThread.run(std::chrono::seconds(m_AdvertiseInterval - 10), [this] () {
+        UpnpSendAdvertisement(m_Device, m_AdvertiseInterval);
+    });
 }
 
 void RootDevice::destroy()
@@ -58,6 +62,7 @@ void RootDevice::destroy()
     {
         log::debug("Unregister root device");
         handleUPnPResult(UpnpUnRegisterRootDevice(m_Device));
+        m_AdvertiseThread.cancel();
         m_Device = 0;
     }
 }
