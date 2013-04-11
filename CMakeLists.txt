@@ -65,6 +65,8 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
+SET (CMAKE_CXX_FLAGS_DEBUG "-g -rdynamic -O0 -Wall -Wfatal-errors -Wno-deprecated-declarations")
+
 IF (UNIX OR APPLE)
     ADD_DEFINITIONS("-DCONSOLE_SUPPORTS_COLOR")
 ENDIF (UNIX OR APPLE)
