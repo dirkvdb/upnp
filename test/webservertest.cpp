@@ -123,16 +123,16 @@ TEST_F(WebServerTest, downloadPartialBinaryFile)
     
     // read byte 1 and 2
     auto result = httpClient.getData(url, 0, 2);
-    EXPECT_EQ(2, result.size());
-    EXPECT_EQ(1, result[0]);
-    EXPECT_EQ(2, result[1]);
+    EXPECT_EQ(2U, result.size());
+    EXPECT_EQ(1U, result[0]);
+    EXPECT_EQ(2U, result[1]);
     
     // read byte 5 and 6
     result = httpClient.getData(url, 4, 2);
     
-    EXPECT_EQ(2, result.size());
-    EXPECT_EQ(5, result[0]);
-    EXPECT_EQ(6, result[1]);
+    EXPECT_EQ(2U, result.size());
+    EXPECT_EQ(5U, result[0]);
+    EXPECT_EQ(6U, result[1]);
 }
 
 
