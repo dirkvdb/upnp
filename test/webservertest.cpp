@@ -150,7 +150,7 @@ TEST_F(WebServerTest, downloadBinaryFileUsingHttpReader)
     
     reader.open(url);
     EXPECT_EQ(file.size(), reader.getContentLength());
-    EXPECT_EQ(0, reader.currentPosition());
+    EXPECT_EQ(0U, reader.currentPosition());
     
     uint64_t size = reader.getContentLength();
     std::vector<uint8_t> result(size, '\0');

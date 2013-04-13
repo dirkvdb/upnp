@@ -231,7 +231,7 @@ TEST_F(ServiceBaseTest, stateVariableEvent)
     
     triggerLastChangeUpdate();
     
-    EXPECT_EQ(1, lastChange.size());
+    EXPECT_EQ(1U, lastChange.size());
     EXPECT_EQ("VarValue", lastChange[ServiceImplVariable::Var1]);
     
     EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));

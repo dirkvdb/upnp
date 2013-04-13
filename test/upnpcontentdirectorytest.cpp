@@ -210,7 +210,7 @@ TEST_F(ContentDirectoryTest, getSearchCapabilities)
 {
     auto props = contentDirectory->getSearchCapabilities();
 
-    EXPECT_EQ(2, props.size());
+    EXPECT_EQ(2U, props.size());
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Artist));
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Title));
 }
