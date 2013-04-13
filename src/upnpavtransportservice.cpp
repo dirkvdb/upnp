@@ -189,6 +189,12 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
 
 void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& value)
 {
+    if (getInstanceVariable(id, var).getValue() == value)
+    {
+        // value is the same
+        return;
+    }
+
     DeviceService::setInstanceVariable(id, var, value);
 
     if (var == Variable::RelativeTimePosition ||
