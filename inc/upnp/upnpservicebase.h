@@ -70,7 +70,8 @@ public:
     
     void subscribe()
     {
-        unsubscribe();
+        try { unsubscribe(); }
+        catch (std::exception& e) { utils::log::warn(e.what()); }
         
         m_Client.UPnPEventOccurredEvent.connect(std::bind(&ServiceBase::eventOccurred, this, std::placeholders::_1), this);
         m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, getSubscriptionTimeout(), &ServiceBase::eventCb, this);
@@ -81,7 +82,7 @@ public:
         if (!m_SubscriptionId.empty())
         {
             m_Client.UPnPEventOccurredEvent.disconnect(this);
-            m_Client.unsubscribeFromService(&(m_SubscriptionId[0]));
+            m_Client.unsubscribeFromService(m_SubscriptionId);
             m_SubscriptionId.clear();
         }
     }
