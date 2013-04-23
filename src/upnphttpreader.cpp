@@ -85,11 +85,12 @@ uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
     if (upperLimit >= m_ContentLength)
     {
         upperLimit = m_ContentLength;
+        size = m_ContentLength - m_CurrentPosition;
     }
     
     m_httpClient.getData(m_Url, pData, m_CurrentPosition, upperLimit - m_CurrentPosition);
     m_CurrentPosition += size;
-
+    
     return size;
 }
 

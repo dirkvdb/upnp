@@ -16,6 +16,8 @@
 
 #include "upnp/upnpclient.h"
 
+#include <upnp/upnpconfig.h>
+
 #include "utils/log.h"
 
 #include <stdexcept>
@@ -43,7 +45,11 @@ void Client::initialize(const char* interfaceName, int port)
 {
     log::debug("Initializing UPnP SDK");
     
+#ifdef UPNP_ENABLE_IPV6
     int rc = UpnpInit2(interfaceName, port);
+#else
+    int rc = UpnpInit(interfaceName, port);
+#endif
     if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
     {
         UpnpFinish();

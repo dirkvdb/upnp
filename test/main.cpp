@@ -27,6 +27,8 @@ int main(int argc, char **argv)
         return 1;
     }
     
+    FLAGS_gmock_verbose = "error";
+    
     InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 }

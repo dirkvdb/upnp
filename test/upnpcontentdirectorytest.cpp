@@ -210,7 +210,7 @@ TEST_F(ContentDirectoryTest, getSearchCapabilities)
 {
     auto props = contentDirectory->getSearchCapabilities();
 
-    EXPECT_EQ(2, props.size());
+    EXPECT_EQ(2U, props.size());
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Artist));
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Title));
 }
@@ -219,7 +219,7 @@ TEST_F(ContentDirectoryTest, getSortCapabilities)
 {
     auto props = contentDirectory->getSortCapabilities();
     
-    EXPECT_EQ(3, props.size());
+    EXPECT_EQ(3U, props.size());
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Artist));
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Title));
     EXPECT_NE(props.end(), std::find(props.begin(), props.end(), Property::Genre));
@@ -294,7 +294,7 @@ TEST_F(ContentDirectoryTest, browseAction)
             EXPECT_EQ("Id" + index,             item->getObjectId());
             EXPECT_EQ("ParentId",               item->getParentId());
             EXPECT_EQ("Title" + index,          item->getTitle());
-            EXPECT_EQ(0,                        item->getChildCount());
+            EXPECT_EQ(0U,                       item->getChildCount());
             
             EXPECT_EQ("Actor" + index,          item->getMetaData(Property::Actor));
             EXPECT_EQ("Album" + index,          item->getMetaData(Property::Album));

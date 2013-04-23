@@ -123,16 +123,16 @@ TEST_F(WebServerTest, downloadPartialBinaryFile)
     
     // read byte 1 and 2
     auto result = httpClient.getData(url, 0, 2);
-    EXPECT_EQ(2, result.size());
-    EXPECT_EQ(1, result[0]);
-    EXPECT_EQ(2, result[1]);
+    EXPECT_EQ(2U, result.size());
+    EXPECT_EQ(1U, result[0]);
+    EXPECT_EQ(2U, result[1]);
     
     // read byte 5 and 6
     result = httpClient.getData(url, 4, 2);
     
-    EXPECT_EQ(2, result.size());
-    EXPECT_EQ(5, result[0]);
-    EXPECT_EQ(6, result[1]);
+    EXPECT_EQ(2U, result.size());
+    EXPECT_EQ(5U, result[0]);
+    EXPECT_EQ(6U, result[1]);
 }
 
 
@@ -150,7 +150,7 @@ TEST_F(WebServerTest, downloadBinaryFileUsingHttpReader)
     
     reader.open(url);
     EXPECT_EQ(file.size(), reader.getContentLength());
-    EXPECT_EQ(0, reader.currentPosition());
+    EXPECT_EQ(0U, reader.currentPosition());
     
     uint64_t size = reader.getContentLength();
     std::vector<uint8_t> result(size, '\0');

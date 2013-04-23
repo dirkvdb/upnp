@@ -58,6 +58,18 @@ public:
     
     virtual xml::Document getSubscriptionResponse() = 0;
     
+    ServiceVariable getVariable(VariableType var)
+    {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        return m_Variables[0][var];
+    }
+    
+    ServiceVariable getInstanceVariable(uint32_t id, VariableType var)
+    {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        return m_Variables.at(id)[var];
+    }
+    
     void setVariable(VariableType var, const std::string& value)
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
@@ -134,18 +146,6 @@ protected:
         var.appendChild(value);
         prop.appendChild(var);
         elem.appendChild(prop);
-    }
-    
-    ServiceVariable getVariable(VariableType var)
-    {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_Variables[0][var];
-    }
-    
-    ServiceVariable getInstanceVariable(uint32_t id, VariableType var)
-    {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_Variables.at(id)[var];
     }
     
     std::string vectorToCSV(const std::vector<std::string>& items)

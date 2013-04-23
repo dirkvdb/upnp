@@ -184,7 +184,7 @@ TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
     EXPECT_NE(nullptr, iter->valueRange);
     EXPECT_EQ(0, iter->valueRange->minimumValue);
     EXPECT_EQ(100, iter->valueRange->maximumValue);
-    EXPECT_EQ(1, iter->valueRange->step);
+    EXPECT_EQ(1U, iter->valueRange->step);
 }
 
 }
