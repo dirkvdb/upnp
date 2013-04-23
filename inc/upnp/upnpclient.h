@@ -27,25 +27,25 @@ class Client : public IClient
 public:
     Client();
     Client(const Client&) = delete;
-    ~Client();
+    virtual ~Client();
 
     Client& operator=(const Client&) = delete;
     
-    virtual void initialize(const char* interfaceName = nullptr, int port = 0);
-    virtual void destroy();
-    virtual void reset();
+    virtual void initialize(const char* interfaceName = nullptr, int port = 0) override;
+    virtual void destroy() override;
+    virtual void reset() override;
     
-    virtual std::string getIpAddress() const;
-    virtual int32_t getPort() const;
+    virtual std::string getIpAddress() const override;
+    virtual int32_t getPort() const override;
     
-    virtual void searchDevices(Device::Type type, int timeout) const;
+    virtual void searchDevices(Device::Type type, int timeout) const override;
     
-    virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const;
-    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const;
-    virtual void unsubscribeFromService(const std::string& subscriptionId) const;
+    virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const override;
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const override;
+    virtual void unsubscribeFromService(const std::string& subscriptionId) const override;
     
-    virtual xml::Document sendAction(const Action& action) const;
-    virtual xml::Document downloadXmlDocument(const std::string& url) const;
+    virtual xml::Document sendAction(const Action& action) const override;
+    virtual xml::Document downloadXmlDocument(const std::string& url) const override;
  
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);

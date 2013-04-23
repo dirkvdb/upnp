@@ -115,27 +115,49 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
 
     stopPlaybackIfNecessary();
 
-    std::stringstream playlist;
-    
     auto parentItem = std::make_shared<Item>(item->getParentId());
     auto items = server.getItemsInContainer(parentItem, 0, 100);
     
+    std::vector<std::shared_ptr<Item>> supportedItems;
+    
     auto iter = std::find_if(items.begin(), items.end(), [item](const std::shared_ptr<Item>& i) { return i->getObjectId() == item->getObjectId(); });
-    std::for_each(iter, items.end(), [this, &playlist] (const std::shared_ptr<Item>& i) {
+    std::for_each(iter, items.end(), [&] (const std::shared_ptr<Item>& i) {
         Resource resource;
         if (m_Renderer.supportsPlayback(i, resource))
         {
-            playlist << resource.getUrl() << std::endl;
+            supportedItems.push_back(i);
         }
     });
     
-    std::string filename = generatePlaylistFilename();
-    m_pWebServer->clearFiles();
-    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
     
-    auto playlistItem = createPlaylistItem(filename);
+    if (supportedItems.empty())
+    {
+        throw std::logic_error("No supported items");
+    }
+    else if (supportedItems.size() == 1)
+    {
+        playItem(server, supportedItems.front());
+    }
+    else
+    {
+        std::stringstream playlist;
+        for (auto& item : supportedItems)
+        {
+            Resource res;
+            if (m_Renderer.supportsPlayback(item, res))
+            {
+                playlist << res.getUrl() << std::endl;
+            }
+        }
     
-    playItem(server, playlistItem);
+        std::string filename = generatePlaylistFilename();
+        m_pWebServer->clearFiles();
+        m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
+        
+        auto playlistItem = createPlaylistItem(filename);
+        
+        playItem(server, playlistItem);
+    }
 }
 
 void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item>& container)
