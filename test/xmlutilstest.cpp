@@ -25,6 +25,7 @@ using namespace utils;
 using namespace testing;
 
 #include "upnp/upnpxmlutils.h"
+#include "upnp/upnpitem.h"
 
 namespace upnp
 {
@@ -185,6 +186,22 @@ TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
     EXPECT_EQ(0, iter->valueRange->minimumValue);
     EXPECT_EQ(100, iter->valueRange->maximumValue);
     EXPECT_EQ(1U, iter->valueRange->step);
+}
+
+TEST_F(XmlUtilsTest, itemToDocument)
+{
+    auto item = std::make_shared<Item>();
+    item->addMetaData(Property::Album, "An album");
+    item->addMetaData(Property::Class, "object.container.album.musicAlbum");
+    
+    auto doc = xml::getItemDocument(item);
+    auto didl = doc.getElementsByTagName("DIDL-Lite").getNode(0);
+    xml::Element itemElem = didl.getFirstChild();
+    
+    EXPECT_EQ(0, itemElem.getAttributeAsNumeric<uint32_t>("id"));
+    EXPECT_STREQ("", itemElem.getAttribute("parentID").c_str());
+    EXPECT_STREQ("An album", itemElem.getChildNodeValue(toString(Property::Album)).c_str());
+    EXPECT_STREQ("object.container.album.musicAlbum", itemElem.getChildNodeValue(toString(Property::Class)).c_str());
 }
 
 }

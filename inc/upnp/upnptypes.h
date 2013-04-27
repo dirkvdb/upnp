@@ -194,7 +194,7 @@ inline Property propertyFromString(const std::string& name)
     return Property::Unknown;
 }
 
-inline std::string propertyToString(Property prop)
+inline std::string toString(Property prop)
 {
     switch (prop)
     {

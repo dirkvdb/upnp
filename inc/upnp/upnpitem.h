@@ -129,7 +129,7 @@ inline std::ostream& operator<< (std::ostream& os, const Item& item)
     os << "Metadata:" << std::endl;
     for (auto& meta : item.m_MetaData)
     {
-        os << propertyToString(meta.first) << " - " << meta.second << std::endl;
+        os << toString(meta.first) << " - " << meta.second << std::endl;
     }
     
     return os;

@@ -24,11 +24,13 @@
 
 #include <upnp/upnp.h>
 
+#include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "utils/stringoperations.h"
 
 namespace upnp
 {
+
 namespace xml
 {
 
@@ -152,8 +154,9 @@ public:
     virtual std::string getValue() const;
     std::string getAttribute(const std::string& attr);
     std::string getAttributeOptional(const std::string& attr, const std::string& defaultValue = "");
-    void addAttribute(const std::string& name, const std::string& value);
     
+    void addAttribute(const std::string& name, const std::string& value);
+   
     template <typename T>
     T getAttributeAsNumeric(const std::string& attr)
     {
@@ -245,6 +248,7 @@ public:
     
     uint64_t size() const;
     Node getNode(uint64_t index) const;
+    Node getNode(const std::string& name) const;
     
     operator IXML_NamedNodeMap*() const;
     operator bool() const;
@@ -271,6 +275,7 @@ inline Iterator<Iterable, Node> end(const Iterable& iterable)
 std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);
 std::map<std::string, std::string> getEventValues(Document& doc);
+Document getItemDocument(const ItemPtr& item);
 
 }
 }

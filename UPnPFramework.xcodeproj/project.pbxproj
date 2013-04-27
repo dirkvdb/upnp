@@ -123,6 +123,7 @@
 		43CD8474170989E100C5B1AB /* upnphttpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846917072E7C00C5B1AB /* upnphttpclient.cpp */; };
 		43CD8475170989E100C5B1AB /* upnphttpreader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD846A17072E7C00C5B1AB /* upnphttpreader.cpp */; };
 		43F157C1155EED0C00B6F8B0 /* upnpwebserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */; };
+		43FE0126172BCD790059ABAD /* libUtils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4354A92616FF407B00F7A88F /* libUtils.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -267,6 +268,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43FE0126172BCD790059ABAD /* libUtils.a in Frameworks */,
 				4303F21A161232220057A64C /* libUPnPFrameworkNative.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

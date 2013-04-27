@@ -15,6 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpxmlutils.h"
+#include "upnp/upnpitem.h"
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
@@ -440,6 +441,17 @@ Node NamedNodeMap::getNode(uint64_t index) const
     return node;
 }
 
+Node NamedNodeMap::getNode(const std::string &name) const
+{
+    Node node = ixmlNamedNodeMap_getNamedItem(m_pNodeMap, name.c_str());
+    if (!node)
+    {
+        throw std::logic_error(stringops::format("Failed to get node from named node map: %s", name));
+    }
+    
+    return node;
+}
+
 NamedNodeMap::operator IXML_NamedNodeMap*() const
 {
     return m_pNodeMap;
@@ -637,6 +649,39 @@ std::map<std::string, std::string> getEventValues(Document& doc)
     }
     
     return values;
+}
+
+Document getItemDocument(const std::shared_ptr<Item>& item)
+{
+    Document doc;
+    
+    auto didl = doc.createElement("DIDL-Lite");
+    didl.addAttribute("xmlns", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+    didl.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
+    didl.addAttribute("xmlns:upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+    didl.addAttribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/");
+    
+    auto itemElem = doc.createElement("item");
+    itemElem.addAttribute("id", item->getObjectId());
+    itemElem.addAttribute("parentID", item->getParentId());
+    itemElem.addAttribute("restricted", "1");
+    
+    for (auto& meta : item->getMetaData())
+    {
+        try
+        {
+            auto elem = doc.createElement(toString(meta.first));
+            auto node = doc.createNode(meta.second);
+            elem.appendChild(node);
+            itemElem.appendChild(elem);
+        }
+        catch (std::exception&) { /* Unknown metadata */ }
+    }
+        
+    didl.appendChild(itemElem);
+    doc.appendChild(didl);
+    
+    return doc;
 }
 
 }

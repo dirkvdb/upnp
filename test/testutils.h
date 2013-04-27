@@ -71,7 +71,7 @@ inline xml::Document generateBrowseResponse(const std::vector<upnp::Item>& conta
         
         for (auto& meta : item.getMetaData())
         {
-            ss << "&lt;" << propertyToString(meta.first) << "&gt;" << meta.second << "&lt;/" << propertyToString(meta.first) << "&gt;";
+            ss << "&lt;" << toString(meta.first) << "&gt;" << meta.second << "&lt;/" << toString(meta.first) << "&gt;";
         }
         
         ss << "&lt;/container&gt;";
@@ -84,7 +84,7 @@ inline xml::Document generateBrowseResponse(const std::vector<upnp::Item>& conta
         
         for (auto& meta : item.getMetaData())
         {
-            ss << "&lt;" << propertyToString(meta.first) << "&gt;" << meta.second << "&lt;/" << propertyToString(meta.first) << "&gt;";
+            ss << "&lt;" << toString(meta.first) << "&gt;" << meta.second << "&lt;/" << toString(meta.first) << "&gt;";
         }
         
         ss << "&lt;/item&gt;";

@@ -229,10 +229,10 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::map<Property, 
         
         if (!canSearchForProperty(crit.first))
         {
-            throw std::logic_error("The server does not support to search on " + propertyToString(crit.first));
+            throw std::logic_error("The server does not support to search on " + toString(crit.first));
         }
 
-        critString << propertyToString(crit.first) << " contains \"" << crit.second << "\"";
+        critString << toString(crit.first) << " contains \"" << crit.second << "\"";
     }
 
     return search(container, critString.str(), onItem);
@@ -282,7 +282,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
 
     if (sort != Property::Unknown && !canSortOnProperty(sort))
     {
-        throw std::logic_error("The server does not support sort on: " + propertyToString(sort));
+        throw std::logic_error("The server does not support sort on: " + toString(sort));
     }
 
     bool itemsLeft = true;
@@ -292,7 +292,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
         std::stringstream ss;
         if (sort != Property::Unknown)
         {
-            ss << (sortMode == SortMode::Ascending ? "+" : "-") << propertyToString(sort);
+            ss << (sortMode == SortMode::Ascending ? "+" : "-") << toString(sort);
         }
         
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
