@@ -24,12 +24,13 @@
 
 #include <upnp/upnp.h>
 
-#include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "utils/stringoperations.h"
 
 namespace upnp
 {
+
+class Item;
 
 namespace xml
 {
@@ -275,7 +276,7 @@ inline Iterator<Iterable, Node> end(const Iterable& iterable)
 std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);
 std::map<std::string, std::string> getEventValues(Document& doc);
-Document getItemDocument(const ItemPtr& item);
+Document getItemDocument(const Item& item);
 
 }
 }
