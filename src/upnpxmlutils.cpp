@@ -651,7 +651,7 @@ std::map<std::string, std::string> getEventValues(Document& doc)
     return values;
 }
 
-Document getItemDocument(const std::shared_ptr<Item>& item)
+Document getItemDocument(const Item& item)
 {
     Document doc;
     
@@ -662,11 +662,11 @@ Document getItemDocument(const std::shared_ptr<Item>& item)
     didl.addAttribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/");
     
     auto itemElem = doc.createElement("item");
-    itemElem.addAttribute("id", item->getObjectId());
-    itemElem.addAttribute("parentID", item->getParentId());
+    itemElem.addAttribute("id", item.getObjectId());
+    itemElem.addAttribute("parentID", item.getParentId());
     itemElem.addAttribute("restricted", "1");
     
-    for (auto& meta : item->getMetaData())
+    for (auto& meta : item.getMetaData())
     {
         try
         {

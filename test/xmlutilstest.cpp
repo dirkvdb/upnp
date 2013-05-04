@@ -190,9 +190,9 @@ TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
 
 TEST_F(XmlUtilsTest, itemToDocument)
 {
-    auto item = std::make_shared<Item>();
-    item->addMetaData(Property::Album, "An album");
-    item->addMetaData(Property::Class, "object.container.album.musicAlbum");
+    Item item;
+    item.addMetaData(Property::Album, "An album");
+    item.addMetaData(Property::Class, "object.container.album.musicAlbum");
     
     auto doc = xml::getItemDocument(item);
     auto didl = doc.getElementsByTagName("DIDL-Lite").getNode(0);
