@@ -112,24 +112,6 @@ Item::Item(const std::string& id, const std::string& title)
     setTitle(title);
 }
 
-Item::Item(const Item& other)
-: m_ObjectId(other.m_ObjectId)
-, m_ParentId(other.m_ParentId)
-, m_MetaData(other.m_MetaData)
-, m_Resources(other.m_Resources)
-, m_ChildCount(other.m_ChildCount)
-{
-}
-
-Item::Item(Item&& other)
-: m_ObjectId(std::move(other.m_ObjectId))
-, m_ParentId(std::move(other.m_ParentId))
-, m_MetaData(std::move(other.m_MetaData))
-, m_Resources(std::move(other.m_Resources))
-, m_ChildCount(other.m_ChildCount)
-{
-}
-
 Item::~Item()
 {
 }
@@ -168,15 +150,26 @@ const std::string& Item::getParentId() const
     return m_ParentId;
 }
 
-const std::string Item::getTitle() const
+std::string Item::getTitle() const
 {
     auto iter = m_MetaData.find(Property::Title);
     return (iter == m_MetaData.end()) ? "" : iter->second;
 }
 
+std::string Item::getAlbumArtUri(dlna::ProfileId profile) const
+{
+    auto iter = m_AlbumArtUris.find(profile);
+    return (iter == m_AlbumArtUris.end()) ? "" : iter->second;
+}
+
 const std::vector<Resource>& Item::getResources() const
 {
     return m_Resources;
+}
+
+const std::map<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
+{
+    return m_AlbumArtUris;
 }
 
 uint32_t Item::getChildCount() const
@@ -258,6 +251,11 @@ void Item::setTitle(const std::string& title)
 void Item::setChildCount(uint32_t count)
 {
     m_ChildCount = count;
+}
+
+void Item::setAlbumArt(dlna::ProfileId profile, const std::string& uri)
+{
+    m_AlbumArtUris[profile] = uri;
 }
 
 void Item::addMetaData(Property prop, const std::string& value)

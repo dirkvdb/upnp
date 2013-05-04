@@ -17,7 +17,7 @@ namespace dlna
 {
 
 Info::Info(const std::string& info)
-: m_contentType(ContentType::Unknown)
+: m_profileId(ProfileId::Unknown)
 {
     auto tokens = utils::stringops::tokenize(info, ";");
     for (auto& token : tokens)
@@ -27,26 +27,16 @@ Info::Info(const std::string& info)
         {
             if (pair[0] == "DLNA.ORG_PN")
             {
-                m_contentType = ContentTypeFromString(pair[1]);
+                m_profileId = profileIdFromString(pair[1]);
             }
         }
     }
 }
     
-ContentType Info::getContentType() const
+ProfileId Info::getProfileId() const
 {
-    return m_contentType;
+    return m_profileId;
 }
     
-ContentType Info::ContentTypeFromString(const std::string& contentType)
-{
-    if (contentType == "JPEG_TN")   return ContentType::JpegThumbnail;
-    if (contentType == "JPEG_SM")   return ContentType::JpegSmall;
-    if (contentType == "JPEG_MED")  return ContentType::JpegMedium;
-    if (contentType == "JPEG_LRG")  return ContentType::JpegLarge;
-    
-    return ContentType::Unknown;
-}
-
 }
 }

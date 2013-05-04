@@ -23,6 +23,7 @@
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnpdlnainfo.h"
 
 namespace upnp
 {
@@ -73,10 +74,10 @@ public:
         Generic,
         Unknown
     };
-
+    
     explicit Item(const std::string& id = "0", const std::string& title = "");
-    Item(const Item& other);
-    Item(Item&& other);
+    Item(const Item& other) = default;
+    Item(Item&& other) = default;
     virtual ~Item();
     
     Item& operator= (const Item& other);
@@ -84,8 +85,13 @@ public:
         
     const std::string& getObjectId() const;
     const std::string& getParentId() const;
-    const std::string getTitle() const;
+    std::string getTitle() const;
+    
+    // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
+    std::string getAlbumArtUri(dlna::ProfileId profile) const;
+    
     const std::vector<Resource>& getResources() const;
+    const std::map<dlna::ProfileId, std::string>& getAlbumArtUris() const;
     
     uint32_t getChildCount() const;
     Class getClass() const;
@@ -95,6 +101,8 @@ public:
     void setParentId(const std::string& id);
     void setTitle(const std::string& title);
     void setChildCount(uint32_t count);
+    
+    void setAlbumArt(dlna::ProfileId profile, const std::string& uri);
         
     void addMetaData(Property prop, const std::string& value);
     void addResource(const Resource& resource);
@@ -105,12 +113,14 @@ public:
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
     
 private:
-    std::string                     m_ObjectId;
-    std::string                     m_ParentId;
+    std::string                             m_ObjectId;
+    std::string                             m_ParentId;
     
-    std::map<Property, std::string> m_MetaData;
-    std::vector<Resource>           m_Resources;
-    uint32_t                        m_ChildCount;
+    std::map<Property, std::string>         m_MetaData;
+    std::map<dlna::ProfileId, std::string>  m_AlbumArtUris;
+    
+    std::vector<Resource>                   m_Resources;
+    uint32_t                                m_ChildCount;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Item& item)

@@ -141,10 +141,10 @@ void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_pt
     else
     {
         std::stringstream playlist;
-        for (auto& item : supportedItems)
+        for (auto& i : supportedItems)
         {
             Resource res;
-            if (m_Renderer.supportsPlayback(item,   res))
+            if (m_Renderer.supportsPlayback(i, res))
             {
                 playlist << res.getUrl() << std::endl;
             }
