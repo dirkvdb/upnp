@@ -356,6 +356,19 @@ void Client::parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item
                     auto nodeMap = elem.getAttributes();
                     item->addResource(parseResource(nodeMap, value));
                 }
+                else if ("upnp:albumArtURI" == key)
+                {
+                    // multiple art uris can be present with different dlna profiles (size)
+                    try
+                    {
+                        item->setAlbumArt(dlna::profileIdFromString(elem.getAttribute("dlna:profileID")), value);
+                    }
+                    catch (std::exception&)
+                    {
+                        // no profile id present, add it as regular metadata
+                        addPropertyToItem(key, value, item);
+                    }
+                }
                 else
                 {
                     addPropertyToItem(key, value, item);

@@ -16,26 +16,47 @@ namespace upnp
 namespace dlna
 {
 
-enum class ContentType
+enum class ProfileId
 {
-    JpegThumbnail,
-    JpegSmall,
-    JpegMedium,
+    JpegThumbnail,  // Max 160x160
+    JpegSmall,      // Max 640x640
+    JpegMedium,     // Max 1024x768
     JpegLarge,
     Unknown
 };
+
+inline ProfileId profileIdFromString(const std::string& profile)
+{
+    if (profile == "JPEG_TN")   return ProfileId::JpegThumbnail;  
+    if (profile == "JPEG_SM")   return ProfileId::JpegSmall;      
+    if (profile == "JPEG_MED")  return ProfileId::JpegMedium;     
+    if (profile == "JPEG_LRG")  return ProfileId::JpegLarge;
+    
+    return ProfileId::Unknown;
+}
+
+inline std::string toString(ProfileId profile)
+{
+    switch (profile)
+    {
+    case ProfileId::JpegThumbnail:  return "JPEG_TN";
+    case ProfileId::JpegSmall:      return "JPEG_SM";
+    case ProfileId::JpegMedium:     return "JPEG_MED";
+    case ProfileId::JpegLarge:      return "JPEG_LRG";
+    default:
+        return "Unknown";
+    }
+}
 
 class Info
 {
 public:
     Info(const std::string& info);
     
-    ContentType getContentType() const;
+    ProfileId getProfileId() const;
     
 private:
-    static ContentType ContentTypeFromString(const std::string& contentType);
-    
-    ContentType     m_contentType;
+    ProfileId     m_profileId;
 };
 
 }

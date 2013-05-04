@@ -677,6 +677,19 @@ Document getItemDocument(const std::shared_ptr<Item>& item)
         }
         catch (std::exception&) { /* Unknown metadata */ }
     }
+    
+    for (auto& uri : item->getAlbumArtUris())
+    {
+        try
+        {
+            auto elem = doc.createElement(toString(Property::AlbumArt));
+            auto node = doc.createNode(uri.second);
+            elem.addAttribute("dlna:profileID", dlna::toString(uri.first));
+            elem.appendChild(node);
+            itemElem.appendChild(elem);
+        }
+        catch (std::exception&) { /* Unknown profileId */ }
+    }
         
     didl.appendChild(itemElem);
     doc.appendChild(didl);
