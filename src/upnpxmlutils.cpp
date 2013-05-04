@@ -678,7 +678,7 @@ Document getItemDocument(const Item& item)
         catch (std::exception&) { /* Unknown metadata */ }
     }
     
-    for (auto& uri : item->getAlbumArtUris())
+    for (auto& uri : item.getAlbumArtUris())
     {
         try
         {
