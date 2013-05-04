@@ -198,7 +198,7 @@ TEST_F(XmlUtilsTest, itemToDocument)
     auto didl = doc.getElementsByTagName("DIDL-Lite").getNode(0);
     xml::Element itemElem = didl.getFirstChild();
     
-    EXPECT_EQ(0, itemElem.getAttributeAsNumeric<uint32_t>("id"));
+    EXPECT_EQ(0U, itemElem.getAttributeAsNumeric<uint32_t>("id"));
     EXPECT_STREQ("", itemElem.getAttribute("parentID").c_str());
     EXPECT_STREQ("An album", itemElem.getChildNodeValue(toString(Property::Album)).c_str());
     EXPECT_STREQ("object.container.album.musicAlbum", itemElem.getChildNodeValue(toString(Property::Class)).c_str());
