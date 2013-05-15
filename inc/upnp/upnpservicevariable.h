@@ -44,9 +44,19 @@ public:
                 m_Attribute.second == other.m_Attribute.second;
     }
     
+    std::string getName() const
+    {
+        return m_Name;
+    }
+    
     std::string getValue() const
     {
         return m_Value;
+    }
+    
+    std::pair<std::string, std::string> getAttribute() const
+    {
+        return m_Attribute;
     }
     
     void addAttribute(const std::string& name, const std::string& value)

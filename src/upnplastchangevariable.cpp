@@ -19,6 +19,7 @@
 #include <chrono>
 
 #include "utils/log.h"
+#include "upnp/upnpxmlutils.h"
 
 using namespace utils;
 
@@ -53,6 +54,12 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
+    if (var.getName().empty())
+    {
+        log::error("Empty var added %s", var.toString());
+        return;
+    }
+    
     auto& vars = m_ChangedVariables[instanceId];
     auto iter = std::find(vars.begin(), vars.end(), var);
     if (iter == vars.end())
@@ -80,24 +87,16 @@ void LastChangeVariable::createLastChangeEvent()
         
         propertySet.addAttribute("xmlns:e", ns);
         
-        std::stringstream ss;
-        ss << "<Event xmlns=\"" << m_EventMetaNamespace << "\">" << std::endl;
+        auto event = doc.createElement("Event");
+        event.addAttribute("xmlns", m_EventMetaNamespace);
         
         for (auto& vars : m_ChangedVariables)
         {
-            ss << "<InstanceID val=\"" << vars.first << "\">" << std::endl;
-            
-            for (auto& var : vars.second)
-            {
-                ss << var.toString() << std::endl;
-            }
-            
-            ss << "</InstanceID>" << std::endl;
+            auto instance = xml::createServiceVariablesElement(doc, vars.first, vars.second);
+            event.appendChild(instance);
         }
         
-        ss << "</Event>";
-
-        auto lastChangeValue = doc.createNode(ss.str());
+        auto lastChangeValue = doc.createNode(event.toString());
 
         lastChange.appendChild(lastChangeValue);
         property.appendChild(lastChange);
@@ -107,7 +106,7 @@ void LastChangeVariable::createLastChangeEvent()
         LastChangeEvent(doc);
         
 #ifdef DEBUG_LAST_CHANGE_VAR
-        utils::log::debug("LastChange event: %s", ss.str());
+        utils::log::debug("LastChange event: %s", event.toString());
 #endif
     }
     catch (std::exception& e)

@@ -92,6 +92,14 @@ void WebServer::addFile(const std::string& virtualDir, const std::string& filena
     m_ServedFiles["/" + virtualDir].push_back(std::move(file));
 }
 
+void WebServer::removeFile(const std::string& virtualDir, const std::string& filename)
+{
+    auto& files = m_ServedFiles["/" + virtualDir];
+    files.erase(std::remove_if(files.begin(), files.end(), [&] (const std::unique_ptr<WebServer::HostedFile>& file) {
+        return file->filename == filename;
+    }), files.end());
+}
+
 void WebServer::clearFiles()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);

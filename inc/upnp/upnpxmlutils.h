@@ -31,6 +31,7 @@ namespace upnp
 {
 
 class Item;
+class ServiceVariable;
 
 namespace xml
 {
@@ -208,8 +209,6 @@ public:
     Element createElement(const std::string& name);
     Element createElementNamespaced(const std::string& nameSpace, const std::string& name);
     
-    virtual std::string toString() const;
-
 private:
     IXML_Document*  m_pDoc;
     OwnershipType   m_Ownership;
@@ -277,6 +276,9 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);
 std::map<std::string, std::string> getEventValues(Document& doc);
 Document getItemDocument(const Item& item);
+
+Element createServiceVariablesElement(Document& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars);
+Element serviceVariableToElement(Document& doc, const ServiceVariable& var);
 
 }
 }

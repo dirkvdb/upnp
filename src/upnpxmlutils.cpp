@@ -16,6 +16,7 @@
 
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpitem.h"
+#include "upnp/upnpservicevariable.h"
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
@@ -336,17 +337,6 @@ Element Document::createElementNamespaced(const std::string& nameSpace, const st
     return elem;
 }
 
-std::string Document::toString() const
-{
-    String str(ixmlPrintDocument(m_pDoc));
-    if (!str)
-    {
-        throw std::logic_error("Failed to convert document to string");
-    }
-    
-    return str;
-}
-
 NodeList::NodeList()
 : m_pList(nullptr)
 {
@@ -662,6 +652,7 @@ Document getItemDocument(const Item& item)
     didl.addAttribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/");
     
     auto itemElem = doc.createElement("item");
+    
     itemElem.addAttribute("id", item.getObjectId());
     itemElem.addAttribute("parentID", item.getParentId());
     itemElem.addAttribute("restricted", "1");
@@ -690,11 +681,39 @@ Document getItemDocument(const Item& item)
         }
         catch (std::exception&) { /* Unknown profileId */ }
     }
-        
+    
     didl.appendChild(itemElem);
     doc.appendChild(didl);
     
     return doc;
+}
+
+Element createServiceVariablesElement(Document& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars)
+{
+    auto instance = doc.createElement("InstanceID");
+    instance.addAttribute("val", std::to_string(instanceId));
+
+    for (auto& var : vars)
+    {
+        auto elem = xml::serviceVariableToElement(doc, var);
+        instance.appendChild(elem);
+    }
+
+    return instance;
+}
+
+Element serviceVariableToElement(Document& doc, const ServiceVariable& var)
+{
+    auto varElem = doc.createElement(var.getName());
+    varElem.addAttribute("val", var.getValue());
+    
+    auto attr = var.getAttribute();
+    if (!attr.first.empty())
+    {
+        varElem.addAttribute(attr.first, attr.second);
+    }
+    
+    return varElem;
 }
 
 }

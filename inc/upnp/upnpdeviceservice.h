@@ -58,16 +58,25 @@ public:
     
     virtual xml::Document getSubscriptionResponse() = 0;
     
-    ServiceVariable getVariable(VariableType var)
+    ServiceVariable getVariable(VariableType var) const
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_Variables[0][var];
+        return getInstanceVariable(0, var);
     }
     
-    ServiceVariable getInstanceVariable(uint32_t id, VariableType var)
+    ServiceVariable getInstanceVariable(uint32_t id, VariableType var) const
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_Variables.at(id)[var];
+        auto vars = m_Variables.find(id);
+        if (vars != m_Variables.end())
+        {
+            auto v = vars->second.find(var);
+            if (v != vars->second.end())
+            {
+                return v->second;
+            }
+        }
+        
+        return ServiceVariable();
     }
     
     void setVariable(VariableType var, const std::string& value)
@@ -102,20 +111,20 @@ public:
         m_Variables[id][var] = serviceVar;
     }
     
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
-    {
-        m_Variables[0][var] = std::to_string(value);
-    }
-    
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value, void>::type setInstanceVariable(uint32_t id, VariableType var, const T& value, const std::string& attrName, const std::string& attrValue)
-    {
-        ServiceVariable serviceVar(variableToString(var), value);
-        serviceVar.addAttribute(attrName, attrValue);
-        
-        m_Variables[id][var] = serviceVar;
-    }
+//    template <typename T>
+//    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
+//    {
+//        m_Variables[0][var] = std::to_string(value);
+//    }
+//    
+//    template <typename T>
+//    typename std::enable_if<std::is_integral<T>::value, void>::type setInstanceVariable(uint32_t id, VariableType var, const T& value, const std::string& attrName, const std::string& attrValue)
+//    {
+//        ServiceVariable serviceVar(variableToString(var), value);
+//        serviceVar.addAttribute(attrName, attrValue);
+//        
+//        m_Variables[id][var] = serviceVar;
+//    }
     
 protected:
     virtual std::string variableToString(VariableType type) const = 0;
@@ -184,7 +193,7 @@ protected:
     IRootDevice&                                                    m_RootDevice;
     ServiceType                                                     m_Type;
     std::map<uint32_t, std::map<VariableType, ServiceVariable>>     m_Variables;
-    std::mutex                                                      m_Mutex;
+    mutable std::mutex                                              m_Mutex;
 };
 
 }

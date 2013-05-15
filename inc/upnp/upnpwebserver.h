@@ -23,10 +23,7 @@
 #include <vector>
 #include <memory>
 
-extern "C"
-{
 #include <upnp/upnp.h>
-}
 
 namespace upnp
 {
@@ -39,6 +36,7 @@ public:
     
     void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data);
     void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data);
+    void removeFile(const std::string& virtualDir, const std::string& filename);
     
     void clearFiles();
     

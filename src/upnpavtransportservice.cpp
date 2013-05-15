@@ -50,25 +50,24 @@ xml::Document Service::getSubscriptionResponse()
     
     propertySet.addAttribute("xmlns:e", ns);
     
-    std::stringstream ss;
-    ss << "<Event xmlns=\"" << serviceTypeToUrnMetadataString(m_Type) << "\">" << std::endl;
+    auto event = doc.createElement("Event");
+    event.addAttribute("xmlns", serviceTypeToUrnMetadataString(m_Type));
     
     for (auto& vars : m_Variables)
     {
-        ss << "<InstanceID val=\"" << vars.first << "\">";
-    
+        auto instance = doc.createElement("InstanceID");
+        instance.addAttribute("val", std::to_string(vars.first));
+
         for (auto& var : vars.second)
         {
-            ss << var.second.toString();
+            auto elem = xml::serviceVariableToElement(doc, var.second);
+            instance.appendChild(elem);
         }
-        
-        ss << "</InstanceID>";
+
+        event.appendChild(instance);
     }
     
-    ss << "</Event>";
-
-
-    auto lastChangeValue = doc.createNode(ss.str());
+    auto lastChangeValue = doc.createNode(event.toString());
 
     lastChange.appendChild(lastChangeValue);
     property.appendChild(lastChange);
@@ -206,6 +205,8 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
         return;
     }
     
+    
+    log::debug("Add change: %s %s", toString(var), value);
     m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
 }
 
