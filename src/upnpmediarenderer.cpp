@@ -70,7 +70,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
     }
     catch (std::exception& e)
     {
-        throw std::logic_error(std::string("Failed to set renderer device:") + e.what());
+        throw std::logic_error(stringops::format("Failed to set renderer device: %s", e.what()));
     }
 }
 
@@ -110,6 +110,14 @@ void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& in
     if (m_AVtransport)
     {
         m_AVtransport->setAVTransportURI(info.connectionId, resource.getUrl());
+    }
+}
+
+void MediaRenderer::setNextTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+{
+    if (m_AVtransport)
+    {
+        m_AVtransport->setNextAVTransportURI(info.connectionId, resource.getUrl());
     }
 }
 
@@ -188,6 +196,12 @@ bool MediaRenderer::isActionAvailable(Action action) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     return m_AvailableActions.find(action) != m_AvailableActions.end();
+}
+
+bool MediaRenderer::supportsQueueItem() const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_AVtransport ? m_AVtransport->supportsAction(AVTransport::Action::SetNextAVTransportURI) : false;
 }
 
 void MediaRenderer::setVolume(const ConnectionManager::ConnectionInfo& info, uint32_t value)

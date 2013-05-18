@@ -73,116 +73,91 @@ void ControlPoint::deactivate()
     m_Renderer.deactivateEvents();
 }
 
-void ControlPoint::playItem(MediaServer& server, const std::shared_ptr<Item>& item)
+void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
 {
-    stopPlaybackIfNecessary();
-    
     Resource resource;
     if (!m_Renderer.supportsPlayback(item, resource))
     {
         throw std::logic_error("The requested item is not supported by the renderer");
     }
     
-    if (m_RendererSupportsPrepareForConnection)
-    {
-        if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
-        {
-            m_ServerConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                               m_Renderer.getPeerConnectionManager(),
-                                                                               ConnectionManager::UnknownConnectionId,
-                                                                               ConnectionManager::Direction::Output);
-        }
-        
-        m_RendererConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                                 server.getPeerConnectionManager(),
-                                                                                 m_ServerConnInfo.connectionId,
-                                                                                 ConnectionManager::Direction::Input);
-    }
-    else
-    {
-        m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
-        m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
-    }
+    stopPlaybackIfNecessary();
     
+    prepareConnection(server, resource);
     server.setTransportItem(m_ServerConnInfo, resource);
     m_Renderer.setTransportItem(m_RendererConnInfo, resource);
     m_Renderer.play(m_RendererConnInfo);
 }
 
-void ControlPoint::playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item)
+void ControlPoint::playItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
 {
-    throwOnMissingWebserver();
-
-    stopPlaybackIfNecessary();
-
-    auto parentItem = std::make_shared<Item>(item->getParentId());
-    auto items = server.getItemsInContainer(parentItem, 0, 100);
-    
-    std::vector<std::shared_ptr<Item>> supportedItems;
-    
-    auto iter = std::find_if(items.begin(), items.end(), [item](const std::shared_ptr<Item>& i) { return i->getObjectId() == item->getObjectId(); });
-    std::for_each(iter, items.end(), [&] (const std::shared_ptr<Item>& i) {
-        Resource resource;
-        if (m_Renderer.supportsPlayback(i, resource))
-        {
-            supportedItems.push_back(i);
-        }
-    });
-    
-    
-    if (supportedItems.empty())
+    if (items.empty())
     {
-        throw std::logic_error("No supported items");
+        throw std::logic_error("No items provided for playback");
     }
-    else if (supportedItems.size() == 1)
-    {
-        playItem(server, supportedItems.front());
-    }
-    else
-    {
-        std::stringstream playlist;
-        for (auto& i : supportedItems)
-        {
-            Resource res;
-            if (m_Renderer.supportsPlayback(i, res))
-            {
-                playlist << res.getUrl() << std::endl;
-            }
-        }
-    
-        std::string filename = generatePlaylistFilename();
-        m_pWebServer->clearFiles();
-        m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
-        
-        auto playlistItem = createPlaylistItem(filename);
-        
-        playItem(server, playlistItem);
-    }
-}
 
-void ControlPoint::playContainer(MediaServer& server, const std::shared_ptr<Item>& container)
-{
+    if (items.size() == 1)
+    {
+        return playItem(server, items.front());
+    }
+
+    // create a playlist from the provided items
     throwOnMissingWebserver();
     
-    stopPlaybackIfNecessary();
-
-    auto items = server.getItemsInContainer(container);
     std::stringstream playlist;
     for (auto& item : items)
     {
-        Resource resource;
-        if (m_Renderer.supportsPlayback(item, resource))
+        Resource res;
+        if (m_Renderer.supportsPlayback(item, res))
         {
-            playlist << resource.getUrl() << std::endl;
+            playlist << res.getUrl() << std::endl;
         }
     }
-    
+
     std::string filename = generatePlaylistFilename();
-    m_pWebServer->clearFiles();
     m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
+    playItem(server, createPlaylistItem(filename));
+}
+
+void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
+{
+    Resource resource;
+    if (!m_Renderer.supportsPlayback(item, resource))
+    {
+        throw std::logic_error("The requested item is not supported by the renderer");
+    }
     
-    auto playlistItem = createPlaylistItem(filename);
-    playItem(server, playlistItem);
+    m_Renderer.setNextTransportItem(m_RendererConnInfo, resource);
+}
+
+void ControlPoint::queueItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
+{
+    if (items.empty())
+    {
+        throw std::logic_error("No items provided for queueing");
+    }
+
+    if (items.size() == 1)
+    {
+        return playItem(server, items.front());
+    }
+
+    // create a playlist from the provided items
+    throwOnMissingWebserver();
+    
+    std::stringstream playlist;
+    for (auto& item : items)
+    {
+        Resource res;
+        if (m_Renderer.supportsPlayback(item, res))
+        {
+            playlist << res.getUrl() << std::endl;
+        }
+    }
+
+    std::string filename = generatePlaylistFilename();
+    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
+    queueItem(server, createPlaylistItem(filename));
 }
 
 void ControlPoint::resume()
@@ -223,6 +198,16 @@ void ControlPoint::previous()
     {
         m_Renderer.previous(m_RendererConnInfo);
     }
+}
+
+bool ControlPoint::supportsQueueItem() const
+{
+    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    {
+        return m_Renderer.supportsQueueItem();
+    }
+    
+    return false;
 }
 
 void ControlPoint::setVolume(uint32_t value)
@@ -279,4 +264,47 @@ std::shared_ptr<Item> ControlPoint::createPlaylistItem(const std::string& filena
     return playlistItem;
 }
 
+void ControlPoint::prepareConnection(MediaServer& server, Resource& resource)
+{
+    if (m_RendererSupportsPrepareForConnection)
+    {
+        if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
+        {
+            m_ServerConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
+                                                                               m_Renderer.getPeerConnectionManager(),
+                                                                               ConnectionManager::UnknownConnectionId,
+                                                                               ConnectionManager::Direction::Output);
+        }
+        
+        m_RendererConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
+                                                                                 server.getPeerConnectionManager(),
+                                                                                 m_ServerConnInfo.connectionId,
+                                                                                 ConnectionManager::Direction::Input);
+    }
+    else
+    {
+        m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+    }
 }
+
+//ItemPtr ControlPoint::getNextItemsInContainer(MediaServer& server, const ItemPtr& item)
+//{
+//    auto parentItem = std::make_shared<Item>(item->getParentId());
+//    auto items = server.getItemsInContainer(parentItem, 0, 100);
+//    
+//    std::vector<ItemPtr> items;
+//    
+//    auto iter = std::find_if(items.begin(), items.end(), [item](const std::shared_ptr<Item>& i) { return i->getObjectId() == item->getObjectId(); });
+//    std::for_each(iter, items.end(), [&] (const std::shared_ptr<Item>& i) {
+//        items.push_back(i);
+//    });
+//}
+//
+//ItemPtr ControlPoint::processContainer(MediaServer& server, const ItemPtr& container)
+//{
+//    auto items = server.getItemsInContainer(container);
+//}
+
+}
+

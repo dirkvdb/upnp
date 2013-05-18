@@ -51,9 +51,18 @@ public:
     void activate();
     void deactivate();
     
-    void playItem(MediaServer& server, const std::shared_ptr<Item>& item);
-    void playFromItemOnwards(MediaServer& server, const std::shared_ptr<Item>& item);
-    void playContainer(MediaServer& server, const std::shared_ptr<Item>& item);
+    // these items are immediately set as the current item, send play when stopped to
+    // actually start playback
+    void playItem(MediaServer& server, const ItemPtr& item);
+    void playItems(MediaServer& server, const std::vector<ItemPtr>& items);
+    
+    // these items are queued for playback after the current item, calling queue multiple times
+    // will overwrite the previous queue action, you have to wait until the currently queued item
+    // has been proccessed before calling queue again
+    void queueItem(MediaServer& server, const ItemPtr& item);
+    void queueItems(MediaServer& server, const std::vector<ItemPtr>& items);
+    bool supportsQueueItem() const;
+    
     void resume();
     void pause();
     void stop();
@@ -64,6 +73,8 @@ public:
     uint32_t getVolume();
     
 private:
+    void prepareConnection(MediaServer& server, Resource& resource);
+    
     void throwOnMissingWebserver();
     void stopPlaybackIfNecessary();
     std::string generatePlaylistFilename();

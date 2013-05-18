@@ -71,6 +71,7 @@ public:
 
     // AV Transport
     void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    void setNextTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
     void play(const ConnectionManager::ConnectionInfo& info);
     void pause(const ConnectionManager::ConnectionInfo& info);
     void stop(const ConnectionManager::ConnectionInfo& info);
@@ -82,6 +83,8 @@ public:
     Item getCurrentTrackInfo() const;
     std::set<Action> getAvailableActions() const;
     bool isActionAvailable(Action action) const;
+    
+    bool supportsQueueItem() const;
     
     
     // Rendering control
