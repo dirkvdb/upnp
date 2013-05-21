@@ -61,16 +61,6 @@ public:
     // has been proccessed before calling queue again
     void queueItem(MediaServer& server, const ItemPtr& item);
     void queueItems(MediaServer& server, const std::vector<ItemPtr>& items);
-    bool supportsQueueItem() const;
-    
-    void resume();
-    void pause();
-    void stop();
-    void next();
-    void previous();
-    
-    void setVolume(uint32_t value);
-    uint32_t getVolume();
     
 private:
     void prepareConnection(MediaServer& server, Resource& resource);
@@ -82,10 +72,6 @@ private:
 
     MediaRenderer                       m_Renderer;
     WebServer*                          m_pWebServer;
-    ConnectionManager::ConnectionInfo   m_ServerConnInfo;
-    ConnectionManager::ConnectionInfo   m_RendererConnInfo;
-    
-    bool                                m_RendererSupportsPrepareForConnection;
 };
     
 }

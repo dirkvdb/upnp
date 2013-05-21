@@ -105,60 +105,99 @@ std::string MediaRenderer::getPeerConnectionManager() const
     return ss.str();
 }
 
-void MediaRenderer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+void MediaRenderer::resetConnection()
+{
+    m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+}
+
+void MediaRenderer::useDefaultConnection()
+{
+    m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+}
+
+bool MediaRenderer::supportsConnectionPreparation() const
+{
+    return m_ConnectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection);
+}
+
+void MediaRenderer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t serverConnectionId)
+{
+    m_ConnInfo = m_ConnectionMgr.prepareForConnection(res.getProtocolInfo(), peerConnectionManager,
+                                                      serverConnectionId, ConnectionManager::Direction::Input);
+}
+
+void MediaRenderer::setTransportItem(Resource& resource)
 {
     if (m_AVtransport)
     {
-        m_AVtransport->setAVTransportURI(info.connectionId, resource.getUrl());
+        m_AVtransport->setAVTransportURI(m_ConnInfo.connectionId, resource.getUrl());
     }
 }
 
-void MediaRenderer::setNextTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+void MediaRenderer::setNextTransportItem(Resource& resource)
 {
     if (m_AVtransport)
     {
-        m_AVtransport->setNextAVTransportURI(info.connectionId, resource.getUrl());
+        throwOnUnknownConnectionId();
+        m_AVtransport->setNextAVTransportURI(m_ConnInfo.connectionId, resource.getUrl());
     }
 }
 
-void MediaRenderer::play(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::play()
 {
     if (m_AVtransport)
     {
-        m_AVtransport->play(info.connectionId);
+        throwOnUnknownConnectionId();
+        m_AVtransport->play(m_ConnInfo.connectionId);
     }
 }
 
-void MediaRenderer::pause(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::pause()
 {
     if (m_AVtransport)
     {
-        m_AVtransport->pause(info.connectionId);
+        throwOnUnknownConnectionId();
+        m_AVtransport->pause(m_ConnInfo.connectionId);
     }
 }
 
-void MediaRenderer::stop(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::stop()
 {
     if (m_AVtransport)
     {
-        m_AVtransport->stop(info.connectionId);
+        throwOnUnknownConnectionId();
+        m_AVtransport->stop(m_ConnInfo.connectionId);
     }
 }
 
-void MediaRenderer::next(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::next()
 {
     if (m_AVtransport)
     {
-        m_AVtransport->next(info.connectionId);
+        throwOnUnknownConnectionId();
+        m_AVtransport->next(m_ConnInfo.connectionId);
     }
 }
 
-void MediaRenderer::previous(const ConnectionManager::ConnectionInfo& info)
+void MediaRenderer::previous()
 {
     if (m_AVtransport)
     {
-        m_AVtransport->previous(info.connectionId);
+        throwOnUnknownConnectionId();
+        m_AVtransport->previous(m_ConnInfo.connectionId);
     }
+}
+
+std::string MediaRenderer::getCurrentTrackPosition()
+{
+    if (m_AVtransport)
+    {
+        throwOnUnknownConnectionId();
+        auto transportInfo = m_AVtransport->getPositionInfo(m_ConnInfo.connectionId);
+        return transportInfo.relTime;
+    }
+    
+    return "";
 }
 
 std::string MediaRenderer::getCurrentTrackURI() const
@@ -204,9 +243,10 @@ bool MediaRenderer::supportsQueueItem() const
     return m_AVtransport ? m_AVtransport->supportsAction(AVTransport::Action::SetNextAVTransportURI) : false;
 }
 
-void MediaRenderer::setVolume(const ConnectionManager::ConnectionInfo& info, uint32_t value)
+void MediaRenderer::setVolume(uint32_t value)
 {
-    m_RenderingControl.setVolume(info.connectionId, value);
+    throwOnUnknownConnectionId();
+    m_RenderingControl.setVolume(m_ConnInfo.connectionId, value);
 }
 
 uint32_t MediaRenderer::getVolume()
@@ -328,9 +368,12 @@ MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action
     }
 }
 
-ConnectionManager::Client& MediaRenderer::connectionManager()
+void MediaRenderer::throwOnUnknownConnectionId()
 {
-    return m_ConnectionMgr;
+    if (m_ConnInfo.connectionId == ConnectionManager::UnknownConnectionId)
+    {
+        throw std::logic_error("No active renderer connection");
+    }
 }
 
 }

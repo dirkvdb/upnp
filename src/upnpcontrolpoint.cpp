@@ -33,15 +33,10 @@ using namespace utils;
 namespace upnp
 {
 
-static const uint32_t maxPlaylistSize = 100;
-    
 ControlPoint::ControlPoint(Client& client)
 : m_Renderer(client)
 , m_pWebServer(nullptr)
-, m_RendererSupportsPrepareForConnection(false)
 {
-    m_ServerConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
-    m_RendererConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
 }
 
 void ControlPoint::setWebserver(WebServer& webServer)
@@ -53,9 +48,7 @@ void ControlPoint::setWebserver(WebServer& webServer)
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
     m_Renderer.setDevice(dev);
-    m_RendererSupportsPrepareForConnection = m_Renderer.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection);
-    m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
-    m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+    m_Renderer.useDefaultConnection();
 }
 
 MediaRenderer& ControlPoint::getActiveRenderer()
@@ -84,9 +77,9 @@ void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
     stopPlaybackIfNecessary();
     
     prepareConnection(server, resource);
-    server.setTransportItem(m_ServerConnInfo, resource);
-    m_Renderer.setTransportItem(m_RendererConnInfo, resource);
-    m_Renderer.play(m_RendererConnInfo);
+    server.setTransportItem(resource);
+    m_Renderer.setTransportItem(resource);
+    m_Renderer.play();
 }
 
 void ControlPoint::playItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
@@ -127,7 +120,7 @@ void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
         throw std::logic_error("The requested item is not supported by the renderer");
     }
     
-    m_Renderer.setNextTransportItem(m_RendererConnInfo, resource);
+    m_Renderer.setNextTransportItem(resource);
 }
 
 void ControlPoint::queueItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
@@ -160,78 +153,15 @@ void ControlPoint::queueItems(upnp::MediaServer &server, const std::vector<ItemP
     queueItem(server, createPlaylistItem(filename));
 }
 
-void ControlPoint::resume()
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.play(m_RendererConnInfo);
-    }
-}
-
-void ControlPoint::pause()
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.pause(m_RendererConnInfo);
-    }
-}
-
-void ControlPoint::stop()
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.stop(m_RendererConnInfo);
-    }
-}
-
-void ControlPoint::next()
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.next(m_RendererConnInfo);
-    }
-}
-
-void ControlPoint::previous()
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.previous(m_RendererConnInfo);
-    }
-}
-
-bool ControlPoint::supportsQueueItem() const
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        return m_Renderer.supportsQueueItem();
-    }
-    
-    return false;
-}
-
-void ControlPoint::setVolume(uint32_t value)
-{
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
-    {
-        m_Renderer.setVolume(m_RendererConnInfo, value);
-    }
-}
-
-uint32_t ControlPoint::getVolume()
-{
-    return m_Renderer.getVolume();
-}
-
 void ControlPoint::stopPlaybackIfNecessary()
 {
-    if (m_RendererConnInfo.connectionId != ConnectionManager::UnknownConnectionId)
+    try
     {
         if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
         {
-            m_Renderer.stop(m_RendererConnInfo);
+            m_Renderer.stop();
         }
-    }
+    } catch (std::exception&) {}
 }
 
 void ControlPoint::throwOnMissingWebserver()
@@ -266,45 +196,21 @@ std::shared_ptr<Item> ControlPoint::createPlaylistItem(const std::string& filena
 
 void ControlPoint::prepareConnection(MediaServer& server, Resource& resource)
 {
-    if (m_RendererSupportsPrepareForConnection)
+    if (m_Renderer.supportsConnectionPreparation())
     {
-        if (server.connectionManager().supportsAction(ConnectionManager::Action::PrepareForConnection))
+        if (server.supportsConnectionPreparation())
         {
-            m_ServerConnInfo = server.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                               m_Renderer.getPeerConnectionManager(),
-                                                                               ConnectionManager::UnknownConnectionId,
-                                                                               ConnectionManager::Direction::Output);
+            server.prepareConnection(resource, m_Renderer.getPeerConnectionManager(), ConnectionManager::UnknownConnectionId);
         }
         
-        m_RendererConnInfo = m_Renderer.connectionManager().prepareForConnection(resource.getProtocolInfo(),
-                                                                                 server.getPeerConnectionManager(),
-                                                                                 m_ServerConnInfo.connectionId,
-                                                                                 ConnectionManager::Direction::Input);
+        m_Renderer.prepareConnection(resource, server.getPeerConnectionManager(), server.getConnectionId());
     }
     else
     {
-        m_ServerConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
-        m_RendererConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+        server.useDefaultConnection();
+        m_Renderer.useDefaultConnection();
     }
 }
-
-//ItemPtr ControlPoint::getNextItemsInContainer(MediaServer& server, const ItemPtr& item)
-//{
-//    auto parentItem = std::make_shared<Item>(item->getParentId());
-//    auto items = server.getItemsInContainer(parentItem, 0, 100);
-//    
-//    std::vector<ItemPtr> items;
-//    
-//    auto iter = std::find_if(items.begin(), items.end(), [item](const std::shared_ptr<Item>& i) { return i->getObjectId() == item->getObjectId(); });
-//    std::for_each(iter, items.end(), [&] (const std::shared_ptr<Item>& i) {
-//        items.push_back(i);
-//    });
-//}
-//
-//ItemPtr ControlPoint::processContainer(MediaServer& server, const ItemPtr& container)
-//{
-//    auto items = server.getItemsInContainer(container);
-//}
 
 }
 

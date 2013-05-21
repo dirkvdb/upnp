@@ -55,13 +55,19 @@ public:
     
     void abort();
     
+    // Connection manager related methods
+    std::string getPeerConnectionManager() const;
+    void resetConnection();
+    void useDefaultConnection();
+    bool supportsConnectionPreparation() const;
+    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
+    uint32_t getConnectionId() const;
+    
     // ContentDirectory related methods
     bool canSearchForProperty(Property prop) const;
     bool canSortOnProperty(Property prop) const;
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
-    std::string getPeerConnectionManager() const;
-    
     std::vector<ItemPtr> getItemsInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
     // Synchronous browse calls
@@ -87,10 +93,8 @@ public:
     void setCompletedCallback(const CompletedCb& completedCb);
     void setErrorCallback(const ErrorCb& errorCb);
         
-    
-    
     // AVTransport related methods
-    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
+    void setTransportItem(Resource& resource);
     
     ConnectionManager::Client& connectionManager();
     
@@ -108,6 +112,8 @@ private:
     ContentDirectory::Client                m_ContentDirectory;
     ConnectionManager::Client               m_ConnectionMgr;
     std::unique_ptr<AVTransport::Client>    m_AVTransport;
+    
+    ConnectionManager::ConnectionInfo       m_ConnInfo;
     
     utils::ThreadPool                       m_ThreadPool;
     bool                                    m_Abort;

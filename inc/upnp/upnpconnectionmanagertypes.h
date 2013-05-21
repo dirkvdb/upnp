@@ -75,7 +75,7 @@ enum class Direction
 
 struct ConnectionInfo
 {
-    int32_t             connectionId = 0;
+    int32_t             connectionId = UnknownConnectionId;
     int32_t             avTransportId = 0;
     int32_t             renderingControlServiceId = 0;
     ProtocolInfo        protocolInfo;
