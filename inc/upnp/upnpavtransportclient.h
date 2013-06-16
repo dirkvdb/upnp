@@ -36,8 +36,8 @@ public:
     struct PositionInfo
     {
         std::string track;
-        std::string trackDuration;
         std::string trackMetaData;
+        std::string trackDuration;
         std::string trackURI;
         std::string relTime;
         std::string absTime;
@@ -54,6 +54,7 @@ public:
     void pause(int32_t);
     void stop(int32_t);
     void previous(int32_t connectionId);
+    void seek(int32_t connectionId, SeekMode mode, const std::string& target);
     void next(int32_t connectionId);
     PositionInfo getPositionInfo(int32_t connectionId);
     TransportInfo getTransportInfo(int32_t connectionId);
@@ -64,7 +65,7 @@ public:
     virtual std::string actionToString(Action action);
     virtual Variable variableFromString(const std::string& var);
     virtual std::string variableToString(Variable var);
-
+    
 protected:
     void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
 

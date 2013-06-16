@@ -92,7 +92,7 @@ void LastChangeVariable::createLastChangeEvent()
         
         for (auto& vars : m_ChangedVariables)
         {
-            auto instance = xml::createServiceVariablesElement(doc, vars.first, vars.second);
+            auto instance = xml::utils::createServiceVariablesElement(doc, vars.first, vars.second);
             event.appendChild(instance);
         }
         

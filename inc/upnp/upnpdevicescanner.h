@@ -62,6 +62,7 @@ private:
     Device::Type                                    m_Type;
     std::map<std::string, std::shared_ptr<Device>>  m_Devices;
     std::mutex                                      m_Mutex;
+    std::mutex                                      m_DataMutex;
     
     std::future<void>                               m_Thread;
     std::condition_variable                         m_Condition;

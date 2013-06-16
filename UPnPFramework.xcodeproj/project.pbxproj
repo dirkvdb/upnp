@@ -30,6 +30,10 @@
 		432013B7169065B100FDFD3C /* upnpdlnainfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 432013B5169065B100FDFD3C /* upnpdlnainfo.cpp */; };
 		432013B8169065B100FDFD3C /* upnpdlnainfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 432013B5169065B100FDFD3C /* upnpdlnainfo.cpp */; };
 		432C62B5154EEA2A00068315 /* upnpclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 432C62B4154EEA2900068315 /* upnpclient.cpp */; };
+		434192701750AC2700418227 /* upnpxml.h in Headers */ = {isa = PBXBuildFile; fileRef = 4341926F1750AC2700418227 /* upnpxml.h */; };
+		434192711750AC2700418227 /* upnpxml.h in Headers */ = {isa = PBXBuildFile; fileRef = 4341926F1750AC2700418227 /* upnpxml.h */; };
+		434192731750AC3800418227 /* upnpxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434192721750AC3800418227 /* upnpxml.cpp */; };
+		434192741750AC3800418227 /* upnpxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434192721750AC3800418227 /* upnpxml.cpp */; };
 		434203C01633E55F0058A49A /* upnpavtransporttest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BA1633E55F0058A49A /* upnpavtransporttest.cpp */; };
 		434203C11633E55F0058A49A /* upnpcontentdirectorytest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BC1633E55F0058A49A /* upnpcontentdirectorytest.cpp */; };
 		434203C21633E55F0058A49A /* upnprenderingcontroltest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434203BE1633E55F0058A49A /* upnprenderingcontroltest.cpp */; };
@@ -190,6 +194,8 @@
 		432013B5169065B100FDFD3C /* upnpdlnainfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpdlnainfo.cpp; path = src/upnpdlnainfo.cpp; sourceTree = "<group>"; };
 		432C62B2154EE9CC00068315 /* upnpclient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpclient.h; sourceTree = "<group>"; };
 		432C62B4154EEA2900068315 /* upnpclient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpclient.cpp; path = src/upnpclient.cpp; sourceTree = "<group>"; };
+		4341926F1750AC2700418227 /* upnpxml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpxml.h; sourceTree = "<group>"; };
+		434192721750AC3800418227 /* upnpxml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpxml.cpp; path = src/upnpxml.cpp; sourceTree = SOURCE_ROOT; };
 		4341AB361387B66600297297 /* libUPnPFramework.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libUPnPFramework.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		434203AE1633E1AC0058A49A /* devicediscover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = devicediscover.h; path = test/devicediscover.h; sourceTree = "<group>"; };
 		434203B11633E1AC0058A49A /* testenvironment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testenvironment.h; path = test/testenvironment.h; sourceTree = "<group>"; };
@@ -293,7 +299,6 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
-				4354A92116FF407B00F7A88F /* Utils.xcodeproj */,
 				4341AB371387B66600297297 /* Products */,
 				434203B71633E1BB0058A49A /* test */,
 				438A7A4C150E9B300093A521 /* upnp */,
@@ -319,7 +324,9 @@
 				4354A8FE16FF401700F7A88F /* upnprenderingcontrolservice.cpp */,
 				4354A8FF16FF401700F7A88F /* upnprootdevice.cpp */,
 				43F157C0155EED0C00B6F8B0 /* upnpwebserver.cpp */,
+				434192721750AC3800418227 /* upnpxml.cpp */,
 				4357AF05154C81890021F9BE /* upnpxmlutils.cpp */,
+				4354A92116FF407B00F7A88F /* Utils.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -385,42 +392,43 @@
 		438A7A4C150E9B300093A521 /* upnp */ = {
 			isa = PBXGroup;
 			children = (
-				43CD846517072E6A00C5B1AB /* upnphttpclient.h */,
-				43CD846617072E6A00C5B1AB /* upnphttpreader.h */,
+				4357AEF5154BFE7F0021F9BE /* upnpaction.h */,
 				4354A8BC16FF400400F7A88F /* upnpactionresponse.h */,
 				4354A8BD16FF400400F7A88F /* upnpavtransportclient.h */,
 				4354A8BE16FF400400F7A88F /* upnpavtransportservice.h */,
 				4354A8BF16FF400400F7A88F /* upnpavtransporttypes.h */,
+				432C62B2154EE9CC00068315 /* upnpclient.h */,
+				4356541A16137C1800868D6B /* upnpclientinterface.h */,
 				4354A8C016FF400500F7A88F /* upnpconnectionmanagerclient.h */,
 				4354A8C116FF400500F7A88F /* upnpconnectionmanagerservice.h */,
 				4354A8C216FF400500F7A88F /* upnpconnectionmanagertypes.h */,
 				4354A8C316FF400500F7A88F /* upnpcontentdirectoryclient.h */,
 				4354A8C416FF400500F7A88F /* upnpcontentdirectorytypes.h */,
+				438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */,
+				438A7A50150E9B300093A521 /* upnpdevice.h */,
+				438A7A51150E9B300093A521 /* upnpdevicescanner.h */,
 				4354A8C516FF400500F7A88F /* upnpdeviceservice.h */,
 				4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */,
+				432013A91690648600FDFD3C /* upnpdlnainfo.h */,
+				43CD846517072E6A00C5B1AB /* upnphttpclient.h */,
+				43CD846617072E6A00C5B1AB /* upnphttpreader.h */,
+				438A7A53150E9B300093A521 /* upnpitem.h */,
 				4354A8C716FF400600F7A88F /* upnplastchangevariable.h */,
+				4357AF02154C7C1C0021F9BE /* upnpmediarenderer.h */,
+				4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */,
+				4357AEF9154C58AF0021F9BE /* upnpprotocolinfo.h */,
 				4354A8C916FF400600F7A88F /* upnprenderingcontrolclient.h */,
 				4354A8CA16FF400600F7A88F /* upnprenderingcontrolservice.h */,
 				4354A8CB16FF400600F7A88F /* upnprenderingcontroltypes.h */,
 				4354A8CC16FF400600F7A88F /* upnprootdevice.h */,
 				4354A8CD16FF400600F7A88F /* upnprootdeviceinterface.h */,
-				4354A8CE16FF400700F7A88F /* upnpservicevariable.h */,
-				432013A91690648600FDFD3C /* upnpdlnainfo.h */,
-				4357AEF5154BFE7F0021F9BE /* upnpaction.h */,
-				432C62B2154EE9CC00068315 /* upnpclient.h */,
-				4356541A16137C1800868D6B /* upnpclientinterface.h */,
-				438A7A4F150E9B300093A521 /* upnpcontrolpoint.h */,
-				438A7A50150E9B300093A521 /* upnpdevice.h */,
-				438A7A51150E9B300093A521 /* upnpdevicescanner.h */,
-				438A7A53150E9B300093A521 /* upnpitem.h */,
-				4357AF02154C7C1C0021F9BE /* upnpmediarenderer.h */,
-				4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */,
-				4357AEF9154C58AF0021F9BE /* upnpprotocolinfo.h */,
 				43CC5AB0161A07F4001B72D8 /* upnpservicebase.h */,
+				4354A8CE16FF400700F7A88F /* upnpservicevariable.h */,
 				438A0265160DF89B00045136 /* upnpstatevariable.h */,
 				4357AF0D154D58570021F9BE /* upnptypes.h */,
 				4357AEF8154C07540021F9BE /* upnputils.h */,
 				43F157BE155EEC5C00B6F8B0 /* upnpwebserver.h */,
+				4341926F1750AC2700418227 /* upnpxml.h */,
 				4357AEFF154C78D00021F9BE /* upnpxmlutils.h */,
 			);
 			name = upnp;
@@ -458,6 +466,7 @@
 				4354A8F016FF400700F7A88F /* upnprootdevice.h in Headers */,
 				4354A8F216FF400700F7A88F /* upnprootdeviceinterface.h in Headers */,
 				4354A8F416FF400700F7A88F /* upnpservicevariable.h in Headers */,
+				434192711750AC2700418227 /* upnpxml.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -491,6 +500,7 @@
 				4354A8F316FF400700F7A88F /* upnpservicevariable.h in Headers */,
 				43CD846717072E6A00C5B1AB /* upnphttpclient.h in Headers */,
 				43CD846817072E6A00C5B1AB /* upnphttpreader.h in Headers */,
+				434192701750AC2700418227 /* upnpxml.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,7 +568,7 @@
 		4341AB2D1387B66600297297 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0460;
+				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = None;
 			};
 			buildConfigurationList = 4341AB301387B66600297297 /* Build configuration list for PBXProject "UPnPFramework" */;
@@ -650,6 +660,7 @@
 				4354A91A16FF401700F7A88F /* upnprenderingcontrolclient.cpp in Sources */,
 				4354A91D16FF401700F7A88F /* upnprenderingcontrolservice.cpp in Sources */,
 				4354A92016FF401700F7A88F /* upnprootdevice.cpp in Sources */,
+				434192741750AC3800418227 /* upnpxml.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -680,6 +691,7 @@
 				4354A91E16FF401700F7A88F /* upnprootdevice.cpp in Sources */,
 				43CD846B17072E7C00C5B1AB /* upnphttpclient.cpp in Sources */,
 				43CD846C17072E7C00C5B1AB /* upnphttpreader.cpp in Sources */,
+				434192731750AC3800418227 /* upnpxml.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -702,7 +714,6 @@
 		4303F1641612080E0057A64C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -741,7 +752,6 @@
 		4303F1651612080E0057A64C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -777,7 +787,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -806,7 +815,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -836,7 +844,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
@@ -846,6 +853,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "";
 				LIBRARY_SEARCH_PATHS = "";
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
 				VALID_ARCHS = "armv7 i386 x86_64";
@@ -857,7 +865,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -893,7 +900,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "armv7 x86_64 i386";
+				VALID_ARCHS = "armv7 x86_64 i386 armv7s";
 			};
 			name = Debug;
 		};
@@ -920,7 +927,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_AFTER_BUILD = NO;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../utils/inc $(SRCROOT)/inc";
-				VALID_ARCHS = "armv7 x86_64 i386";
+				VALID_ARCHS = "armv7 x86_64 i386 armv7s";
 			};
 			name = Release;
 		};

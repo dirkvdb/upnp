@@ -64,7 +64,13 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
             m_AVtransport->setDevice(device);
         }
         
-        m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
+        // reset state related data
+        m_ProtocolInfo      = m_ConnectionMgr.getProtocolInfo();
+        m_CurrentTrack      = ItemPtr();
+        m_CurrentVolume     = 0;
+
+        m_AvTransportInfo.clear();
+        m_AvailableActions.clear();
         
         activateEvents();
     }
@@ -179,6 +185,15 @@ void MediaRenderer::next()
     }
 }
 
+void MediaRenderer::seekInTrack(uint32_t position)
+{
+    if (m_AVtransport)
+    {
+        throwOnUnknownConnectionId();
+        m_AVtransport->seek(m_ConnInfo.connectionId, AVTransport::SeekMode::RelativeTime, positionToString(position));
+    }
+}
+
 void MediaRenderer::previous()
 {
     if (m_AVtransport)
@@ -188,16 +203,16 @@ void MediaRenderer::previous()
     }
 }
 
-std::string MediaRenderer::getCurrentTrackPosition()
+uint32_t MediaRenderer::getCurrentTrackPosition()
 {
     if (m_AVtransport)
     {
         throwOnUnknownConnectionId();
         auto transportInfo = m_AVtransport->getPositionInfo(m_ConnInfo.connectionId);
-        return transportInfo.relTime;
+        return parseDuration(transportInfo.relTime);
     }
     
-    return "";
+    return 0;
 }
 
 std::string MediaRenderer::getCurrentTrackURI() const
@@ -208,27 +223,17 @@ std::string MediaRenderer::getCurrentTrackURI() const
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
 
-std::string MediaRenderer::getCurrentTrackDuration() const
+uint32_t MediaRenderer::getCurrentTrackDuration() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     
     auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
-    return iter == m_AvTransportInfo.end() ? "" : iter->second;
+    return iter == m_AvTransportInfo.end() ? 0 : parseDuration(iter->second);
 }
 
-Item MediaRenderer::getCurrentTrackInfo() const
+ItemPtr MediaRenderer::getCurrentTrackInfo() const
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    
-    Item item;
-
-    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
-    if (iter != m_AvTransportInfo.end())
-    {
-        log::warn("Meta parsing not implemented");
-    }
-    
-    return item;
+    return m_CurrentTrack;
 }
 
 bool MediaRenderer::isActionAvailable(Action action) const
@@ -324,6 +329,27 @@ void MediaRenderer::calculateAvailableActions()
     });
 }
 
+void MediaRenderer::updateCurrentTrack()
+{
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackMetaData);
+    if (iter == m_AvTransportInfo.end() || iter->second.empty())
+    {
+        m_CurrentTrack = ItemPtr();
+        return;
+    }
+    
+    try
+    {
+        xml::Document doc(iter->second);
+        m_CurrentTrack = xml::utils::parseItemDocument(doc);
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse item doc: %s", e.what());
+        m_CurrentTrack = ItemPtr();
+    }
+}
+
 void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -350,7 +376,49 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
         calculateAvailableActions();
     }
     
+    if (vars.find(AVTransport::Variable::CurrentTrackMetaData) != vars.end())
+    {
+        updateCurrentTrack();
+    }
+    
     MediaInfoChanged();
+}
+
+uint32_t MediaRenderer::parseDuration(const std::string& duration) const
+{
+    uint32_t seconds = 0;
+
+    auto split = stringops::tokenize(duration, ":");
+    if (split.size() == 3)
+    {
+        seconds += std::stoul(split[0]) * 3600;
+        seconds += std::stoul(split[1]) * 60;
+        
+        auto secondsSplit = stringops::tokenize(split[2], ".");
+        seconds += std::stoul(secondsSplit.front());
+    }
+    
+    return seconds;
+}
+
+std::string MediaRenderer::positionToString(uint32_t position) const
+{
+    uint32_t hours   = position / 3600;
+    position -= hours * 3600;
+
+    uint32_t minutes = position / 60;
+    uint32_t seconds = position % 60;
+
+
+    std::stringstream ss;
+
+    if (hours > 0)
+    {
+        ss << hours << ':';
+    }
+    
+    ss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2) << std::setfill('0')  << seconds;
+    return ss.str();
 }
 
 MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action action)

@@ -48,7 +48,7 @@ DeviceScanner::~DeviceScanner() throw()
     
 void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::lock_guard<std::mutex> lock(m_DataMutex);
     auto iter = m_Devices.find(deviceId);
     if (iter != m_Devices.end())
     {
@@ -101,7 +101,7 @@ void DeviceScanner::checkForTimeoutThread()
 {
     while (!m_Stop)
     {
-        std::unique_lock<std::mutex> lock(m_Mutex);
+        std::unique_lock<std::mutex> lock(m_DataMutex);
     
         system_clock::time_point now = system_clock::now();
         auto mapEnd = m_Devices.end();
@@ -137,13 +137,13 @@ void DeviceScanner::refresh()
 
 uint32_t DeviceScanner::getDeviceCount()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::lock_guard<std::mutex> lock(m_DataMutex);
     return m_Devices.size();
 }
 
 std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::lock_guard<std::mutex> lock(m_DataMutex);
     return m_Devices;
 }
 
@@ -237,7 +237,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
     }
     
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
+        std::lock_guard<std::mutex> lock(m_DataMutex);
         
         auto iter = m_Devices.find(pDiscovery->DeviceId);
         if (iter != m_Devices.end())
@@ -285,7 +285,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
                 log::info("Media server added to the list: %s (%s)", device->m_FriendlyName, device->m_UDN);
 
                 {
-                    std::lock_guard<std::mutex> lock(m_Mutex);
+                    std::lock_guard<std::mutex> lock(m_DataMutex);
                     m_Devices[device->m_UDN] = device;
                 }
 
@@ -304,7 +304,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
                 log::info("Media renderer added to the list: %s (%s)", device->m_FriendlyName, device->m_UDN);
                 
                 {
-                    std::lock_guard<std::mutex> lock(m_Mutex);
+                    std::lock_guard<std::mutex> lock(m_DataMutex);
                     m_Devices[device->m_UDN] = device;
                 }
                 

@@ -60,7 +60,7 @@ xml::Document Service::getSubscriptionResponse()
 
         for (auto& var : vars.second)
         {
-            auto elem = xml::serviceVariableToElement(doc, var.second);
+            auto elem = xml::utils::serviceVariableToElement(doc, var.second);
             instance.appendChild(elem);
         }
 

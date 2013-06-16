@@ -274,14 +274,14 @@ void MediaServer::searchAsync(const ItemPtr& container, const ItemCb& onItem, co
     m_ThreadPool.queueFunction(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, container, onItem, criteria));
 }
 
-void MediaServer::getMetaData(const ItemPtr& item)
+ItemPtr MediaServer::getMetaData(const std::string& objectId)
 {
-    m_ContentDirectory.browseMetadata(item, "*");
+    return m_ContentDirectory.browseMetadata(objectId, "*");
 }
 
-void MediaServer::getMetaDataAsync(const ItemPtr& item, const ItemCb& onItem)
+void MediaServer::getMetaDataAsync(const std::string& objectId, const ItemCb& onItem)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::getMetaDataThread, this, item, onItem));
+    m_ThreadPool.queueFunction(std::bind(&MediaServer::getMetaDataThread, this, objectId, onItem));
 }
 
 void MediaServer::setCompletedCallback(const CompletedCb& completedCb)
@@ -375,12 +375,11 @@ void MediaServer::searchThread(const ItemPtr& container, const ItemCb& onItem, c
     }
 }
 
-void MediaServer::getMetaDataThread(const ItemPtr& item, const ItemCb& onItem)
+void MediaServer::getMetaDataThread(const std::string& objectId, const ItemCb& onItem)
 {
     try
     {
-        getMetaData(item);
-        onItem(item);
+        onItem(getMetaData(objectId));
     }
     catch(std::exception& e)
     {

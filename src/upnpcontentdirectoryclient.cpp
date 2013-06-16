@@ -112,11 +112,11 @@ void Client::querySystemUpdateID()
     m_SystemUpdateId = elem.getChildNodeValue("Id");
 }
 
-void Client::browseMetadata(const ItemPtr& item, const std::string& filter)
+ItemPtr Client::browseMetadata(const std::string& objectId, const std::string& filter)
 {
     ActionResult res;
 
-    xml::Document result = browseAction(item->getObjectId(), "BrowseMetadata", filter, 0, 0, "");
+    xml::Document result = browseAction(objectId, "BrowseMetadata", filter, 0, 0, "");
     xml::Document browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
@@ -127,7 +127,7 @@ void Client::browseMetadata(const ItemPtr& item, const std::string& filter)
     log::debug(browseResult.toString());
 #endif
     
-    parseMetaData(browseResult, item);
+    return parseMetaData(browseResult);
 }
 
 
@@ -264,29 +264,31 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
     return xml::Document(browseResult);
 }
 
-void Client::parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item)
+ItemPtr Client::parseMetaData(xml::Document& doc)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
     
     try
     {
         xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
-        return parseContainer(containerElem, item);
+        return parseContainer(containerElem);
     }
     catch (std::exception&) {}
     
     try
     {
         xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
-        return parseItem(itemElem, item);
+        return xml::utils::parseItem(itemElem);
     }
     catch (std::exception&) {}
     
     log::warn("No metadata could be retrieved");
+    return ItemPtr();
 }
 
-void Client::parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item)
+ItemPtr Client::parseContainer(xml::Element& containerElem)
 {
+    auto item = std::make_shared<Item>();
     item->setObjectId(containerElem.getAttribute("id"));
     item->setParentId(containerElem.getAttribute("parentID"));
     item->setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
@@ -308,86 +310,13 @@ void Client::parseContainer(xml::Element& containerElem, const std::shared_ptr<I
     {
         throw std::logic_error("No title found in item");
     }
-}
-
-Resource Client::parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
-{
-    Resource res;
-    res.setUrl(url);
     
-    for (auto& node : nodeMap)
-    {
-        try
-        {
-            std::string key = node.getName();
-            std::string value = node.getValue();
-            
-            if (key == "protocolInfo")
-            {
-                res.setProtocolInfo(ProtocolInfo(value));
-            }
-            else
-            {
-                res.addMetaData(key, value);
-            }
-        }
-        catch (std::exception& e) { /* skip invalid resource */ log::warn(e.what()); }
-    }
-    
-    return res;
+    return item;
 }
 
-void Client::parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item)
-{
-    item->setObjectId(itemElem.getAttribute("id"));
-    item->setParentId(itemElem.getAttribute("parentID"));
 
-    try
-    {
-        for (xml::Element elem : itemElem.getChildNodes())
-        {
-            try
-            {
-                std::string key     = elem.getName();
-                std::string value   = elem.getValue();
-                
-                if ("res" == key)
-                {
-                    auto nodeMap = elem.getAttributes();
-                    item->addResource(parseResource(nodeMap, value));
-                }
-                else if ("upnp:albumArtURI" == key)
-                {
-                    // multiple art uris can be present with different dlna profiles (size)
-                    try
-                    {
-                        item->setAlbumArt(dlna::profileIdFromString(elem.getAttribute("dlna:profileID")), value);
-                    }
-                    catch (std::exception&)
-                    {
-                        // no profile id present, add it as regular metadata
-                        addPropertyToItem(key, value, item);
-                    }
-                }
-                else
-                {
-                    addPropertyToItem(key, value, item);
-                }
-            }
-            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: %s", e.what()); }
-        }
-        
-#ifdef DEBUG_CONTENT_BROWSING
-        log::debug(*item);
-#endif
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to parse item");
-    }
-}
 
-std::vector<std::shared_ptr<Item>> Client::parseContainers(xml::Document& doc)
+std::vector<ItemPtr> Client::parseContainers(xml::Document& doc)
 {
     assert(doc && "ParseContainers: Invalid document supplied");
 
@@ -396,9 +325,7 @@ std::vector<std::shared_ptr<Item>> Client::parseContainers(xml::Document& doc)
     {
         try
         {
-            auto item = std::make_shared<Item>();
-            parseContainer(elem, item);
-            containers.push_back(item);
+            containers.push_back(parseContainer(elem));
         }
         catch (std::exception& e)
         {
@@ -409,7 +336,7 @@ std::vector<std::shared_ptr<Item>> Client::parseContainers(xml::Document& doc)
     return containers;
 }
 
-std::vector<std::shared_ptr<Item>> Client::parseItems(xml::Document& doc)
+std::vector<ItemPtr> Client::parseItems(xml::Document& doc)
 {
     assert(doc && "ParseItems: Invalid document supplied");
 
@@ -418,9 +345,7 @@ std::vector<std::shared_ptr<Item>> Client::parseItems(xml::Document& doc)
     {
         try
         {
-            auto item = std::make_shared<Item>();
-            parseItem(elem, item);
-            items.push_back(item);
+            items.push_back(xml::utils::parseItem(elem));
         }
         catch (std::exception& e)
         {
@@ -457,19 +382,6 @@ void Client::handleUPnPResult(int errorCode)
     case 719: throw std::logic_error("Destination resource access denied");
     case 720: throw std::logic_error("Cannot process the request");
     default: upnp::handleUPnPResult(errorCode);
-    }
-}
-
-void Client::addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item)
-{
-    Property prop = propertyFromString(propertyName);
-    if (prop != Property::Unknown)
-    {
-        item->addMetaData(prop, propertyValue);
-    }
-    else
-    {
-        log::warn("Unknown property: %s", propertyName);
     }
 }
 

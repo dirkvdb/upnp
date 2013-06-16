@@ -74,7 +74,7 @@ public:
     void getItemsInContainer            (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getContainersInContainer       (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getAllInContainer              (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getMetaData                    (const ItemPtr& item);
+    ItemPtr getMetaData                 (const std::string& objectId);
     uint32_t search                     (const ItemPtr& container, const std::string& criteria, const ItemCb& onItem);
     uint32_t search                     (const ItemPtr& container, const std::map<Property, std::string>& criteria, const ItemCb& onItem);
     std::vector<ItemPtr> search         (const ItemPtr& container, const std::string& criteria);
@@ -84,7 +84,7 @@ public:
     void getItemsInContainerAsync       (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getContainersInContainerAsync  (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     void getAllInContainerAsync         (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getMetaDataAsync               (const ItemPtr& item, const ItemCb& onItem);
+    void getMetaDataAsync               (const std::string& objectId, const ItemCb& onItem);
     void searchAsync                    (const ItemPtr& container, const ItemCb& onItem, const std::string& criteria);
     void searchAsync                    (const ItemPtr& container, const ItemCb& onItem, const std::map<Property, std::string>& criteria);
     
@@ -103,7 +103,7 @@ private:
     void performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     template <typename T>
     void searchThread(const ItemPtr& container, const ItemCb& onItem, const T& criteria);
-    void getMetaDataThread(const ItemPtr& item, const ItemCb& onItem);
+    void getMetaDataThread(const std::string& objectId, const ItemCb& onItem);
 
     std::shared_ptr<Device>                 m_Device;
     std::vector<ProtocolInfo>               m_ProtocolInfo;

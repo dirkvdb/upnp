@@ -103,7 +103,7 @@ protected:
         try
         {
             xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
-            for (auto& action : getActionsFromDescription(doc))
+            for (auto& action : xml::utils::getActionsFromDescription(doc))
             {
                 try
                 {
@@ -115,7 +115,7 @@ protected:
                 }
             }
             
-            m_StateVariables = getStateVariablesFromDescription(doc);
+            m_StateVariables = xml::utils::getStateVariablesFromDescription(doc);
         }
         catch (std::exception& e)
         {

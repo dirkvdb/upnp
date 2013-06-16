@@ -79,6 +79,13 @@ void Client::previous(int32_t connectionId)
     executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} });
 }
 
+void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target)
+{
+    executeAction(AVTransport::Action::Seek, { {"InstanceID", std::to_string(connectionId)},
+                                               {"Unit", toString(mode)},
+                                               {"Target", target} });
+}
+
 TransportInfo Client::getTransportInfo(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} });
@@ -182,6 +189,6 @@ void Client::handleUPnPResult(int errorCode)
         default: upnp::handleUPnPResult(errorCode);
     }
 }
-    
+
 }
 }

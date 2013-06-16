@@ -58,7 +58,7 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
     
-    void browseMetadata(const ItemPtr& item, const std::string& filter);
+    ItemPtr browseMetadata(const std::string& objectId, const std::string& filter);
     ActionResult browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     ActionResult search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     
@@ -79,18 +79,14 @@ private:
     void querySortCapabilities();
     void querySystemUpdateID();
     
-    static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const std::shared_ptr<Item>& item);
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
     
     xml::Document parseBrowseResult(xml::Document& doc, ActionResult& result);
-    void parseMetaData(xml::Document& doc, const std::shared_ptr<Item>& item);
-    
-    void parseContainer(xml::Element& containerElem, const std::shared_ptr<Item>& item);
-    void parseItem(xml::Element& itemElem, const std::shared_ptr<Item>& item);
-    Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
-    
-    std::vector<std::shared_ptr<Item>> parseContainers(xml::Document& doc);
-    std::vector<std::shared_ptr<Item>> parseItems(xml::Document& doc);
+    ItemPtr parseMetaData(xml::Document& doc);
+    ItemPtr parseContainer(xml::Element& containerElem);
+
+    std::vector<ItemPtr> parseContainers(xml::Document& doc);
+    std::vector<ItemPtr> parseItems(xml::Document& doc);
     
     void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem);
 

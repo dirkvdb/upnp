@@ -80,12 +80,13 @@ public:
     void pause();
     void stop();
     void next();
+    void seekInTrack(uint32_t position);
     void previous();
-    std::string getCurrentTrackPosition();
+    uint32_t getCurrentTrackPosition();
     
     std::string getCurrentTrackURI() const;
-    std::string getCurrentTrackDuration() const;
-    Item getCurrentTrackInfo() const;
+    uint32_t getCurrentTrackDuration() const;
+    ItemPtr getCurrentTrackInfo() const;
     std::set<Action> getAvailableActions() const;
     bool isActionAvailable(Action action) const;
     
@@ -106,27 +107,31 @@ private:
     void throwOnUnknownConnectionId();
 
     void calculateAvailableActions();
+    void updateCurrentTrack();
+    
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
-    
+    uint32_t parseDuration(const std::string& duration) const;
+    std::string positionToString(uint32_t position) const;
     
     static MediaRenderer::Action transportActionToAction(AVTransport::Action action);
     
     std::shared_ptr<Device>                         m_Device;
-    std::vector<ProtocolInfo>                       m_ProtocolInfo;
-    
     IClient&                                        m_Client;
     ConnectionManager::Client                       m_ConnectionMgr;
     RenderingControl::Client                        m_RenderingControl;
     std::unique_ptr<AVTransport::Client>            m_AVtransport;
-    
-    bool                                            m_Active;
     uint32_t                                        m_CurrentVolume;
     
+    std::vector<ProtocolInfo>                       m_ProtocolInfo;
     std::set<Action>                                m_AvailableActions;
     std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
-    
+    ItemPtr                                         m_CurrentTrack;
     ConnectionManager::ConnectionInfo               m_ConnInfo;
+    
+    
+    bool                                            m_Active;
+    
     
     mutable std::mutex                              m_Mutex;
 };
