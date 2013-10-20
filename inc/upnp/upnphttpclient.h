@@ -35,14 +35,14 @@ public:
     std::string getText(const std::string& url);
     
     std::vector<uint8_t> getData(const std::string& url);
-    std::vector<uint8_t> getData(const std::string& url, uint32_t offset, uint32_t size);
+    std::vector<uint8_t> getData(const std::string& url, uint64_t offset, uint64_t size);
     
     void getData(const std::string& url, uint8_t* pData);
-    void getData(const std::string& url, uint8_t* pData, uint32_t offset, uint32_t size);
+    void getData(const std::string& url, uint8_t* pData, uint64_t offset, uint64_t size);
 	
 private:
     void* open(const std::string& url, int& contentLength, int32_t& httpStatus);
-    void* open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint32_t offset, uint32_t size);
+    void* open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint64_t offset, uint64_t size);
     void read(void* pHandle, uint8_t* pData, size_t dataSize);
     void throwOnBadHttpStatus(const std::string& url, int32_t status);
     

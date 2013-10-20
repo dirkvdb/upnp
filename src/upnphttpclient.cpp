@@ -79,7 +79,7 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url)
     return data;
 }
 
-std::vector<uint8_t> HttpClient::getData(const std::string& url, uint32_t offset, uint32_t size)
+std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset, uint64_t size)
 {
     std::vector<uint8_t> data;
     
@@ -106,7 +106,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData)
     UpnpCloseHttpGet(pHandle);
 }
 
-void HttpClient::getData(const std::string& url, uint8_t* pData, uint32_t offset, uint32_t size)
+void HttpClient::getData(const std::string& url, uint8_t* pData, uint64_t offset, uint64_t size)
 {
     int32_t httpStatus = 0;
     int contentLength = 0;
@@ -133,7 +133,7 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
     return pHandle;
 }
 
-void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint32_t offset, uint32_t size)
+void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint64_t offset, uint64_t size)
 {
     void* pHandle       = nullptr;
     char* pContentType  = nullptr;

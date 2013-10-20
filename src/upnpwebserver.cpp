@@ -226,7 +226,7 @@ int WebServer::readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t bufl
         memcpy(buf, &file.fileContents[pHandle->offset], buflen);
         pHandle->offset += buflen;
         
-        return buflen;
+        return static_cast<int>(buflen);
     }
     catch (std::exception& e)
     {
