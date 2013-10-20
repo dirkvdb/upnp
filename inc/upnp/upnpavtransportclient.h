@@ -48,6 +48,8 @@ public:
     Client(IClient& client);
     
     void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
+    void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
+    
     void play(int32_t connectionId, const std::string& speed = "1");
     void pause(int32_t);
     void stop(int32_t);

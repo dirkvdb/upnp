@@ -46,6 +46,13 @@ void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, con
                                                {"CurrentURIMetaData", uriMetaData} });
 }
 
+void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
+{
+    executeAction(Action::SetNextAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
+                                                   {"NextURI", uri},
+                                                   {"NextURIMetaData", uriMetaData} });
+}
+
 void Client::play(int32_t connectionId, const std::string& speed)
 {
     executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},

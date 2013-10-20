@@ -57,7 +57,7 @@ public:
         Previous,
         Record
     };
-
+    
     MediaRenderer(IClient& cp);
     MediaRenderer(const MediaRenderer&) = delete;
     
@@ -65,17 +65,23 @@ public:
     void setDevice(const std::shared_ptr<Device>& device);
     bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
     
-    std::string getPeerConnectionManager() const;
     
-    ConnectionManager::Client& connectionManager();
+    // Connection management
+    std::string getPeerConnectionManager() const;
+    void resetConnection();
+    void useDefaultConnection();
+    bool supportsConnectionPreparation() const;
+    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
 
     // AV Transport
-    void setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource);
-    void play(const ConnectionManager::ConnectionInfo& info);
-    void pause(const ConnectionManager::ConnectionInfo& info);
-    void stop(const ConnectionManager::ConnectionInfo& info);
-    void next(const ConnectionManager::ConnectionInfo& info);
-    void previous(const ConnectionManager::ConnectionInfo& info);
+    void setTransportItem(Resource& resource);
+    void setNextTransportItem(Resource& resource);
+    void play();
+    void pause();
+    void stop();
+    void next();
+    void previous();
+    std::string getCurrentTrackPosition();
     
     std::string getCurrentTrackURI() const;
     std::string getCurrentTrackDuration() const;
@@ -83,9 +89,11 @@ public:
     std::set<Action> getAvailableActions() const;
     bool isActionAvailable(Action action) const;
     
+    bool supportsQueueItem() const;
+    
     
     // Rendering control
-    void setVolume(const ConnectionManager::ConnectionInfo& info, uint32_t value);
+    void setVolume(uint32_t value);
     uint32_t getVolume();
     
     void activateEvents();
@@ -95,6 +103,8 @@ public:
     utils::Signal<void()>                           MediaInfoChanged;
     
 private:
+    void throwOnUnknownConnectionId();
+
     void calculateAvailableActions();
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
@@ -115,6 +125,8 @@ private:
     
     std::set<Action>                                m_AvailableActions;
     std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
+    
+    ConnectionManager::ConnectionInfo               m_ConnInfo;
     
     mutable std::mutex                              m_Mutex;
 };

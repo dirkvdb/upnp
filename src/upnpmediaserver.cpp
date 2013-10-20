@@ -81,6 +81,45 @@ void MediaServer::abort()
     m_ContentDirectory.abort();
 }
 
+std::string MediaServer::getPeerConnectionManager() const
+{
+    std::stringstream ss;
+    ss << m_Device->m_UDN << "/";
+    
+    if (m_Device->implementsService(ServiceType::ConnectionManager))
+    {
+       ss << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
+    }
+    
+    return ss.str();
+}
+
+void MediaServer::resetConnection()
+{
+    m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+}
+
+void MediaServer::useDefaultConnection()
+{
+    m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+}
+
+bool MediaServer::supportsConnectionPreparation() const
+{
+    return m_ConnectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection);
+}
+
+void MediaServer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t remoteConnectionId)
+{
+    m_ConnInfo = m_ConnectionMgr.prepareForConnection(res.getProtocolInfo(), peerConnectionManager,
+                                                      remoteConnectionId, ConnectionManager::Direction::Output);
+}
+
+uint32_t MediaServer::getConnectionId() const
+{
+    return m_ConnInfo.connectionId;
+}
+
 bool MediaServer::canSearchForProperty(Property prop) const
 {
     auto& props = m_ContentDirectory.getSearchCapabilities();
@@ -112,19 +151,6 @@ const std::vector<Property>& MediaServer::getSearchCapabilities() const
 const std::vector<Property>& MediaServer::getSortCapabilities() const
 {
     return m_ContentDirectory.getSortCapabilities();
-}
-
-std::string MediaServer::getPeerConnectionManager() const
-{
-    std::stringstream ss;
-    ss << m_Device->m_UDN << "/";
-    
-    if (m_Device->implementsService(ServiceType::ConnectionManager))
-    {
-       ss << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
-    }
-    
-    return ss.str();
 }
 
 std::vector<ItemPtr> MediaServer::getItemsInContainer(const ItemPtr& container, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
@@ -268,11 +294,11 @@ void MediaServer::setErrorCallback(const ErrorCb& errorCb)
     m_ErrorCb = errorCb;
 }
 
-void MediaServer::setTransportItem(const ConnectionManager::ConnectionInfo& info, Resource& resource)
+void MediaServer::setTransportItem(Resource& resource)
 {
     if (m_AVTransport)
     {
-        m_AVTransport->setAVTransportURI(info.connectionId, resource.getUrl(), "");
+        m_AVTransport->setAVTransportURI(m_ConnInfo.connectionId, resource.getUrl(), "");
     }
 }
 
