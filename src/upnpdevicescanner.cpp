@@ -138,7 +138,7 @@ void DeviceScanner::refresh()
 uint32_t DeviceScanner::getDeviceCount()
 {
     std::lock_guard<std::mutex> lock(m_DataMutex);
-    return m_Devices.size();
+    return static_cast<uint32_t>(m_Devices.size());
 }
 
 std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
