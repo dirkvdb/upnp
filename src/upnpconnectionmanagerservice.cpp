@@ -44,7 +44,9 @@ xml::Document Service::getSubscriptionResponse()
     
     doc.appendChild(propertySet);
     
+#ifdef DEBUG_CONNECTION_MANAGER
     log::debug(doc.toString());
+#endif
     
     return doc;
 }

@@ -100,7 +100,6 @@ void Client::querySortCapabilities()
     
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
     {
-        log::debug(cap);
         addPropertyToList(cap, m_SortCaps);
     }
 }

@@ -40,6 +40,7 @@ public:
     virtual void seekAbsolute(uint64_t position);
     virtual void seekRelative(uint64_t offset);
     virtual uint64_t read(uint8_t* pData, uint64_t size);
+    virtual void clearErrors();
     
 private:
     void throwOnEmptyUrl();
