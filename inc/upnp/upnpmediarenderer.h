@@ -58,6 +58,15 @@ public:
         Record
     };
     
+    enum class PlaybackState
+    {
+        Stopped,
+        Playing,
+        Transitioning,
+        Paused,
+        Recording
+    };
+    
     MediaRenderer(IClient& cp);
     MediaRenderer(const MediaRenderer&) = delete;
     
@@ -83,6 +92,7 @@ public:
     void seekInTrack(uint32_t position);
     void previous();
     uint32_t getCurrentTrackPosition();
+    PlaybackState getPlaybackState();
     
     std::string getCurrentTrackURI() const;
     uint32_t getCurrentTrackDuration() const;
@@ -100,21 +110,25 @@ public:
     void activateEvents();
     void deactivateEvents();
     
+    utils::Signal<void(std::shared_ptr<Device>)>    DeviceChanged;
     utils::Signal<void(uint32_t)>                   VolumeChanged;
     utils::Signal<void()>                           MediaInfoChanged;
     
 private:
     void throwOnUnknownConnectionId();
 
+    void resetData();
     void calculateAvailableActions();
     void updateCurrentTrack();
+    void updatePlaybackState();
     
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
     uint32_t parseDuration(const std::string& duration) const;
     std::string positionToString(uint32_t position) const;
     
-    static MediaRenderer::Action transportActionToAction(AVTransport::Action action);
+    static Action transportActionToAction(AVTransport::Action action);
+    static PlaybackState transportStateToPlaybackState(AVTransport::State state);
     
     std::shared_ptr<Device>                         m_Device;
     IClient&                                        m_Client;
@@ -128,6 +142,7 @@ private:
     std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
     ItemPtr                                         m_CurrentTrack;
     ConnectionManager::ConnectionInfo               m_ConnInfo;
+    PlaybackState                                   m_PlaybackState;
     
     
     bool                                            m_Active;

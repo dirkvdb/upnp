@@ -37,6 +37,7 @@ MediaRenderer::MediaRenderer(IClient& client)
 , m_RenderingControl(client)
 , m_Active(false)
 , m_CurrentVolume(0)
+, m_PlaybackState(PlaybackState::Stopped)
 {
 }
 
@@ -65,14 +66,12 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
         }
         
         // reset state related data
-        m_ProtocolInfo      = m_ConnectionMgr.getProtocolInfo();
-        m_CurrentTrack      = ItemPtr();
-        m_CurrentVolume     = 0;
-
-        m_AvTransportInfo.clear();
-        m_AvailableActions.clear();
+        m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
+        resetData();
         
         activateEvents();
+        
+        DeviceChanged(device);
     }
     catch (std::exception& e)
     {
@@ -208,11 +207,16 @@ uint32_t MediaRenderer::getCurrentTrackPosition()
     if (m_AVtransport)
     {
         throwOnUnknownConnectionId();
-        auto transportInfo = m_AVtransport->getPositionInfo(m_ConnInfo.connectionId);
-        return parseDuration(transportInfo.relTime);
+        auto info = m_AVtransport->getPositionInfo(m_ConnInfo.connectionId);
+        return parseDuration(info.relTime);
     }
     
     return 0;
+}
+
+MediaRenderer::PlaybackState MediaRenderer::getPlaybackState()
+{
+    return m_PlaybackState;
 }
 
 std::string MediaRenderer::getCurrentTrackURI() const
@@ -309,6 +313,15 @@ void MediaRenderer::deactivateEvents()
     }
 }
 
+void MediaRenderer::resetData()
+{
+    m_AvTransportInfo.clear();
+    m_AvailableActions.clear();
+    m_CurrentTrack.reset();
+    m_PlaybackState = PlaybackState::Stopped;
+    m_CurrentVolume = 0;
+}
+
 void MediaRenderer::calculateAvailableActions()
 {
     auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTransportActions);
@@ -350,6 +363,26 @@ void MediaRenderer::updateCurrentTrack()
     }
 }
 
+void MediaRenderer::updatePlaybackState()
+{
+    auto iter = m_AvTransportInfo.find(AVTransport::Variable::TransportState);
+    if (iter == m_AvTransportInfo.end() || iter->second.empty())
+    {
+        m_PlaybackState = PlaybackState::Stopped;
+        return;
+    }
+    
+    try
+    {
+        m_PlaybackState = transportStateToPlaybackState(AVTransport::stateFromString(iter->second));
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse item doc: %s", e.what());
+        m_PlaybackState = PlaybackState::Stopped;
+    }
+}
+
 void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -379,6 +412,11 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
     if (vars.find(AVTransport::Variable::CurrentTrackMetaData) != vars.end())
     {
         updateCurrentTrack();
+    }
+    
+    if (vars.find(AVTransport::Variable::TransportState) != vars.end())
+    {
+        updatePlaybackState();
     }
     
     MediaInfoChanged();
@@ -432,7 +470,24 @@ MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action
         case AVTransport::Action::Next:     return Action::Next;
         case AVTransport::Action::Previous: return Action::Previous;
         case AVTransport::Action::Record:   return Action::Record;
+
         default: throw std::logic_error("Invalid transport action");
+    }
+}
+
+MediaRenderer::PlaybackState MediaRenderer::transportStateToPlaybackState(AVTransport::State state)
+{
+    switch (state)
+    {
+        case AVTransport::State::Playing:           return PlaybackState::Playing;
+        case AVTransport::State::Recording:         return PlaybackState::Recording;
+        case AVTransport::State::PausedPlayback:
+        case AVTransport::State::PausedRecording:   return PlaybackState::Paused;
+        case AVTransport::State::Transitioning:     return PlaybackState::Transitioning;
+        case AVTransport::State::Stopped:
+        case AVTransport::State::NoMediaPresent:    return PlaybackState::Stopped;
+        
+        default: throw std::logic_error("Invalid transport state");
     }
 }
 
