@@ -94,6 +94,10 @@ uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
     return size;
 }
 
+void HttpReader::clearErrors()
+{
+}
+
 void HttpReader::throwOnEmptyUrl()
 {
     if (m_Url.empty())

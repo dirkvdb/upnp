@@ -73,8 +73,10 @@ xml::Document Service::getSubscriptionResponse()
     property.appendChild(lastChange);
     propertySet.appendChild(property);
     doc.appendChild(propertySet);
-    
+
+#ifdef DEBUG_AVTRANSPORT
     log::debug(doc.toString());
+#endif
     
     return doc;
 }

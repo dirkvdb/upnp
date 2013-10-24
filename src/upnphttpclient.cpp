@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <sstream>
 
+#include "upnp/upnputils.h"
 #include "utils/stringoperations.h"
 
 using namespace utils;
@@ -85,14 +86,24 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset
     
     int32_t httpStatus = 0;
     int contentLength = 0;
+    void* pHandle = nullptr;
     
-    void* pHandle = open(url, contentLength, httpStatus, offset, size);
+    try
+    {
+        pHandle = open(url, contentLength, httpStatus, offset, size);
 
-	data.resize(contentLength);
-    read(pHandle, data.data(), contentLength);
-    UpnpCloseHttpGet(pHandle);
+        data.resize(contentLength);
+        read(pHandle, data.data(), contentLength);
+        UpnpCloseHttpGet(pHandle);
+    }
+    catch (std::exception& e)
+    {
+        UpnpCloseHttpGet(pHandle);
+        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+    }
     
     throwOnBadHttpStatus(url, httpStatus);
+    
     return data;
 }
 
@@ -100,20 +111,40 @@ void HttpClient::getData(const std::string& url, uint8_t* pData)
 {
     int32_t httpStatus = 0;
     int contentLength = 0;
+    void* pHandle = nullptr;
     
-    void* pHandle = open(url, contentLength, httpStatus);
-    read(pHandle, pData, contentLength);
-    UpnpCloseHttpGet(pHandle);
+    try
+    {
+        pHandle = open(url, contentLength, httpStatus);
+        read(pHandle, pData, contentLength);
+        UpnpCloseHttpGet(pHandle);
+    }
+    catch (std::exception& e)
+    {
+        UpnpCloseHttpGet(pHandle);
+        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+    }
+    
+    throwOnBadHttpStatus(url, httpStatus);
 }
 
 void HttpClient::getData(const std::string& url, uint8_t* pData, uint64_t offset, uint64_t size)
 {
     int32_t httpStatus = 0;
     int contentLength = 0;
+    void* pHandle = nullptr;
     
-    void* pHandle = open(url, contentLength, httpStatus, offset, size);
-    read(pHandle, pData, contentLength);
-    UpnpCloseHttpGet(pHandle);
+    try
+    {
+        pHandle = open(url, contentLength, httpStatus, offset, size);
+        read(pHandle, pData, contentLength);
+        UpnpCloseHttpGet(pHandle);
+    }
+    catch (std::exception& e)
+    {
+        UpnpCloseHttpGet(pHandle);
+        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+    }
     
     throwOnBadHttpStatus(url, httpStatus);
 }
@@ -123,13 +154,7 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
     void* pHandle       = nullptr;
     char* pContentType  = nullptr;
 
-    auto ret = UpnpOpenHttpGet(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, m_Timeout);
-	if (ret != UPNP_E_SUCCESS)
-	{
-		UpnpCloseHttpGet(pHandle);
-		throw std::logic_error(stringops::format("Failed to get http url %s (%d)", url, ret));
-	}
-    
+    handleUPnPResult(UpnpOpenHttpGet(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, m_Timeout));
     return pHandle;
 }
 
@@ -138,26 +163,14 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
     void* pHandle       = nullptr;
     char* pContentType  = nullptr;
 
-    auto ret = UpnpOpenHttpGetEx(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size - 1), m_Timeout);
-	if (ret != UPNP_E_SUCCESS)
-	{
-		UpnpCloseHttpGet(pHandle);
-		throw std::logic_error(stringops::format("Failed to get http url %s (%d)", url, ret));
-	}
-    
+    handleUPnPResult(UpnpOpenHttpGetEx(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size - 1), m_Timeout));
     return pHandle;
 }
 
 void HttpClient::read(void* pHandle, uint8_t* pData, size_t dataSize)
 {
     auto sizeCopy = dataSize;
-
-    auto ret = UpnpReadHttpGet(pHandle, reinterpret_cast<char*>(pData), &sizeCopy, m_Timeout);
-	if (ret != UPNP_E_SUCCESS)
-	{
-        UpnpCloseHttpGet(pHandle);
-        throw std::logic_error(stringops::format("Failed to get url data (%d)", ret));
-	}
+    handleUPnPResult(UpnpReadHttpGet(pHandle, reinterpret_cast<char*>(pData), &sizeCopy, m_Timeout));
     
     if (sizeCopy != dataSize)
     {

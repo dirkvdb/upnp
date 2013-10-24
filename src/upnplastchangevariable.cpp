@@ -23,7 +23,7 @@
 
 using namespace utils;
 
-#define DEBUG_LAST_CHANGE_VAR
+//#define DEBUG_LAST_CHANGE_VAR
 
 namespace upnp
 {

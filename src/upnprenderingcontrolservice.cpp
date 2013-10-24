@@ -134,8 +134,10 @@ xml::Document Service::getSubscriptionResponse()
     property.appendChild(lastChange);
     propertySet.appendChild(property);
     doc.appendChild(propertySet);
-    
+
+#ifdef DEBUG_RENDERING_CONTROL
     log::debug(doc.toString());
+#endif
     
     return doc;
 }
