@@ -35,9 +35,9 @@ MediaRenderer::MediaRenderer(IClient& client)
 : m_Client(client)
 , m_ConnectionMgr(client)
 , m_RenderingControl(client)
-, m_Active(false)
 , m_CurrentVolume(0)
 , m_PlaybackState(PlaybackState::Stopped)
+, m_Active(false)
 {
 }
 

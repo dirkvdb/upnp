@@ -30,17 +30,18 @@ class HttpReader : public utils::IReader
 public:
     HttpReader();
     
-    virtual void open(const std::string& url);
+    virtual void open(const std::string& url) override;
 
-    virtual uint64_t getContentLength();
-    virtual uint64_t currentPosition();
-    virtual bool eof();
-    virtual std::string uri();
+    virtual uint64_t getContentLength() override;
+    virtual uint64_t currentPosition() override;
+    virtual bool eof() override;
+    virtual std::string uri() override;
     
-    virtual void seekAbsolute(uint64_t position);
-    virtual void seekRelative(uint64_t offset);
-    virtual uint64_t read(uint8_t* pData, uint64_t size);
-    virtual void clearErrors();
+    virtual void seekAbsolute(uint64_t position) override;
+    virtual void seekRelative(uint64_t offset) override;
+    virtual uint64_t read(uint8_t* pData, uint64_t size) override;
+    virtual std::vector<uint8_t> readAllData() override;
+    virtual void clearErrors() override;
     
 private:
     void throwOnEmptyUrl();

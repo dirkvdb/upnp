@@ -94,6 +94,20 @@ uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
     return size;
 }
 
+std::vector<uint8_t> HttpReader::readAllData()
+{
+    std::vector<uint8_t> data;
+    data.resize(getContentLength());
+    
+    seekAbsolute(0);
+    if (data.size() != read(data.data(), data.size()))
+    {
+        throw std::runtime_error("Failed to read all file data for url: " + m_Url);
+    }
+    
+    return data;
+}
+
 void HttpReader::clearErrors()
 {
 }

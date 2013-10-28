@@ -164,7 +164,7 @@ TEST_F(XmlUtilsTest, elementGetChildElementValue)
 
 TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
 {
-    auto vars = getStateVariablesFromDescription(doc);
+    auto vars = xml::utils::getStateVariablesFromDescription(doc);
 
     auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
         return var.name == "LastChange";
@@ -194,7 +194,7 @@ TEST_F(XmlUtilsTest, itemToDocument)
     item.addMetaData(Property::Album, "An album");
     item.addMetaData(Property::Class, "object.container.album.musicAlbum");
     
-    auto doc = xml::getItemDocument(item);
+    auto doc = xml::utils::getItemDocument(item);
     auto didl = doc.getElementsByTagName("DIDL-Lite").getNode(0);
     xml::Element itemElem = didl.getFirstChild();
     
