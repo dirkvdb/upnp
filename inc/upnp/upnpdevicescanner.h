@@ -22,6 +22,7 @@
 #include <mutex>
 #include <memory>
 #include <future>
+#include <thread>
 
 #include <upnp/upnp.h>
 
