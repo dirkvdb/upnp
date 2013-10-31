@@ -11,33 +11,35 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-ADD_EXECUTABLE(upnptest
-	gmock-gtest-all.cpp
-	main.cpp
-
-    devicediscover.h
-
-    xmlutilstest.cpp
-	#mediarenderertest.cpp
-	#mediaservertest.cpp
-	#controlpointtest.cpp
-	testenvironment.h
-    webservertest.cpp
-    upnpavtransporttest.cpp
-    upnpcontentdirectorytest.cpp
-    upnprenderingcontroltest.cpp
-    upnpservicebasetest.cpp
-)
-
 LINK_DIRECTORIES(
     ${UPNPFRAMEWORK_LIBRARY_DIRS}
 )
 
-TARGET_LINK_LIBRARIES(upnptest
-	-lpthread
-	${UTILS_LIBRARIES}
-	${UPNPFRAMEWORK_LIBRARIES}
-)
+IF (BUILD_TESTING)
+    ADD_EXECUTABLE(upnptest
+        gmock-gtest-all.cpp
+        main.cpp
 
-ADD_TEST(UPnPTests upnptest)
- 
+        devicediscover.h
+
+        xmlutilstest.cpp
+        #mediarenderertest.cpp
+        #mediaservertest.cpp
+        #controlpointtest.cpp
+        testenvironment.h
+        webservertest.cpp
+        upnpavtransporttest.cpp
+        upnpcontentdirectorytest.cpp
+        upnprenderingcontroltest.cpp
+        upnpservicebasetest.cpp
+    )
+
+
+    TARGET_LINK_LIBRARIES(upnptest
+        -lpthread
+        ${UTILS_LIBRARIES}
+        ${UPNPFRAMEWORK_LIBRARIES}
+    )
+
+    ADD_TEST(UPnPTests upnptest)
+ENDIF (BUILD_TESTING)
