@@ -10,12 +10,15 @@ PKG_CHECK_MODULES(UPNP libupnp REQUIRED)
 SET (UPNPFRAMEWORK_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
     "${CMAKE_CURRENT_SOURCE_DIR}/../utils/inc/"
-    ${UPNP_INCLUDE_DIRS})
+    ${UPNP_INCLUDEDIR})
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
     ${UPNP_LIBRARY_DIRS}
 )
 SET (UPNPFRAMEWORK_LIBRARIES upnpframework ${UPNP_LIBRARIES} ${UTILS_LIBRARIES})
+
+INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
+LINK_DIRECTORIES(${UPNPFRAMEWORK_LIBRARY_DIRS})
 
 ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpaction.h                       src/upnpaction.cpp
@@ -54,12 +57,9 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnptypes.h
     inc/upnp/upnputils.h
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
-    inc/upnp/upnpxml.h                     src/upnpxml.cpp
+    inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
 )
-
-INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
-LINK_DIRECTORIES(${UPNPFRAMEWORK_LIBRARY_DIRS})
 
 ADD_DEFINITIONS("-std=c++11")
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
