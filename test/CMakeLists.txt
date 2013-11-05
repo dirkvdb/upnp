@@ -15,31 +15,30 @@ LINK_DIRECTORIES(
     ${UPNPFRAMEWORK_LIBRARY_DIRS}
 )
 
-IF (BUILD_TESTING)
-    ADD_EXECUTABLE(upnptest
-        gmock-gtest-all.cpp
-        main.cpp
+ADD_EXECUTABLE(upnptest EXCLUDE_FROM_ALL
+    gmock-gtest-all.cpp
+    main.cpp
 
-        devicediscover.h
+    devicediscover.h
 
-        xmlutilstest.cpp
-        #mediarenderertest.cpp
-        #mediaservertest.cpp
-        #controlpointtest.cpp
-        testenvironment.h
-        webservertest.cpp
-        upnpavtransporttest.cpp
-        upnpcontentdirectorytest.cpp
-        upnprenderingcontroltest.cpp
-        upnpservicebasetest.cpp
-    )
+    xmlutilstest.cpp
+    #mediarenderertest.cpp
+    #mediaservertest.cpp
+    #controlpointtest.cpp
+    testenvironment.h
+    webservertest.cpp
+    upnpavtransporttest.cpp
+    upnpcontentdirectorytest.cpp
+    upnprenderingcontroltest.cpp
+    upnpservicebasetest.cpp
+)
 
 
-    TARGET_LINK_LIBRARIES(upnptest
-        -lpthread
-        ${UTILS_LIBRARIES}
-        ${UPNPFRAMEWORK_LIBRARIES}
-    )
+TARGET_LINK_LIBRARIES(upnptest
+    -lpthread
+    ${UTILS_LIBRARIES}
+    ${UPNPFRAMEWORK_LIBRARIES}
+)
 
-    ADD_TEST(UPnPTests upnptest)
-ENDIF (BUILD_TESTING)
+ADD_TEST(UPnPTests upnptest)
+ADD_DEPENDENCIES(check upnptest)
