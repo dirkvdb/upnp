@@ -171,7 +171,7 @@ void MediaServer::getItemsInContainer(const ItemPtr& container, const ItemCb& on
 
 void MediaServer::getItemsInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getContainersInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
@@ -181,7 +181,7 @@ void MediaServer::getContainersInContainer(const ItemPtr& container, const ItemC
 
 void MediaServer::getContainersInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getAllInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
@@ -191,7 +191,7 @@ void MediaServer::getAllInContainer(const ItemPtr& container, const ItemCb& onIt
 
 void MediaServer::getAllInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode));
 }
 
 std::vector<ItemPtr> MediaServer::search(const ItemPtr& container, const std::string& criteria)
@@ -266,12 +266,12 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::map<Property, 
 
 void MediaServer::searchAsync(const ItemPtr& container, const ItemCb& onItem, const std::string& criteria)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::searchThread<std::string>, this, container, onItem, criteria));
+    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::string>, this, container, onItem, criteria));
 }
 
 void MediaServer::searchAsync(const ItemPtr& container, const ItemCb& onItem, const std::map<Property, std::string>& criteria)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, container, onItem, criteria));
+    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, container, onItem, criteria));
 }
 
 ItemPtr MediaServer::getMetaData(const std::string& objectId)
@@ -281,7 +281,7 @@ ItemPtr MediaServer::getMetaData(const std::string& objectId)
 
 void MediaServer::getMetaDataAsync(const std::string& objectId, const ItemCb& onItem)
 {
-    m_ThreadPool.queueFunction(std::bind(&MediaServer::getMetaDataThread, this, objectId, onItem));
+    m_ThreadPool.addJob(std::bind(&MediaServer::getMetaDataThread, this, objectId, onItem));
 }
 
 void MediaServer::setCompletedCallback(const CompletedCb& completedCb)
