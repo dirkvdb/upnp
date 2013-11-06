@@ -31,7 +31,7 @@ namespace upnp
 {
 
 const std::string MediaServer::rootId = "0";
-static const uint32_t g_maxNumThreads = 20;
+static const uint32_t g_maxNumThreads = 8;
 static const uint32_t g_requestSize =32;
     
 MediaServer::MediaServer(IClient& client)
