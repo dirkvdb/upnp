@@ -21,6 +21,7 @@ ADD_EXECUTABLE(upnptest EXCLUDE_FROM_ALL
     #mediaservertest.cpp
     #controlpointtest.cpp
     testenvironment.h
+    httpreadertest.cpp
     webservertest.cpp
     upnpavtransporttest.cpp
     upnpcontentdirectorytest.cpp
