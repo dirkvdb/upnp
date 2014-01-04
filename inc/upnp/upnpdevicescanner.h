@@ -54,8 +54,9 @@ public:
     void onDeviceDissapeared(const std::string& deviceId);
     
 private:
+    void obtainDeviceDetails(Upnp_Discovery* pDiscovery, const std::shared_ptr<Device>& device);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
-    static bool findAndParseService(xml::Document& doc, ServiceType serviceType, std::shared_ptr<Device>& device);
+    static bool findAndParseService(xml::Document& doc, ServiceType serviceType, const std::shared_ptr<Device>& device);
     
     void checkForTimeoutThread();
     
