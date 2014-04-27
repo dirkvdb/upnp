@@ -169,7 +169,7 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
 
 void HttpClient::read(void* pHandle, uint8_t* pData, size_t dataSize)
 {
-    auto sizeCopy = dataSize;
+    auto sizeCopy = static_cast<unsigned int>(dataSize);
     handleUPnPResult(UpnpReadHttpGet(pHandle, reinterpret_cast<char*>(pData), &sizeCopy, m_Timeout));
     
     if (sizeCopy != dataSize)
