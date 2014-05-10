@@ -163,6 +163,17 @@ std::vector<ItemPtr> MediaServer::getItemsInContainer(const ItemPtr& container, 
 
     return items;
 }
+    
+std::vector<ItemPtr> MediaServer::getAllInContainer(const ItemPtr& container, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+{
+    std::vector<ItemPtr> items;
+    
+    getAllInContainer(container, [&items] (const ItemPtr& item) {
+        items.push_back(item);
+    }, offset, limit, sort, mode);
+    
+    return items;
+}
 
 void MediaServer::getItemsInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {

@@ -135,10 +135,16 @@ void DeviceScanner::refresh()
     m_Client.searchDevices(m_Type, 5);
 }
 
-uint32_t DeviceScanner::getDeviceCount()
+uint32_t DeviceScanner::getDeviceCount() const
 {
     std::lock_guard<std::mutex> lock(m_DataMutex);
     return static_cast<uint32_t>(m_Devices.size());
+}
+    
+std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
+{
+    std::lock_guard<std::mutex> lock(m_DataMutex);
+    return m_Devices.at(udn);
 }
 
 std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()

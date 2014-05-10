@@ -69,6 +69,7 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
     std::vector<ItemPtr> getItemsInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    std::vector<ItemPtr> getAllInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     
     // Synchronous browse calls
     void getItemsInContainer            (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);

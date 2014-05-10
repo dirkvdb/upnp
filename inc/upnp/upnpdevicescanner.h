@@ -44,7 +44,8 @@ public:
     void stop();
     void refresh();
     
-    uint32_t getDeviceCount();
+    uint32_t getDeviceCount() const;
+    std::shared_ptr<Device> getDevice(const std::string& udn) const;
     std::map<std::string, std::shared_ptr<Device>> getDevices();
     
     utils::Signal<void(std::shared_ptr<Device>)> DeviceDiscoveredEvent;
@@ -63,8 +64,8 @@ private:
     IClient&                                        m_Client;
     Device::Type                                    m_Type;
     std::map<std::string, std::shared_ptr<Device>>  m_Devices;
-    std::mutex                                      m_Mutex;
-    std::mutex                                      m_DataMutex;
+    mutable std::mutex                              m_Mutex;
+    mutable std::mutex                              m_DataMutex;
     
     std::future<void>                               m_Thread;
     std::condition_variable                         m_Condition;
