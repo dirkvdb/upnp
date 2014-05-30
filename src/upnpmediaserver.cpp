@@ -153,74 +153,74 @@ const std::vector<Property>& MediaServer::getSortCapabilities() const
     return m_ContentDirectory.getSortCapabilities();
 }
 
-std::vector<ItemPtr> MediaServer::getItemsInContainer(const ItemPtr& container, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+std::vector<ItemPtr> MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
 {
     std::vector<ItemPtr> items;
     
-    getItemsInContainer(container, [&items] (const ItemPtr& item) {
+    getItemsInContainer(id, [&items] (const ItemPtr& item) {
         items.push_back(item);
     }, offset, limit, sort, mode);
 
     return items;
 }
     
-std::vector<ItemPtr> MediaServer::getAllInContainer(const ItemPtr& container, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+std::vector<ItemPtr> MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
 {
     std::vector<ItemPtr> items;
     
-    getAllInContainer(container, [&items] (const ItemPtr& item) {
+    getAllInContainer(id, [&items] (const ItemPtr& item) {
         items.push_back(item);
     }, offset, limit, sort, mode);
     
     return items;
 }
 
-void MediaServer::getItemsInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainer(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::ItemsOnly, id, onItem, offset, limit, sort, sortMode);
 }
 
-void MediaServer::getItemsInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, id, onItem, offset, limit, sort, sortMode));
 }
 
-void MediaServer::getContainersInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getContainersInContainer(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::ContainersOnly, id, onItem, offset, limit, sort, sortMode);
 }
 
-void MediaServer::getContainersInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getContainersInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, id, onItem, offset, limit, sort, sortMode));
 }
 
-void MediaServer::getAllInContainer(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getAllInContainer(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    performBrowseRequest(ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::All, id, onItem, offset, limit, sort, sortMode);
 }
 
-void MediaServer::getAllInContainerAsync(const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getAllInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, container, onItem, offset, limit, sort, sortMode));
+    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, id, onItem, offset, limit, sort, sortMode));
 }
 
-std::vector<ItemPtr> MediaServer::search(const ItemPtr& container, const std::string& criteria)
+std::vector<ItemPtr> MediaServer::search(const std::string& id, const std::string& criteria)
 {
     std::vector<ItemPtr> items;
     
-    search(container, criteria, [&items] (const ItemPtr& item) {
+    search(id, criteria, [&items] (const ItemPtr& item) {
         items.push_back(item);
     });
     
     return items;
 }
 
-std::vector<ItemPtr> MediaServer::search(const ItemPtr& container, const std::map<Property, std::string>& criteria)
+std::vector<ItemPtr> MediaServer::search(const std::string& id, const std::map<Property, std::string>& criteria)
 {
     std::vector<ItemPtr> items;
     
-    search(container, criteria, [&items] (const ItemPtr& item) {
+    search(id, criteria, [&items] (const ItemPtr& item) {
         items.push_back(item);
     });
     
@@ -228,7 +228,7 @@ std::vector<ItemPtr> MediaServer::search(const ItemPtr& container, const std::ma
 }
     
 
-uint32_t MediaServer::search(const ItemPtr& container, const std::string& criteria, const ItemCb& onItem)
+uint32_t MediaServer::search(const std::string& id, const std::string& criteria, const ItemCb& onItem)
 {
     m_Abort = false;
     uint32_t offset = 0;
@@ -236,7 +236,7 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::string& criter
 
     do
     {
-        res = m_ContentDirectory.search(onItem, container->getObjectId(), criteria, "*", offset, g_requestSize, "");
+        res = m_ContentDirectory.search(onItem, id, criteria, "*", offset, g_requestSize, "");
         offset += res.numberReturned;
     }
     while (offset < res.totalMatches || (res.totalMatches == 0 && res.numberReturned != 0));
@@ -249,7 +249,7 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::string& criter
     return res.totalMatches;
 }
 
-uint32_t MediaServer::search(const ItemPtr& container, const std::map<Property, std::string>& criteria, const ItemCb& onItem)
+uint32_t MediaServer::search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemCb& onItem)
 {
     bool first = true;
     std::stringstream critString;
@@ -272,17 +272,17 @@ uint32_t MediaServer::search(const ItemPtr& container, const std::map<Property, 
         critString << toString(crit.first) << " contains \"" << crit.second << "\"";
     }
 
-    return search(container, critString.str(), onItem);
+    return search(id, critString.str(), onItem);
 }
 
-void MediaServer::searchAsync(const ItemPtr& container, const ItemCb& onItem, const std::string& criteria)
+void MediaServer::searchAsync(const std::string& id, const ItemCb& onItem, const std::string& criteria)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::string>, this, container, onItem, criteria));
+    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::string>, this, id, onItem, criteria));
 }
 
-void MediaServer::searchAsync(const ItemPtr& container, const ItemCb& onItem, const std::map<Property, std::string>& criteria)
+void MediaServer::searchAsync(const std::string& id, const ItemCb& onItem, const std::map<Property, std::string>& criteria)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, container, onItem, criteria));
+    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, id, onItem, criteria));
 }
 
 ItemPtr MediaServer::getMetaData(const std::string& objectId)
@@ -313,7 +313,7 @@ void MediaServer::setTransportItem(Resource& resource)
     }
 }
 
-void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
     m_Abort = false;
 
@@ -333,7 +333,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
         }
         
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
-        ContentDirectory::Client::ActionResult res = m_ContentDirectory.browseDirectChildren(type, onItem, container->getObjectId(), "*", curOffset, requestSize, ss.str());
+        ContentDirectory::Client::ActionResult res = m_ContentDirectory.browseDirectChildren(type, onItem, id, "*", curOffset, requestSize, ss.str());
         itemsReceived += res.numberReturned;
         
         if (limit > 0)
@@ -352,11 +352,11 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
     }
 }
 
-void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
     try
     {
-        performBrowseRequest(type, item, onItem, offset, limit, sort, sortMode);
+        performBrowseRequest(type, id, onItem, offset, limit, sort, sortMode);
     }
     catch(std::exception& e)
     {
@@ -369,12 +369,12 @@ void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseTyp
 }
 
 template <typename T>
-void MediaServer::searchThread(const ItemPtr& container, const ItemCb& onItem, const T& criteria)
+void MediaServer::searchThread(const std::string& id, const ItemCb& onItem, const T& criteria)
 {
     try
     {
         auto critCopy = criteria;
-        search(container, criteria, onItem);
+        search(id, criteria, onItem);
     }
     catch(std::exception& e)
     {
@@ -386,11 +386,11 @@ void MediaServer::searchThread(const ItemPtr& container, const ItemCb& onItem, c
     }
 }
 
-void MediaServer::getMetaDataThread(const std::string& objectId, const ItemCb& onItem)
+void MediaServer::getMetaDataThread(const std::string& id, const ItemCb& onItem)
 {
     try
     {
-        onItem(getMetaData(objectId));
+        onItem(getMetaData(id));
     }
     catch(std::exception& e)
     {
