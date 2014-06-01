@@ -68,26 +68,26 @@ public:
     bool canSortOnProperty(Property prop) const;
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
-    std::vector<ItemPtr> getItemsInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    std::vector<ItemPtr> getAllInContainer(const ItemPtr& container, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    
+
     // Synchronous browse calls
-    void getItemsInContainer            (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainer       (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainer              (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    ItemPtr getMetaData                 (const std::string& objectId);
-    uint32_t search                     (const ItemPtr& container, const std::string& criteria, const ItemCb& onItem);
-    uint32_t search                     (const ItemPtr& container, const std::map<Property, std::string>& criteria, const ItemCb& onItem);
-    std::vector<ItemPtr> search         (const ItemPtr& container, const std::string& criteria);
-    std::vector<ItemPtr> search         (const ItemPtr& container, const std::map<Property, std::string>& criteria);
+    void getItemsInContainer                (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainer           (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainer                  (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    std::vector<ItemPtr> getItemsInContainer(const std::string& id, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    std::vector<ItemPtr> getAllInContainer  (const std::string& id, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    ItemPtr getMetaData                     (const std::string& id);
+    uint32_t search                         (const std::string& id, const std::string& criteria, const ItemCb& onItem);
+    uint32_t search                         (const std::string& id, const std::map<Property, std::string>& criteria, const ItemCb& onItem);
+    std::vector<ItemPtr> search             (const std::string& id, const std::string& criteria);
+    std::vector<ItemPtr> search             (const std::string& id, const std::map<Property, std::string>& criteria);
     
     // Asynchronous browse calls
-    void getItemsInContainerAsync       (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainerAsync  (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainerAsync         (const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getMetaDataAsync               (const std::string& objectId, const ItemCb& onItem);
-    void searchAsync                    (const ItemPtr& container, const ItemCb& onItem, const std::string& criteria);
-    void searchAsync                    (const ItemPtr& container, const ItemCb& onItem, const std::map<Property, std::string>& criteria);
+    void getItemsInContainerAsync           (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getContainersInContainerAsync      (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getAllInContainerAsync             (const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getMetaDataAsync                   (const std::string& id, const ItemCb& onItem);
+    void searchAsync                        (const std::string& id, const ItemCb& onItem, const std::string& criteria);
+    void searchAsync                        (const std::string& id, const ItemCb& onItem, const std::map<Property, std::string>& criteria);
     
     // callbacks for the asynchronous methods
     void setItemCallback(const ItemCb& itemCb);
@@ -100,10 +100,10 @@ public:
     ConnectionManager::Client& connectionManager();
     
 private:
-    void performBrowseRequest(ContentDirectory::Client::BrowseType type, const ItemPtr& container, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const ItemPtr& item, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
+    void performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     template <typename T>
-    void searchThread(const ItemPtr& container, const ItemCb& onItem, const T& criteria);
+    void searchThread(const std::string& id, const ItemCb& onItem, const T& criteria);
     void getMetaDataThread(const std::string& objectId, const ItemCb& onItem);
 
     std::shared_ptr<Device>                 m_Device;

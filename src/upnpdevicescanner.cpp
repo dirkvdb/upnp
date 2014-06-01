@@ -292,7 +292,7 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
     
     {
         std::lock_guard<std::mutex> lock(m_DataMutex);
-        
+
         auto iter = m_Devices.find(pDiscovery->DeviceId);
         if (iter != m_Devices.end())
         {
@@ -304,7 +304,15 @@ void DeviceScanner::onDeviceDiscovered(Upnp_Discovery* pDiscovery)
             {
                 // update the device, ip or port has changed
                 log::debug("Update device, location has changed: %s -> %s", iter->second->m_Location, std::string(pDiscovery->Location));
-                return obtainDeviceDetails(pDiscovery, iter->second);
+
+                try
+                {
+                    obtainDeviceDetails(pDiscovery, iter->second);
+                }
+                catch (std::exception& e)
+                {
+                    log::error(e.what());
+                }
             }
             
             return;
