@@ -34,5 +34,5 @@ TARGET_LINK_LIBRARIES(upnptest
     ${UPNPFRAMEWORK_LIBRARIES}
 )
 
-ADD_TEST(UPnPTests upnptest)
+ADD_TEST(NAME UPnPTests COMMAND upnptest)
 ADD_DEPENDENCIES(check upnptest)

@@ -107,7 +107,6 @@ private:
     void getMetaDataThread(const std::string& objectId, const ItemCb& onItem);
 
     std::shared_ptr<Device>                 m_Device;
-    std::vector<ProtocolInfo>               m_ProtocolInfo;
     
     IClient&                                m_Client;
     ContentDirectory::Client                m_ContentDirectory;
@@ -118,8 +117,7 @@ private:
     
     utils::ThreadPool                       m_ThreadPool;
     bool                                    m_Abort;
-    
-    ItemCb                                  m_ItemCb;
+
     CompletedCb                             m_CompletedCb;
     ErrorCb                                 m_ErrorCb;
 };
