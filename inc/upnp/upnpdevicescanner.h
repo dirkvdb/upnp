@@ -30,6 +30,7 @@
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpxmlutils.h"
 #include "utils/signal.h"
+#include "utils/workerthread.h"
 
 namespace upnp
 {
@@ -51,11 +52,12 @@ public:
     utils::Signal<void(std::shared_ptr<Device>)> DeviceDiscoveredEvent;
     utils::Signal<void(std::shared_ptr<Device>)> DeviceDissapearedEvent;
     
-    void onDeviceDiscovered(Upnp_Discovery* pDiscovery);
+    void onDeviceDiscovered(const DeviceDiscoverInfo& info);
     void onDeviceDissapeared(const std::string& deviceId);
     
 private:
-    void obtainDeviceDetails(Upnp_Discovery* pDiscovery, const std::shared_ptr<Device>& device);
+    void updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
+    void obtainDeviceDetails(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
     static bool findAndParseService(xml::Document& doc, ServiceType serviceType, const std::shared_ptr<Device>& device);
     
@@ -68,6 +70,7 @@ private:
     mutable std::mutex                              m_DataMutex;
     
     std::future<void>                               m_Thread;
+    utils::WorkerThread                             m_DownloadThread;
     std::condition_variable                         m_Condition;
     bool                                            m_Started;
     bool                                            m_Stop;

@@ -29,6 +29,16 @@
 
 namespace upnp
 {
+
+struct DeviceDiscoverInfo
+{
+    uint32_t        expirationTime;
+    std::string     deviceId;
+    std::string     deviceType;
+    std::string     serviceType;
+    std::string     serviceVersion;
+    std::string     location;
+};
     
 class IClient
 {
@@ -50,7 +60,7 @@ public:
     virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;
     
-    utils::Signal<void(Upnp_Discovery*)> UPnPDeviceDiscoveredEvent;
+    utils::Signal<void(const DeviceDiscoverInfo&)> UPnPDeviceDiscoveredEvent;
     utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
     utils::Signal<void(Upnp_Event*)> UPnPEventOccurredEvent;
 };

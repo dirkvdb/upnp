@@ -200,7 +200,15 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         }
         else if (pDiscEvent->DeviceId && pDiscEvent->DeviceType && pDiscEvent->Location)
         {
-            pClient->UPnPDeviceDiscoveredEvent(pDiscEvent);
+            DeviceDiscoverInfo info;
+            info.deviceId       = pDiscEvent->DeviceId;
+            info.deviceType     = pDiscEvent->DeviceType;
+            info.expirationTime = pDiscEvent->Expires;
+            info.location       = pDiscEvent->Location;
+            info.serviceType    = pDiscEvent->ServiceType;
+            info.serviceVersion = pDiscEvent->ServiceVer;
+
+            pClient->UPnPDeviceDiscoveredEvent(info);
         }
         break;
     }
