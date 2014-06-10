@@ -49,10 +49,10 @@ public:
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
     
 protected:
-    virtual Action actionFromString(const std::string& action);
-    virtual std::string actionToString(Action action);
-    virtual Variable variableFromString(const std::string& var);
-    virtual std::string variableToString(Variable var);
+    virtual Action actionFromString(const std::string& action) const override;
+    virtual std::string actionToString(Action action) const override;
+    virtual Variable variableFromString(const std::string& var) const override;
+    virtual std::string variableToString(Variable var) const override;
 
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();

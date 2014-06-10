@@ -157,10 +157,10 @@ void ControlPoint::stopPlaybackIfNecessary()
 {
     try
     {
-        if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
-        {
+        //if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
+        //{
             m_Renderer.stop();
-        }
+        //}
     } catch (std::exception&) {}
 }
 

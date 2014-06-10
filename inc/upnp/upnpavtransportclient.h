@@ -33,18 +33,6 @@ namespace AVTransport
 class Client : public ServiceBase<Action, Variable>
 {
 public:
-    struct PositionInfo
-    {
-        std::string track;
-        std::string trackMetaData;
-        std::string trackDuration;
-        std::string trackURI;
-        std::string relTime;
-        std::string absTime;
-        std::string relCount;
-        std::string absCount;
-    };
-    
     Client(IClient& client);
     
     void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
@@ -56,15 +44,18 @@ public:
     void previous(int32_t connectionId);
     void seek(int32_t connectionId, SeekMode mode, const std::string& target);
     void next(int32_t connectionId);
+    
     PositionInfo getPositionInfo(int32_t connectionId);
+    MediaInfo getMediaInfo(int32_t connectionId);
     TransportInfo getTransportInfo(int32_t connectionId);
+    std::set<Action> getCurrentTransportActions(int32_t connectionId);
     
     utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
     
-    virtual Action actionFromString(const std::string& action);
-    virtual std::string actionToString(Action action);
-    virtual Variable variableFromString(const std::string& var);
-    virtual std::string variableToString(Variable var);
+    virtual Action actionFromString(const std::string& action) const  override;
+    virtual std::string actionToString(Action action) const  override;
+    virtual Variable variableFromString(const std::string& var) const  override;
+    virtual std::string variableToString(Variable var) const  override;
     
 protected:
     void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);

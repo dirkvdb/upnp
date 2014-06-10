@@ -92,10 +92,10 @@ public:
         return m_SupportedActions.find(action) != m_SupportedActions.end();
     }
     
-    virtual ActionType actionFromString(const std::string& action) = 0;
-    virtual std::string actionToString(ActionType action) = 0;
-    virtual VariableType variableFromString(const std::string& var) = 0;
-    virtual std::string variableToString(VariableType var) = 0;
+    virtual ActionType actionFromString(const std::string& action) const = 0;
+    virtual std::string actionToString(ActionType action) const  = 0;
+    virtual VariableType variableFromString(const std::string& var) const  = 0;
+    virtual std::string variableToString(VariableType var) const  = 0;
     
 protected:
     virtual void parseServiceDescription(const std::string& descriptionUrl)

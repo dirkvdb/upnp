@@ -122,7 +122,7 @@ enum class PlayMode
     Direct,
     Intro
 };
-
+    
 struct TransportInfo
 {
     State       currentTransportState;

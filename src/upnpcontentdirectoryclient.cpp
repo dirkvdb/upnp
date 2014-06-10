@@ -397,22 +397,22 @@ void Client::addPropertyToList(const std::string& propertyName, std::vector<Prop
     }
 }
 
-Action Client::actionFromString(const std::string& action)
+Action Client::actionFromString(const std::string& action) const
 {
     return ContentDirectory::actionFromString(action);
 }
 
-std::string Client::actionToString(Action action)
+std::string Client::actionToString(Action action) const
 {
     return ContentDirectory::actionToString(action);
 }
 
-Variable Client::variableFromString(const std::string& var)
+Variable Client::variableFromString(const std::string& var) const
 {
     return ContentDirectory::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var)
+std::string Client::variableToString(Variable var) const 
 {
     return ContentDirectory::variableToString(var);
 }

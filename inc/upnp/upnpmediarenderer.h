@@ -74,7 +74,6 @@ public:
     void setDevice(const std::shared_ptr<Device>& device);
     bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
     
-    
     // Connection management
     std::string getPeerConnectionManager() const;
     void resetConnection();
@@ -97,8 +96,8 @@ public:
     std::string getCurrentTrackURI() const;
     uint32_t getCurrentTrackDuration() const;
     ItemPtr getCurrentTrackInfo() const;
-    std::set<Action> getAvailableActions() const;
-    bool isActionAvailable(Action action) const;
+    std::set<Action> getAvailableActions();
+    static bool isActionAvailable(const std::set<Action>& actions, Action action);
     
     bool supportsQueueItem() const;
     
@@ -112,15 +111,17 @@ public:
     
     utils::Signal<void(std::shared_ptr<Device>)>    DeviceChanged;
     utils::Signal<void(uint32_t)>                   VolumeChanged;
-    utils::Signal<void()>                           MediaInfoChanged;
+    utils::Signal<void(ItemPtr)>                    CurrentTrackChanged;
+    utils::Signal<void(std::set<Action>)>           AvailableActionsChanged;
+    utils::Signal<void(PlaybackState)>              PlaybackStateChanged;
     
 private:
-    void throwOnUnknownConnectionId();
+    void throwOnUnknownConnectionId() const;
 
     void resetData();
-    void calculateAvailableActions();
-    void updateCurrentTrack();
-    void updatePlaybackState();
+    std::set<Action> parseAvailableActions(const std::string& actions) const ;
+    ItemPtr parseCurrentTrack(const std::string& track) const ;
+    PlaybackState parsePlaybackState(const std::string& state) const ;
     
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
@@ -135,14 +136,10 @@ private:
     ConnectionManager::Client                       m_ConnectionMgr;
     RenderingControl::Client                        m_RenderingControl;
     std::unique_ptr<AVTransport::Client>            m_AVtransport;
-    uint32_t                                        m_CurrentVolume;
     
     std::vector<ProtocolInfo>                       m_ProtocolInfo;
-    std::set<Action>                                m_AvailableActions;
     std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
-    ItemPtr                                         m_CurrentTrack;
     ConnectionManager::ConnectionInfo               m_ConnInfo;
-    PlaybackState                                   m_PlaybackState;
     
     
     bool                                            m_Active;

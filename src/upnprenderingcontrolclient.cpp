@@ -108,22 +108,22 @@ void Client::handleUPnPResult(int errorCode)
     }
 }
 
-Action Client::actionFromString(const std::string& action)
+Action Client::actionFromString(const std::string& action) const
 {
     return RenderingControl::actionFromString(action);
 }
 
-std::string Client::actionToString(Action action)
+std::string Client::actionToString(Action action) const
 {
     return RenderingControl::toString(action);
 }
 
-Variable Client::variableFromString(const std::string& var)
+Variable Client::variableFromString(const std::string& var) const
 {
     return RenderingControl::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var)
+std::string Client::variableToString(Variable var) const 
 {
     return RenderingControl::toString(var);
 }
