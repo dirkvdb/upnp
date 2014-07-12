@@ -108,6 +108,7 @@ void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)
 , m_ChildCount(0)
+, m_Restricted(true)
 {
     setTitle(title);
 }
@@ -154,6 +155,11 @@ std::string Item::getTitle() const
 {
     auto iter = m_MetaData.find(Property::Title);
     return (iter == m_MetaData.end()) ? "" : iter->second;
+}
+
+bool Item::restricted() const
+{
+    return m_Restricted;
 }
 
 std::string Item::getAlbumArtUri(dlna::ProfileId profile) const
@@ -288,3 +294,4 @@ std::map<Property, std::string> Item::getMetaData() const
 }
 
 }
+

@@ -64,22 +64,23 @@ class Service : public DeviceService<Variable>
 public:
     Service(IRootDevice& dev, IRenderingControl& rc);
     ~Service();
-    
+
     void setMute(uint32_t instanceId, Channel channel, bool enabled);
     void setLoudness(uint32_t instanceId, Channel channel, bool enabled);
     void setVolume(uint32_t instanceId, Channel channel, uint16_t volume);
     void setVolumeDB(uint32_t instanceId, Channel channel, int16_t volume);
-
+    
     virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
     
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
     
 protected:
-    virtual std::string variableToString(Variable type) const;
-    void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);
+    virtual std::string variableToString(Variable type) const override;
 
 private:
+    void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);
+
     IRenderingControl&                                       m_RenderingControl;
     LastChangeVariable                                       m_LastChange;
     

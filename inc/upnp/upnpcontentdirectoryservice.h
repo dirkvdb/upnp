@@ -29,18 +29,6 @@ class IClient;
 
 typedef std::function<void(const ItemPtr&)> ItemCb;
 
-enum class SortType
-{
-    Ascending,
-    Descending
-};
-
-struct SortProperty
-{
-    SortType type;
-    Property prop;
-};
-
 namespace ContentDirectory
 {
 
@@ -56,7 +44,7 @@ public:
     virtual ActionResult Browse(const std::string& id, BrowseFlag flag, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<SortProperty>& sortCriteria) = 0;
     
     // Optional
-    virtual ActionResult Search()        { throw InvalidActionException(); }
+    virtual ActionResult Search(const std::string& id, const std::string& criteria, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<SortProperty>& sortCriteria)        { throw InvalidActionException(); }
     virtual void CreateObject()          { throw InvalidActionException(); }
     virtual void DestroyObject()         { throw InvalidActionException(); }
     virtual void UpdateObject()          { throw InvalidActionException(); }

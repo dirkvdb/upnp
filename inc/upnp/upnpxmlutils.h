@@ -45,6 +45,7 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);
 std::map<std::string, std::string> getEventValues(Document& doc);
 Document getItemDocument(const Item& item);
+Document getItemsDocument(const std::vector<ItemPtr>& item);
 
 Element createServiceVariablesElement(Document& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars);
 Element serviceVariableToElement(Document& doc, const ServiceVariable& var);

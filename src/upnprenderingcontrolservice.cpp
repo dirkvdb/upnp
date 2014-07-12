@@ -30,14 +30,14 @@ Service::Service(IRootDevice& dev, IRenderingControl& rc)
 , m_RenderingControl(rc)
 , m_LastChange(m_Type, std::chrono::milliseconds(200))
 {
-    m_LastChange.LastChangeEvent.connect([this] (const xml::Document& doc) {
+    m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {
         m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
-    }, this);
+    };
 }
 
 Service::~Service()
 {
-    m_LastChange.LastChangeEvent.disconnect(this);
+    m_LastChange.LastChangeEvent = nullptr;
 }
 
 void Service::updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value)

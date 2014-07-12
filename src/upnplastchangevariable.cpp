@@ -103,8 +103,11 @@ void LastChangeVariable::createLastChangeEvent()
         propertySet.appendChild(property);
         doc.appendChild(propertySet);
 
-        LastChangeEvent(doc);
-        
+        if (LastChangeEvent)
+        {
+            LastChangeEvent(doc);
+        }
+
 #ifdef DEBUG_LAST_CHANGE_VAR
         utils::log::debug("LastChange event: %s", event.toString());
 #endif
