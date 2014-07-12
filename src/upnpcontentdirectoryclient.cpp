@@ -130,7 +130,7 @@ ItemPtr Client::browseMetadata(const std::string& objectId, const std::string& f
 }
 
 
-Client::ActionResult Client::browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ActionResult Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     ActionResult res;
 
@@ -149,8 +149,7 @@ Client::ActionResult Client::browseDirectChildren(BrowseType type, const ItemCb&
     {
         try
         {
-            auto containers = parseContainers(browseResult);
-            notifySubscriber(containers, onItem);
+            res.result = parseContainers(browseResult);
         }
         catch (std::exception&e ) { log::warn(e.what()); }
     }
@@ -160,7 +159,10 @@ Client::ActionResult Client::browseDirectChildren(BrowseType type, const ItemCb&
         try
         {
             auto items = parseItems(browseResult);
-            notifySubscriber(items, onItem);
+            for (auto& item : items)
+            {
+                res.result.push_back(item);
+            }
         }
         catch (std::exception& e) { log::warn(e.what()); }
     }
@@ -168,7 +170,7 @@ Client::ActionResult Client::browseDirectChildren(BrowseType type, const ItemCb&
     return res;
 }
 
-Client::ActionResult Client::search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+ActionResult Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
     
@@ -188,33 +190,21 @@ Client::ActionResult Client::search(const ItemCb& onItem, const std::string& obj
 
     try
     {
-        auto containers = parseContainers(searchResultDoc);
-        notifySubscriber(containers, onItem);
+        searchResult.result = parseContainers(searchResultDoc);
     }
     catch (std::exception&e ) { log::warn(e.what()); }
     
     try
     {
         auto items = parseItems(searchResultDoc);
-        notifySubscriber(items, onItem);
+        for (auto& item : items)
+        {
+            searchResult.result.push_back(item);
+        }
     }
     catch (std::exception& e) { log::warn(e.what()); }
 
     return searchResult;
-}
-
-void Client::notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem)
-{
-    for (auto& item : items)
-    {
-        if (m_Abort) break;
-        
-#ifdef DEBUG_CONTENT_BROWSING
-        log::debug("Item: %s", item->getTitle());
-#endif
-
-        onItem(item);
-    }
 }
 
 xml::Document Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
@@ -252,6 +242,10 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
         else if (elem.getName() == "TotalMatches")
         {
             result.totalMatches = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+        else if (elem.getName() == "UpdateID")
+        {
+            result.updateId = stringops::toNumeric<uint32_t>(elem.getValue());
         }
     }
     

@@ -315,24 +315,24 @@ TEST_F(AVTransportTest, getPositionInfo)
     
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
-                                                { "AbsCount",      "Absolute count" },
-                                                { "AbsTime",       "Absolute Time" },
-                                                { "RelTime",       "Relative Time" },
-                                                { "RelCount",      "Relative Count" },
-                                                { "Track",         "The Track" },
+                                                { "AbsCount",      "1" },
+                                                { "AbsTime",       "AbsTime" },
+                                                { "RelTime",       "RelTime" },
+                                                { "RelCount",      "2" },
+                                                { "Track",         "3" },
                                                 { "TrackDuration", "Duration" },
                                                 { "TrackMetaData", "Meta" },
                                                 { "TrackURI",      "URI"} } )));
     
-    AVTransport::Client::PositionInfo info = avtransport->getPositionInfo(g_connectionId);
-    EXPECT_EQ(info.absCount,        "Absolute count");
-    EXPECT_EQ(info.absTime,         "Absolute Time");
-    EXPECT_EQ(info.relTime,         "Relative Time");
-    EXPECT_EQ(info.relCount,        "Relative Count");
-    EXPECT_EQ(info.track,           "The Track");
-    EXPECT_EQ(info.trackDuration,   "Duration");
-    EXPECT_EQ(info.trackMetaData,   "Meta");
-    EXPECT_EQ(info.trackURI,        "URI");
+    auto info = avtransport->getPositionInfo(g_connectionId);
+    EXPECT_EQ(1, info.absoluteCount);
+    EXPECT_EQ(2, info.relativeCount);
+    EXPECT_EQ(3, info.track);
+    EXPECT_EQ("AbsTime", info.absoluteTime);
+    EXPECT_EQ("RelTime", info.relativeTime);
+    EXPECT_EQ("Duration", info.trackDuration);
+    EXPECT_EQ("Meta", info.trackMetaData);
+    EXPECT_EQ("URI", info.trackURI);
 }
 
 }

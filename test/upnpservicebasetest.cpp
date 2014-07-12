@@ -74,10 +74,10 @@ public:
 
     MOCK_METHOD2(onStateVariableEvent, void(ServiceImplVariable, const std::map<ServiceImplVariable, std::string>&));
 
-    MOCK_METHOD1(actionFromString, ServiceImplAction(const std::string&));
-    MOCK_METHOD1(actionToString, std::string(ServiceImplAction));
-    MOCK_METHOD1(variableFromString, ServiceImplVariable(const std::string&));
-    MOCK_METHOD1(variableToString, std::string(ServiceImplVariable));
+    MOCK_CONST_METHOD1(actionFromString, ServiceImplAction(const std::string&));
+    MOCK_CONST_METHOD1(actionToString, std::string(ServiceImplAction));
+    MOCK_CONST_METHOD1(variableFromString, ServiceImplVariable(const std::string&));
+    MOCK_CONST_METHOD1(variableToString, std::string(ServiceImplVariable));
     
     MOCK_METHOD0(getType, ServiceType());
     MOCK_METHOD0(getSubscriptionTimeout, int32_t());

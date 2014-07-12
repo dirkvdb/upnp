@@ -43,12 +43,6 @@ public:
         ContainersOnly
     };
     
-    struct ActionResult
-    {
-        uint32_t totalMatches;
-        uint32_t numberReturned;
-    };
-
     Client(IClient& client);
         
     void setDevice(const std::shared_ptr<Device>& device);
@@ -59,8 +53,8 @@ public:
     const std::vector<Property>& getSortCapabilities() const;
     
     ItemPtr browseMetadata(const std::string& objectId, const std::string& filter);
-    ActionResult browseDirectChildren(BrowseType type, const ItemCb& onItem, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    ActionResult search(const ItemCb& onItem, const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    ActionResult browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    ActionResult search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     
 protected:
     virtual Action actionFromString(const std::string& action) const override;

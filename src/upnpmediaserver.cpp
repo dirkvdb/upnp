@@ -232,11 +232,16 @@ uint32_t MediaServer::search(const std::string& id, const std::string& criteria,
 {
     m_Abort = false;
     uint32_t offset = 0;
-    ContentDirectory::Client::ActionResult res {0, 0};
+    ContentDirectory::ActionResult res;
 
     do
     {
-        res = m_ContentDirectory.search(onItem, id, criteria, "*", offset, g_requestSize, "");
+        auto res = m_ContentDirectory.search(id, criteria, "*", offset, g_requestSize, "");
+        for (auto& item : res.result)
+        {
+            onItem(item);
+        }
+        
         offset += res.numberReturned;
     }
     while (offset < res.totalMatches || (res.totalMatches == 0 && res.numberReturned != 0));
@@ -333,8 +338,12 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
         }
         
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
-        ContentDirectory::Client::ActionResult res = m_ContentDirectory.browseDirectChildren(type, onItem, id, "*", curOffset, requestSize, ss.str());
+        auto res = m_ContentDirectory.browseDirectChildren(type, id, "*", curOffset, requestSize, ss.str());
         itemsReceived += res.numberReturned;
+        for (auto& item : res.result)
+        {
+            onItem(item);
+        }
         
         if (limit > 0)
         {

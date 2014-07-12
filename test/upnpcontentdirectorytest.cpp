@@ -237,10 +237,7 @@ TEST_F(ContentDirectoryTest, supportedActions)
 TEST_F(ContentDirectoryTest, browseAction)
 {
     const uint32_t size = 10;
-    std::vector<std::shared_ptr<Item>> receivedItems;
 
-    StrictMock<ItemSubscriber> subscriber;
-    
     Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
@@ -253,19 +250,14 @@ TEST_F(ContentDirectoryTest, browseAction)
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem"))));
-    EXPECT_CALL(subscriber, onItem(_))
-        .Times(static_cast<int>(size * 2))
-        .WillRepeatedly(Invoke([&] (const std::shared_ptr<Item>& item) {
-            receivedItems.push_back(item);
-        }));
 
-    auto result = contentDirectory->browseDirectChildren(ContentDirectory::Client::All, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, 100, "sort");
+    auto result = contentDirectory->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort");
     EXPECT_EQ(size, result.totalMatches);
     EXPECT_EQ(size, result.numberReturned);
     
     uint32_t containerCount = 0;
     uint32_t itemCount = 0;
-    for (auto& item : receivedItems)
+    for (auto& item : result.result)
     {
         if (item->getClass() == Item::Class::Container)
         {
@@ -316,8 +308,7 @@ TEST_F(ContentDirectoryTest, browseAction)
 TEST_F(ContentDirectoryTest, DISABLED_performanceTestAll)
 {
     const uint32_t size = 10000;
-    ItemSubscriber subscriber;
-    
+
     Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
@@ -330,18 +321,16 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestAll)
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem"))));
-    EXPECT_CALL(subscriber, onItem(_)).Times(static_cast<int>(size * 2));
-    
+
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test");
-    contentDirectory->browseDirectChildren(ContentDirectory::Client::All, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, size*2, "sort");
+    contentDirectory->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, size*2, "sort");
     log::info("Performance test finished: took %dms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 
 TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
 {
     const uint32_t size = 10000;
-    ItemSubscriber subscriber;
     
     Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
@@ -354,11 +343,10 @@ TEST_F(ContentDirectoryTest, DISABLED_performanceTestContainersOnly)
     InSequence seq;
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateBrowseResponse(generateContainers(size, "object.container"), {})));
-    EXPECT_CALL(subscriber, onItem(_)).Times(static_cast<int>(size));
     
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test containers only");
-    contentDirectory->browseDirectChildren(ContentDirectory::Client::ContainersOnly, [&] (const std::shared_ptr<upnp::Item>& item) { subscriber.onItem(item); }, "ObjectId", "filter", 0, size, "sort");
+    contentDirectory->browseDirectChildren(ContentDirectory::Client::ContainersOnly, "ObjectId", "filter", 0, size, "sort");
     log::info("Performance test finished: took %dms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
 }
 

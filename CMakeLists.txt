@@ -54,6 +54,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
     inc/upnp/upnpconnectionmanagertypes.h
     inc/upnp/upnpcontentdirectoryclient.h       src/upnpcontentdirectoryclient.cpp
+    inc/upnp/upnpcontentdirectoryservice.h      src/upnpcontentdirectoryservice.cpp
     inc/upnp/upnpcontentdirectorytypes.h
     inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp
     inc/upnp/upnpdevice.h

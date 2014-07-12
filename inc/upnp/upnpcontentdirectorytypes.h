@@ -22,6 +22,15 @@ namespace upnp
 namespace ContentDirectory
 {
 
+struct ActionResult
+{
+    uint32_t totalMatches = 0;
+    uint32_t numberReturned = 0;
+    uint32_t updateId = 0;
+    std::vector<ItemPtr> result;
+};
+
+
 enum class Action
 {
     GetSearchCapabilities,
@@ -45,8 +54,14 @@ enum class Variable
     ArgumentTypeIndex,
     ArgumentTypeCount,
     ArgumentTypeUpdateID,
-    ArgumentTypeSearchCapabilities,
-    ArgumentTypeSortCapabilities
+    SearchCapabilities,
+    SortCapabilities
+};
+
+enum class BrowseFlag
+{
+    Metadata,
+    DirectChildren
 };
 
 inline Action actionFromString(const std::string& action)
@@ -89,8 +104,8 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_Index")                  return Variable::ArgumentTypeIndex;
     if (var == "A_ARG_TYPE_Count")                  return Variable::ArgumentTypeCount;
     if (var == "A_ARG_TYPE_UpdateID")               return Variable::ArgumentTypeUpdateID;
-    if (var == "A_ARG_TYPE_SearchCapabilities")     return Variable::ArgumentTypeSearchCapabilities;
-    if (var == "A_ARG_TYPE_SortCapabilities")       return Variable::ArgumentTypeSortCapabilities;
+    if (var == "SearchCapabilities")                return Variable::SearchCapabilities;
+    if (var == "SortCapabilities")                  return Variable::SortCapabilities;
 
     throw std::logic_error("Unknown ContentDirectory variable:" + var);
 }
@@ -111,13 +126,34 @@ inline std::string variableToString(Variable var)
         case Variable::ArgumentTypeIndex:                   return "A_ARG_TYPE_Index";
         case Variable::ArgumentTypeCount:                   return "A_ARG_TYPE_Count";
         case Variable::ArgumentTypeUpdateID:                return "A_ARG_TYPE_UpdateID";
-        case Variable::ArgumentTypeSearchCapabilities:      return "A_ARG_TYPE_SearchCapabilities";
-        case Variable::ArgumentTypeSortCapabilities:        return "A_ARG_TYPE_SortCapabilities";
+        case Variable::SearchCapabilities:                  return "SearchCapabilities";
+        case Variable::SortCapabilities:                    return "SortCapabilities";
         
         default:
             throw std::logic_error("Unknown ContentDirectory variable");
     }
 }
+
+inline BrowseFlag browseFlagFromString(const std::string& browseFlag)
+{
+    if (browseFlag == "BrowseMetadata")         return BrowseFlag::Metadata;
+    if (browseFlag == "BrowseDirectChildren")   return BrowseFlag::DirectChildren;
+    
+    throw std::logic_error("Unknown ContentDirectory browse flag:" + browseFlag);
+}
+
+inline std::string browseFlagToString(BrowseFlag browseFlag)
+{
+    switch (browseFlag)
+    {
+        case BrowseFlag::DirectChildren:    return "BrowseDirectChildren";
+        case BrowseFlag::Metadata:          return "BrowseMetadata";
+            
+        default:
+            throw std::logic_error("Unknown ContentDirectory BrowseFlag");
+    }
+}
+
 
 }
 }
