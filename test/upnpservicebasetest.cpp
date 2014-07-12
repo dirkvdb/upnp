@@ -28,7 +28,7 @@
 #include "testutils.h"
 
 #include "upnp/upnpaction.h"
-#include "upnp/upnpservicebase.h"
+#include "upnp/upnpserviceclientbase.h"
 
 
 using namespace utils;
@@ -62,11 +62,11 @@ enum class ServiceImplVariable
     Var2
 };
 
-class ServiceImplMock : public ServiceBase<ServiceImplAction, ServiceImplVariable>
+class ServiceImplMock : public ServiceClientBase<ServiceImplAction, ServiceImplVariable>
 {
 public:
     ServiceImplMock(IClient& client)
-    : ServiceBase(client)
+    : ServiceClientBase(client)
     {
     }
     

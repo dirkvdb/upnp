@@ -18,7 +18,7 @@
 #define UPNP_AV_TRANSPORT_CLIENT_H
 
 #include "utils/signal.h"
-#include "upnp/upnpservicebase.h"
+#include "upnp/upnpserviceclientbase.h"
 #include "upnp/upnpavtransporttypes.h"
 
 namespace upnp
@@ -30,7 +30,7 @@ class Action;
 namespace AVTransport
 {
     
-class Client : public ServiceBase<Action, Variable>
+class Client : public ServiceClientBase<Action, Variable>
 {
 public:
     Client(IClient& client);

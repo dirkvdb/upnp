@@ -17,7 +17,7 @@
 #ifndef UPNP_CONNECTION_MANAGER_CLIENT_H
 #define UPNP_CONNECTION_MANAGER_CLIENT_H
 
-#include "upnp/upnpservicebase.h"
+#include "upnp/upnpserviceclientbase.h"
 #include "upnp/upnpprotocolinfo.h"
 #include "upnp/upnpconnectionmanagertypes.h"
 
@@ -29,7 +29,7 @@ class Action;
 namespace ConnectionManager
 {
 
-class Client : public ServiceBase<Action, Variable>
+class Client : public ServiceClientBase<Action, Variable>
 {
 public:    
     Client(IClient& client);

@@ -74,7 +74,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnprenderingcontroltypes.h
     inc/upnp/upnprootdevice.h                   src/upnprootdevice.cpp
     inc/upnp/upnprootdeviceinterface.h
-    inc/upnp/upnpservicebase.h
+    inc/upnp/upnpserviceclientbase.h
     inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
     inc/upnp/upnptypes.h

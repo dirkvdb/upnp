@@ -39,7 +39,7 @@ namespace ContentDirectory
 static const int32_t g_subscriptionTimeout = 1801;
 
 Client::Client(IClient& client)
-: ServiceBase(client)
+: ServiceClientBase(client)
 , m_Abort(false)
 {
     ixmlRelaxParser(1);
@@ -47,7 +47,7 @@ Client::Client(IClient& client)
 
 void Client::setDevice(const std::shared_ptr<Device>& device)
 {
-    ServiceBase::setDevice(device);
+    ServiceClientBase::setDevice(device);
 
     m_SearchCaps.clear();
     m_SortCaps.clear();

@@ -37,17 +37,17 @@ namespace upnp
 class IClient;
 
 template <typename ActionType, typename VariableType>
-class ServiceBase
+class ServiceClientBase
 {
 public:
     utils::Signal<void(VariableType, const std::map<VariableType, std::string>&)> StateVariableEvent;
 
-    ServiceBase(IClient& client)
+    ServiceClientBase(IClient& client)
     : m_Client(client)
     {
     }
     
-    virtual ~ServiceBase()
+    virtual ~ServiceClientBase()
     {
         try
         {
@@ -73,8 +73,8 @@ public:
         try { unsubscribe(); }
         catch (std::exception& e) { utils::log::warn(e.what()); }
         
-        m_Client.UPnPEventOccurredEvent.connect(std::bind(&ServiceBase::eventOccurred, this, std::placeholders::_1), this);
-        m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, getSubscriptionTimeout(), &ServiceBase::eventCb, this);
+        m_Client.UPnPEventOccurredEvent.connect(std::bind(&ServiceClientBase::eventOccurred, this, std::placeholders::_1), this);
+        m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, getSubscriptionTimeout(), &ServiceClientBase::eventCb, this);
     }
     
     void unsubscribe()
@@ -200,7 +200,7 @@ protected:
     
     static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
     {
-        auto rc = reinterpret_cast<ServiceBase<ActionType, VariableType>*>(pInstance);
+        auto rc = reinterpret_cast<ServiceClientBase<ActionType, VariableType>*>(pInstance);
         
         switch (eventType)
         {

@@ -35,7 +35,7 @@ namespace ConnectionManager
 static const int32_t g_subscriptionTimeout = 1801;
 
 Client::Client(IClient& client)
-: ServiceBase(client)
+: ServiceClientBase(client)
 {
 }
 

@@ -18,7 +18,7 @@
 #define UPNP_CONTENT_DIRECTORY_CLIENT_H
 
 #include "upnp/upnpitem.h"
-#include "upnp/upnpservicebase.h"
+#include "upnp/upnpserviceclientbase.h"
 #include "upnp/upnpcontentdirectorytypes.h"
 
 namespace upnp
@@ -33,7 +33,7 @@ typedef std::function<void(const ItemPtr&)> ItemCb;
 namespace ContentDirectory
 {
 
-class Client : public ServiceBase<Action, Variable>
+class Client : public ServiceClientBase<Action, Variable>
 {
 public:
     enum BrowseType

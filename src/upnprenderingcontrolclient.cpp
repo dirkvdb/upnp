@@ -39,7 +39,7 @@ static const int32_t g_subscriptionTimeout = 1801;
 // TODO: assign min and max volume
 
 Client::Client(IClient& client)
-: ServiceBase(client)
+: ServiceClientBase(client)
 , m_MinVolume(0)
 , m_MaxVolume(100)
 {
@@ -74,7 +74,7 @@ int32_t Client::getSubscriptionTimeout()
 
 void Client::parseServiceDescription(const std::string& descriptionUrl)
 {
-    ServiceBase::parseServiceDescription(descriptionUrl);
+    ServiceClientBase::parseServiceDescription(descriptionUrl);
     
     for (auto& variable : m_StateVariables)
     {

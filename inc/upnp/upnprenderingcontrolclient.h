@@ -19,7 +19,7 @@
 
 #include "utils/signal.h"
 
-#include "upnp/upnpservicebase.h"
+#include "upnp/upnpserviceclientbase.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
@@ -38,7 +38,7 @@ class IClient;
 namespace RenderingControl
 {
 
-class Client : public ServiceBase<Action, Variable>
+class Client : public ServiceClientBase<Action, Variable>
 {
 public:
     Client(IClient& client);
