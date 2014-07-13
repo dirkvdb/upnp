@@ -34,6 +34,58 @@ namespace xml
 namespace utils
 {
 
+namespace
+{
+
+Element createDidlForDocument(Document& doc)
+{
+    auto didl = doc.createElement("DIDL-Lite");
+    didl.addAttribute("xmlns", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+    didl.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
+    didl.addAttribute("xmlns:upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+    didl.addAttribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/");
+
+    return didl;
+}
+
+void addItemToDidl(Document& doc, Element& didl, const Item& item)
+{
+    auto itemElem = doc.createElement("item");
+
+    itemElem.addAttribute("id", item.getObjectId());
+    itemElem.addAttribute("parentID", item.getParentId());
+    itemElem.addAttribute("restricted", item.restricted() ? "1" : "0");
+
+    for (auto& meta : item.getMetaData())
+    {
+        try
+        {
+            auto elem = doc.createElement(toString(meta.first));
+            auto node = doc.createNode(meta.second);
+            elem.appendChild(node);
+            itemElem.appendChild(elem);
+        }
+        catch (std::exception&) { /* Unknown metadata */ }
+    }
+
+    for (auto& uri : item.getAlbumArtUris())
+    {
+        try
+        {
+            auto elem = doc.createElement(toString(Property::AlbumArt));
+            auto node = doc.createNode(uri.second);
+            elem.addAttribute("dlna:profileID", dlna::toString(uri.first));
+            elem.appendChild(node);
+            itemElem.appendChild(elem);
+        }
+        catch (std::exception&) { /* Unknown profileId */ }
+    }
+
+    didl.appendChild(itemElem);
+}
+
+}
+
 std::vector<std::string> getActionsFromDescription(Document& doc)
 {
     std::vector<std::string> actions;
@@ -101,47 +153,23 @@ std::map<std::string, std::string> getEventValues(Document& doc)
 Document getItemDocument(const Item& item)
 {
     Document doc;
-    
-    auto didl = doc.createElement("DIDL-Lite");
-    didl.addAttribute("xmlns", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
-    didl.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
-    didl.addAttribute("xmlns:upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
-    didl.addAttribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/");
-    
-    auto itemElem = doc.createElement("item");
-    
-    itemElem.addAttribute("id", item.getObjectId());
-    itemElem.addAttribute("parentID", item.getParentId());
-    itemElem.addAttribute("restricted", "1");
-    
-    for (auto& meta : item.getMetaData())
-    {
-        try
-        {
-            auto elem = doc.createElement(toString(meta.first));
-            auto node = doc.createNode(meta.second);
-            elem.appendChild(node);
-            itemElem.appendChild(elem);
-        }
-        catch (std::exception&) { /* Unknown metadata */ }
-    }
-    
-    for (auto& uri : item.getAlbumArtUris())
-    {
-        try
-        {
-            auto elem = doc.createElement(toString(Property::AlbumArt));
-            auto node = doc.createNode(uri.second);
-            elem.addAttribute("dlna:profileID", dlna::toString(uri.first));
-            elem.appendChild(node);
-            itemElem.appendChild(elem);
-        }
-        catch (std::exception&) { /* Unknown profileId */ }
-    }
-    
-    didl.appendChild(itemElem);
+    auto didl = createDidlForDocument(doc);
+    addItemToDidl(doc, didl, item);
     doc.appendChild(didl);
-    
+    return doc;
+}
+
+Document getItemsDocument(const std::vector<ItemPtr>& items)
+{
+    Document doc;
+    auto didl = createDidlForDocument(doc);
+
+    for (auto& item : items)
+    {
+        addItemToDidl(doc, didl, *item);
+    }
+
+    doc.appendChild(didl);
     return doc;
 }
 

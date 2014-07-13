@@ -64,6 +64,20 @@ enum class BrowseFlag
     DirectChildren
 };
 
+enum class SortType
+{
+    Ascending,
+    Descending
+};
+
+struct SortProperty
+{
+    SortProperty(Property p, SortType t) : prop(p), type(t) {}
+
+    Property prop;
+    SortType type;
+};
+
 inline Action actionFromString(const std::string& action)
 {
     if (action == "GetSearchCapabilities")  return Action::GetSearchCapabilities;
@@ -154,6 +168,13 @@ inline std::string browseFlagToString(BrowseFlag browseFlag)
     }
 }
 
+inline SortType sortTypeFromString(char c)
+{
+    if (c == '-')   return SortType::Descending;
+    if (c == '+')   return SortType::Ascending;
+
+    throw std::logic_error("Invalid sort character: " + std::string(1, c));
+}
 
 }
 }

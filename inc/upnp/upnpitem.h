@@ -87,7 +87,8 @@ public:
     const std::string& getParentId() const;
     const std::string& getRefId() const;
     std::string getTitle() const;
-
+    bool restricted() const;
+    
     // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
     std::string getAlbumArtUri(dlna::ProfileId profile) const;
 
@@ -120,6 +121,8 @@ private:
     std::string                             m_ParentId;
     std::string                             m_RefId;
 
+    bool                                    m_Restricted;
+    
     std::map<Property, std::string>         m_MetaData;
     std::map<dlna::ProfileId, std::string>  m_AlbumArtUris;
 

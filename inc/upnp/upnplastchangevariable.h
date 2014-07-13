@@ -42,7 +42,7 @@ public:
     
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
     
-    utils::Signal<void(const xml::Document&)> LastChangeEvent;
+    std::function<void(const xml::Document&)> LastChangeEvent;
     
 private:
     void variableThread();

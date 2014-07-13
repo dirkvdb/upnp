@@ -44,10 +44,10 @@ xml::Document Service::getSubscriptionResponse()
     xml::Document doc;
     auto propertySet    = doc.createElement("e:propertyset");
     propertySet.addAttribute("xmlns:e", ns);
-    
-    //addPropertyToElement(0, Variable::SourceProtocolInfo, propertySet);
-    //addPropertyToElement(0, Variable::SinkProtocolInfo, propertySet);
-    //addPropertyToElement(0, Variable::CurrentConnectionIds, propertySet);
+
+    addPropertyToElement(0, Variable::TransferIDs, propertySet);
+    addPropertyToElement(0, Variable::SystemUpdateID, propertySet);
+    addPropertyToElement(0, Variable::ContainerUpdateIDs, propertySet);
     
     doc.appendChild(propertySet);
     
@@ -67,19 +67,79 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         
         switch (actionFromString(action))
         {
-            case Action::GetSearchCapabilities:
-                response.addArgument("SearchCaps", getVariable(Variable::SearchCapabilities).getValue());
-                break;
-            case Action::GetSortCapabilities:
-                response.addArgument("SortCaps", getVariable(Variable::SortCapabilities).getValue());
-                break;
-            case Action::GetSystemUpdateID:
-                response.addArgument("Id", m_ContentDirectory.GetSystemUpdateId());
-                break;
-            case Action::Browse:
-                break;
-            default:
-                throw InvalidActionException();
+        case Action::GetSearchCapabilities:
+            response.addArgument("SearchCaps", getVariable(Variable::SearchCapabilities).getValue());
+            break;
+        case Action::GetSortCapabilities:
+            response.addArgument("SortCaps", getVariable(Variable::SortCapabilities).getValue());
+            break;
+        case Action::GetSystemUpdateID:
+            response.addArgument("Id", m_ContentDirectory.GetSystemUpdateId());
+            break;
+        case Action::Browse:
+        {
+            auto id = request.getChildNodeValue("ObjectID");
+            auto flag = browseFlagFromString(request.getChildNodeValue("BrowseFlag"));
+            auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
+            auto startIndex = std::stoul(request.getChildNodeValue("StartingIndex").c_str());
+            auto count = std::stoul(request.getChildNodeValue("RequestedCount").c_str());
+            auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
+
+            std::vector<Property> filter;
+            std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
+                return propertyFromString(prop);
+            });
+
+            std::vector<SortProperty> sort;
+            std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
+                if (prop.empty())
+                {
+                    throw std::runtime_error("Invalid sort property provided");
+                }
+
+                return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));
+            });
+
+            auto res = m_ContentDirectory.Browse(id, flag, filter, startIndex, count, sort);
+            response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
+            response.addArgument("NumberReturned", std::to_string(res.numberReturned));
+            response.addArgument("TotalMatches", std::to_string(res.totalMatches));
+            response.addArgument("UpdateID", std::to_string(res.updateId));
+            break;
+        }
+        case Action::Search:
+        {
+            auto id = request.getChildNodeValue("ContainerID");
+            auto criteria = request.getChildNodeValue("SearchCriteria");
+            auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
+            auto startIndex = std::stoul(request.getChildNodeValue("StartingIndex").c_str());
+            auto count = std::stoul(request.getChildNodeValue("RequestedCount").c_str());
+            auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
+
+            std::vector<Property> filter;
+            std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
+                return propertyFromString(prop);
+            });
+
+            std::vector<SortProperty> sort;
+            std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
+                if (prop.empty())
+                {
+                    throw std::runtime_error("Invalid sort property provided");
+                }
+
+                return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));
+            });
+
+            auto res = m_ContentDirectory.Search(id, criteria, filter, startIndex, count, sort);
+            response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
+            response.addArgument("NumberReturned", std::to_string(res.numberReturned));
+            response.addArgument("TotalMatches", std::to_string(res.totalMatches));
+            response.addArgument("UpdateID", std::to_string(res.updateId));
+            break;
+        }
+        default:
+            throw InvalidActionException();
         }
         
         return response;

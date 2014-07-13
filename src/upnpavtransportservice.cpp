@@ -29,14 +29,14 @@ Service::Service(IRootDevice& dev, IAVTransport& av)
 , m_avTransport(av)
 , m_LastChange(m_Type, std::chrono::milliseconds(200))
 {
-    m_LastChange.LastChangeEvent.connect([this] (const xml::Document& doc) {
+    m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {
         m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
-    }, this);
+    };
 }
 
 Service::~Service()
 {
-    m_LastChange.LastChangeEvent.disconnect(this);
+    m_LastChange.LastChangeEvent = nullptr;
 }
 
 xml::Document Service::getSubscriptionResponse()
