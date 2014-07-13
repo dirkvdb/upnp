@@ -150,6 +150,11 @@ const std::string& Item::getParentId() const
     return m_ParentId;
 }
 
+const std::string& Item::getRefId() const
+{
+    return m_RefId;
+}
+
 std::string Item::getTitle() const
 {
     auto iter = m_MetaData.find(Property::Title);
@@ -222,6 +227,11 @@ Item::Class Item::getClass() const
     return Unknown;
 }
 
+void Item::setClass(const std::string& className)
+{
+    m_MetaData.emplace(Property::Class, className);
+}
+
 std::string Item::getClassString() const
 {
     auto iter = m_MetaData.find(Property::Class);
@@ -241,6 +251,11 @@ void Item::setObjectId(const std::string& id)
 void Item::setParentId(const std::string& id)
 {
     m_ParentId = id;
+}
+
+void Item::setRefId(const std::string& id)
+{
+    m_RefId = id;
 }
 
 void Item::setTitle(const std::string& title)

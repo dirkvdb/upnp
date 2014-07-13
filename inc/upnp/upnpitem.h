@@ -42,7 +42,7 @@ public:
     const std::string& getUrl() const;
     const ProtocolInfo& getProtocolInfo() const;
     bool isThumbnail() const;
-    
+
     void addMetaData(const std::string& key, const std::string& value);
     void setUrl(const std::string& url);
     void setProtocolInfo(const ProtocolInfo& info);
@@ -74,51 +74,55 @@ public:
         Generic,
         Unknown
     };
-    
+
     explicit Item(const std::string& id = "0", const std::string& title = "");
     Item(const Item& other) = default;
     Item(Item&& other) = default;
     virtual ~Item();
-    
+
     Item& operator= (const Item& other);
     Item& operator= (Item&& other);
-        
+
     const std::string& getObjectId() const;
     const std::string& getParentId() const;
+    const std::string& getRefId() const;
     std::string getTitle() const;
-    
+
     // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
     std::string getAlbumArtUri(dlna::ProfileId profile) const;
-    
+
     const std::vector<Resource>& getResources() const;
     const std::map<dlna::ProfileId, std::string>& getAlbumArtUris() const;
-    
+
     uint32_t getChildCount() const;
     Class getClass() const;
     std::string getClassString() const;
-    
+    void setClass(const std::string& className);
+
     void setObjectId(const std::string& id);
     void setParentId(const std::string& id);
+    void setRefId(const std::string& id);
     void setTitle(const std::string& title);
     void setChildCount(uint32_t count);
-    
+
     void setAlbumArt(dlna::ProfileId profile, const std::string& uri);
-        
+
     void addMetaData(Property prop, const std::string& value);
     void addResource(const Resource& resource);
-    
+
     std::string getMetaData(Property prop) const;
     std::map<Property, std::string> getMetaData() const;
-    
+
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
-    
+
 private:
     std::string                             m_ObjectId;
     std::string                             m_ParentId;
-    
+    std::string                             m_RefId;
+
     std::map<Property, std::string>         m_MetaData;
     std::map<dlna::ProfileId, std::string>  m_AlbumArtUris;
-    
+
     std::vector<Resource>                   m_Resources;
     uint32_t                                m_ChildCount;
 };
@@ -128,20 +132,20 @@ inline std::ostream& operator<< (std::ostream& os, const Item& item)
     os << "Item: " << item.getTitle() << "(" << item.getObjectId() << ")" << std::endl
        << "Childcount: " << item.getChildCount() << std::endl
        << "Class: " << item.getClassString();
-    
+
     for (auto& res : item.getResources())
     {
         os << res << std::endl;
     }
-    
+
     if (item.getResources().empty()) os << std::endl;
-    
+
     os << "Metadata:" << std::endl;
     for (auto& meta : item.m_MetaData)
     {
         os << toString(meta.first) << " - " << meta.second << std::endl;
     }
-    
+
     return os;
 }
 
