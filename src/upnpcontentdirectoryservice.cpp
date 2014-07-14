@@ -81,8 +81,8 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             auto id = request.getChildNodeValue("ObjectID");
             auto flag = browseFlagFromString(request.getChildNodeValue("BrowseFlag"));
             auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
-            auto startIndex = std::stoul(request.getChildNodeValue("StartingIndex").c_str());
-            auto count = std::stoul(request.getChildNodeValue("RequestedCount").c_str());
+            auto startIndex = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("StartingIndex").c_str()));
+            auto count = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("RequestedCount").c_str()));
             auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
 
             std::vector<Property> filter;
@@ -112,8 +112,8 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             auto id = request.getChildNodeValue("ContainerID");
             auto criteria = request.getChildNodeValue("SearchCriteria");
             auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
-            auto startIndex = std::stoul(request.getChildNodeValue("StartingIndex").c_str());
-            auto count = std::stoul(request.getChildNodeValue("RequestedCount").c_str());
+            auto startIndex = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("StartingIndex").c_str()));
+            auto count = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("RequestedCount").c_str()));
             auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
 
             std::vector<Property> filter;

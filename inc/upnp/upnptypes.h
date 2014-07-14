@@ -22,16 +22,12 @@
 #include <memory>
 #include <stdexcept>
 
+#include "upnp/upnpfwd.h"
 #include "upnp/upnpprotocolinfo.h"
 
 namespace upnp
 {
     
-class Item;
-    
-typedef std::shared_ptr<Item> ItemPtr;
-typedef std::map<std::string, std::string> MetaMap;
-
 namespace
 {
     static const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
