@@ -98,6 +98,7 @@ public:
     uint32_t getChildCount() const;
     Class getClass() const;
     std::string getClassString() const;
+    void setClass(Class c);
     void setClass(const std::string& className);
 
     void setObjectId(const std::string& id);

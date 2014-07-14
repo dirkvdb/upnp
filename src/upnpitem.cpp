@@ -233,6 +233,39 @@ Item::Class Item::getClass() const
     return Unknown;
 }
 
+void Item::setClass(Class c)
+{
+    switch (c)
+    {
+    case Class::Container:
+        m_MetaData[Property::Class] = "object.container";
+        break;
+    case Class::VideoContainer:
+        m_MetaData[Property::Class] = "object.container.videoContainer";
+        break;
+    case Class::AudioContainer:
+        m_MetaData[Property::Class] = "object.container.album.musicAlbum";
+        break;
+    case Class::ImageContainer:
+        m_MetaData[Property::Class] = "object.container.photoAlbum";
+        break;
+    case Class::Video:
+        m_MetaData[Property::Class] = "object.item.videoItem";
+        break;
+    case Class::Audio:
+        m_MetaData[Property::Class] = "object.item.audioItem";
+        break;
+    case Class::Image:
+        m_MetaData[Property::Class] = "object.item.imageItem";
+        break;
+    case Class::Generic:
+        m_MetaData[Property::Class] = "object.container";
+        break;
+    default:
+        throw std::runtime_error("Invalid upnp class provided");
+    }
+}
+
 void Item::setClass(const std::string& className)
 {
     m_MetaData.emplace(Property::Class, className);
