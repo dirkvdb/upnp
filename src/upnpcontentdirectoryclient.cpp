@@ -408,7 +408,7 @@ Variable Client::variableFromString(const std::string& var) const
 
 std::string Client::variableToString(Variable var) const 
 {
-    return ContentDirectory::variableToString(var);
+    return ContentDirectory::toString(var);
 }
 
 ServiceType Client::getType()

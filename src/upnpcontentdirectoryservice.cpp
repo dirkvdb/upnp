@@ -151,6 +151,10 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
 }
 
+std::string Service::variableToString(Variable type) const
+{
+    return ContentDirectory::toString(type);
+}
 
 
 }

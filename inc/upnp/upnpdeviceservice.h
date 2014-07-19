@@ -44,6 +44,8 @@ public:
     }
     
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
+    virtual xml::Document getSubscriptionResponse() = 0;
+    
     std::map<std::string, std::string> getVariables() const
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
@@ -55,8 +57,6 @@ public:
         
         return vars;
     }
-    
-    virtual xml::Document getSubscriptionResponse() = 0;
     
     ServiceVariable getVariable(VariableType var) const
     {

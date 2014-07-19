@@ -40,11 +40,11 @@ class Service : public DeviceService<Variable>
 public:
     Service(IRootDevice& dev, IConnectionManager& cm);
     
-    virtual xml::Document getSubscriptionResponse();
-    virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
+    xml::Document getSubscriptionResponse() override;
+    ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
 protected:
-    virtual std::string variableToString(Variable type) const;
+    std::string variableToString(Variable type) const override;
 
 private:
     IConnectionManager&  m_connectionManager;

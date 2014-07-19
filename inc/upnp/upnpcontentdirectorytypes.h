@@ -124,7 +124,7 @@ inline Variable variableFromString(const std::string& var)
     throw std::logic_error("Unknown ContentDirectory variable:" + var);
 }
 
-inline std::string variableToString(Variable var)
+inline std::string toString(Variable var)
 {
     switch (var)
     {

@@ -59,8 +59,11 @@ class Service : public DeviceService<Variable>
 public:
     Service(IRootDevice& dev, IContentDirectory& cd);
         
-    virtual xml::Document getSubscriptionResponse();
-    virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
+    xml::Document getSubscriptionResponse() override;
+    ActionResponse onAction(const std::string& action, const xml::Document& request) override;
+
+protected:
+    std::string variableToString(Variable type) const override;
     
 private:
     IContentDirectory&          m_ContentDirectory;
