@@ -24,8 +24,6 @@
 
 using namespace utils;
 
-//#define DEBUG_CONTENT_BROWSING
-
 namespace upnp
 {
 namespace ContentDirectory

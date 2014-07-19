@@ -50,11 +50,17 @@ Element createDidlForDocument(Document& doc)
 
 void addItemToDidl(Document& doc, Element& didl, const Item& item)
 {
-    auto itemElem = doc.createElement("item");
+    bool isContainer = item.isContainer();
+    auto itemElem = doc.createElement(isContainer ? "container" : "item");
 
     itemElem.addAttribute("id", item.getObjectId());
     itemElem.addAttribute("parentID", item.getParentId());
     itemElem.addAttribute("restricted", item.restricted() ? "1" : "0");
+
+    if (isContainer)
+    {
+        itemElem.addAttribute("childCount", std::to_string(item.getChildCount()));
+    }
 
     for (auto& meta : item.getMetaData())
     {

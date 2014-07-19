@@ -167,6 +167,17 @@ bool Item::restricted() const
     return m_Restricted;
 }
 
+bool Item::isContainer() const
+{
+    auto iter = m_MetaData.find(Property::Class);
+    if (iter == m_MetaData.end())
+    {
+        return false;
+    }
+
+    return iter->second.find("object.container") == 0;
+}
+
 std::string Item::getAlbumArtUri(dlna::ProfileId profile) const
 {
     auto iter = m_AlbumArtUris.find(profile);
@@ -217,6 +228,10 @@ Item::Class Item::getClass() const
     {
         return VideoContainer;
     }
+    else if (upnpClass == "object.container.storageFolder")
+    {
+        return StorageFolder;
+    }
     else if (upnpClass == "object.container.album.musicAlbum")
     {
         return AudioContainer;
@@ -249,6 +264,9 @@ void Item::setClass(Class c)
     case Class::ImageContainer:
         m_MetaData[Property::Class] = "object.container.photoAlbum";
         break;
+    case Class::StorageFolder:
+        m_MetaData[Property::Class] = "object.container.storageFolder";
+        break;
     case Class::Video:
         m_MetaData[Property::Class] = "object.item.videoItem";
         break;
@@ -259,7 +277,7 @@ void Item::setClass(Class c)
         m_MetaData[Property::Class] = "object.item.imageItem";
         break;
     case Class::Generic:
-        m_MetaData[Property::Class] = "object.container";
+        m_MetaData[Property::Class] = "object.generic";
         break;
     default:
         throw std::runtime_error("Invalid upnp class provided");

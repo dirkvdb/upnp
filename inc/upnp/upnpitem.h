@@ -68,6 +68,7 @@ public:
         VideoContainer,
         AudioContainer,
         ImageContainer,
+        StorageFolder,
         Video,
         Audio,
         Image,
@@ -88,6 +89,8 @@ public:
     const std::string& getRefId() const;
     std::string getTitle() const;
     bool restricted() const;
+
+    bool isContainer() const;
     
     // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
     std::string getAlbumArtUri(dlna::ProfileId profile) const;

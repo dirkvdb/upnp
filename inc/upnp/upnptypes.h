@@ -38,6 +38,7 @@ namespace
     static const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
     static const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
     static const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
+    static const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
     
     static const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
     static const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
@@ -153,6 +154,7 @@ inline ServiceType serviceTypeUrnStringToService(const std::string& type)
 
 inline ServiceType serviceIdUrnStringToService(const std::string& type)
 {
+    if (type == ContentDirectoryServiceIdUrn)    return ServiceType::ContentDirectory;
     if (type == RenderingControlServiceIdUrn)    return ServiceType::RenderingControl;
     if (type == ConnectionManagerServiceIdUrn)   return ServiceType::ConnectionManager;
     if (type == AVTransportServiceIdUrn)         return ServiceType::AVTransport;
