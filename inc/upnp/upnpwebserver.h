@@ -17,16 +17,23 @@
 #ifndef UPNP_WEBSERVER_H
 #define UPNP_WEBSERVER_H
 
-#include <map>
-#include <mutex>
 #include <string>
 #include <vector>
-#include <memory>
-
-#include <upnp/upnp.h>
+#include <functional>
 
 namespace upnp
 {
+
+class IVirtualDirCallback
+{
+public:
+    virtual ~IVirtualDirCallback() {}
+
+    virtual void getInfo(const std::string& path) = 0;
+    virtual void read(const std::string& path) = 0;
+    virtual void seek(const std::string& path) = 0;
+    virtual void close(const std::string& path) = 0;
+};
     
 class WebServer
 {
@@ -40,42 +47,16 @@ public:
     
     void clearFiles();
     
+    // adds a virtual directory, in memory files can be added using addFile
     void addVirtualDirectory(const std::string& virtualDirName);
+    // adds a virtual directory, the callback is called on incoming requests in this directory
+    void addVirtualDirectory(const std::string& virtualDirName, std::function<void(const std::string&)> requestCb);
     void removeVirtualDirectory(const std::string& virtualDirName);
 
     std::string getWebRootUrl();
     
 private:
-    struct HostedFile
-    {
-        std::string             filename;
-        std::vector<uint8_t>    fileContents;
-        std::string             contentType;
-    };
-
-    struct FileHandle
-    {
-        FileHandle() : offset(0) {}
-    
-        uint64_t		id;
-        std::string     filename;
-        size_t          offset;
-    };
-
-    static HostedFile& getFileFromRequest(const std::string& uri);
-    
-    static UpnpWebFileHandle openCallback(const char* pFilename, UpnpOpenFileMode mode);
-    static int getInfoCallback(const char* pFilename, File_Info* pInfo);
-    static int readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen);
-    static int writeCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen);
-    static int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin);
-    static int closeCallback(UpnpWebFileHandle fileHandle);
-    
-    std::string                                                         		m_WebRoot;
-    static std::mutex                                                   		m_Mutex;
-    static uint64_t																m_CurrentRequestId;
-    static std::map<std::string, std::vector<std::unique_ptr<HostedFile>>>      m_ServedFiles;
-    static std::vector<std::unique_ptr<FileHandle>>                     		m_OpenHandles;
+    std::string m_webRoot;
 };
 
 }
