@@ -156,10 +156,9 @@ const std::string& Item::getRefId() const
     return m_RefId;
 }
 
-std::string Item::getTitle() const
+const std::string& Item::getTitle() const
 {
-    auto iter = m_MetaData.find(Property::Title);
-    return (iter == m_MetaData.end()) ? "" : iter->second;
+    return getMetaData(upnp::Property::Title);
 }
 
 bool Item::restricted() const
@@ -343,15 +342,17 @@ void Item::addResource(const Resource& resource)
     m_Resources.push_back(resource);
 }
 
-std::string Item::getMetaData(Property prop) const
+const std::string& Item::getMetaData(Property prop) const
 {
+    static const std::string emptyString = "";
+    
     auto iter = m_MetaData.find(prop);
     if (iter != m_MetaData.end())
     {
         return iter->second;
     }
     
-    return "";
+    return emptyString;
 }
 
 std::map<Property, std::string> Item::getMetaData() const

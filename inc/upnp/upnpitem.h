@@ -87,7 +87,7 @@ public:
     const std::string& getObjectId() const;
     const std::string& getParentId() const;
     const std::string& getRefId() const;
-    std::string getTitle() const;
+    const std::string& getTitle() const;
     bool restricted() const;
 
     bool isContainer() const;
@@ -115,7 +115,7 @@ public:
     void addMetaData(Property prop, const std::string& value);
     void addResource(const Resource& resource);
 
-    std::string getMetaData(Property prop) const;
+    const std::string& getMetaData(Property prop) const;
     std::map<Property, std::string> getMetaData() const;
 
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
