@@ -37,6 +37,10 @@ void HttpReader::open(const std::string& url)
     m_ContentLength = m_httpClient.getContentLength(url);
 }
 
+void HttpReader::close()
+{
+}
+
 uint64_t HttpReader::getContentLength()
 {
     throwOnEmptyUrl();

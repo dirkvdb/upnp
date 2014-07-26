@@ -32,25 +32,28 @@ class Resource
 {
 public:
     Resource();
-    Resource(const Resource& other);
-    Resource(Resource&& other);
+    Resource(const Resource& other) = default;
+    Resource(Resource&& other) = default;
 
-    Resource& operator=(const Resource& other);
-    Resource& operator=(Resource&& other);
+    Resource& operator=(const Resource& other) = default;
+    Resource& operator=(Resource&& other) = default;
 
     const std::string& getMetaData(const std::string& metaKey) const;
     const std::string& getUrl() const;
     const ProtocolInfo& getProtocolInfo() const;
+    uint64_t getSize() const;
     bool isThumbnail() const;
 
     void addMetaData(const std::string& key, const std::string& value);
     void setUrl(const std::string& url);
     void setProtocolInfo(const ProtocolInfo& info);
+    void setSize(uint64_t);
 
 private:
-    MetaMap         m_MetaData;
-    std::string     m_Url;
-    ProtocolInfo    m_ProtocolInfo;
+    MetaMap         m_metaData;
+    std::string     m_url;
+    ProtocolInfo    m_protocolInfo;
+    uint64_t        m_size;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Resource& res)

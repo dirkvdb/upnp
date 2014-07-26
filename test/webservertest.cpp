@@ -14,8 +14,10 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#include "utils/log.h"
 #include "utils/signal.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <iostream>
 #include <fstream>
@@ -37,6 +39,16 @@ namespace upnp
 {
 namespace test
 {
+
+class VirtualDirCallback : public IVirtualDirCallback
+{
+public:
+    MOCK_METHOD2(read, uint64_t(uint8_t*, uint64_t));
+    MOCK_METHOD1(seekRelative, void(uint64_t));
+    MOCK_METHOD1(seekAbsolute, void(uint64_t));
+    MOCK_METHOD1(seekFromEnd, void(uint64_t));
+    MOCK_METHOD0(close, void());
+};
 
 class WebServerTest : public Test
 {
@@ -133,6 +145,57 @@ TEST_F(WebServerTest, downloadPartialBinaryFile)
     EXPECT_EQ(2U, result.size());
     EXPECT_EQ(5U, result[0]);
     EXPECT_EQ(6U, result[1]);
+}
+
+
+TEST_F(WebServerTest, downloadTextFileThroughCalllback)
+{
+    auto cb = std::make_shared<StrictMock<VirtualDirCallback>>();
+    auto file = createTextFile();
+    auto filePath = "virtualDir/?id=@100";
+    auto requestedFilePath = stringops::format("/%s", filePath);
+    
+    fileops::FileSystemEntryInfo info;
+    info.modifyTime = 200;
+    info.sizeInBytes = file.size();
+    info.type = fileops::FileSystemEntryType::File;
+    
+    auto fileInfoCb = [&] (const std::string& path) {
+        EXPECT_EQ(requestedFilePath, path);
+        return info;
+    };
+    auto requestCb = [&] (const std::string& path) {
+        EXPECT_EQ(requestedFilePath, path);
+        return cb;
+    };
+    
+    webserver->addVirtualDirectory("virtualDir", fileInfoCb, requestCb);
+    
+    EXPECT_CALL(*cb, read(_, file.size())).WillRepeatedly(Invoke([&] (uint8_t* pData, int32_t size) -> int32_t {
+        memcpy(pData, file.data(), size);
+        return size;
+    }));
+    EXPECT_CALL(*cb, close());
+    
+    std::string url = webserver->getWebRootUrl() + filePath;
+    EXPECT_EQ(file, httpClient.getText(url));
+    
+    // we should have the last reference to the mock now, the server should have released the callback
+    EXPECT_TRUE(cb.unique());
+}
+
+TEST_F(WebServerTest, downloadBinaryFileThroughCalllback)
+{
+//    auto file = createBinaryFile();
+//    
+//    webserver->addVirtualDirectory("virtualDir");
+//    webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", file);
+//    std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
+//    
+//    auto result = httpClient.getData(url);
+//    
+//    EXPECT_EQ(file.size(), httpClient.getContentLength(url));
+//    EXPECT_EQ(0, memcmp(file.data(), result.data(), file.size()));
 }
 
 

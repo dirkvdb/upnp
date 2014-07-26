@@ -21,6 +21,8 @@
 #include <vector>
 #include <functional>
 
+#include "utils/fileoperations.h"
+
 namespace upnp
 {
 
@@ -29,11 +31,15 @@ class IVirtualDirCallback
 public:
     virtual ~IVirtualDirCallback() {}
 
-    virtual void getInfo(const std::string& path) = 0;
-    virtual void read(const std::string& path) = 0;
-    virtual void seek(const std::string& path) = 0;
-    virtual void close(const std::string& path) = 0;
+    virtual uint64_t read(uint8_t* buf, uint64_t buflen) = 0;
+    virtual void seekAbsolute(uint64_t position) = 0;
+    virtual void seekRelative(uint64_t offset) = 0;
+    virtual void seekFromEnd(uint64_t offset) = 0;
+    virtual void close() = 0;
 };
+
+using FileInfoCb = std::function<utils::fileops::FileSystemEntryInfo(const std::string&)>;
+using RequestCb = std::function<std::shared_ptr<IVirtualDirCallback>(const std::string&)>;
     
 class WebServer
 {
@@ -50,7 +56,7 @@ public:
     // adds a virtual directory, in memory files can be added using addFile
     void addVirtualDirectory(const std::string& virtualDirName);
     // adds a virtual directory, the callback is called on incoming requests in this directory
-    void addVirtualDirectory(const std::string& virtualDirName, std::function<void(const std::string&)> requestCb);
+    void addVirtualDirectory(const std::string& virtualDirName, FileInfoCb fileinfoCb, RequestCb requestCb);
     void removeVirtualDirectory(const std::string& virtualDirName);
 
     std::string getWebRootUrl();

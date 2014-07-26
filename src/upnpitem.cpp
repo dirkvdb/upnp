@@ -28,45 +28,14 @@ static const std::string emptyString;
 static const std::string resourceTag    = "res";
 
 Resource::Resource()
+: m_size(0)
 {
-}
-
-Resource::Resource(const Resource& other)
-: m_MetaData(other.m_MetaData)
-, m_Url(other.m_Url)
-, m_ProtocolInfo(other.m_ProtocolInfo)
-{
-}
-
-Resource::Resource(Resource&& other)
-: m_MetaData(std::move(other.m_MetaData))
-, m_Url(std::move(other.m_Url))
-, m_ProtocolInfo(std::move(other.m_ProtocolInfo))
-{    
-}
-
-Resource& Resource::operator=(const Resource& other)
-{
-    m_MetaData      = other.m_MetaData;
-    m_Url           = other.m_Url;
-    m_ProtocolInfo  = other.m_ProtocolInfo;
-        
-    return *this;
-}
-
-Resource& Resource::operator=(Resource&& other)
-{
-    m_MetaData      = std::move(other.m_MetaData);
-    m_Url           = std::move(other.m_Url);
-    m_ProtocolInfo  = std::move(other.m_ProtocolInfo);
-    
-    return *this;
 }
 
 const std::string& Resource::getMetaData(const std::string& metaKey) const
 {
-    auto iter = m_MetaData.find(metaKey);
-    if (iter != m_MetaData.end())
+    auto iter = m_metaData.find(metaKey);
+    if (iter != m_metaData.end())
     {
         return iter->second;
     }
@@ -76,12 +45,17 @@ const std::string& Resource::getMetaData(const std::string& metaKey) const
 
 const std::string& Resource::getUrl() const
 {
-    return m_Url;
+    return m_url;
 }
 
 const ProtocolInfo& Resource::getProtocolInfo() const
 {
-    return m_ProtocolInfo;
+    return m_protocolInfo;
+}
+
+uint64_t Resource::getSize() const
+{
+    return m_size;
 }
 
 bool Resource::isThumbnail() const
@@ -91,17 +65,17 @@ bool Resource::isThumbnail() const
 
 void Resource::addMetaData(const std::string& key, const std::string& value)
 {
-    m_MetaData[key] = value;
+    m_metaData[key] = value;
 }
 
 void Resource::setUrl(const std::string& url)
 {
-    m_Url = url;
+    m_url = url;
 }
 
 void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
 {
-    m_ProtocolInfo = info;
+    m_protocolInfo = info;
 }
 
 
@@ -344,8 +318,6 @@ void Item::addResource(const Resource& resource)
 
 const std::string& Item::getMetaData(Property prop) const
 {
-    static const std::string emptyString = "";
-    
     auto iter = m_MetaData.find(prop);
     if (iter != m_MetaData.end())
     {

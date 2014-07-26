@@ -86,6 +86,20 @@ void addItemToDidl(Document& doc, Element& didl, const Item& item)
         }
         catch (std::exception&) { /* Unknown profileId */ }
     }
+    
+    for (auto& res : item.getResources())
+    {
+        try
+        {
+            auto elem = doc.createElement("res");
+            auto node = doc.createNode(res.getUrl());
+            elem.addAttribute("protocolInfo", res.getProtocolInfo().toString());
+            elem.addAttribute("size", std::to_string(res.getSize()));
+            elem.appendChild(node);
+            itemElem.appendChild(elem);
+        }
+        catch (std::exception&) {}
+    }
 
     didl.appendChild(itemElem);
 }
