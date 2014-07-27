@@ -65,20 +65,6 @@ inline std::ostream& operator<< (std::ostream& os, const Resource& res)
 class Item
 {
 public:
-    enum Class
-    {
-        Container,
-        VideoContainer,
-        AudioContainer,
-        ImageContainer,
-        StorageFolder,
-        Video,
-        Audio,
-        Image,
-        Generic,
-        Unknown
-    };
-
     explicit Item(const std::string& id = "0", const std::string& title = "");
     Item(const Item& other) = default;
     Item(Item&& other) = default;

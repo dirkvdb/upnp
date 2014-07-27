@@ -259,7 +259,7 @@ TEST_F(ContentDirectoryTest, browseAction)
     uint32_t itemCount = 0;
     for (auto& item : result.result)
     {
-        if (item->getClass() == Item::Class::Container)
+        if (item->getClass() == Class::Container)
         {
             std::string index = getIndexString(containerCount);
             EXPECT_EQ("Id" + index,             item->getObjectId());
@@ -280,7 +280,7 @@ TEST_F(ContentDirectoryTest, browseAction)
             
             ++containerCount;
         }
-        else if (item->getClass() == Item::Class::Audio)
+        else if (item->getClass() == Class::Audio)
         {
             std::string index = getIndexString(itemCount);
             EXPECT_EQ("Id" + index,             item->getObjectId());

@@ -83,6 +83,20 @@ enum class Property
     Unknown
 };
 
+enum class Class
+{
+    Container,
+    VideoContainer,
+    AudioContainer,
+    ImageContainer,
+    StorageFolder,
+    Video,
+    Audio,
+    Image,
+    Generic,
+    Unknown
+};
+
 class UPnPException : public std::exception
 {
 public:
@@ -222,6 +236,24 @@ inline std::string toString(Property prop)
     case Property::All:               return "*";
     case Property::Unknown:
     default:                          return "";
+    }
+}
+
+inline std::string toString(Class c)
+{
+    switch (c)
+    {
+    case Class::Container:          return "object.container";
+    case Class::VideoContainer:     return "object.container.videoContainer";
+    case Class::AudioContainer:     return "object.container.album.musicAlbum";
+    case Class::ImageContainer:     return "object.container.photoAlbum";
+    case Class::StorageFolder:      return "object.container.storageFolder";
+    case Class::Video:              return "object.item.videoItem";
+    case Class::Audio:              return "object.item.audioItem";
+    case Class::Image:              return "object.item.imageItem";
+    case Class::Generic:            return "object.generic";
+    default:
+        throw std::runtime_error("Invalid upnp class provided");
     }
 }
 

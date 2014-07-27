@@ -172,89 +172,58 @@ uint32_t Item::getChildCount() const
     return m_ChildCount;
 }
 
-Item::Class Item::getClass() const
+Class Item::getClass() const
 {
     auto iter = m_MetaData.find(Property::Class);
     if (iter == m_MetaData.end())
     {
-        return Unknown;
+        return Class::Unknown;
     }
     
     const std::string& upnpClass = iter->second;
     if (0 == upnpClass.find("object.item.audioItem"))
     {
-        return Audio;
+        return Class::Audio;
     }
     else if (0 == upnpClass.find("object.item.imageItem"))
     {
-        return Image;
+        return Class::Image;
     }
     else if (0 == upnpClass.find("object.item.videoItem"))
     {
-        return Video;
+        return Class::Video;
     }
     else if (upnpClass == "object.item")
     {
-        return Generic;
+        return Class::Generic;
     }
     else if (upnpClass == "object.container.videoContainer")
     {
-        return VideoContainer;
+        return Class::VideoContainer;
     }
     else if (upnpClass == "object.container.storageFolder")
     {
-        return StorageFolder;
+        return Class::StorageFolder;
     }
     else if (upnpClass == "object.container.album.musicAlbum")
     {
-        return AudioContainer;
+        return Class::AudioContainer;
     }
     else if (upnpClass == "object.container.album.photoAlbum")
     {
-        return ImageContainer;
+        return Class::ImageContainer;
     }
     else if (0 == upnpClass.find("object.container"))
     {
-        return Container;
+        return Class::Container;
     }
     
-    return Unknown;
+    return Class::Unknown;
 }
 
 void Item::setClass(Class c)
 {
-    switch (c)
-    {
-    case Class::Container:
-        m_MetaData[Property::Class] = "object.container";
-        break;
-    case Class::VideoContainer:
-        m_MetaData[Property::Class] = "object.container.videoContainer";
-        break;
-    case Class::AudioContainer:
-        m_MetaData[Property::Class] = "object.container.album.musicAlbum";
-        break;
-    case Class::ImageContainer:
-        m_MetaData[Property::Class] = "object.container.photoAlbum";
-        break;
-    case Class::StorageFolder:
-        m_MetaData[Property::Class] = "object.container.storageFolder";
-        break;
-    case Class::Video:
-        m_MetaData[Property::Class] = "object.item.videoItem";
-        break;
-    case Class::Audio:
-        m_MetaData[Property::Class] = "object.item.audioItem";
-        break;
-    case Class::Image:
-        m_MetaData[Property::Class] = "object.item.imageItem";
-        break;
-    case Class::Generic:
-        m_MetaData[Property::Class] = "object.generic";
-        break;
-    default:
-        throw std::runtime_error("Invalid upnp class provided");
-    }
+    m_MetaData.emplace(Property::Class, toString(c));
 }
 
 void Item::setClass(const std::string& className)
