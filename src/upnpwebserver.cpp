@@ -327,13 +327,14 @@ int closeCallback(UpnpWebFileHandle fileHandle)
 	std::lock_guard<std::mutex> lock(g_mutex);
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
 
+#ifdef DEBUG_WEBSERVER
+    log::debug("[Webserver] Close: %s", pHandle->filename);
+#endif
+
     try
     {
         if (pHandle->callback)
         {
-#ifdef DEBUG_WEBSERVER
-            log::debug("[Webserver] Close: %s", pHandle->filename);
-#endif
             pHandle->callback->close();
             pHandle->callback.reset();
         }
