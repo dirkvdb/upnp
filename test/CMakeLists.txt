@@ -17,6 +17,7 @@ ADD_EXECUTABLE(upnptest EXCLUDE_FROM_ALL
     devicediscover.h
 
     xmlutilstest.cpp
+    upnputilstest.cpp
     #mediarenderertest.cpp
     #mediaservertest.cpp
     #controlpointtest.cpp

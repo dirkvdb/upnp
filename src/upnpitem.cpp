@@ -133,6 +133,10 @@ void Resource::setSampleRate(uint32_t sampleRate)
     m_sampleRate = sampleRate;
 }
 
+void Resource::setBitsPerSample(uint32_t bitsPerSample)
+{
+    m_bitsPerSample = bitsPerSample;
+}
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)

@@ -259,6 +259,30 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
             {
                 res.setProtocolInfo(ProtocolInfo(value));
             }
+            else if (key == "size")
+            {
+                res.setSize(std::stoul(value));
+            }
+            else if (key == "duration")
+            {
+                res.setDuration(durationFromString(value));
+            }
+            else if (key == "nrAudioChannels")
+            {
+                res.setNrAudioChannels(static_cast<uint32_t>(std::stoul(value)));
+            }
+            else if (key == "bitRate")
+            {
+                res.setBitRate(static_cast<uint32_t>(std::stoul(value)));
+            }
+            else if (key == "sampleFrequency")
+            {
+                res.setSampleRate(static_cast<uint32_t>(std::stoul(value)));
+            }
+            else if (key == "bitsPerSample")
+            {
+                res.setBitsPerSample(static_cast<uint32_t>(std::stoul(value)));
+            }
             else
             {
                 res.addMetaData(key, value);

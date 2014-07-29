@@ -25,6 +25,8 @@
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
 
+#include "utils/stringoperations.h"
+
 namespace upnp
 {
 
@@ -91,6 +93,36 @@ inline std::string durationToString(uint32_t durationInSecs)
     return ss.str();
 }
 
+inline uint32_t durationFromString(const std::string& durationString)
+{
+    uint32_t duration = 0;
+    auto times = utils::stringops::tokenize(durationString, ":");
+
+    if (times.size() != 3)
+    {
+        throw std::runtime_error("Invalid duration format: " + durationString);
+    }
+
+    uint32_t hours = 0;
+    if (times[0].size() > 0)
+    {
+        hours = utils::stringops::toNumeric<uint32_t>(times[0]);
+    }
+
+    uint32_t minutes = utils::stringops::toNumeric<uint32_t>(times[1]);
+
+    auto secondsAndFractals = utils::stringops::tokenize(times[2], ".");
+    uint32_t seconds = utils::stringops::toNumeric<uint32_t>(secondsAndFractals.front());
+
+    if (secondsAndFractals.size() > 1)
+    {
+        // process fractal part here
+    }
+
+    duration += hours * 3600;
+    duration += minutes * 60;
+    duration += seconds;
+    return duration;}
 }
 
 
