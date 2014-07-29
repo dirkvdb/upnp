@@ -78,6 +78,10 @@ void Resource::setProtocolInfo(const upnp::ProtocolInfo& info)
     m_protocolInfo = info;
 }
 
+void Resource::setSize(uint64_t size)
+{
+    m_size = size;
+}
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)
@@ -283,6 +287,14 @@ void Item::addMetaData(Property prop, const std::string& value)
 void Item::addResource(const Resource& resource)
 {
     m_Resources.push_back(resource);
+}
+
+void Item::setResourceUrl(const std::string& url)
+{
+    for (auto& res : m_Resources)
+    {
+        res.setUrl(url);
+    }
 }
 
 const std::string& Item::getMetaData(Property prop) const
