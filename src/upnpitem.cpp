@@ -289,14 +289,6 @@ void Item::addResource(const Resource& resource)
     m_Resources.push_back(resource);
 }
 
-void Item::setResourceUrl(const std::string& url)
-{
-    for (auto& res : m_Resources)
-    {
-        res.setUrl(url);
-    }
-}
-
 const std::string& Item::getMetaData(Property prop) const
 {
     auto iter = m_MetaData.find(prop);

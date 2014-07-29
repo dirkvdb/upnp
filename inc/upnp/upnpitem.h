@@ -103,7 +103,6 @@ public:
 
     void addMetaData(Property prop, const std::string& value);
     void addResource(const Resource& resource);
-    void setResourceUrl(const std::string& url);
 
     const std::string& getMetaData(Property prop) const;
     std::map<Property, std::string> getMetaData() const;

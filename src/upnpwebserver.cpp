@@ -115,7 +115,11 @@ UpnpWebFileHandle openCallback(const char* pFilename, UpnpOpenFileMode mode)
         // writing is not supported
         return nullptr;
     }
-    
+
+#ifdef DEBUG_WEBSERVER
+    log::debug("[Webserver] Open: %s", pFilename);
+#endif
+
     std::unique_ptr<FileHandle> handle(new FileHandle());
     handle->filename = pFilename;
     handle->offset = 0;
@@ -207,7 +211,11 @@ int readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen)
     {
         return UPNP_E_INVALID_ARGUMENT;
     }
-    
+
+#ifdef DEBUG_WEBSERVER
+    log::debug("[Webserver] Read: %s (size: %d)", pHandle->filename, buflen);
+#endif
+
     try
     {
         if (pHandle->callback)
@@ -251,7 +259,11 @@ int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin)
 {
 	std::lock_guard<std::mutex> lock(g_mutex);
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
-    
+
+#ifdef DEBUG_WEBSERVER
+    log::debug("[Webserver] Seek: %s (offset: %d mode: %d)", pHandle->filename, offset, origin);
+#endif
+
     try
     {
         if (pHandle->callback)
@@ -314,11 +326,14 @@ int closeCallback(UpnpWebFileHandle fileHandle)
 {
 	std::lock_guard<std::mutex> lock(g_mutex);
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
-    
+
     try
     {
         if (pHandle->callback)
         {
+#ifdef DEBUG_WEBSERVER
+            log::debug("[Webserver] Close: %s", pHandle->filename);
+#endif
             pHandle->callback->close();
             pHandle->callback.reset();
         }
