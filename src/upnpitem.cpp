@@ -29,6 +29,11 @@ static const std::string resourceTag    = "res";
 
 Resource::Resource()
 : m_size(0)
+, m_duration(0)
+, m_nrAudioChannels(0)
+, m_bitRate(0)
+, m_sampleRate(0)
+, m_bitsPerSample(0)
 {
 }
 
@@ -58,6 +63,31 @@ uint64_t Resource::getSize() const
     return m_size;
 }
 
+uint32_t Resource::getDuration() const
+{
+    return m_duration;
+}
+
+uint32_t Resource::getNrAudioChannels() const
+{
+    return m_nrAudioChannels;
+}
+
+uint32_t Resource::getBitRate() const
+{
+    return m_bitRate;
+}
+
+uint32_t Resource::getSampleRate() const
+{
+    return m_sampleRate;
+}
+
+uint32_t Resource::getBitsPerSample() const
+{
+    return m_bitsPerSample;
+}
+
 bool Resource::isThumbnail() const
 {
     return (0 != getMetaData(protocolInfo).find(dlnaThumbnail));
@@ -82,6 +112,27 @@ void Resource::setSize(uint64_t size)
 {
     m_size = size;
 }
+
+void Resource::setDuration(uint32_t durationInSeconds)
+{
+    m_duration = durationInSeconds;
+}
+
+void Resource::setNrAudioChannels(uint32_t channels)
+{
+    m_nrAudioChannels = channels;
+}
+
+void Resource::setBitRate(uint32_t bitRate)
+{
+    m_bitRate = bitRate;
+}
+
+void Resource::setSampleRate(uint32_t sampleRate)
+{
+    m_sampleRate = sampleRate;
+}
+
 
 Item::Item(const std::string& id, const std::string& title)
 : m_ObjectId(id)

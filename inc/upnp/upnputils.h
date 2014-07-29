@@ -20,6 +20,7 @@
 #include <string>
 #include <stdexcept>
 #include <sstream>
+#include <iomanip>
 
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
@@ -71,6 +72,23 @@ inline void handleUPnPResult(int errorCode)
         ss << UpnpGetErrorMessage(errorCode) << " (" << errorCode << ")";
         throw std::logic_error(ss.str().c_str());
     }
+}
+
+inline std::string durationToString(uint32_t durationInSecs)
+{
+    uint32_t hours = durationInSecs / 3600;
+    durationInSecs -= hours * 3600;
+
+    uint32_t minutes = durationInSecs / 60;
+    uint32_t seconds = durationInSecs % 60;
+
+
+    std::stringstream ss;
+
+    ss << std::setw(2) << std::setfill('0') << hours << ':'
+    << std::setw(2) << std::setfill('0') << minutes << ':'
+    << std::setw(2) << std::setfill('0') << seconds;
+    return ss.str();
 }
 
 }

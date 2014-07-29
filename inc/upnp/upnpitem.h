@@ -42,18 +42,33 @@ public:
     const std::string& getUrl() const;
     const ProtocolInfo& getProtocolInfo() const;
     uint64_t getSize() const;
+    uint32_t getNrAudioChannels() const;
+    uint32_t getBitRate() const;
+    uint32_t getSampleRate() const;
+    uint32_t getBitsPerSample() const;
+    uint32_t getDuration() const;
     bool isThumbnail() const;
 
     void addMetaData(const std::string& key, const std::string& value);
     void setUrl(const std::string& url);
     void setProtocolInfo(const ProtocolInfo& info);
-    void setSize(uint64_t);
+    void setSize(uint64_t size);
+    void setDuration(uint32_t durationInSeconds);
+    void setNrAudioChannels(uint32_t channels);
+    void setBitRate(uint32_t bitRate);
+    void setSampleRate(uint32_t sampleRate);
+    void setBitsPerSample(uint32_t bitsPerSample);
 
 private:
     MetaMap         m_metaData;
     std::string     m_url;
     ProtocolInfo    m_protocolInfo;
     uint64_t        m_size;
+    uint32_t        m_duration;
+    uint32_t        m_nrAudioChannels;
+    uint32_t        m_bitRate;
+    uint32_t        m_sampleRate;
+    uint32_t        m_bitsPerSample;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Resource& res)

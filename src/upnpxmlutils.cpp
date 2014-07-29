@@ -17,6 +17,7 @@
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpitem.h"
 #include "upnp/upnpservicevariable.h"
+#include "upnp/upnputils.h"
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
@@ -94,9 +95,30 @@ void addItemToDidl(Document& doc, Element& didl, const Item& item)
             auto elem = doc.createElement("res");
             auto node = doc.createNode(res.getUrl());
             elem.addAttribute("protocolInfo", res.getProtocolInfo().toString());
-            elem.addAttribute("size", std::to_string(res.getSize()));
-            elem.appendChild(node);
-            itemElem.appendChild(elem);
+
+            auto size = res.getSize();
+            if (size > 0) { elem.addAttribute("size", std::to_string(size)); }
+
+            if (item.getClass() == upnp::Class::Audio)
+            {
+                auto duration = res.getDuration();
+                if (duration > 0) { elem.addAttribute("duration", durationToString(duration)); }
+
+                auto bitrate = res.getBitRate();
+                if (bitrate > 0) { elem.addAttribute("bitrate", std::to_string(bitrate)); }
+
+                auto sampleRate = res.getSampleRate();
+                if (sampleRate > 0) { elem.addAttribute("samplefrequency", std::to_string(sampleRate)); }
+
+                auto nrChannels = res.getNrAudioChannels();
+                if (nrChannels > 0) { elem.addAttribute("nrAudioChannels", std::to_string(nrChannels)); }
+
+                auto bitsPerSample = res.getBitsPerSample();
+                if (bitsPerSample > 0) { elem.addAttribute("bitsPerSample", std::to_string(bitsPerSample)); }
+
+                elem.appendChild(node);
+                itemElem.appendChild(elem);
+            }
         }
         catch (std::exception&) {}
     }
