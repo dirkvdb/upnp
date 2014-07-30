@@ -171,7 +171,7 @@ TEST_F(WebServerTest, downloadTextFileThroughCalllback)
     
     webserver->addVirtualDirectory("virtualDir", fileInfoCb, requestCb);
     
-    EXPECT_CALL(*cb, read(_, file.size())).WillRepeatedly(Invoke([&] (uint8_t* pData, int32_t size) -> int32_t {
+    EXPECT_CALL(*cb, read(_, file.size())).WillRepeatedly(Invoke([&] (uint8_t* pData, uint64_t size) -> uint64_t {
         memcpy(pData, file.data(), size);
         return size;
     }));
