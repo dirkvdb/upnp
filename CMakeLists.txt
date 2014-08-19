@@ -85,7 +85,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
 )
 
-ADD_DEFINITIONS("-std=c++11")
+ADD_DEFINITIONS("-std=c++1y")
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")

@@ -59,7 +59,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
         
         if (m_Device->implementsService(ServiceType::AVTransport))
         {
-            m_AVtransport.reset(new AVTransport::Client(m_Client));
+            m_AVtransport = std::make_unique<AVTransport::Client>(m_Client);
             m_AVtransport->setDevice(device);
         }
         

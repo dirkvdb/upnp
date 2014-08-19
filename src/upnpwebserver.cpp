@@ -120,7 +120,7 @@ UpnpWebFileHandle openCallback(const char* pFilename, UpnpOpenFileMode mode)
     log::debug("[Webserver] Open: %s", pFilename);
 #endif
 
-    std::unique_ptr<FileHandle> handle(new FileHandle());
+    auto handle = std::make_unique<FileHandle>();
     handle->filename = pFilename;
     handle->offset = 0;
     handle->id = ++g_currentRequestId;
@@ -388,7 +388,7 @@ std::string WebServer::getWebRootUrl()
 
 void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data)
 {
-	std::unique_ptr<HostedFile> file(new HostedFile());
+	auto file = std::make_unique<HostedFile>();
 	file->filename       = filename;
 	file->contentType    = contentType;
 	file->fileContents.resize(data.size());
@@ -400,7 +400,7 @@ void WebServer::addFile(const std::string& virtualDir, const std::string& filena
 
 void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data)
 {
-	std::unique_ptr<HostedFile> file(new HostedFile());
+	auto file = std::make_unique<HostedFile>();
     file->filename       = filename;
     file->contentType    = contentType;
     file->fileContents   = data;

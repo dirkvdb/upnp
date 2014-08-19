@@ -58,7 +58,7 @@ public:
 protected:
     void SetUp()
     {
-        avtransport.reset(new AVTransport::Client(client));
+        avtransport = std::make_unique<AVTransport::Client>(client);
         
         Service service;
         service.m_Type                  = ServiceType::AVTransport;

@@ -68,7 +68,7 @@ public:
 protected:
     void SetUp()
     {
-        contentDirectory.reset(new ContentDirectory::Client(client));
+        contentDirectory = std::make_unique<ContentDirectory::Client>(client);
         
         Service service;
         service.m_Type = ServiceType::ContentDirectory;

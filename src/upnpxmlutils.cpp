@@ -160,8 +160,7 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
             try
             {
                 Element rangeElement = elem.getElementsByTagName("allowedValueRange").getNode(0);
-                std::unique_ptr<StateVariable::ValueRange> range(new StateVariable::ValueRange());
-                
+                auto range             = std::make_unique<StateVariable::ValueRange>();
                 range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("minimum"));
                 range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("maximum"));
                 range->step            = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("step"));

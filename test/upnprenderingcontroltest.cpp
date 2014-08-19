@@ -60,7 +60,7 @@ public:
 protected:
     void SetUp()
     {
-        renderingControl.reset(new RenderingControl::Client(client));
+        renderingControl = std::make_unique<RenderingControl::Client>(client);
         
         Service service;
         service.m_Type = ServiceType::RenderingControl;

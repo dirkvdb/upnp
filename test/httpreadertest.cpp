@@ -52,7 +52,7 @@ protected:
     void SetUp()
     {
         client.initialize();
-        webserver.reset(new WebServer("/"));
+        webserver = std::make_unique<WebServer>("/");
     }
     
     void TearDown()
@@ -86,7 +86,7 @@ TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", data);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
     
-    BufferedReader reader(std::unique_ptr<IReader>(new HttpReader()), 128 * 1024);
+    BufferedReader reader(std::unique_ptr<HttpReader>(), 128 * 1024);
     reader.open(url);
     EXPECT_EQ(fileSize, reader.getContentLength());
     

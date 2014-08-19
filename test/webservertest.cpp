@@ -63,7 +63,7 @@ protected:
     void SetUp()
     {
         client.initialize();
-        webserver.reset(new WebServer("/"));
+        webserver = std::make_unique<WebServer>("/");
     }
     
     void TearDown()
@@ -259,7 +259,7 @@ TEST_F(WebServerTest, restartServer)
     webserver.reset();
     client.destroy();
     client.initialize();
-    webserver.reset(new WebServer("/"));
+    webserver = std::make_unique<WebServer>("/");
 
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);

@@ -98,7 +98,7 @@ public:
 protected:
     void SetUp()
     {
-        service.reset(new ServiceImplMock(client));
+        service = std::make_unique<ServiceImplMock>(client);
         
         Service serviceDesc;
         serviceDesc.m_Type                  = ServiceType::RenderingControl;

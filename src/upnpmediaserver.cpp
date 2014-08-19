@@ -60,7 +60,7 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device)
         
         if (m_Device->implementsService(ServiceType::AVTransport))
         {
-            m_AVTransport.reset(new AVTransport::Client(m_Client));
+            m_AVTransport = std::make_unique<AVTransport::Client>(m_Client);
             m_AVTransport->setDevice(device);
         }
     }
