@@ -305,7 +305,7 @@ int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin)
                     return UPNP_E_INVALID_ARGUMENT;
             }
         
-            if (newPosition < 0 || newPosition >= file.fileContents.size())
+            if (newPosition < 0 || static_cast<uint64_t>(newPosition) >= file.fileContents.size())
             {
                 return UPNP_E_INVALID_ARGUMENT;
             }

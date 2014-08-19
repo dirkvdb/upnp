@@ -86,7 +86,7 @@ TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", data);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
     
-    BufferedReader reader(std::unique_ptr<HttpReader>(), 128 * 1024);
+    BufferedReader reader(std::make_unique<HttpReader>(), 128 * 1024);
     reader.open(url);
     EXPECT_EQ(fileSize, reader.getContentLength());
     
