@@ -37,8 +37,8 @@ public:
     virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response) = 0;
     virtual void notifyEvent(const std::string& serviceId, const xml::Document& event) = 0;
     
-    utils::Signal<void(Upnp_Action_Request*)> ControlActionRequested;
-    utils::Signal<void(Upnp_Subscription_Request*)> EventSubscriptionRequested;
+    utils::Signal<Upnp_Action_Request*> ControlActionRequested;
+    utils::Signal<Upnp_Subscription_Request*> EventSubscriptionRequested;
 };
     
 }

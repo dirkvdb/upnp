@@ -49,8 +49,8 @@ public:
     std::shared_ptr<Device> getDevice(const std::string& udn) const;
     std::map<std::string, std::shared_ptr<Device>> getDevices();
     
-    utils::Signal<void(std::shared_ptr<Device>)> DeviceDiscoveredEvent;
-    utils::Signal<void(std::shared_ptr<Device>)> DeviceDissapearedEvent;
+    utils::Signal<std::shared_ptr<Device>> DeviceDiscoveredEvent;
+    utils::Signal<std::shared_ptr<Device>> DeviceDissapearedEvent;
     
     void onDeviceDiscovered(const DeviceDiscoverInfo& info);
     void onDeviceDissapeared(const std::string& deviceId);

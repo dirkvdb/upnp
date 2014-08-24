@@ -41,11 +41,11 @@ protected:
 
 TEST_F(UtilsTest, DurationFromString)
 {
-    EXPECT_EQ(145, durationFromString(":02:25"));
-    EXPECT_EQ(145, durationFromString("0:02:25"));
-    EXPECT_EQ(145, durationFromString("00:02:25"));
-    EXPECT_EQ(145, durationFromString("00:02:25.00"));
-    EXPECT_EQ(3745, durationFromString("01:02:25.00"));
+    EXPECT_EQ(145u, durationFromString(":02:25"));
+    EXPECT_EQ(145u, durationFromString("0:02:25"));
+    EXPECT_EQ(145u, durationFromString("00:02:25"));
+    EXPECT_EQ(145u, durationFromString("00:02:25.00"));
+    EXPECT_EQ(3745u, durationFromString("01:02:25.00"));
 }
 
 }

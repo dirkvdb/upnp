@@ -40,7 +40,7 @@ template <typename ActionType, typename VariableType>
 class ServiceClientBase
 {
 public:
-    utils::Signal<void(VariableType, const std::map<VariableType, std::string>&)> StateVariableEvent;
+    utils::Signal<VariableType, const std::map<VariableType, std::string>&> StateVariableEvent;
 
     ServiceClientBase(IClient& client)
     : m_Client(client)

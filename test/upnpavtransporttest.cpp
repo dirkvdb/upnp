@@ -327,7 +327,7 @@ TEST_F(AVTransportTest, getPositionInfo)
     auto info = avtransport->getPositionInfo(g_connectionId);
     EXPECT_EQ(1, info.absoluteCount);
     EXPECT_EQ(2, info.relativeCount);
-    EXPECT_EQ(3, info.track);
+    EXPECT_EQ(3u, info.track);
     EXPECT_EQ("AbsTime", info.absoluteTime);
     EXPECT_EQ("RelTime", info.relativeTime);
     EXPECT_EQ("Duration", info.trackDuration);

@@ -46,7 +46,7 @@ public:
     void setVolume(int32_t connectionId, uint32_t value);
     uint32_t getVolume(int32_t connectionId);
     
-    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
+    utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
     
 protected:
     virtual Action actionFromString(const std::string& action) const override;

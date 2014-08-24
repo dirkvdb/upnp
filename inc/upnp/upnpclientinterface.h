@@ -60,9 +60,9 @@ public:
     virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;
     
-    utils::Signal<void(const DeviceDiscoverInfo&)> UPnPDeviceDiscoveredEvent;
-    utils::Signal<void(const std::string&)> UPnPDeviceDissapearedEvent;
-    utils::Signal<void(Upnp_Event*)> UPnPEventOccurredEvent;
+    utils::Signal<const DeviceDiscoverInfo&> UPnPDeviceDiscoveredEvent;
+    utils::Signal<const std::string&> UPnPDeviceDissapearedEvent;
+    utils::Signal<Upnp_Event*> UPnPEventOccurredEvent;
 };
     
 }

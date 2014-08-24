@@ -50,7 +50,7 @@ public:
     TransportInfo getTransportInfo(int32_t connectionId);
     std::set<Action> getCurrentTransportActions(int32_t connectionId);
     
-    utils::Signal<void(const std::map<Variable, std::string>&)> LastChangeEvent;
+    utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
     
     virtual Action actionFromString(const std::string& action) const  override;
     virtual std::string actionToString(Action action) const  override;

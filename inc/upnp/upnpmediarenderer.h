@@ -109,11 +109,11 @@ public:
     void activateEvents();
     void deactivateEvents();
     
-    utils::Signal<void(std::shared_ptr<Device>)>    DeviceChanged;
-    utils::Signal<void(uint32_t)>                   VolumeChanged;
-    utils::Signal<void(ItemPtr)>                    CurrentTrackChanged;
-    utils::Signal<void(std::set<Action>)>           AvailableActionsChanged;
-    utils::Signal<void(PlaybackState)>              PlaybackStateChanged;
+    utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
+    utils::Signal<uint32_t>                   VolumeChanged;
+    utils::Signal<ItemPtr>                    CurrentTrackChanged;
+    utils::Signal<std::set<Action>>           AvailableActionsChanged;
+    utils::Signal<PlaybackState>              PlaybackStateChanged;
     
 private:
     void throwOnUnknownConnectionId() const;
