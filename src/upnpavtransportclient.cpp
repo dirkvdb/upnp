@@ -110,14 +110,14 @@ PositionInfo Client::getPositionInfo(int32_t connectionId)
     PositionInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
-             if (elem.getName() == "Track")          info.track          = static_cast<uint32_t>(std::stoul(elem.getValue()));
+             if (elem.getName() == "Track")          info.track          = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(elem.getValue());
         else if (elem.getName() == "TrackDuration")  info.trackDuration  = elem.getValue();
         else if (elem.getName() == "TrackMetaData")  info.trackMetaData  = elem.getValue();
         else if (elem.getName() == "TrackURI")       info.trackURI       = elem.getValue();
         else if (elem.getName() == "RelTime")        info.relativeTime   = elem.getValue();
         else if (elem.getName() == "AbsTime")        info.absoluteTime   = elem.getValue();
-        else if (elem.getName() == "RelCount")       info.relativeCount  = static_cast<int32_t>(std::stol(elem.getValue()));
-        else if (elem.getName() == "AbsCount")       info.absoluteCount  = static_cast<int32_t>(std::stol(elem.getValue()));
+        else if (elem.getName() == "RelCount")       info.relativeCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
+        else if (elem.getName() == "AbsCount")       info.absoluteCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
     }
     
     return info;
@@ -131,7 +131,7 @@ MediaInfo Client::getMediaInfo(int32_t connectionId)
     MediaInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
-             if (elem.getName() == "NrTracks")              info.numberOfTracks     = static_cast<uint32_t>(std::stoul(elem.getValue()));
+             if (elem.getName() == "NrTracks")              info.numberOfTracks     = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(elem.getValue());
         else if (elem.getName() == "MediaDuration")         info.mediaDuration      = elem.getValue();
         else if (elem.getName() == "CurrentUri")            info.currentURI         = elem.getValue();
         else if (elem.getName() == "CurrentUriMetaData")    info.currentURIMetaData = elem.getValue();

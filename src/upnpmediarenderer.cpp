@@ -372,14 +372,19 @@ ItemPtr MediaRenderer::parseCurrentTrack(const std::string& track) const
 {
     try
     {
-        xml::Document doc(track);
-        return xml::utils::parseItemDocument(doc);
+        if (!track.empty())
+        {
+            xml::Document doc(track);
+            return xml::utils::parseItemDocument(doc);
+        }
     }
     catch (std::exception& e)
     {
         log::warn("Failed to parse item doc: %s", e.what());
-        return ItemPtr();
+
     }
+
+    return ItemPtr();
 }
 
 MediaRenderer::PlaybackState MediaRenderer::parsePlaybackState(const std::string& state) const
@@ -426,8 +431,23 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
     {
         CurrentTrackChanged(parseCurrentTrack(iter->second));
     }
-    
-    
+    else
+    {
+        // No metadata present
+        iter = vars.find(AVTransport::Variable::CurrentTrackURI);
+        if (iter != vars.end())
+        {
+            // But the track uri changed, notify with empty info
+            CurrentTrackChanged(ItemPtr());
+        }
+    }    
+
+    iter = vars.find(AVTransport::Variable::CurrentTrackDuration);
+    if (iter != vars.end())
+    {
+        CurrentTrackDurationChanged(parseDuration(iter->second));
+    }
+
     iter = vars.find(AVTransport::Variable::TransportState);
     if (iter != vars.end())
     {

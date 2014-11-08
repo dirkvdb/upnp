@@ -18,6 +18,7 @@
 #define UPNP_DEVICE_SCANNER
 
 #include <map>
+#include <set>
 #include <string>
 #include <mutex>
 #include <memory>
@@ -38,7 +39,8 @@ namespace upnp
 class DeviceScanner
 {
 public:
-    DeviceScanner(IClient& client, Device::Type type);
+    DeviceScanner(IClient& client, DeviceType type);
+    DeviceScanner(IClient& client, std::set<DeviceType> types);
     ~DeviceScanner() throw();
     
     void start();
@@ -52,10 +54,9 @@ public:
     utils::Signal<std::shared_ptr<Device>> DeviceDiscoveredEvent;
     utils::Signal<std::shared_ptr<Device>> DeviceDissapearedEvent;
     
+private:
     void onDeviceDiscovered(const DeviceDiscoverInfo& info);
     void onDeviceDissapeared(const std::string& deviceId);
-    
-private:
     void updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
     void obtainDeviceDetails(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
@@ -64,7 +65,7 @@ private:
     void checkForTimeoutThread();
     
     IClient&                                        m_Client;
-    Device::Type                                    m_Type;
+    const std::set<DeviceType>                      m_Types;
     std::map<std::string, std::shared_ptr<Device>>  m_Devices;
     mutable std::mutex                              m_Mutex;
     mutable std::mutex                              m_DataMutex;

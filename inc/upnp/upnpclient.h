@@ -38,7 +38,8 @@ public:
     virtual std::string getIpAddress() const override;
     virtual int32_t getPort() const override;
     
-    virtual void searchDevices(Device::Type type, int timeout) const override;
+    virtual void searchDevicesOfType(DeviceType type, int32_t timeout) const override;
+    virtual void searchAllDevices(int32_t timeout) const override;
     
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const override;
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const override;
@@ -50,7 +51,7 @@ public:
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
     static void throwOnUPnPError(int errorCode);
-    static const char* deviceTypeToString(Device::Type type);
+    static const char* deviceTypeToString(DeviceType type);
 
     UpnpClient_Handle   m_Client;
 };

@@ -54,6 +54,13 @@ enum class ServiceType
     Unknown
 };
 
+enum class DeviceType
+{
+    MediaServer,
+    MediaRenderer,
+    Unknown
+};
+
 enum class Property
 {
     Id,

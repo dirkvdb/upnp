@@ -31,11 +31,17 @@ using namespace std::chrono;
 namespace upnp
 {
 
-static const int timeCheckInterval = 60;
+static const int32_t g_timeCheckInterval = 60;
+static const int32_t g_searchTimeoutInSec = 5;
 
-DeviceScanner::DeviceScanner(IClient& client, Device::Type type)
+DeviceScanner::DeviceScanner(IClient& client, DeviceType type)
+: DeviceScanner(client, std::set<DeviceType> { type })
+{
+}
+
+DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 : m_Client(client)
-, m_Type(type)
+, m_Types(types)
 , m_Started(false)
 , m_Stop(false)
 {
@@ -125,7 +131,7 @@ void DeviceScanner::checkForTimeoutThread()
         }
         
         
-        if (std::cv_status::no_timeout == m_Condition.wait_for(lock, seconds(timeCheckInterval)))
+        if (std::cv_status::no_timeout == m_Condition.wait_for(lock, seconds(g_timeCheckInterval)))
         {
             return;
         }
@@ -134,7 +140,14 @@ void DeviceScanner::checkForTimeoutThread()
 
 void DeviceScanner::refresh()
 {
-    m_Client.searchDevices(m_Type, 5);
+    if (m_Types.size() == 1)
+    {
+        m_Client.searchDevicesOfType(*m_Types.begin(), g_searchTimeoutInSec);
+    }
+    else
+    {
+        m_Client.searchAllDevices(g_searchTimeoutInSec);
+    }
 }
 
 uint32_t DeviceScanner::getDeviceCount() const
@@ -164,7 +177,7 @@ void DeviceScanner::obtainDeviceDetails(const DeviceDiscoverInfo& info, const st
     device->m_Type          = Device::stringToDeviceType(doc.getChildNodeValueRecursive("deviceType"));
     device->m_TimeoutTime   = system_clock::now() + seconds(info.expirationTime);
     
-    assert(device->m_Type == m_Type);
+    assert(m_Types.find(device->m_Type) != m_Types.end());
     
     if (device->m_UDN.empty())
     {
@@ -182,7 +195,7 @@ void DeviceScanner::obtainDeviceDetails(const DeviceDiscoverInfo& info, const st
         device->m_PresURL = presURL;
     }
     
-    if (device->m_Type == Device::MediaServer)
+    if (device->m_Type == DeviceType::MediaServer)
     {
         if (findAndParseService(doc, ServiceType::ContentDirectory, device))
         {
@@ -191,7 +204,7 @@ void DeviceScanner::obtainDeviceDetails(const DeviceDiscoverInfo& info, const st
             findAndParseService(doc, ServiceType::ConnectionManager, device);
         }
     }
-    else if (device->m_Type == Device::MediaRenderer)
+    else if (device->m_Type == DeviceType::MediaRenderer)
     {
         if (   findAndParseService(doc, ServiceType::RenderingControl, device)
             && findAndParseService(doc, ServiceType::ConnectionManager, device)
@@ -287,7 +300,8 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
 
 void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
 {
-    if (m_Type != Device::stringToDeviceType(info.deviceType))
+    auto deviceType = Device::stringToDeviceType(info.deviceType);
+    if (m_Types.find(deviceType) == m_Types.end())
     {
         return;
     }

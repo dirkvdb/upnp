@@ -236,8 +236,8 @@ uint32_t MediaServer::search(const std::string& id, const std::string& criteria,
 
     do
     {
-        auto res = m_ContentDirectory.search(id, criteria, "*", offset, g_requestSize, "");
-        for (auto& item : res.result)
+        auto searchRes = m_ContentDirectory.search(id, criteria, "*", offset, g_requestSize, "");
+        for (auto& item : searchRes.result)
         {
             onItem(item);
         }

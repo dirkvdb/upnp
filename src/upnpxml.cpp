@@ -297,8 +297,17 @@ std::string Document::getChildNodeValueRecursive(const std::string& tagName) con
     {
         throw std::logic_error(std::string("Failed to get document subelement value with tag: ") + tagName);
     }
-    
-    return nodeList.getNode(0).getFirstChild().getValue();
+
+    auto node = nodeList.getNode(0);
+    try
+    {
+        return node.getFirstChild().getValue();
+    }
+    catch (std::exception)
+    {
+        // empty node value
+        return "";
+    }
 }
 
 Node Document::createNode(const std::string& value)

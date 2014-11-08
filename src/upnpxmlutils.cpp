@@ -260,7 +260,7 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
             }
             else if (key == "size")
             {
-                res.setSize(std::stoul(value));
+                res.setSize(optionalStringToUnsignedNumeric<uint64_t>(value));
             }
             else if (key == "duration")
             {
@@ -268,19 +268,19 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
             }
             else if (key == "nrAudioChannels")
             {
-                res.setNrAudioChannels(static_cast<uint32_t>(std::stoul(value)));
+                res.setNrAudioChannels(optionalStringToUnsignedNumeric<uint32_t>(value));
             }
             else if (key == "bitRate")
             {
-                res.setBitRate(static_cast<uint32_t>(std::stoul(value)));
+                res.setBitRate(optionalStringToUnsignedNumeric<uint32_t>(value));
             }
             else if (key == "sampleFrequency")
             {
-                res.setSampleRate(static_cast<uint32_t>(std::stoul(value)));
+                res.setSampleRate(optionalStringToUnsignedNumeric<uint32_t>(value));
             }
             else if (key == "bitsPerSample")
             {
-                res.setBitsPerSample(static_cast<uint32_t>(std::stoul(value)));
+                res.setBitsPerSample(optionalStringToUnsignedNumeric<uint32_t>(value));
             }
             else
             {

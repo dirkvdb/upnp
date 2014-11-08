@@ -112,6 +112,7 @@ public:
     utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
     utils::Signal<uint32_t>                   VolumeChanged;
     utils::Signal<ItemPtr>                    CurrentTrackChanged;
+    utils::Signal<uint32_t>                   CurrentTrackDurationChanged;
     utils::Signal<std::set<Action>>           AvailableActionsChanged;
     utils::Signal<PlaybackState>              PlaybackStateChanged;
     

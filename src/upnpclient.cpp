@@ -104,11 +104,22 @@ int32_t Client::getPort() const
     return UpnpGetServerPort();
 }
 
-void Client::searchDevices(Device::Type type, int timeout) const
+void Client::searchDevicesOfType(DeviceType type, int32_t timeout) const
 {
     log::debug("Send UPnP discovery");
     
     int rc = UpnpSearchAsync(m_Client, timeout, Device::deviceTypeToString(type).c_str(), this);
+    if (UPNP_E_SUCCESS != rc)
+    {
+        log::error("Error sending search request: %d", rc);
+    }
+}
+
+void Client::searchAllDevices(int32_t timeout) const
+{
+    log::debug("Send UPnP discovery");
+    
+    int rc = UpnpSearchAsync(m_Client, timeout, "ssdp:all", this);
     if (UPNP_E_SUCCESS != rc)
     {
         log::error("Error sending search request: %d", rc);

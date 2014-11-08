@@ -47,18 +47,11 @@ public:
 class Device
 {
 public:
-    enum Type
-    {
-        MediaServer,
-        MediaRenderer,
-        Unknown
-    };
-
     bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
     
     bool implementsService(ServiceType type) const { return m_Services.find(type) != m_Services.end(); }
 
-    Type            m_Type;
+    DeviceType      m_Type;
     std::string     m_UserDefinedName;
     std::string     m_FriendlyName;
     std::string     m_UDN;
@@ -72,25 +65,25 @@ public:
     
     std::map<ServiceType, Service>    m_Services;
     
-    static const std::string deviceTypeToString(Device::Type type)
+    static const std::string deviceTypeToString(DeviceType type)
     {
         switch (type)
         {
-            case Device::MediaServer:
+            case DeviceType::MediaServer:
                 return MediaServerDeviceTypeUrn;
-            case Device::MediaRenderer:
+            case DeviceType::MediaRenderer:
                 return MediaRendererDeviceTypeUrn;
             default:
                 throw std::logic_error("Invalid device type encountered");
         }
     }
     
-    static const Device::Type stringToDeviceType(const std::string& type)
+    static const DeviceType stringToDeviceType(const std::string& type)
     {
-        if (type == MediaServerDeviceTypeUrn)   { return Type::MediaServer; }
-        if (type == MediaRendererDeviceTypeUrn) { return Type::MediaRenderer; }
+        if (type == MediaServerDeviceTypeUrn)   { return DeviceType::MediaServer; }
+        if (type == MediaRendererDeviceTypeUrn) { return DeviceType::MediaRenderer; }
         
-        return Type::Unknown;
+        return DeviceType::Unknown;
     }
 };
 

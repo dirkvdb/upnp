@@ -51,7 +51,8 @@ public:
     
     virtual std::string getIpAddress() const = 0;
     virtual int32_t getPort() const = 0;
-    virtual void searchDevices(Device::Type type, int timeout) const = 0;
+    virtual void searchDevicesOfType(DeviceType type, int32_t timeout) const = 0;
+    virtual void searchAllDevices(int32_t timeout) const = 0;
     
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const = 0;
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const = 0;

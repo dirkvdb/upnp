@@ -54,6 +54,18 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
 ItemPtr parseItem(xml::Element& itemElem);
 ItemPtr parseItemDocument(Document& doc);
 
+template <typename T>
+inline T optionalStringToUnsignedNumeric(const std::string& str)
+{
+    return str.empty() ? 0 : static_cast<T>(std::stoul(str));
+}
+
+template <typename T>
+inline T optionalStringToNumeric(const std::string& str)
+{
+    return str.empty() ? 0 : static_cast<T>(std::stol(str));
+}
+
 }
 }
 }
