@@ -162,7 +162,7 @@ std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
     return m_Devices.at(udn);
 }
 
-std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices()
+std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
 {
     std::lock_guard<std::mutex> lock(m_DataMutex);
     return m_Devices;

@@ -49,7 +49,7 @@ public:
     
     uint32_t getDeviceCount() const;
     std::shared_ptr<Device> getDevice(const std::string& udn) const;
-    std::map<std::string, std::shared_ptr<Device>> getDevices();
+    std::map<std::string, std::shared_ptr<Device>> getDevices() const;
     
     utils::Signal<std::shared_ptr<Device>> DeviceDiscoveredEvent;
     utils::Signal<std::shared_ptr<Device>> DeviceDissapearedEvent;
