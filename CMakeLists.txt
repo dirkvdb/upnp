@@ -85,6 +85,8 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
 )
 
+OPTION(STANDALONE "Not used as a submodule of another project" OFF)
+
 ADD_DEFINITIONS("-std=c++1y")
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
