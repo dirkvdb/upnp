@@ -77,7 +77,7 @@ protected:
         service.m_SCPDUrl = g_serviceDescriptionUrl;
         
         auto device = std::make_shared<Device>();
-        device->m_Type = Device::Type::MediaServer;
+        device->m_Type = DeviceType::MediaServer;
         device->m_Services[service.m_Type] = service;
         
         // set a valid device
