@@ -117,7 +117,7 @@ UpnpWebFileHandle openCallback(const char* pFilename, UpnpOpenFileMode mode)
     }
 
 #ifdef DEBUG_WEBSERVER
-    log::debug("[Webserver] Open: %s", pFilename);
+    log::debug("[Webserver] Open: {}", pFilename);
 #endif
 
     auto handle = std::make_unique<FileHandle>();
@@ -159,7 +159,7 @@ int getInfoCallback(const char* pFilename, File_Info* pInfo)
     }
     
 #ifdef DEBUG_WEBSERVER
-    log::debug("[Webserver] Get info: %s", pFilename);
+    log::debug("[Webserver] Get info: {}", pFilename);
 #endif
     
     try
@@ -213,7 +213,7 @@ int readCallback(UpnpWebFileHandle fileHandle, char* buf, size_t buflen)
     }
 
 #ifdef DEBUG_WEBSERVER
-    log::debug("[Webserver] Read: %s (size: %d)", pHandle->filename, buflen);
+    log::debug("[Webserver] Read: {} (size: {})", pHandle->filename, buflen);
 #endif
 
     try
@@ -261,7 +261,7 @@ int seekCallback(UpnpWebFileHandle fileHandle, off_t offset, int origin)
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
 
 #ifdef DEBUG_WEBSERVER
-    log::debug("[Webserver] Seek: %s (offset: %d mode: %d)", pHandle->filename, offset, origin);
+    log::debug("[Webserver] Seek: {} (offset: {} mode: {})", pHandle->filename, offset, origin);
 #endif
 
     try
@@ -328,7 +328,7 @@ int closeCallback(UpnpWebFileHandle fileHandle)
     FileHandle* pHandle = reinterpret_cast<FileHandle*>(fileHandle);
 
 #ifdef DEBUG_WEBSERVER
-    log::debug("[Webserver] Close: %s", pHandle->filename);
+    log::debug("[Webserver] Close: {}", pHandle->filename);
 #endif
 
     try
@@ -383,7 +383,7 @@ WebServer::~WebServer()
 
 std::string WebServer::getWebRootUrl()
 {
-    return stringops::format("http://%s:%d/", UpnpGetServerIpAddress(), UpnpGetServerPort());
+    return fmt::format("http://{}:{}/", UpnpGetServerIpAddress(), UpnpGetServerPort());
 }
 
 void WebServer::addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data)

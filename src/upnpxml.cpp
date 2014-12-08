@@ -442,7 +442,7 @@ Node NamedNodeMap::getNode(const std::string &name) const
     Node node = ixmlNamedNodeMap_getNamedItem(m_pNodeMap, name.c_str());
     if (!node)
     {
-        throw std::logic_error(stringops::format("Failed to get node from named node map: %s", name));
+        throw std::logic_error(fmt::format("Failed to get node from named node map: {}", name));
     }
     
     return node;

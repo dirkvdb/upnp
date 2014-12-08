@@ -147,7 +147,7 @@ protected:
                             for (xml::Element elem : instanceIDNode.getChildNodes())
                             {
                                 auto str = elem.getAttribute("val");
-                                utils::log::debug("%s %s", elem.getName(), elem.getAttribute("val"));
+                                utils::log::debug("{} {}", elem.getName(), elem.getAttribute("val"));
                                 vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
                             }
                             
@@ -159,7 +159,7 @@ protected:
                         }
                         catch (std::exception& e)
                         {
-                            utils::log::warn("Unknown event variable ignored: %s", e.what());
+                            utils::log::warn("Unknown event variable ignored: {}", e.what());
                             utils::log::debug(var.toString());
                         }
                     }
@@ -167,7 +167,7 @@ protected:
             }
             catch (std::exception& e)
             {
-                utils::log::error("Failed to parse event: %s", e.what());
+                utils::log::error("Failed to parse event: {}", e.what());
             }
         }
     }
@@ -209,7 +209,7 @@ protected:
                 auto pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
                 if (pSubEvent->ErrCode != UPNP_E_SUCCESS)
                 {
-                    utils::log::error("Error in Event Subscribe Callback: %d", pSubEvent->ErrCode);
+                    utils::log::error("Error in Event Subscribe Callback: {}", pSubEvent->ErrCode);
                 }
                 else
                 {
@@ -218,7 +218,7 @@ protected:
                         rc->m_SubscriptionId = pSubEvent->Sid;
                         
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-                        utils::log::debug("Subscription complete: %s", rc->m_SubscriptionId);
+                        utils::log::debug("Subscription complete: {}", rc->m_SubscriptionId);
 #endif
                     }
                     else
@@ -240,12 +240,12 @@ protected:
                     rc->m_SubscriptionId = rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout);
 
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-                    utils::log::debug("Service subscription renewed: %s", rc->m_SubscriptionId);
+                    utils::log::debug("Service subscription renewed: {}", rc->m_SubscriptionId);
 #endif
                 }
                 catch (std::exception& e)
                 {
-                    utils::log::error("Failed to renew event subscription: %s", e.what());
+                    utils::log::error("Failed to renew event subscription: {}", e.what());
                 }
                 break;
             }
@@ -255,7 +255,7 @@ protected:
 #endif
                 break;
             default:
-                utils::log::info("Unhandled action: %d", eventType);
+                utils::log::info("Unhandled action: {}", eventType);
                 break;
         }
         

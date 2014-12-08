@@ -153,7 +153,7 @@ TEST_F(WebServerTest, downloadTextFileThroughCalllback)
     auto cb = std::make_shared<StrictMock<VirtualDirCallback>>();
     auto file = createTextFile();
     auto filePath = "virtualDir/?id=@100";
-    auto requestedFilePath = stringops::format("/%s", filePath);
+    auto requestedFilePath = stringops::format("/{}", filePath);
     
     fileops::FileSystemEntryInfo info;
     info.modifyTime = 200;

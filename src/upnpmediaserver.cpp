@@ -369,7 +369,7 @@ void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseTyp
     }
     catch(std::exception& e)
     {
-        log::error("Exception getting items and containers: %s", e.what());
+        log::error("Exception getting items and containers: {}", e.what());
         if (m_ErrorCb)
         {
             m_ErrorCb(e.what());
@@ -387,7 +387,7 @@ void MediaServer::searchThread(const std::string& id, const ItemCb& onItem, cons
     }
     catch(std::exception& e)
     {
-        log::error("Exception performing search: %s", e.what());
+        log::error("Exception performing search: {}", e.what());
         if (m_ErrorCb)
         {
             m_ErrorCb(e.what());
@@ -403,7 +403,7 @@ void MediaServer::getMetaDataThread(const std::string& id, const ItemCb& onItem)
     }
     catch(std::exception& e)
     {
-        log::error("Exception getting metadata: %s", e.what());
+        log::error("Exception getting metadata: {}", e.what());
         if (m_ErrorCb)
         {
             m_ErrorCb(e.what());

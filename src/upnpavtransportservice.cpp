@@ -183,7 +183,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
     catch (std::exception& e)
     {
-        log::error("Error processing request: %s", e.what());
+        log::error("Error processing request: {}", e.what());
         throw InvalidActionException();
     }
 }
@@ -208,7 +208,7 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
     }
     
     
-    log::debug("Add change: %s %s", toString(var), value);
+    log::debug("Add change: {} {}", toString(var), value);
     m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
 }
 

@@ -302,7 +302,7 @@ static void addPropertyToItem(const std::string& propertyName, const std::string
     }
     else
     {
-        log::warn("Unknown property: %s", propertyName);
+        log::warn("Unknown property: {}", propertyName);
     }
 }
 
@@ -344,7 +344,7 @@ ItemPtr parseItem(xml::Element& itemElem)
                     addPropertyToItem(key, value, item);
                 }
             }
-            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: %s", e.what()); }
+            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: {}", e.what()); }
         }
     }
     catch (std::exception& e)

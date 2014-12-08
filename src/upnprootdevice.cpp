@@ -81,7 +81,7 @@ void RootDevice::acceptSubscription(const std::string& serviceId, const std::str
     }
     catch (std::exception& e)
     {
-        log::warn("Failed to accept subscription: %s", e.what());
+        log::warn("Failed to accept subscription: {}", e.what());
     }
 }
 
@@ -129,7 +129,7 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
             {
                 assert(strlen(e.what()) < 180);
             
-                log::warn("Error processing request: %s", e.what());
+                log::warn("Error processing request: {}", e.what());
                 request->ErrCode = e.errorCode();
                 strcpy(request->ErrStr, e.what());
             }
@@ -137,7 +137,7 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
 			break;
         }
 		default:
-			log::error("RootDevice: Unknown eventType %d", eventType);
+			log::error("RootDevice: Unknown eventType {}", eventType);
 	}
     
     return 0;

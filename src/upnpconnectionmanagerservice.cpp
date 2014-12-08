@@ -105,7 +105,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
     catch (std::exception& e)
     {
-        log::error("Error processing ConnectionManager request: %s", e.what());
+        log::error("Error processing ConnectionManager request: {}", e.what());
         throw InvalidActionException();
     }
 }

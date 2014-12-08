@@ -140,7 +140,7 @@ protected:
         
         doc.appendChild(propertySet);
     
-        utils::log::debug("Variable change event: %s", doc.toString());
+        utils::log::debug("Variable change event: {}", doc.toString());
     
         m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
     }

@@ -22,7 +22,7 @@
 #include <sstream>
 
 #include "upnp/upnputils.h"
-#include "utils/stringoperations.h"
+#include "utils/format.h"
 
 using namespace utils;
 
@@ -99,7 +99,7 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset
     catch (std::exception& e)
     {
         UpnpCloseHttpGet(pHandle);
-        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+        throw std::logic_error(fmt::format("Failed to read http data from url: {} ({})", url, e.what()).c_str());
     }
     
     throwOnBadHttpStatus(url, httpStatus);
@@ -122,7 +122,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData)
     catch (std::exception& e)
     {
         UpnpCloseHttpGet(pHandle);
-        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+        throw std::logic_error(fmt::format("Failed to read http data from url: {} ({})", url, e.what()).c_str());
     }
     
     throwOnBadHttpStatus(url, httpStatus);
@@ -143,7 +143,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData, uint64_t offset
     catch (std::exception& e)
     {
         UpnpCloseHttpGet(pHandle);
-        throw std::logic_error(stringops::format("Failed to read http data from url: %s (%s)", url, e.what()).c_str());
+        throw std::logic_error(fmt::format("Failed to read http data from url: {} ({})", url, e.what()).c_str());
     }
     
     throwOnBadHttpStatus(url, httpStatus);
@@ -174,7 +174,7 @@ void HttpClient::read(void* pHandle, uint8_t* pData, size_t dataSize)
     
     if (sizeCopy != dataSize)
     {
-        throw std::logic_error(stringops::format("Incorrect bytes read from (%d <-> %d)", dataSize, sizeCopy));
+        throw std::logic_error(fmt::format("Incorrect bytes read from ({} <-> {})", dataSize, sizeCopy));
     }
 }
 
@@ -183,7 +183,7 @@ void HttpClient::throwOnBadHttpStatus(const std::string& url, int32_t status)
     // 206 is for partial content
     if (status != 200 && status != 206)
     {
-        throw std::logic_error(stringops::format("Incorrect http status for %s (%d)", url, status));
+        throw std::logic_error(fmt::format("Incorrect http status for {} ({})", url, status));
     }
 }
 

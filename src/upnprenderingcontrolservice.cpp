@@ -262,7 +262,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_RenderingControl.setLoudness(id, channelFromString(req.getChildNodeValue("Channel")), req.getChildNodeValue("DesiredLoudness") == "1");
             break;
         default:
-            log::warn("No handler for RenderingControl action: %s", action);
+            log::warn("No handler for RenderingControl action: {}", action);
             throw InvalidActionException();
         }
     
@@ -270,7 +270,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
     catch (std::exception& e)
     {
-        log::error("Error processing RenderingControl request: %s", e.what());
+        log::error("Error processing RenderingControl request: {}", e.what());
         throw InvalidActionException();
     }
 }

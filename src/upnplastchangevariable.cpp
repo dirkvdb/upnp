@@ -56,7 +56,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
     
     if (var.getName().empty())
     {
-        log::error("Empty var added %s", var.toString());
+        log::error("Empty var added {}", var.toString());
         return;
     }
     
@@ -109,12 +109,12 @@ void LastChangeVariable::createLastChangeEvent()
         }
 
 #ifdef DEBUG_LAST_CHANGE_VAR
-        utils::log::debug("LastChange event: %s", event.toString());
+        utils::log::debug("LastChange event: {}", event.toString());
 #endif
     }
     catch (std::exception& e)
     {
-        log::error("Failed to create LastChange notification: %s", e.what());
+        log::error("Failed to create LastChange notification: {}", e.what());
     }
 }
 

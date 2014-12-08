@@ -54,13 +54,13 @@ void Client::setDevice(const std::shared_ptr<Device>& device)
     m_SystemUpdateId.clear();
     
     try { querySearchCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain search capabilities: %s", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
     
     try { querySortCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain sort capabilities: %s", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain sort capabilities: {}", e.what()); }
     
     try { querySystemUpdateID(); }
-    catch (std::exception& e) { log::error("Failed to obtain system update id: %s", e.what()); }
+    catch (std::exception& e) { log::error("Failed to obtain system update id: {}", e.what()); }
 }
 
 void Client::abort()
@@ -212,7 +212,7 @@ xml::Document Client::browseAction(const std::string& objectId, const std::strin
     m_Abort = false;
     
 #ifdef DEBUG_CONTENT_BROWSING
-    log::debug("Browse: %s %s %s %d %d %s", objectId, flag, filter, startIndex, limit, sort);
+    log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
     
     return executeAction(Action::Browse, { {"ObjectID", objectId},
@@ -291,7 +291,7 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
         Property prop = propertyFromString(elem.getName());
         if (prop == Property::Unknown)
         {
-            log::warn("Unknown property %s", elem.getName());
+            log::warn("Unknown property {}", elem.getName());
             continue;
         }
         
@@ -322,7 +322,7 @@ std::vector<ItemPtr> Client::parseContainers(xml::Document& doc)
         }
         catch (std::exception& e)
         {
-            log::warn("Failed to parse container, skipping (%s)", e.what());
+            log::warn("Failed to parse container, skipping ({})", e.what());
         }
     }
     
@@ -342,7 +342,7 @@ std::vector<ItemPtr> Client::parseItems(xml::Document& doc)
         }
         catch (std::exception& e)
         {
-            log::error("Failed to parse item, skipping (%s)", e.what());
+            log::error("Failed to parse item, skipping ({})", e.what());
         }
     }
     
@@ -387,7 +387,7 @@ void Client::addPropertyToList(const std::string& propertyName, std::vector<Prop
     }
     else
     {
-        log::warn("Unknown property: %s", propertyName);
+        log::warn("Unknown property: {}", propertyName);
     }
 }
 

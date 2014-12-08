@@ -53,7 +53,7 @@ void Client::initialize(const char* interfaceName, int port)
     if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
     {
         UpnpFinish();
-        log::error("UpnpInit() Error: %d", rc);
+        log::error("UpnpInit() Error: {}", rc);
         throw std::logic_error("Failed to initialize UPnP stack");
     }
     
@@ -68,12 +68,12 @@ void Client::initialize(const char* interfaceName, int port)
     }
     else if (UPNP_E_SUCCESS != rc )
     {
-        log::error("Error registering Control Point: %d", rc);
+        log::error("Error registering Control Point: {}", rc);
         UpnpFinish();
         throw std::logic_error("Error registering Control Point");
     } 
     
-    log::debug("Initialized: %s:%d", UpnpGetServerIpAddress(), UpnpGetServerPort());
+    log::debug("Initialized: {}:{}", UpnpGetServerIpAddress(), UpnpGetServerPort());
 }
 
 void Client::destroy()
@@ -111,7 +111,7 @@ void Client::searchDevicesOfType(DeviceType type, int32_t timeout) const
     int rc = UpnpSearchAsync(m_Client, timeout, Device::deviceTypeToString(type).c_str(), this);
     if (UPNP_E_SUCCESS != rc)
     {
-        log::error("Error sending search request: %d", rc);
+        log::error("Error sending search request: {}", rc);
     }
 }
 
@@ -122,13 +122,13 @@ void Client::searchAllDevices(int32_t timeout) const
     int rc = UpnpSearchAsync(m_Client, timeout, "ssdp:all", this);
     if (UPNP_E_SUCCESS != rc)
     {
-        log::error("Error sending search request: %d", rc);
+        log::error("Error sending search request: {}", rc);
     }
 }
 
 std::string Client::subscribeToService(const std::string& publisherUrl, int32_t& timeout) const
 {
-    log::debug("Subscribe to service: %s", publisherUrl);
+    log::debug("Subscribe to service: {}", publisherUrl);
     
     Upnp_SID subscriptionId;
     int ret = UpnpSubscribe(m_Client, publisherUrl.c_str(), &timeout, subscriptionId);
@@ -142,7 +142,7 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
 
 void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const
 {
-    log::debug("Subscribe to service: %s", publisherUrl);
+    log::debug("Subscribe to service: {}", publisherUrl);
     
     int ret = UpnpSubscribeAsync(m_Client, publisherUrl.c_str(), timeout, callback, cookie);
     if (ret != UPNP_E_SUCCESS)
@@ -170,7 +170,7 @@ void Client::unsubscribeFromService(const std::string& subscriptionId) const
 xml::Document Client::sendAction(const Action& action) const
 {
 #ifdef DEBUG_UPNP_CLIENT
-    log::debug("Execute action: %s", action.getActionDocument().toString());
+    log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
     IXML_Document* pDoc = nullptr;
@@ -207,7 +207,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
-            log::error("Error in Discovery Alive Callback: %d", pDiscEvent->ErrCode);
+            log::error("Error in Discovery Alive Callback: {}", pDiscEvent->ErrCode);
         }
         else if (pDiscEvent->DeviceId && pDiscEvent->DeviceType && pDiscEvent->Location)
         {
@@ -228,7 +228,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
-            log::error("Error in Discovery Bye Bye Callback: %d", pDiscEvent->ErrCode);
+            log::error("Error in Discovery Bye Bye Callback: {}", pDiscEvent->ErrCode);
         }
         else
         {

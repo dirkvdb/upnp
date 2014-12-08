@@ -71,7 +71,7 @@ void DeviceScanner::start()
         return;
     }
     
-    log::debug("Start device scanner, known devices (%d)", m_Devices.size());
+    log::debug("Start device scanner, known devices ({})", m_Devices.size());
 
     m_Client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
     m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
@@ -102,7 +102,7 @@ void DeviceScanner::stop()
     m_Stop = false;
     m_Started = false;
     
-    log::debug("Stop device scanner, known devices (%d)", m_Devices.size());
+    log::debug("Stop device scanner, known devices ({})", m_Devices.size());
 }
 
 void DeviceScanner::checkForTimeoutThread()
@@ -119,7 +119,7 @@ void DeviceScanner::checkForTimeoutThread()
             {
                 auto dev = iter->second;
             
-                log::info("Device timed out removing it from the list: %s", iter->second->m_FriendlyName);
+                log::info("Device timed out removing it from the list: {}", iter->second->m_FriendlyName);
                 iter = m_Devices.erase(iter);
                 
                 DeviceDissapearedEvent(dev);
@@ -260,7 +260,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
-                log::error("Error generating controlURL from %s and %s", base, relControlURL);
+                log::error("Error generating controlURL from {} and {}", base, relControlURL);
             }
             else
             {
@@ -270,7 +270,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             ret = UpnpResolveURL(base.c_str(), relEventURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
-                log::error("Error generating eventURL from %s and %s", base, relEventURL);
+                log::error("Error generating eventURL from {} and {}", base, relEventURL);
             }
             else
             {
@@ -280,7 +280,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             ret = UpnpResolveURL(base.c_str(), scpURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
-                log::error("Error generating eventURL from %s and %s", base, scpURL);
+                log::error("Error generating eventURL from {} and {}", base, scpURL);
             }
             else
             {
@@ -319,7 +319,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
             if (iter->second->m_Location != std::string(info.location))
             {
                 // update the device, ip or port has changed
-                log::debug("Update device, location has changed: %s -> %s", iter->second->m_Location, std::string(info.location));
+                log::debug("Update device, location has changed: {} -> {}", iter->second->m_Location, std::string(info.location));
                 updateDevice(info, iter->second);
             }
             
@@ -338,7 +338,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
                 auto iter = m_Devices.find(device->m_UDN);
                 if (iter == m_Devices.end())
                 {
-                    log::info("Device added to the list: %s (%s)", device->m_FriendlyName, device->m_UDN);
+                    log::info("Device added to the list: {} ({})", device->m_FriendlyName, device->m_UDN);
                     m_Devices.emplace(device->m_UDN, device);
 
                     m_DataMutex.unlock();

@@ -73,7 +73,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
     }
     catch (std::exception& e)
     {
-        throw std::logic_error(stringops::format("Failed to set renderer device: %s", e.what()));
+        throw std::logic_error(fmt::format("Failed to set renderer device: {}", e.what()));
     }
 }
 
@@ -380,7 +380,7 @@ ItemPtr MediaRenderer::parseCurrentTrack(const std::string& track) const
     }
     catch (std::exception& e)
     {
-        log::warn("Failed to parse item doc: %s", e.what());
+        log::warn("Failed to parse item doc: {}", e.what());
 
     }
 
@@ -395,7 +395,7 @@ MediaRenderer::PlaybackState MediaRenderer::parsePlaybackState(const std::string
     }
     catch (std::exception& e)
     {
-        log::warn("Failed to parse item doc: %s", e.what());
+        log::warn("Failed to parse item doc: {}", e.what());
         return PlaybackState::Stopped;
     }
 }
