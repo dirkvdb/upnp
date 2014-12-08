@@ -37,7 +37,8 @@ public:
     
     MOCK_CONST_METHOD0(getIpAddress, std::string());
     MOCK_CONST_METHOD0(getPort, int32_t());
-    MOCK_CONST_METHOD2(searchDevices, void(Device::Type, int));
+    MOCK_CONST_METHOD2(searchDevicesOfType, void(DeviceType, int32_t));
+    MOCK_CONST_METHOD1(searchAllDevices, void(int32_t));
     
     MOCK_CONST_METHOD2(subscribeToService, std::string(const std::string&, int32_t&));
     MOCK_CONST_METHOD4(subscribeToService, void(const std::string&, int32_t, Upnp_FunPtr, void*));

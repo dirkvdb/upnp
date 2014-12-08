@@ -107,7 +107,7 @@ protected:
         serviceDesc.m_SCPDUrl               = g_serviceDescriptionUrl;
         
         auto device = std::make_shared<Device>();
-        device->m_Type = Device::Type::MediaRenderer;
+        device->m_Type = DeviceType::MediaRenderer;
         device->m_Services[serviceDesc.m_Type] = serviceDesc;
         
         ON_CALL(*service, getType()).WillByDefault(Return(ServiceType::RenderingControl));

@@ -69,7 +69,7 @@ protected:
         service.m_SCPDUrl = g_serviceDescriptionUrl;
         
         auto device = std::make_shared<Device>();
-        device->m_Type = Device::Type::MediaRenderer;
+        device->m_Type = DeviceType::MediaRenderer;
         device->m_Services[service.m_Type] = service;
         
         // set a valid device
