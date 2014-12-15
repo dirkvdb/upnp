@@ -74,7 +74,7 @@ public:
         catch (std::exception& e) { utils::log::warn(e.what()); }
         
         m_Client.UPnPEventOccurredEvent.connect(std::bind(&ServiceClientBase::eventOccurred, this, std::placeholders::_1), this);
-        m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, getSubscriptionTimeout(), &ServiceClientBase::eventCb, this);
+        m_Client.subscribeToService(std::string(m_Service.m_EventSubscriptionURL), getSubscriptionTimeout(), &ServiceClientBase::eventCb, this);
     }
     
     void unsubscribe()
