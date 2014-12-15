@@ -1,0 +1,38 @@
+box: dirkvdb/cxx14
+no-response-timeout: 10
+build:
+    steps:
+        - script:
+            name: Setup environnement variables
+            code: |
+                SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                BUILD_DIR="${SRC_DIR}/build"
+                echo "SRC_DIR ${SRC_DIR}"
+                echo "BUILD_DIR ${BUILD_DIR}"
+
+        - script:
+            name: Install dependencies
+            code: |
+                sudo apt-get update
+                sudo apt-get install libxdg-basedir-dev libupnp-dev
+
+        - script:
+            name: Compile UPnP
+            code: |
+                mkdir -p "${BUILD_DIR}"
+                cd "${SRC_DIR}"
+                cd ..
+                git clone https://github.com/dirkvdb/utils.git
+                cd utils
+                git checkout develop
+                git submodule update --init --recursive
+                cd "${BUILD_DIR}"
+                cmake -DSTANDALONE=1 -DCMAKE_BUILD_TYPE=Release "${SRC_DIR}"
+                make -j8
+                make check -j8
+
+        - script:
+            name: Run Tests
+            code: |
+                cd "${BUILD_DIR}"
+                make test
