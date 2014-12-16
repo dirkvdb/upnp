@@ -31,7 +31,7 @@
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 
-#define DEBUG_WEBSERVER
+//#define DEBUG_WEBSERVER
 
 using namespace utils;
 using namespace std::chrono;
