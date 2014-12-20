@@ -180,7 +180,7 @@ int getInfoCallback(const char* pFilename, File_Info* pInfo)
         }
         else
         {
-            auto info = cb(fileops::getFileNameWithoutExtension(pFilename));
+            auto info = cb(pFilename);
             pInfo->file_length = info.sizeInBytes;
             pInfo->last_modified = info.modifyTime;
             pInfo->is_directory = info.type == fileops::FileSystemEntryType::Directory ? 1 : 0;
