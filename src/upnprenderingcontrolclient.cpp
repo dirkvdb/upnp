@@ -103,7 +103,7 @@ void Client::handleUPnPResult(int errorCode)
     
     switch (errorCode)
     {
-        case 702: throw std::logic_error("Invalid instance id");
+        case 702: throw Exception(errorCode, "Invalid instance id");
         default: upnp::handleUPnPResult(errorCode);
     }
 }

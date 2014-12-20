@@ -119,7 +119,7 @@ ItemPtr Client::browseMetadata(const std::string& objectId, const std::string& f
     xml::Document browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
-        throw std::logic_error("Failed to browse meta data");
+        throw Exception("Failed to browse meta data");
     }
     
 #ifdef DEBUG_CONTENT_BROWSING
@@ -138,7 +138,7 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
     xml::Document browseResult = parseBrowseResult(result, res);
     if (!browseResult)
     {
-        throw std::logic_error("Failed to browse direct children");
+        throw Exception("Failed to browse direct children");
     }
 
 #ifdef DEBUG_CONTENT_BROWSING
@@ -147,10 +147,7 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
 
     if (type == ContainersOnly || type == All)
     {
-        try
-        {
-            res.result = parseContainers(browseResult);
-        }
+        try { res.result = parseContainers(browseResult); }
         catch (std::exception&e ) { log::warn(e.what()); }
     }
     
@@ -185,13 +182,10 @@ ActionResult Client::search(const std::string& objectId, const std::string& crit
     xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
     if (!searchResultDoc)
     {
-        throw std::logic_error("Failed to perform search");
+        throw Exception("Failed to perform search");
     }
 
-    try
-    {
-        searchResult.result = parseContainers(searchResultDoc);
-    }
+    try { searchResult.result = parseContainers(searchResultDoc); }
     catch (std::exception&e ) { log::warn(e.what()); }
     
     try
@@ -251,7 +245,7 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
     
     if (browseResult.empty())
     {
-        throw std::logic_error("Failed to obtain browse result");
+        throw Exception("Failed to obtain browse result");
     }
     
     return xml::Document(browseResult);
@@ -301,7 +295,7 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
     // check required properties
     if (item->getTitle().empty())
     {
-        throw std::logic_error("No title found in item");
+        throw Exception("No title found in item");
     }
     
     return item;
@@ -355,25 +349,25 @@ void Client::handleUPnPResult(int errorCode)
 
     switch (errorCode)
     {
-    case 701: throw std::logic_error("No such object, the specified id is invalid");
-    case 702: throw std::logic_error("Invalid CurrentTagValue, probably out of date");
-    case 703: throw std::logic_error("Invalid NewTagValue, parameter is invalid");
-    case 704: throw std::logic_error("Unable to delete a required tag");
-    case 705: throw std::logic_error("UPdate read only tag not allowed");
-    case 706: throw std::logic_error("Parameter Mismatch");
-    case 708: throw std::logic_error("Unsupported or invalid search criteria");
-    case 709: throw std::logic_error("Unsupported or invalid sort criteria");
-    case 710: throw std::logic_error("No such container");
-    case 711: throw std::logic_error("This is a restricted object");
-    case 712: throw std::logic_error("Operation would result in bad metadata");
-    case 713: throw std::logic_error("The parent object is restricted");
-    case 714: throw std::logic_error("No such source resource");
-    case 715: throw std::logic_error("Source resource access denied");
-    case 716: throw std::logic_error("A transfer is busy");
-    case 717: throw std::logic_error("No such file transfer");
-    case 718: throw std::logic_error("No such destination resource");
-    case 719: throw std::logic_error("Destination resource access denied");
-    case 720: throw std::logic_error("Cannot process the request");
+    case 701: throw Exception(errorCode, "No such object, the specified id is invalid");
+    case 702: throw Exception(errorCode, "Invalid CurrentTagValue, probably out of date");
+    case 703: throw Exception(errorCode, "Invalid NewTagValue, parameter is invalid");
+    case 704: throw Exception(errorCode, "Unable to delete a required tag");
+    case 705: throw Exception(errorCode, "UPdate read only tag not allowed");
+    case 706: throw Exception(errorCode, "Parameter Mismatch");
+    case 708: throw Exception(errorCode, "Unsupported or invalid search criteria");
+    case 709: throw Exception(errorCode, "Unsupported or invalid sort criteria");
+    case 710: throw Exception(errorCode, "No such container");
+    case 711: throw Exception(errorCode, "This is a restricted object");
+    case 712: throw Exception(errorCode, "Operation would result in bad metadata");
+    case 713: throw Exception(errorCode, "The parent object is restricted");
+    case 714: throw Exception(errorCode, "No such source resource");
+    case 715: throw Exception(errorCode, "Source resource access denied");
+    case 716: throw Exception(errorCode, "A transfer is busy");
+    case 717: throw Exception(errorCode, "No such file transfer");
+    case 718: throw Exception(errorCode, "No such destination resource");
+    case 719: throw Exception(errorCode, "Destination resource access denied");
+    case 720: throw Exception(errorCode, "Cannot process the request");
     default: upnp::handleUPnPResult(errorCode);
     }
 }

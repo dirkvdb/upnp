@@ -50,10 +50,9 @@ public:
  
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-    static void throwOnUPnPError(int errorCode);
     static const char* deviceTypeToString(DeviceType type);
 
-    UpnpClient_Handle   m_Client;
+    UpnpClient_Handle   m_client;
 };
     
 }

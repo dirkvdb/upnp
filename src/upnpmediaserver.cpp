@@ -66,7 +66,7 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device)
     }
     catch (std::exception& e)
     {
-        throw std::logic_error(std::string("Failed to set server device:") + e.what());
+        throw Exception("Failed to set server device: {}", e.what());
     }
 }
 
@@ -271,7 +271,7 @@ uint32_t MediaServer::search(const std::string& id, const std::map<Property, std
         
         if (!canSearchForProperty(crit.first))
         {
-            throw std::logic_error("The server does not support to search on " + toString(crit.first));
+            throw Exception("The server does not support to search on {}", toString(crit.first));
         }
 
         critString << toString(crit.first) << " contains \"" << crit.second << "\"";
@@ -324,7 +324,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
 
     if (sort != Property::Unknown && !canSortOnProperty(sort))
     {
-        throw std::logic_error("The server does not support sort on: " + toString(sort));
+        throw Exception("The server does not support sort on: {}", toString(sort));
     }
 
     bool itemsLeft = true;

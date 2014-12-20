@@ -139,7 +139,7 @@ inline Action actionFromString(const std::string& action)
     if (action == "GetLoudness")                return Action::GetLoudness;
     if (action == "SetLoudness")                return Action::SetLoudness;
     
-    throw std::logic_error("Unknown RendereringControl action:" + action);
+    throw Exception("Unknown RendereringControl action: {}", action);
 }
 
 inline std::string toString(Action action)
@@ -182,7 +182,7 @@ inline std::string toString(Action action)
     case Action::SetLoudness:                   return "SetLoudness";
     case Action::GetLoudness:                   return "GetLoudness";
     default:
-        throw std::logic_error("Invalid RenderingControl action");
+        throw Exception("Invalid RenderingControl action: {}", static_cast<int32_t>(action));
     }
 }
 
@@ -207,7 +207,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "Loudness")                          return Variable::Loudness;
     if (var == "LastChange")                        return Variable::LastChange;
     
-    throw std::logic_error("Unknown RenderingControl variable:" + var);
+    throw Exception("Unknown RenderingControl variable: {}", var);
 }
 
 inline std::string toString(Variable var)
@@ -233,7 +233,7 @@ inline std::string toString(Variable var)
         case Variable::Loudness:                    return "Loudness";
         case Variable::LastChange:                  return "LastChange";
         default:
-            throw std::logic_error("Invalid RenderingControl variable");
+            throw Exception("Invalid RenderingControl variable: {}", static_cast<int32_t>(var));
     }
 }
 
@@ -253,7 +253,7 @@ inline Channel channelFromString(const std::string& channel)
     if (channel == "T")                 return Channel::T;
     if (channel == "B")                 return Channel::B;
     
-    throw std::logic_error("Unknown RendereringControl channel:" + channel);
+    throw Exception("Unknown RendereringControl channel: {}", channel);
 }
 
 inline std::string toString(Channel channel)
@@ -274,7 +274,7 @@ inline std::string toString(Channel channel)
     case Channel::T:                    return "T";
     case Channel::B:                    return "B";
     default:
-        throw std::logic_error("Invalid RenderingControl channel");
+        throw Exception("Invalid RenderingControl channel: {}", static_cast<int32_t>(channel));
     }
 }
     

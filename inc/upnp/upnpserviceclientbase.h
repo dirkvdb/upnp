@@ -189,8 +189,9 @@ protected:
         {
             return m_Client.sendAction(action);
         }
-        catch (UPnPException& e)
+        catch (Exception& e)
         {
+            // give the service implementation a chance to translate the service specific error code
             handleUPnPResult(e.getErrorCode());
         }
         

@@ -93,7 +93,7 @@ inline Action actionFromString(const std::string& action)
     if (action == "GetCurrentConnectionIDs")    return Action::GetCurrentConnectionIDs;
     if (action == "GetCurrentConnectionInfo")   return Action::GetCurrentConnectionInfo;
     
-    throw std::logic_error("Unknown ConnectionManager action:" + action);
+    throw Exception("Unknown ConnectionManager action: {}", action);
 }
 
 inline std::string toString(Action action)
@@ -106,7 +106,7 @@ inline std::string toString(Action action)
         case Action::GetCurrentConnectionIDs:        return "GetCurrentConnectionIDs";
         case Action::GetCurrentConnectionInfo:       return "GetCurrentConnectionInfo";
 
-        default: throw std::logic_error("Unknown ConnectionManager action");
+        default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(action));
     }
 }
 
@@ -123,7 +123,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_AVTransportID")      return Variable::ArgumentTypeAVTransportId;
     if (var == "A_ARG_TYPE_RcsID")              return Variable::ArgumentTypeRecourceId;
     
-    throw std::logic_error("Unknown ConnectionManager variable:" + var);
+    throw Exception("Unknown ConnectionManager variable: {}", var);
 }
 
 inline std::string toString(Variable var)
@@ -141,7 +141,7 @@ inline std::string toString(Variable var)
         case Variable::ArgumentTypeAVTransportId:      return "A_ARG_TYPE_AVTransportID";
         case Variable::ArgumentTypeRecourceId:         return "A_ARG_TYPE_RcsID";
             
-        default: throw std::logic_error("Unknown ConnectionManager action");
+        default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(var));
     }
 }
 
@@ -165,7 +165,7 @@ inline std::string toString(ConnectionStatus status)
         case ConnectionStatus::UnreliableChannel:       return "UnreliableChannel";
         case ConnectionStatus::Unknown:                 return "Unknown";
            
-        default: throw std::logic_error("Unknown ConnectionManager status");
+        default: throw Exception("Unknown ConnectionManager status: {}", static_cast<int32_t>(status));
     }
 }
 
@@ -174,7 +174,7 @@ inline Direction directionFromString(const std::string& direction)
     if (direction == "Input")            return Direction::Input;
     if (direction == "Output")           return Direction::Output;
     
-    throw std::logic_error("Unknown ConnectionManager direction:" + direction);
+    throw Exception("Unknown ConnectionManager direction: {}", direction);
 }
 
 inline std::string toString(Direction direction)
@@ -184,7 +184,7 @@ inline std::string toString(Direction direction)
         case Direction::Input:             return "Input";
         case Direction::Output:            return "Output";
             
-        default: throw std::logic_error("Unknown ConnectionManager direction");
+        default: throw Exception("Unknown ConnectionManager direction: {}", static_cast<int32_t>(direction));
     }
 }
     

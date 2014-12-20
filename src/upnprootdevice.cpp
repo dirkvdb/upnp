@@ -125,12 +125,12 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
                 // The appropriate service should fill in the result 
                 dev->ControlActionRequested(request);
             }
-            catch (ServiceException& e)
+            catch (Exception& e)
             {
                 assert(strlen(e.what()) < 180);
             
                 log::warn("Error processing request: {}", e.what());
-                request->ErrCode = e.errorCode();
+                request->ErrCode = e.getErrorCode();
                 strcpy(request->ErrStr, e.what());
             }
             

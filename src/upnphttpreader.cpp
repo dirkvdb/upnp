@@ -16,6 +16,7 @@
 
 #include "upnp/upnphttpreader.h"
 #include "utils/log.h"
+#include "upnp/upnptypes.h"
 
 #include <stdexcept>
 
@@ -110,7 +111,7 @@ std::vector<uint8_t> HttpReader::readAllData()
     seekAbsolute(0);
     if (data.size() != read(data.data(), data.size()))
     {
-        throw std::runtime_error("Failed to read all file data for url: " + m_Url);
+        throw Exception("Failed to read all file data for url: {}", m_Url);
     }
     
     return data;
@@ -124,7 +125,7 @@ void HttpReader::throwOnEmptyUrl()
 {
     if (m_Url.empty())
     {
-        throw std::logic_error("HttpReader: no url was opened yet");
+        throw Exception("HttpReader: no url was opened yet");
     }
 }
 
@@ -139,7 +140,7 @@ utils::IReader* HttpReaderBuilder::build(const std::string& uri)
 {
     if (!supportsUri(uri))
     {
-        throw std::logic_error("Uri is not supported by Http reader: " + uri);
+        throw Exception("Uri is not supported by Http reader: " + uri);
     }
     
     return new upnp::HttpReader();

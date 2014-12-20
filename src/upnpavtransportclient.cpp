@@ -217,24 +217,24 @@ void Client::handleUPnPResult(int errorCode)
     
     switch (errorCode)
     {
-        case 701: throw std::logic_error("Playback transition not supported at this moment");
-        case 702: throw std::logic_error("No content found in media item");
-        case 703: throw std::logic_error("The media could not be read");
-        case 704: throw std::logic_error("Storage format not supported by the device");
-        case 705: throw std::logic_error("The device is locked");
-        case 706: throw std::logic_error("Error when writing media");
-        case 707: throw std::logic_error("Media is not writable");
-        case 708: throw std::logic_error("Format is not supported for recording");
-        case 709: throw std::logic_error("The media is full");
-        case 710: throw std::logic_error("Seek mode is not supported");
-        case 711: throw std::logic_error("Illegal seek target");
-        case 712: throw std::logic_error("Play mode is not supported");
-        case 713: throw std::logic_error("Record quality is not supported");
-        case 714: throw std::logic_error("Unsupported MIME-type");
-        case 715: throw std::logic_error("Resource is already being played");
-        case 716: throw std::logic_error("Resource not found");
-        case 717: throw std::logic_error("Play speed not supported");
-        case 718: throw std::logic_error("Invalid instance id");
+        case 701: throw Exception(errorCode, "Playback transition not supported at this moment");
+        case 702: throw Exception(errorCode, "No content found in media item");
+        case 703: throw Exception(errorCode, "The media could not be read");
+        case 704: throw Exception(errorCode, "Storage format not supported by the device");
+        case 705: throw Exception(errorCode, "The device is locked");
+        case 706: throw Exception(errorCode, "Error when writing media");
+        case 707: throw Exception(errorCode, "Media is not writable");
+        case 708: throw Exception(errorCode, "Format is not supported for recording");
+        case 709: throw Exception(errorCode, "The media is full");
+        case 710: throw Exception(errorCode, "Seek mode is not supported");
+        case 711: throw Exception(errorCode, "Illegal seek target");
+        case 712: throw Exception(errorCode, "Play mode is not supported");
+        case 713: throw Exception(errorCode, "Record quality is not supported");
+        case 714: throw Exception(errorCode, "Unsupported MIME-type");
+        case 715: throw Exception(errorCode, "Resource is already being played");
+        case 716: throw Exception(errorCode, "Resource not found");
+        case 717: throw Exception(errorCode, "Play speed not supported");
+        case 718: throw Exception(errorCode, "Invalid instance id");
         
         default: upnp::handleUPnPResult(errorCode);
     }

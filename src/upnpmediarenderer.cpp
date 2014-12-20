@@ -73,7 +73,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
     }
     catch (std::exception& e)
     {
-        throw std::logic_error(fmt::format("Failed to set renderer device: {}", e.what()));
+        throw Exception("Failed to set renderer device: {}", e.what());
     }
 }
 
@@ -81,7 +81,7 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
 {
     if (!m_Device)
     {
-        throw std::logic_error("No UPnP renderer selected");
+        throw Exception("No UPnP renderer selected");
     }
 
     for (auto& res : item->getResources())
@@ -102,10 +102,7 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
 
 std::string MediaRenderer::getPeerConnectionManager() const
 {
-    std::stringstream ss;
-    ss << m_Device->m_UDN << "/" << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
-    
-    return ss.str();
+    return fmt::format("{}/{}", m_Device->m_UDN, m_Device->m_Services[ServiceType::ConnectionManager].m_Id);
 }
 
 void MediaRenderer::resetConnection()
@@ -320,7 +317,7 @@ void MediaRenderer::deactivateEvents()
             m_RenderingControl.StateVariableEvent.disconnect(this);
             m_RenderingControl.unsubscribe();
         }
-        catch (std::logic_error& e)
+        catch (std::exception& e)
         {
             // this can fail if the device disappeared
             log::warn(e.what());
@@ -334,7 +331,7 @@ void MediaRenderer::deactivateEvents()
                 m_AVtransport->unsubscribe();
             }
         }
-        catch (std::logic_error& e)
+        catch (std::exception& e)
         {
             // this can fail if the device disappeared
             log::warn(e.what());
@@ -381,7 +378,6 @@ ItemPtr MediaRenderer::parseCurrentTrack(const std::string& track) const
     catch (std::exception& e)
     {
         log::warn("Failed to parse item doc: {}", e.what());
-
     }
 
     return ItemPtr();
@@ -504,7 +500,7 @@ MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action
         case AVTransport::Action::Previous: return Action::Previous;
         case AVTransport::Action::Record:   return Action::Record;
 
-        default: throw std::logic_error("Invalid transport action");
+        default: throw Exception("Invalid transport action");
     }
 }
 
@@ -520,7 +516,7 @@ MediaRenderer::PlaybackState MediaRenderer::transportStateToPlaybackState(AVTran
         case AVTransport::State::Stopped:
         case AVTransport::State::NoMediaPresent:    return PlaybackState::Stopped;
         
-        default: throw std::logic_error("Invalid transport state");
+        default: throw Exception("Invalid transport state");
     }
 }
 
@@ -528,7 +524,7 @@ void MediaRenderer::throwOnUnknownConnectionId() const
 {
     if (m_ConnInfo.connectionId == ConnectionManager::UnknownConnectionId)
     {
-        throw std::logic_error("No active renderer connection");
+        throw Exception("No active renderer connection");
     }
 }
 

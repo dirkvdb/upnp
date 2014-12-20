@@ -92,7 +92,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
                 if (prop.empty())
                 {
-                    throw std::runtime_error("Invalid sort property provided");
+                    throw Exception("Invalid sort property provided");
                 }
 
                 return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));
@@ -123,7 +123,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
                 if (prop.empty())
                 {
-                    throw std::runtime_error("Invalid sort property provided");
+                    throw Exception("Invalid sort property provided");
                 }
 
                 return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));

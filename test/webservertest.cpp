@@ -208,8 +208,8 @@ TEST_F(WebServerTest, downloadBinaryFileUsingHttpReader)
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
     
     HttpReader reader;
-    EXPECT_THROW(reader.getContentLength(), std::logic_error);
-    EXPECT_THROW(reader.currentPosition(), std::logic_error);
+    EXPECT_THROW(reader.getContentLength(), Exception);
+    EXPECT_THROW(reader.currentPosition(), Exception);
     
     reader.open(url);
     EXPECT_EQ(file.size(), reader.getContentLength());
@@ -233,16 +233,16 @@ TEST_F(WebServerTest, addRemoveVirtualDir)
     std::string contents = "testfilecontents";
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
     
-    EXPECT_THROW(httpClient.getContentLength(url), std::logic_error);
+    EXPECT_THROW(httpClient.getContentLength(url), Exception);
     
     webserver->addVirtualDirectory("virtualDir");
-    EXPECT_THROW(httpClient.getContentLength(url), std::logic_error);
+    EXPECT_THROW(httpClient.getContentLength(url), Exception);
     
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", contents);
     EXPECT_NO_THROW(httpClient.getContentLength(url));
     
     webserver->removeVirtualDirectory("virtualDir");
-    EXPECT_THROW(httpClient.getContentLength(url), std::logic_error);
+    EXPECT_THROW(httpClient.getContentLength(url), Exception);
 }
 
 TEST_F(WebServerTest, restartServer)

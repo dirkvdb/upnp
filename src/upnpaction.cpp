@@ -33,9 +33,10 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
 void Action::addArgument(const std::string& name, const std::string& value)
 {
     IXML_Document* pDoc = static_cast<IXML_Document*>(m_ActionDoc);
-    if (UPNP_E_SUCCESS != UpnpAddToAction(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str()))
+    auto rc = UpnpAddToAction(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str());
+    if (UPNP_E_SUCCESS != rc)
     {
-        throw std::logic_error("Failed to add action to UPnP request: " + name);
+        throw Exception(rc, "Failed to add action to UPnP request: {}", name);
     }
 }
 

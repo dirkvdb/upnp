@@ -74,7 +74,7 @@ public:
             case DeviceType::MediaRenderer:
                 return MediaRendererDeviceTypeUrn;
             default:
-                throw std::logic_error("Invalid device type encountered");
+                throw Exception("Invalid device type encountered");
         }
     }
     

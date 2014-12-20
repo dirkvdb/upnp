@@ -130,13 +130,13 @@ void Client::handleUPnPResult(int errorCode)
     
     switch (errorCode)
     {
-        case 701: throw std::logic_error("Incompatible protocol info");
-        case 702: throw std::logic_error("Incompatible directions");
-        case 703: throw std::logic_error("Insufficient network resources");
-        case 704: throw std::logic_error("Local restrictions");
-        case 705: throw std::logic_error("Access denied");
-        case 706: throw std::logic_error("Invalid connection reference");
-        case 707: throw std::logic_error("Managers are not part of the same network");
+        case 701: throw Exception(errorCode, "Incompatible protocol info");
+        case 702: throw Exception(errorCode, "Incompatible directions");
+        case 703: throw Exception(errorCode, "Insufficient network resources");
+        case 704: throw Exception(errorCode, "Local restrictions");
+        case 705: throw Exception(errorCode, "Access denied");
+        case 706: throw Exception(errorCode, "Invalid connection reference");
+        case 707: throw Exception(errorCode, "Managers are not part of the same network");
         
         default: upnp::handleUPnPResult(errorCode);
     }

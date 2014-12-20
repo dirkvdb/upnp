@@ -16,7 +16,9 @@
 
 #include "upnp/upnpprotocolinfo.h"
 
+#include "utils/format.h"
 #include "utils/stringoperations.h"
+#include "upnp/upnptypes.h"
 
 namespace upnp
 {
@@ -30,7 +32,7 @@ ProtocolInfo::ProtocolInfo(const std::string& protocolString)
     auto items = utils::stringops::tokenize(protocolString, ":");
     if (items.size() != 4)
     {
-        throw std::logic_error("Invalid protocol definition: " + protocolString);
+        throw Exception("Invalid protocol definition: {}", protocolString);
     }
     
     m_Protocol          = items[0];
@@ -72,10 +74,7 @@ std::string ProtocolInfo::toString() const
         return "";
     }
 
-    std::stringstream ss;
-    ss << m_Protocol << ":" << m_Network << ":" << m_ContentFormat << ":" << m_AdditionalInfo;
-    
-    return ss.str();
+    return fmt::format("{}:{}:{}:{}", m_Protocol, m_Network, m_ContentFormat, m_AdditionalInfo);
 }
 
 }

@@ -28,34 +28,17 @@
 namespace upnp
 {
 
-class ServiceException : public std::runtime_error
-{
-public:
-    ServiceException(const std::string& msg, uint32_t errorCode)
-    : std::runtime_error(msg)
-    , m_ErrorCode(errorCode)
-    {
-    }
-    
-    uint32_t errorCode()
-    {
-        return m_ErrorCode;
-    }
-
-private:
-    uint32_t    m_ErrorCode;
-};
-
-#define DEFINE_UPNP_SERVICE_EXCEPTION(name, msg, code) \
-class name : public ServiceException \
+#define DEFINE_UPNP_SERVICE_EXCEPTION(name, code, msg) \
+class name : public Exception \
 { \
 public: \
-    name() : ServiceException(msg, code) {} \
+    name() : Exception(code, msg) {} \
 }; \
 
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException,               "Invalid action",       401)
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsServiceException,     "Invalid arguments",    402)
-DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                "Action failed",        501)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException,               401, "Invalid action")
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsServiceException,     401, "Invalid arguments")
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidSubscriptionIdException,       401, "Invalid subscription id")
+DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                501, "Action failed")
 
 /*class InvalidNameException : public ServiceException
 {

@@ -188,7 +188,7 @@ inline Action actionFromString(const std::string& action)
     if (action == "SetRecordQualityMode")           return Action::SetRecordQualityMode;
     if (action == "GetCurrentTransportActions")     return Action::GetCurrentTransportActions;
 
-    throw std::logic_error("Unknown AVTransport action:" + action);
+    throw Exception("Unknown AVTransport action: {}", action);
 }
 
 inline std::string toString(Action action)
@@ -213,7 +213,7 @@ inline std::string toString(Action action)
         case Action::SetRecordQualityMode:          return "SetRecordQualityMode";
         case Action::GetCurrentTransportActions:    return "GetCurrentTransportActions";
         default:
-            throw std::logic_error("Invalid AVTransport action");
+            throw Exception("Invalid AVTransport action: {}", static_cast<int32_t>(action));
     }
 }
 
@@ -250,7 +250,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_InstanceID")          return Variable::ArgumentTypeInstanceId;
     if (var == "LastChange")                     return Variable::LastChange;
     
-    throw std::logic_error("Unknown AVTransport variable:" + var);
+    throw Exception("Unknown AVTransport variable: {}", var);
 }
 
 inline std::string toString(Variable var)
@@ -288,7 +288,7 @@ inline std::string toString(Variable var)
     case Variable::ArgumentTypeInstanceId:           return "ArgumentTypeInstanceId";
     case Variable::LastChange:                       return "LastChange";
     default:
-        throw std::logic_error("Unknown AVTransport variable");
+        throw Exception("Unknown AVTransport variable: {:d}", static_cast<int32_t>(var));
     }    
 }
 
@@ -302,7 +302,7 @@ inline State stateFromString(const std::string& state)
     if (state == "RECORDING")           return State::Recording;
     if (state == "NO_MEDIA_PRESENT")    return State::NoMediaPresent;
 
-    throw std::logic_error("Unknown AVTransport state:" + state);
+    throw Exception("Unknown AVTransport state: {}", state);
 }
 
 inline std::string toString(State state)
@@ -317,7 +317,7 @@ inline std::string toString(State state)
         case State::Recording:          return "RECORDING";
         case State::NoMediaPresent:     return "NO_MEDIA_PRESENT";
         default:
-            throw std::logic_error("Invalid AVTransport state");
+            throw Exception("Invalid AVTransport state: {:d}", static_cast<int32_t>(state));
     }
 }
 
@@ -326,7 +326,7 @@ inline Status statusFromString(const std::string& status)
     if (status == "OK")                 return Status::Ok;
     if (status == "ERROR_OCCURRED")     return Status::Error;
 
-    throw std::logic_error("Unknown AVTransport status:" + status);
+    throw Exception("Unknown AVTransport status: {}", status);
 }
 
 inline std::string toString(Status status)
@@ -336,7 +336,7 @@ inline std::string toString(Status status)
         case Status::Ok:            return "OK";
         case Status::Error:         return "ERROR_OCCURRED";
         default:
-            throw std::logic_error("Invalid AVTransport status");
+            throw Exception("Invalid AVTransport status: {}", static_cast<int32_t>(status));
     }
 }
 
@@ -351,7 +351,7 @@ inline SeekMode seekModeFromString(const std::string& mode)
     if (mode == "TAPE-INDEX")      return SeekMode::TapeIndex;
     if (mode == "FRAME")           return SeekMode::Frame;
 
-    throw std::logic_error("Unknown AVTransport seekmode:" + mode);
+    throw Exception("Unknown AVTransport seekmode: {}", mode);
 }
 
 inline std::string toString(SeekMode mode)
@@ -367,7 +367,7 @@ inline std::string toString(SeekMode mode)
         case SeekMode::TapeIndex:           return "TAPE-INDEX";
         case SeekMode::Frame:               return "FRAME";
         default:
-            throw std::logic_error("Invalid AVTransport seekmode");
+            throw Exception("Invalid AVTransport seekmode: {}", static_cast<int32_t>(mode));
     }
 }
 
@@ -381,7 +381,7 @@ inline PlayMode playModeFromString(const std::string& mode)
     if (mode == "DIRECT_1")         return PlayMode::Direct;
     if (mode == "INTRO")            return PlayMode::Intro;
 
-    throw std::logic_error("Unknown AVTransport playmode:" + mode);
+    throw Exception("Unknown AVTransport playmode: {}", mode);
 }
 
 inline std::string toString(PlayMode mode)
@@ -396,7 +396,7 @@ inline std::string toString(PlayMode mode)
         case PlayMode::Direct:      return "DIRECT_1";
         case PlayMode::Intro:       return "INTRO";
         default:
-            throw std::logic_error("Invalid AVTransport playmode");
+            throw Exception("Invalid AVTransport playmode: {}", static_cast<int32_t>(mode));
     }
 }
 

@@ -86,7 +86,7 @@ inline Action actionFromString(const std::string& action)
     if (action == "Browse")                 return Action::Browse;
     if (action == "Search")                 return Action::Search;
     
-    throw std::logic_error("Unknown ContentDirectory action:" + action);
+    throw Exception("Unknown ContentDirectory action: {}", action);
 }
 
 inline std::string actionToString(Action action)
@@ -100,7 +100,7 @@ inline std::string actionToString(Action action)
         case Action::Search:                    return "Search";
             
         default:
-            throw std::logic_error("Unknown ContentDirectory action");
+            throw Exception("Unknown ContentDirectory action: {}", static_cast<int32_t>(action));
     }
 }
 
@@ -121,7 +121,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "SearchCapabilities")                return Variable::SearchCapabilities;
     if (var == "SortCapabilities")                  return Variable::SortCapabilities;
 
-    throw std::logic_error("Unknown ContentDirectory variable:" + var);
+    throw Exception("Unknown ContentDirectory variable: {}", var);
 }
 
 inline std::string toString(Variable var)
@@ -144,7 +144,7 @@ inline std::string toString(Variable var)
         case Variable::SortCapabilities:                    return "SortCapabilities";
         
         default:
-            throw std::logic_error("Unknown ContentDirectory variable");
+            throw Exception("Unknown ContentDirectory variable: {}", static_cast<int32_t>(var));
     }
 }
 
@@ -153,7 +153,7 @@ inline BrowseFlag browseFlagFromString(const std::string& browseFlag)
     if (browseFlag == "BrowseMetadata")         return BrowseFlag::Metadata;
     if (browseFlag == "BrowseDirectChildren")   return BrowseFlag::DirectChildren;
     
-    throw std::logic_error("Unknown ContentDirectory browse flag:" + browseFlag);
+    throw Exception("Unknown ContentDirectory browse flag: {}", browseFlag);
 }
 
 inline std::string browseFlagToString(BrowseFlag browseFlag)
@@ -164,7 +164,7 @@ inline std::string browseFlagToString(BrowseFlag browseFlag)
         case BrowseFlag::Metadata:          return "BrowseMetadata";
             
         default:
-            throw std::logic_error("Unknown ContentDirectory BrowseFlag");
+            throw Exception("Unknown ContentDirectory BrowseFlag: {}", static_cast<int32_t>(browseFlag));
     }
 }
 
@@ -173,7 +173,7 @@ inline SortType sortTypeFromString(char c)
     if (c == '-')   return SortType::Descending;
     if (c == '+')   return SortType::Ascending;
 
-    throw std::logic_error("Invalid sort character: " + std::string(1, c));
+    throw Exception("Invalid sort character: {}", c);
 }
 
 }

@@ -22,6 +22,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "utils/format.h"
 #include "upnp/upnpfwd.h"
 #include "upnp/upnpprotocolinfo.h"
 
@@ -104,10 +105,21 @@ enum class Class
     Unknown
 };
 
-class UPnPException : public std::exception
+class Exception : public std::runtime_error
 {
 public:
-    UPnPException(int32_t errorCode) : m_ErrorCode(errorCode) {}
+    Exception(const char* msg) : std::runtime_error(msg), m_ErrorCode(0) {}
+    Exception(const std::string& msg) : Exception(msg.c_str()) {}
+
+    template<typename... T>
+    Exception(const char* fmt, const T&... args) : Exception(0, fmt, std::forward<const T>(args)...) {}
+
+    Exception(int32_t errorCode, const char* msg) : std::runtime_error(msg), m_ErrorCode(errorCode) {}
+    Exception(int32_t errorCode, const std::string& msg) : Exception(errorCode, msg.c_str()) {}
+
+    template<typename... T>
+    Exception(int32_t errorCode, const char* fmt, const T&... args) : Exception(errorCode, fmt::format(fmt, std::forward<const T>(args)...)) {}
+
     int32_t getErrorCode() { return m_ErrorCode; }
     
 private:
@@ -132,7 +144,7 @@ inline std::string serviceTypeToTypeString(ServiceType type)
     if (type == ServiceType::AVTransport)           return "AVTransport";
     if (type == ServiceType::Unknown)               return "UnknownServiceType";
     
-    throw std::logic_error("Invalid service type received");
+    throw Exception("Invalid service type received");
 }
 
 inline std::string serviceTypeToUrnTypeString(ServiceType type)
@@ -142,7 +154,7 @@ inline std::string serviceTypeToUrnTypeString(ServiceType type)
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
     
-    throw std::logic_error("Invalid service type received for urn");
+    throw Exception("Invalid service type received for urn");
 }
 
 inline std::string serviceTypeToUrnIdString(ServiceType type)
@@ -151,7 +163,7 @@ inline std::string serviceTypeToUrnIdString(ServiceType type)
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
     
-    throw std::logic_error("Invalid service type received for id urn");
+    throw Exception("Invalid service type received for id urn");
 }
 
 inline std::string serviceTypeToUrnMetadataString(ServiceType type)
@@ -160,7 +172,7 @@ inline std::string serviceTypeToUrnMetadataString(ServiceType type)
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
     
-    throw std::logic_error("Invalid service type received for id urn");
+    throw Exception("Invalid service type received for id urn");
 }
 
 inline ServiceType serviceTypeUrnStringToService(const std::string& type)
@@ -260,7 +272,7 @@ inline std::string toString(Class c)
     case Class::Image:              return "object.item.imageItem";
     case Class::Generic:            return "object.generic";
     default:
-        throw std::runtime_error("Invalid upnp class provided");
+        throw Exception("Invalid upnp class provided");
     }
 }
 

@@ -71,7 +71,7 @@ void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
     Resource resource;
     if (!m_Renderer.supportsPlayback(item, resource))
     {
-        throw std::logic_error("The requested item is not supported by the renderer");
+        throw Exception("The requested item is not supported by the renderer");
     }
     
     stopPlaybackIfNecessary();
@@ -86,7 +86,7 @@ void ControlPoint::playItems(upnp::MediaServer &server, const std::vector<ItemPt
 {
     if (items.empty())
     {
-        throw std::logic_error("No items provided for playback");
+        throw Exception("No items provided for playback");
     }
 
     if (items.size() == 1)
@@ -117,7 +117,7 @@ void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
     Resource resource;
     if (!m_Renderer.supportsPlayback(item, resource))
     {
-        throw std::logic_error("The requested item is not supported by the renderer");
+        throw Exception("The requested item is not supported by the renderer");
     }
     
     m_Renderer.setNextTransportItem(resource);
@@ -127,7 +127,7 @@ void ControlPoint::queueItems(upnp::MediaServer &server, const std::vector<ItemP
 {
     if (items.empty())
     {
-        throw std::logic_error("No items provided for queueing");
+        throw Exception("No items provided for queueing");
     }
 
     if (items.size() == 1)
@@ -168,7 +168,7 @@ void ControlPoint::throwOnMissingWebserver()
 {
     if (!m_pWebServer)
     {
-        throw std::logic_error("A web server must be available to serve playlists");
+        throw Exception("A web server must be available to serve playlists");
     }
 }
 

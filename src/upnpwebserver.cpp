@@ -93,7 +93,7 @@ HostedFile& getFileFromRequest(const std::string& uri)
     auto iter = g_servedFiles.find(dir);
     if (iter == g_servedFiles.end())
     {
-        throw std::logic_error("Virtual directory does not exist: " + dir);
+        throw Exception("Virtual directory does not exist: {}", dir);
     }
     
     auto fileIter = std::find_if(iter->second.begin(), iter->second.end(), [&] (const std::unique_ptr<HostedFile>& file) {
@@ -102,7 +102,7 @@ HostedFile& getFileFromRequest(const std::string& uri)
     
     if (fileIter == iter->second.end())
     {
-        throw std::logic_error("File is not hosted: " + filename);
+        throw Exception("File is not hosted: {}", filename);
     }
     
     return (*(*fileIter).get());
@@ -180,7 +180,7 @@ int getInfoCallback(const char* pFilename, File_Info* pInfo)
         }
         else
         {
-            auto info = cb(pFilename);
+            auto info = cb(fileops::getFileNameWithoutExtension(pFilename));
             pInfo->file_length = info.sizeInBytes;
             pInfo->last_modified = info.modifyTime;
             pInfo->is_directory = info.type == fileops::FileSystemEntryType::Directory ? 1 : 0;
@@ -366,10 +366,11 @@ WebServer::WebServer(const std::string& webRoot)
     cbs.write       = &writeCallback;
     cbs.seek        = &seekCallback;
     cbs.close       = &closeCallback;
-    
-    if (UPNP_E_SUCCESS != UpnpSetVirtualDirCallbacks(&cbs))
+
+    auto rc = UpnpSetVirtualDirCallbacks(&cbs);
+    if (UPNP_E_SUCCESS != rc)
     {
-        throw std::logic_error("Failed to create webserver");
+        throw Exception(rc, "Failed to create webserver");
     }
 }
 
@@ -430,9 +431,10 @@ void WebServer::addVirtualDirectory(const std::string& virtualDirName)
 {
 	std::lock_guard<std::mutex> lock(g_mutex);
 
-    if (UPNP_E_SUCCESS != UpnpAddVirtualDir(virtualDirName.c_str()))
+    auto rc = UpnpAddVirtualDir(virtualDirName.c_str());
+    if (UPNP_E_SUCCESS != rc)
     {
-        throw std::logic_error("Failed to add virtual directory to webserver");
+        throw Exception(rc, "Failed to add virtual directory to webserver");
     }
 
     g_servedFiles.emplace("/" + virtualDirName, std::vector<std::unique_ptr<HostedFile>>());
@@ -442,9 +444,10 @@ void WebServer::addVirtualDirectory(const std::string& virtualDirName, FileInfoC
 {
 	std::lock_guard<std::mutex> lock(g_mutex);
 
-    if (UPNP_E_SUCCESS != UpnpAddVirtualDir(virtualDirName.c_str()))
+    auto rc = UpnpAddVirtualDir(virtualDirName.c_str());
+    if (UPNP_E_SUCCESS != rc)
     {
-        throw std::logic_error("Failed to add virtual directory to webserver");
+        throw Exception(rc, "Failed to add virtual directory to webserver");
     }
 
     g_virtualDirs.emplace("/" + virtualDirName, std::make_pair(fileinfoCb, requestCb));
