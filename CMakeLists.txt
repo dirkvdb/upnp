@@ -31,10 +31,20 @@ FIND_LIBRARY(THREADUTIL_LIBRARY
     PATHS ${UPNP_PKG_LIBRARY_DIRS}
 )
 
+OPTION(STANDALONE "Not used as a submodule of another project" OFF)
+
+IF (STANDALONE)
+    ADD_SUBDIRECTORY(../utils utils)
+    GET_DIRECTORY_PROPERTY(UTILS_INCLUDE_DIRS   DIRECTORY ../utils INCLUDE_DIRECTORIES)
+    GET_DIRECTORY_PROPERTY(UTILS_LIBRARY_DIRS   DIRECTORY ../utils LINK_DIRECTORIES)
+    GET_DIRECTORY_PROPERTY(UTILS_LIBRARIES      DIRECTORY ../utils DEFINITION UTILS_LIBRARIES)
+ENDIF (STANDALONE)
+
 SET (UPNPFRAMEWORK_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../utils/inc/"
-    ${UPNP_INCLUDE_DIR})
+    ${UTILS_INCLUDE_DIRS}
+    ${UPNP_INCLUDE_DIR}
+)
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
@@ -84,8 +94,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
 )
-
-OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 
 ADD_DEFINITIONS("-std=c++1y")
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
