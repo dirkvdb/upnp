@@ -99,7 +99,7 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
 		case UPNP_EVENT_SUBSCRIPTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Subscription_Request*>(pEvent);
-            if (request->UDN == nullptr || request->ServiceId == nullptr || request->Sid == nullptr)
+            if (request->UDN == nullptr || request->ServiceId == nullptr)
             {
                 log::warn("Invalid Event subscription request: NULL value provided");
                 return -1;
@@ -117,11 +117,6 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
         
             try
             {
-                if (request->ActionName == nullptr)
-                {
-                    throw InvalidArgumentsServiceException();
-                }
-            
                 // The appropriate service should fill in the result 
                 dev->ControlActionRequested(request);
             }

@@ -210,7 +210,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         {
             log::error("Error in Discovery Alive Callback: {}", pDiscEvent->ErrCode);
         }
-        else if (pDiscEvent->DeviceId && pDiscEvent->DeviceType && pDiscEvent->Location)
+        else
         {
             DeviceDiscoverInfo info;
             info.deviceId       = pDiscEvent->DeviceId;
