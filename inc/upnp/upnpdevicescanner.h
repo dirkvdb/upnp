@@ -32,6 +32,7 @@
 #include "upnp/upnpxmlutils.h"
 #include "utils/signal.h"
 #include "utils/workerthread.h"
+#include "utils/threadpool.h"
 
 namespace upnp
 {
@@ -71,7 +72,7 @@ private:
     mutable std::mutex                              m_DataMutex;
     
     std::future<void>                               m_Thread;
-    utils::WorkerThread                             m_DownloadThread;
+    utils::ThreadPool                               m_DownloadPool;
     std::condition_variable                         m_Condition;
     bool                                            m_Started;
     bool                                            m_Stop;

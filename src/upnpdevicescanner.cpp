@@ -77,7 +77,7 @@ void DeviceScanner::start()
     m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
     
     m_Thread = std::async(std::launch::async, std::bind(&DeviceScanner::checkForTimeoutThread, this));
-    m_DownloadThread.start();
+    m_DownloadPool.start();
     m_Started = true;
 }
 
@@ -95,7 +95,7 @@ void DeviceScanner::stop()
         
         m_Stop = true;
         m_Condition.notify_all();
-        m_DownloadThread.stop();
+        m_DownloadPool.stop();
     }
     
     m_Thread.wait();
@@ -327,7 +327,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
         }
     }
     
-    m_DownloadThread.addJob([this, info] () {
+    m_DownloadPool.addJob([this, info] () {
         try
         {
             auto device = std::make_shared<Device>();
@@ -355,7 +355,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
 
 void DeviceScanner::updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device)
 {
-    m_DownloadThread.addJob([this, info, device] () {
+    m_DownloadPool.addJob([this, info, device] () {
         try
         {
             obtainDeviceDetails(info, device);
