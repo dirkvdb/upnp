@@ -28,6 +28,7 @@
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "utils/stringoperations.h"
+#include "utils/cppcompat.h"
 
 namespace upnp
 {
