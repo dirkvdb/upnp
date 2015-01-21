@@ -18,7 +18,6 @@
 #define UPNP_ROOT_DEVICE_H
 
 #include "utils/types.h"
-#include "utils/timerthread.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnprootdeviceinterface.h"
 
@@ -45,7 +44,6 @@ private:
     std::string         m_Udn;
     std::string         m_DescriptionXml;
     int32_t             m_AdvertiseInterval;
-    utils::TimerThread  m_AdvertiseThread;
 };
 
 }
