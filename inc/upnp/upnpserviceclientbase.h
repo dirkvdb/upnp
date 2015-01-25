@@ -77,7 +77,7 @@ public:
         
         std::lock_guard<std::mutex> lock(m_eventMutex);
         m_subscriber = std::make_shared<ServiceSubscriber>(std::bind(&ServiceClientBase::eventCb, this, std::placeholders::_1, std::placeholders::_2));
-        m_client.UPnPEventOccurredEvent.connect([this] (auto* arg) { eventOccurred(arg); }, this);
+        m_client.UPnPEventOccurredEvent.connect([this] (Upnp_Event* arg) { eventOccurred(arg); }, this);
         m_client.subscribeToService(m_service.m_EventSubscriptionURL, getSubscriptionTimeout(), m_subscriber);
     }
     
