@@ -54,9 +54,9 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device)
 {
     try
     {
-        m_Device = device;
         m_ContentDirectory.setDevice(device);
         m_ConnectionMgr.setDevice(device);
+        m_Device = device;
         
         if (m_Device->implementsService(ServiceType::AVTransport))
         {

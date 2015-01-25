@@ -100,9 +100,10 @@ public:
 protected:
     virtual void parseServiceDescription(const std::string& descriptionUrl)
     {
+        xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
+
         try
         {
-            xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
             for (auto& action : xml::utils::getActionsFromDescription(doc))
             {
                 try
