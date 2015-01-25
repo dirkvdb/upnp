@@ -43,12 +43,13 @@ public:
     utils::Signal<VariableType, const std::map<VariableType, std::string>&> StateVariableEvent;
 
     ServiceClientBase(IClient& client)
-    : m_Client(client)
+    : m_client(client)
     {
     }
     
     virtual ~ServiceClientBase()
     {
+        utils::log::debug("DEST {}", (void*)this);
         try
         {
             unsubscribe();
@@ -57,14 +58,15 @@ public:
         {
             utils::log::error(e.what());
         }
+        utils::log::debug("RUCT {}", (void*) this);
     }
     
     virtual void setDevice(const std::shared_ptr<Device>& device)
     {
         if (device->implementsService(getType()))
         {
-            m_Service = device->m_Services[getType()];
-            parseServiceDescription(m_Service.m_SCPDUrl);
+            m_service = device->m_Services[getType()];
+            parseServiceDescription(m_service.m_SCPDUrl);
         }
     }
     
@@ -73,23 +75,27 @@ public:
         try { unsubscribe(); }
         catch (std::exception& e) { utils::log::warn(e.what()); }
         
-        m_Client.UPnPEventOccurredEvent.connect(std::bind(&ServiceClientBase::eventOccurred, this, std::placeholders::_1), this);
-        m_Client.subscribeToService(m_Service.m_EventSubscriptionURL, getSubscriptionTimeout(), &ServiceClientBase::eventCb, this);
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        m_subscriber = std::make_shared<ServiceSubscriber>(std::bind(&ServiceClientBase::eventCb, this, std::placeholders::_1, std::placeholders::_2));
+        m_client.UPnPEventOccurredEvent.connect([this] (auto* arg) { eventOccurred(arg); }, this);
+        m_client.subscribeToService(m_service.m_EventSubscriptionURL, getSubscriptionTimeout(), m_subscriber);
     }
     
     void unsubscribe()
     {
-        if (!m_SubscriptionId.empty())
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        if (m_subscriber)
         {
-            m_Client.UPnPEventOccurredEvent.disconnect(this);
-            m_Client.unsubscribeFromService(m_SubscriptionId);
-            m_SubscriptionId.clear();
+            m_subscriber.reset();
+            m_client.UPnPEventOccurredEvent.disconnect(this);
+            m_client.unsubscribeFromService(m_subscriptionId);
+            m_subscriptionId.clear();
         }
     }
     
     bool supportsAction(ActionType action) const
     {
-        return m_SupportedActions.find(action) != m_SupportedActions.end();
+        return m_supportedActions.find(action) != m_supportedActions.end();
     }
     
     virtual ActionType actionFromString(const std::string& action) const = 0;
@@ -100,7 +106,7 @@ public:
 protected:
     virtual void parseServiceDescription(const std::string& descriptionUrl)
     {
-        xml::Document doc = m_Client.downloadXmlDocument(descriptionUrl);
+        xml::Document doc = m_client.downloadXmlDocument(descriptionUrl);
 
         try
         {
@@ -108,7 +114,7 @@ protected:
             {
                 try
                 {
-                    m_SupportedActions.insert(actionFromString(action));
+                    m_supportedActions.insert(actionFromString(action));
                 }
                 catch (std::exception& e)
                 {
@@ -126,7 +132,8 @@ protected:
     
     void eventOccurred(Upnp_Event* pEvent)
     {
-        if (pEvent->Sid == m_SubscriptionId)
+        std::string sid = pEvent->Sid;
+        if (sid == m_subscriptionId)
         {
             try
             {
@@ -180,7 +187,7 @@ protected:
     
     xml::Document executeAction(ActionType actionType, const std::map<std::string, std::string>& args)
     {
-        Action action(actionToString(actionType), m_Service.m_ControlURL, getType());
+        Action action(actionToString(actionType), m_service.m_ControlURL, getType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
@@ -188,7 +195,7 @@ protected:
         
         try
         {
-            return m_Client.sendAction(action);
+            return m_client.sendAction(action);
         }
         catch (Exception& e)
         {
@@ -200,10 +207,18 @@ protected:
         return xml::Document();
     }
     
-    static int eventCb(Upnp_EventType eventType, void* pEvent, void* pInstance)
+    virtual ServiceType getType() = 0;
+    virtual int32_t getSubscriptionTimeout() = 0;
+    virtual void handleStateVariableEvent(VariableType changedVariable, const std::map<VariableType, std::string>& variables) {}
+    virtual void handleUPnPResult(int errorCode) = 0;
+
+    std::vector<StateVariable>              m_StateVariables;
+    
+private:
+    void eventCb(Upnp_EventType eventType, void* pEvent)
     {
-        auto rc = reinterpret_cast<ServiceClientBase<ActionType, VariableType>*>(pInstance);
-        
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        utils::log::debug("eventCb");
         switch (eventType)
         {
             case UPNP_EVENT_SUBSCRIBE_COMPLETE:
@@ -211,21 +226,21 @@ protected:
                 auto pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
                 if (pSubEvent->ErrCode != UPNP_E_SUCCESS)
                 {
-                    utils::log::error("Error in Event Subscribe Callback: {}", pSubEvent->ErrCode);
+                    utils::log::error("Error in Event Subscribe Callback: {} ({})", UpnpGetErrorMessage(pSubEvent->ErrCode), pSubEvent->ErrCode);
                 }
                 else
                 {
                     if (pSubEvent->Sid)
                     {
-                        rc->m_SubscriptionId = pSubEvent->Sid;
+                        m_subscriptionId = pSubEvent->Sid;
                         
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-                        utils::log::debug("Subscription complete: {}", rc->m_SubscriptionId);
+                        utils::log::debug("Subscription complete: {}", m_SubscriptionId);
 #endif
                     }
                     else
                     {
-                        rc->m_SubscriptionId.clear();
+                        m_subscriptionId.clear();
                         utils::log::error("Subscription id for device is empty");
                     }
                 }
@@ -238,11 +253,11 @@ protected:
                 
                 try
                 {
-                    int32_t timeout = rc->getSubscriptionTimeout();
-                    rc->m_SubscriptionId = rc->m_Client.subscribeToService(pSubEvent->PublisherUrl, timeout);
+                    int32_t timeout = getSubscriptionTimeout();
+                    m_subscriptionId = m_client.subscribeToService(pSubEvent->PublisherUrl, timeout);
 
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-                    utils::log::debug("Service subscription renewed: {}", rc->m_SubscriptionId);
+                    utils::log::debug("Service subscription renewed: {}", m_SubscriptionId);
 #endif
                 }
                 catch (std::exception& e)
@@ -260,22 +275,31 @@ protected:
                 utils::log::info("Unhandled action: {}", eventType);
                 break;
         }
-        
-        return 0;
     }
-    
-    virtual ServiceType getType() = 0;
-    virtual int32_t getSubscriptionTimeout() = 0;
-    virtual void handleStateVariableEvent(VariableType changedVariable, const std::map<VariableType, std::string>& variables) {}
-    virtual void handleUPnPResult(int errorCode) = 0;
 
-    std::vector<StateVariable>              m_StateVariables;
+    class ServiceSubscriber : public IServiceSubscriber
+    {
+    public:
+        ServiceSubscriber(std::function<void(Upnp_EventType, void*)> func)
+        : m_cb(func)
+        {
+        }
     
-private:
-    IClient&                                m_Client;
-    Service                                 m_Service;
-    std::set<ActionType>                    m_SupportedActions;
-    std::string                             m_SubscriptionId;
+        void onServiceEvent(Upnp_EventType eventType, void* pEvent) override
+        {
+            m_cb(eventType, pEvent);
+        }
+        
+    private:
+        std::function<void(Upnp_EventType, void*)> m_cb;
+    };
+
+    IClient&                                m_client;
+    Service                                 m_service;
+    std::set<ActionType>                    m_supportedActions;
+    std::string                             m_subscriptionId;
+    std::shared_ptr<ServiceSubscriber>      m_subscriber;
+    std::mutex                              m_eventMutex;
 };
     
 }

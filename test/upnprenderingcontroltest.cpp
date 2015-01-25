@@ -91,11 +91,9 @@ protected:
     
     void subscribe()
     {
-        Upnp_FunPtr callback;
-        void* pCookie = renderingControl.get();
-        
-        EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _, pCookie))
-            .WillOnce(SaveArgPointee<2>(&callback));
+        std::shared_ptr<IServiceSubscriber> callback;
+        EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _))
+            .WillOnce(Invoke([&] (const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>& cb) { callback = cb; }));
         
         renderingControl->StateVariableEvent.connect(std::bind(&EventListenerMock::RenderingControlLastChangedEvent, &eventListener, _1, _2), this);
         renderingControl->subscribe();
@@ -105,7 +103,7 @@ protected:
         strcpy(event.PublisherUrl, g_subscriptionUrl.c_str());
         strcpy(event.Sid, g_subscriptionId);
         
-        callback(UPNP_EVENT_SUBSCRIBE_COMPLETE, &event, pCookie);
+        callback->onServiceEvent(UPNP_EVENT_SUBSCRIBE_COMPLETE, &event);
     }
     
     void unsubscribe()

@@ -114,6 +114,7 @@
 		4357AF04154C7C390021F9BE /* upnpmediarenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AF03154C7C390021F9BE /* upnpmediarenderer.cpp */; };
 		4357AF06154C81890021F9BE /* upnpxmlutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AF05154C81890021F9BE /* upnpxmlutils.cpp */; };
 		4357AF0C154D30ED0021F9BE /* upnpmediaserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4357AF0B154D30ED0021F9BE /* upnpmediaserver.cpp */; };
+		43888C8A1A75A3EA00778222 /* upnpclientmock.h in Headers */ = {isa = PBXBuildFile; fileRef = 43888C891A75A3EA00778222 /* upnpclientmock.h */; };
 		438A7A48150E9B1F0093A521 /* upnpcontrolpoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */; };
 		438A7A49150E9B1F0093A521 /* upnpdevicescanner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */; };
 		438A7A4B150E9B1F0093A521 /* upnpitem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 438A7A45150E9B1F0093A521 /* upnpitem.cpp */; };
@@ -195,7 +196,6 @@
 		434203B81633E5490058A49A /* eventlistenermock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventlistenermock.h; path = test/eventlistenermock.h; sourceTree = SOURCE_ROOT; };
 		434203B91633E55F0058A49A /* testxmls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testxmls.h; path = test/testxmls.h; sourceTree = "<group>"; };
 		434203BA1633E55F0058A49A /* upnpavtransporttest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpavtransporttest.cpp; path = test/upnpavtransporttest.cpp; sourceTree = "<group>"; };
-		434203BB1633E55F0058A49A /* upnpclientmock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnpclientmock.h; path = ../test/upnpclientmock.h; sourceTree = "<group>"; };
 		434203BC1633E55F0058A49A /* upnpcontentdirectorytest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpcontentdirectorytest.cpp; path = test/upnpcontentdirectorytest.cpp; sourceTree = "<group>"; };
 		434203BD1633E55F0058A49A /* upnpobjectprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnpobjectprinter.h; path = test/upnpobjectprinter.h; sourceTree = "<group>"; };
 		434203BE1633E55F0058A49A /* upnprenderingcontroltest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnprenderingcontroltest.cpp; path = test/upnprenderingcontroltest.cpp; sourceTree = "<group>"; };
@@ -242,6 +242,7 @@
 		4357AF0A154D30DF0021F9BE /* upnpmediaserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpmediaserver.h; sourceTree = "<group>"; };
 		4357AF0B154D30ED0021F9BE /* upnpmediaserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpmediaserver.cpp; path = src/upnpmediaserver.cpp; sourceTree = "<group>"; };
 		4357AF0D154D58570021F9BE /* upnptypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnptypes.h; sourceTree = "<group>"; };
+		43888C891A75A3EA00778222 /* upnpclientmock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnpclientmock.h; path = test/upnpclientmock.h; sourceTree = SOURCE_ROOT; };
 		438A0265160DF89B00045136 /* upnpstatevariable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnpstatevariable.h; sourceTree = "<group>"; };
 		438A7A42150E9B1F0093A521 /* upnpcontrolpoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpcontrolpoint.cpp; path = src/upnpcontrolpoint.cpp; sourceTree = "<group>"; };
 		438A7A43150E9B1F0093A521 /* upnpdevicescanner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnpdevicescanner.cpp; path = src/upnpdevicescanner.cpp; sourceTree = "<group>"; };
@@ -364,7 +365,7 @@
 		4356547B1613B95700868D6B /* Mocks */ = {
 			isa = PBXGroup;
 			children = (
-				434203BB1633E55F0058A49A /* upnpclientmock.h */,
+				43888C891A75A3EA00778222 /* upnpclientmock.h */,
 				434203B81633E5490058A49A /* eventlistenermock.h */,
 			);
 			name = Mocks;
@@ -460,6 +461,7 @@
 			files = (
 				438A7A56150E9B300093A521 /* upnpcontrolpoint.h in Headers */,
 				438A7A57150E9B300093A521 /* upnpdevice.h in Headers */,
+				43888C8A1A75A3EA00778222 /* upnpclientmock.h in Headers */,
 				438A7A58150E9B300093A521 /* upnpdevicescanner.h in Headers */,
 				438A7A5A150E9B300093A521 /* upnpitem.h in Headers */,
 				432013AF1690648600FDFD3C /* upnpdlnainfo.h in Headers */,
