@@ -86,10 +86,10 @@ public:
         std::lock_guard<std::mutex> lock(m_eventMutex);
         if (m_subscriber)
         {
+            auto subCopy = m_subscriber;
             m_subscriber.reset();
             m_client.UPnPEventOccurredEvent.disconnect(this);
-            m_client.unsubscribeFromService(m_subscriptionId);
-            m_subscriptionId.clear();
+            m_client.unsubscribeFromService(subCopy);
         }
     }
     
@@ -133,7 +133,7 @@ protected:
     void eventOccurred(Upnp_Event* pEvent)
     {
         std::string sid = pEvent->Sid;
-        if (sid == m_subscriptionId)
+        if (sid == m_subscriber->getSubscriptionId())
         {
             try
             {
@@ -230,19 +230,11 @@ private:
                 }
                 else
                 {
-                    if (pSubEvent->Sid)
-                    {
-                        m_subscriptionId = pSubEvent->Sid;
-                        
+                    m_subscriber->setSubscriptionId(pSubEvent->Sid);
+                    
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-                        utils::log::debug("Subscription complete: {}", m_SubscriptionId);
+                    utils::log::debug("Subscription complete: {}", m_SubscriptionId);
 #endif
-                    }
-                    else
-                    {
-                        m_subscriptionId.clear();
-                        utils::log::error("Subscription id for device is empty");
-                    }
                 }
                 break;
             }
@@ -254,7 +246,7 @@ private:
                 try
                 {
                     int32_t timeout = getSubscriptionTimeout();
-                    m_subscriptionId = m_client.subscribeToService(pSubEvent->PublisherUrl, timeout);
+                    m_subscriber->setSubscriptionId(m_client.subscribeToService(pSubEvent->PublisherUrl, timeout));
 
 #ifdef DEBUG_SERVICE_SUBSCRIPTIONS
                     utils::log::debug("Service subscription renewed: {}", m_SubscriptionId);
@@ -290,14 +282,24 @@ private:
             m_cb(eventType, pEvent);
         }
         
+        void setSubscriptionId(const std::string& id)
+        {
+            m_subscriptionId = id;
+        }
+        
+        std::string getSubscriptionId()
+        {
+            return m_subscriptionId;
+        }
+        
     private:
-        std::function<void(Upnp_EventType, void*)> m_cb;
+        std::function<void(Upnp_EventType, void*)>  m_cb;
+        std::string                                 m_subscriptionId;
     };
 
     IClient&                                m_client;
     Service                                 m_service;
     std::set<ActionType>                    m_supportedActions;
-    std::string                             m_subscriptionId;
     std::shared_ptr<ServiceSubscriber>      m_subscriber;
     std::mutex                              m_eventMutex;
 };

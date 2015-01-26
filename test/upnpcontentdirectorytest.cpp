@@ -105,8 +105,6 @@ protected:
     
     void subscribe()
     {
-        std::shared_ptr<IServiceSubscriber> callback;
-        
         EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _))
             .WillOnce(Invoke([&] (const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>& cb) { callback = cb; }));
         
@@ -123,7 +121,7 @@ protected:
     
     void unsubscribe()
     {
-        EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
+        EXPECT_CALL(client, unsubscribeFromService(callback));
         
         contentDirectory->StateVariableEvent.disconnect(this);
         contentDirectory->unsubscribe();
@@ -203,6 +201,7 @@ protected:
     std::unique_ptr<ContentDirectory::Client>   contentDirectory;
     StrictMock<ClientMock>                      client;
     StrictMock<EventListenerMock>               eventListener;
+    std::shared_ptr<IServiceSubscriber>         callback;
 };
 
 TEST_F(ContentDirectoryTest, getSearchCapabilities)

@@ -144,6 +144,22 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
     return subscriptionId;
 }
 
+void Client::unsubscribeFromService(const std::string& subscriptionId) const
+{
+    Upnp_SID id;
+    if (subscriptionId.size() >= sizeof(id))
+    {
+        throw Exception("Invalid subscription Id");
+    }
+    
+    strcpy(id, subscriptionId.c_str());
+    int rc = UpnpUnSubscribe(m_client, id);
+    if (rc != UPNP_E_SUCCESS)
+    {
+        throw Exception(rc, "Failed to unsubscribe from UPnP device service");
+    }
+}
+
 void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -158,21 +174,16 @@ void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout
     m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
 }
 
-void Client::unsubscribeFromService(const std::string& subscriptionId) const
+void Client::unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    Upnp_SID id;
-    if (subscriptionId.size() >= sizeof(id))
+    auto iter = m_serviceSubscriptions.find(sub.get());
+    if (iter != m_serviceSubscriptions.end())
     {
-        throw Exception("Invalid subscription Id");
+        m_serviceSubscriptions.erase(iter);
     }
     
-    strcpy(id, subscriptionId.c_str());
-    int rc = UpnpUnSubscribe(m_client, id);
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Failed to unsubscribe from UPnP device service");
-    }
+    unsubscribeFromService(sub->getSubscriptionId());
 }
 
 xml::Document Client::sendAction(const Action& action) const
