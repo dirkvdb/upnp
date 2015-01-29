@@ -41,8 +41,9 @@ public:
     MOCK_CONST_METHOD1(searchAllDevices, void(int32_t));
     
     MOCK_CONST_METHOD2(subscribeToService, std::string(const std::string&, int32_t&));
-    MOCK_CONST_METHOD4(subscribeToService, void(const std::string&, int32_t, Upnp_FunPtr, void*));
     MOCK_CONST_METHOD1(unsubscribeFromService, void(const std::string&));
+    MOCK_CONST_METHOD3(subscribeToService, void(const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>&));
+    MOCK_CONST_METHOD1(unsubscribeFromService, void(const std::shared_ptr<IServiceSubscriber>&));
     MOCK_CONST_METHOD1(sendAction, xml::Document(const Action&));
     MOCK_CONST_METHOD1(downloadXmlDocument, xml::Document(const std::string&));
 };

@@ -31,6 +31,9 @@ using namespace utils;
 
 namespace upnp
 {
+
+std::map<IServiceSubscriber*, std::weak_ptr<IServiceSubscriber>> Client::m_serviceSubscriptions;
+std::mutex Client::m_mutex;
     
 Client::Client()
 : m_client(0)
@@ -141,17 +144,6 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
     return subscriptionId;
 }
 
-void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const
-{
-    log::debug("Subscribe to service: {}", publisherUrl);
-    
-    int rc = UpnpSubscribeAsync(m_client, publisherUrl.c_str(), timeout, callback, cookie);
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Failed to subscribe to UPnP device service");
-    }
-}
-
 void Client::unsubscribeFromService(const std::string& subscriptionId) const
 {
     Upnp_SID id;
@@ -166,6 +158,32 @@ void Client::unsubscribeFromService(const std::string& subscriptionId) const
     {
         throw Exception(rc, "Failed to unsubscribe from UPnP device service");
     }
+}
+
+void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    log::debug("Subscribe to service: {}", publisherUrl);
+    
+    int rc = UpnpSubscribeAsync(m_client, publisherUrl.c_str(), timeout, &Client::upnpServiceCallback, sub.get());
+    if (rc != UPNP_E_SUCCESS)
+    {
+        throw Exception(rc, "Failed to subscribe to UPnP device service");
+    }
+    
+    m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
+}
+
+void Client::unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto iter = m_serviceSubscriptions.find(sub.get());
+    if (iter != m_serviceSubscriptions.end())
+    {
+        m_serviceSubscriptions.erase(iter);
+    }
+    
+    unsubscribeFromService(sub->getSubscriptionId());
 }
 
 xml::Document Client::sendAction(const Action& action) const
@@ -244,6 +262,23 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
     }
     default:
         break;
+    }
+    
+    return 0;
+}
+
+int Client::upnpServiceCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto* subPtr = reinterpret_cast<IServiceSubscriber*>(pCookie);
+    auto iter = m_serviceSubscriptions.find(subPtr);
+    if (iter != m_serviceSubscriptions.end())
+    {
+        auto sub = iter->second.lock();
+        if (sub)
+        {
+            sub->onServiceEvent(eventType, pEvent);
+        }
     }
     
     return 0;

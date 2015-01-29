@@ -39,6 +39,14 @@ struct DeviceDiscoverInfo
     std::string     serviceVersion;
     std::string     location;
 };
+
+class IServiceSubscriber
+{
+public:
+    virtual ~IServiceSubscriber() = default;
+    virtual void onServiceEvent(Upnp_EventType eventType, void* pEvent) = 0;
+    virtual std::string getSubscriptionId() = 0;
+};
     
 class IClient
 {
@@ -54,9 +62,15 @@ public:
     virtual void searchDevicesOfType(DeviceType type, int32_t timeout) const = 0;
     virtual void searchAllDevices(int32_t timeout) const = 0;
     
+    // synchronously subscribe to the service, returns the subscription id
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const = 0;
-    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, Upnp_FunPtr callback, void* cookie) const = 0;
+    // synchronously unsubscribe from the service
     virtual void unsubscribeFromService(const std::string& subscriptionId) const = 0;
+    
+    // asynchronously subscribe to the service
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const = 0;
+    // synchronously unsubscribe from the service
+    virtual void unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const = 0;
     
     virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;

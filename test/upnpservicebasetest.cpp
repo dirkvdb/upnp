@@ -129,8 +129,8 @@ protected:
     void subscribe()
     {
         EXPECT_CALL(*service, getSubscriptionTimeout()).WillOnce(Return(g_defaultTimeout));
-        EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _, service.get()))
-            .WillOnce(SaveArgPointee<2>(&subscriptionCallback));
+        EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _))
+            .WillOnce(Invoke([&] (const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>& cb) { subscriptionCallback = cb; }));
     
         service->StateVariableEvent.connect(std::bind(&ServiceImplMock::onStateVariableEvent, service.get(), _1, _2), service.get());
         service->subscribe();
@@ -150,7 +150,7 @@ protected:
         strcpy(event.PublisherUrl, g_subscriptionUrl.c_str());
         strcpy(event.Sid, g_subscriptionId);
         
-        subscriptionCallback(UPNP_EVENT_SUBSCRIBE_COMPLETE, &event, service.get());
+        subscriptionCallback->onServiceEvent(UPNP_EVENT_SUBSCRIBE_COMPLETE, &event);
     }
     
     void triggerLastChangeUpdate()
@@ -168,14 +168,14 @@ protected:
     std::unique_ptr<ServiceImplMock>        service;
     StrictMock<ClientMock>                  client;
     
-    Upnp_FunPtr                             subscriptionCallback;
+    std::shared_ptr<IServiceSubscriber>     subscriptionCallback;
 };
 
 TEST_F(ServiceBaseTest, subscribe)
 {
     subscribe();
     
-    EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
+    EXPECT_CALL(client, unsubscribeFromService(subscriptionCallback));
     unsubscribe();
 }
 
@@ -191,15 +191,15 @@ TEST_F(ServiceBaseTest, renewSubscription)
     int32_t timeout = g_defaultTimeout;
     EXPECT_CALL(*service, getSubscriptionTimeout()).WillOnce(Return(g_defaultTimeout));
     EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, timeout)).WillOnce(Return(g_subscriptionId));
-    subscriptionCallback(UPNP_EVENT_SUBSCRIPTION_EXPIRED, &event, service.get());
+    subscriptionCallback->onServiceEvent(UPNP_EVENT_SUBSCRIPTION_EXPIRED, &event);
     
-    EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
+    EXPECT_CALL(client, unsubscribeFromService(subscriptionCallback));
     unsubscribe();
 }
 
 TEST_F(ServiceBaseTest, unsubscribeNotSubscribed)
 {
-    EXPECT_CALL(client, unsubscribeFromService(_)).Times(0);
+    EXPECT_CALL(client, unsubscribeFromService(subscriptionCallback)).Times(0);
     unsubscribe();
 }
 
@@ -234,7 +234,7 @@ TEST_F(ServiceBaseTest, stateVariableEvent)
     EXPECT_EQ(1U, lastChange.size());
     EXPECT_EQ("VarValue", lastChange[ServiceImplVariable::Var1]);
     
-    EXPECT_CALL(client, unsubscribeFromService(g_subscriptionId));
+    EXPECT_CALL(client, unsubscribeFromService(subscriptionCallback));
     unsubscribe();
 }
 
