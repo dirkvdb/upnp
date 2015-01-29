@@ -120,9 +120,9 @@ private:
     void throwOnUnknownConnectionId() const;
 
     void resetData();
-    std::set<Action> parseAvailableActions(const std::string& actions) const ;
-    ItemPtr parseCurrentTrack(const std::string& track) const ;
-    PlaybackState parsePlaybackState(const std::string& state) const ;
+    std::set<Action> parseAvailableActions(const std::string& actions) const;
+    ItemPtr parseCurrentTrack(const std::string& track) const;
+    PlaybackState parsePlaybackState(const std::string& state) const;
     
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);

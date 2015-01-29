@@ -82,7 +82,7 @@ void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
     m_Renderer.play();
 }
 
-void ControlPoint::playItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
+void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
 {
     if (items.empty())
     {
@@ -123,7 +123,7 @@ void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
     m_Renderer.setNextTransportItem(resource);
 }
 
-void ControlPoint::queueItems(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
+void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
 {
     if (items.empty())
     {
