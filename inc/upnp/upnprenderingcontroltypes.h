@@ -24,6 +24,7 @@ namespace RenderingControl
 
 enum class Action
 {
+// RenderingControl:1
     ListPresets,    // Required
     SelectPreset,   // Required
     GetBrightness,
@@ -58,11 +59,16 @@ enum class Action
     SetVolumeDB,
     GetVolumeDBRange,
     GetLoudness,
-    SetLoudness
+    SetLoudness,
+    
+// RenderingControl:2
+    GetStateVariables, // Optional
+    SetStateVariables // Optional
 };
 
 enum class Variable
 {
+// RenderingControl:1
     PresetNameList,
     Brightness,
     Contrast,
@@ -80,7 +86,14 @@ enum class Variable
     Volume,
     VolumeDB,
     Loudness,
-    LastChange //event
+    LastChange, //event
+
+// RenderingControl:2
+    ArgumentTypeDeviceUDN, // Optional
+    ArgumentTypeServiceType, // Optional
+    ArgumentTypeServiceId, // Optional
+    ArgumentTypeStateVariableValuePairs, // Optional
+    ArgumentTypeStateVariableList // Optional
 };
 
 enum class Channel
@@ -139,6 +152,10 @@ inline Action actionFromString(const std::string& action)
     if (action == "GetLoudness")                return Action::GetLoudness;
     if (action == "SetLoudness")                return Action::SetLoudness;
     
+    if (action == "GetStateVariables")          return Action::GetStateVariables;
+    if (action == "SetStateVariables")          return Action::SetStateVariables;
+
+    
     throw Exception("Unknown RendereringControl action: {}", action);
 }
 
@@ -181,6 +198,10 @@ inline std::string toString(Action action)
     case Action::SetVolumeDB:                   return "SetVolumeDB";
     case Action::SetLoudness:                   return "SetLoudness";
     case Action::GetLoudness:                   return "GetLoudness";
+    
+    case Action::GetStateVariables:             return "GetStateVariables";
+    case Action::SetStateVariables:             return "SetStateVariables";
+
     default:
         throw Exception("Invalid RenderingControl action: {}", static_cast<int32_t>(action));
     }
@@ -188,24 +209,30 @@ inline std::string toString(Action action)
 
 inline Variable variableFromString(const std::string& var)
 {
-    if (var == "PresetNameList")                    return Variable::PresetNameList;
-    if (var == "Brightness")                        return Variable::Brightness;
-    if (var == "Contrast")                          return Variable::Contrast;
-    if (var == "Sharpness")                         return Variable::Sharpness;
-    if (var == "RedVideoGain")                      return Variable::RedVideoGain;
-    if (var == "GreenVideoGain")                    return Variable::GreenVideoGain;
-    if (var == "BlueVideoGain")                     return Variable::BlueVideoGain;
-    if (var == "RedVideoBlackLevel")                return Variable::RedVideoBlackLevel;
-    if (var == "GreenVideoBlackLevel")              return Variable::GreenVideoBlackLevel;
-    if (var == "BlueVideoBlackLevel")               return Variable::BlueVideoBlackLevel;
-    if (var == "ColorTemperature")                  return Variable::ColorTemperature;
-    if (var == "HorizontalKeystone")                return Variable::HorizontalKeystone;
-    if (var == "VerticalKeystone")                  return Variable::VerticalKeystone;
-    if (var == "Mute")                              return Variable::Mute;
-    if (var == "Volume")                            return Variable::Volume;
-    if (var == "VolumeDB")                          return Variable::VolumeDB;
-    if (var == "Loudness")                          return Variable::Loudness;
-    if (var == "LastChange")                        return Variable::LastChange;
+    if (var == "PresetNameList")                        return Variable::PresetNameList;
+    if (var == "Brightness")                            return Variable::Brightness;
+    if (var == "Contrast")                              return Variable::Contrast;
+    if (var == "Sharpness")                             return Variable::Sharpness;
+    if (var == "RedVideoGain")                          return Variable::RedVideoGain;
+    if (var == "GreenVideoGain")                        return Variable::GreenVideoGain;
+    if (var == "BlueVideoGain")                         return Variable::BlueVideoGain;
+    if (var == "RedVideoBlackLevel")                    return Variable::RedVideoBlackLevel;
+    if (var == "GreenVideoBlackLevel")                  return Variable::GreenVideoBlackLevel;
+    if (var == "BlueVideoBlackLevel")                   return Variable::BlueVideoBlackLevel;
+    if (var == "ColorTemperature")                      return Variable::ColorTemperature;
+    if (var == "HorizontalKeystone")                    return Variable::HorizontalKeystone;
+    if (var == "VerticalKeystone")                      return Variable::VerticalKeystone;
+    if (var == "Mute")                                  return Variable::Mute;
+    if (var == "Volume")                                return Variable::Volume;
+    if (var == "VolumeDB")                              return Variable::VolumeDB;
+    if (var == "Loudness")                              return Variable::Loudness;
+    if (var == "LastChange")                            return Variable::LastChange;
+    
+    if (var == "A_ARG_TYPE_DeviceUDN")                  return Variable::ArgumentTypeDeviceUDN;
+    if (var == "A_ARG_TYPE_ServiceType")                return Variable::ArgumentTypeServiceType;
+    if (var == "A_ARG_TYPE_ServiceId")                  return Variable::ArgumentTypeServiceId;
+    if (var == "A_ARG_TYPE_StateVariableValuePairs")    return Variable::ArgumentTypeStateVariableValuePairs;
+    if (var == "A_ARG_TYPE_StateVariableList")          return Variable::ArgumentTypeStateVariableList;
     
     throw Exception("Unknown RenderingControl variable: {}", var);
 }
@@ -214,24 +241,30 @@ inline std::string toString(Variable var)
 {
     switch (var)
     {
-        case Variable::PresetNameList:              return "PresetNameList";
-        case Variable::Brightness:                  return "Brightness";
-        case Variable::Contrast:                    return "Contrast";
-        case Variable::Sharpness:                   return "Sharpness";
-        case Variable::RedVideoGain:                return "RedVideoGain";
-        case Variable::GreenVideoGain:              return "GreenVideoGain";
-        case Variable::BlueVideoGain:               return "BlueVideoGain";
-        case Variable::RedVideoBlackLevel:          return "RedVideoBlackLevel";
-        case Variable::GreenVideoBlackLevel:        return "GreenVideoBlackLevel";
-        case Variable::BlueVideoBlackLevel:         return "BlueVideoBlackLevel";
-        case Variable::ColorTemperature:            return "ColorTemperature";
-        case Variable::HorizontalKeystone:          return "HorizontalKeystone";
-        case Variable::VerticalKeystone:            return "VerticalKeystone";
-        case Variable::Mute:                        return "Mute";
-        case Variable::Volume:                      return "Volume";
-        case Variable::VolumeDB:                    return "VolumeDB";
-        case Variable::Loudness:                    return "Loudness";
-        case Variable::LastChange:                  return "LastChange";
+        case Variable::PresetNameList:                      return "PresetNameList";
+        case Variable::Brightness:                          return "Brightness";
+        case Variable::Contrast:                            return "Contrast";
+        case Variable::Sharpness:                           return "Sharpness";
+        case Variable::RedVideoGain:                        return "RedVideoGain";
+        case Variable::GreenVideoGain:                      return "GreenVideoGain";
+        case Variable::BlueVideoGain:                       return "BlueVideoGain";
+        case Variable::RedVideoBlackLevel:                  return "RedVideoBlackLevel";
+        case Variable::GreenVideoBlackLevel:                return "GreenVideoBlackLevel";
+        case Variable::BlueVideoBlackLevel:                 return "BlueVideoBlackLevel";
+        case Variable::ColorTemperature:                    return "ColorTemperature";
+        case Variable::HorizontalKeystone:                  return "HorizontalKeystone";
+        case Variable::VerticalKeystone:                    return "VerticalKeystone";
+        case Variable::Mute:                                return "Mute";
+        case Variable::Volume:                              return "Volume";
+        case Variable::VolumeDB:                            return "VolumeDB";
+        case Variable::Loudness:                            return "Loudness";
+        case Variable::LastChange:                          return "LastChange";
+        
+        case Variable::ArgumentTypeDeviceUDN:               return "A_ARG_TYPE_DeviceUDN";
+        case Variable::ArgumentTypeServiceType:             return "A_ARG_TYPE_ServiceType";
+        case Variable::ArgumentTypeServiceId:               return "A_ARG_TYPE_ServiceId";
+        case Variable::ArgumentTypeStateVariableValuePairs: return "A_ARG_TYPE_StateVariableValuePairs";
+        case Variable::ArgumentTypeStateVariableList:       return "A_ARG_TYPE_StateVariableList";
         default:
             throw Exception("Invalid RenderingControl variable: {}", static_cast<int32_t>(var));
     }

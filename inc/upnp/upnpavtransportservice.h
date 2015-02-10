@@ -31,7 +31,7 @@ namespace upnp
 class IAVTransport
 {
 public:
-    virtual ~IAVTransport() {}
+    virtual ~IAVTransport() = default;
     
     virtual void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData) = 0;
     virtual void stop(uint32_t instanceId) = 0;
@@ -46,6 +46,21 @@ public:
     virtual void setPlayMode(uint32_t instanceId, AVTransport::PlayMode)                                            { throw InvalidActionException(); }
     virtual void setRecordQualityMode(uint32_t instanceId, const std::string& mode)                                 { throw InvalidActionException(); }
     virtual std::vector<AVTransport::Action> getCurrentTransportActions(uint32_t)                                   { throw InvalidActionException(); }
+};
+
+class IAVTransport3
+{
+public:
+    virtual ~IAVTransport3() = default;
+    
+    virtual void setSyncOffset(uint32_t instanceId, const std::string& syncOffset) { throw InvalidActionException(); }
+    virtual void adjustSyncOffset(uint32_t instanceId, const std::string& adjustment) { throw InvalidActionException(); }
+    virtual void syncPlay(uint32_t instanceId, const std::string& speed, AVTransport::SeekMode refPositionUnit, const std::string& refPosition, const std::string& refPresentatationTime, const std::string& refClockId) { throw InvalidActionException(); }
+    virtual void syncStop(uint32_t instanceId, const std::string& stopTime, const std::string& refClockId) { throw InvalidActionException(); }
+    virtual void syncPause(uint32_t instanceId, const std::string& pauseTime, const std::string& refClockId) { throw InvalidActionException(); }
+    virtual void setStaticPlaylist(uint32_t instanceId, const std::string& data, uint32_t offset, uint32_t totalLength, const std::string& mimeType, const std::string& extendedType, const std::string& startObjectId, const std::string& startGroupId) { throw InvalidActionException(); }
+    virtual void setStreamingPlaylist(uint32_t instanceId, const std::string& data, const std::string& mimeType, const std::string& extendedType, AVTransport::PlaylistStep step) { throw InvalidActionException(); }
+    virtual const std::string getPlaylistInfo(uint32_t instanceId, AVTransport::PlaylistType type) { throw InvalidActionException(); }
 };
 
 namespace AVTransport
@@ -64,9 +79,13 @@ public:
     
 protected:
     virtual std::string variableToString(Variable type) const;
+    xml::Document getStateVariables(uint32_t id, const std::string& variableList) const;
     
 private:
+    void throwIfNoAVTransport3Support();
+
     IAVTransport&                       m_avTransport;
+    IAVTransport3*                      m_avTransport3;
     LastChangeVariable                  m_LastChange;
 };
 

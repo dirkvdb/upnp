@@ -27,10 +27,10 @@ namespace AVTransport
 Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, ServiceType::AVTransport)
 , m_avTransport(av)
-, m_LastChange(m_Type, std::chrono::milliseconds(200))
+, m_LastChange(m_type, std::chrono::milliseconds(200))
 {
     m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {
-        m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
+        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
     };
 }
 
@@ -51,9 +51,9 @@ xml::Document Service::getSubscriptionResponse()
     propertySet.addAttribute("xmlns:e", ns);
     
     auto event = doc.createElement("Event");
-    event.addAttribute("xmlns", serviceTypeToUrnMetadataString(m_Type));
+    event.addAttribute("xmlns", serviceTypeToUrnMetadataString(m_type));
     
-    for (auto& vars : m_Variables)
+    for (auto& vars : m_variables)
     {
         auto instance = doc.createElement("InstanceID");
         instance.addAttribute("val", std::to_string(vars.first));
@@ -99,7 +99,6 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.setNextAVTransportURI(id, req.getChildNodeValue("NextURI"), req.getChildNodeValue("NextURIMetaData"));
             break;
         case Action::GetMediaInfo:
-        {
             response.addArgument("NrTracks",                getInstanceVariable(id, Variable::NumberOfTracks).getValue());
             response.addArgument("MediaDuration",           getInstanceVariable(id, Variable::CurrentMediaDuration).getValue());
             response.addArgument("CurrentURI",              getInstanceVariable(id, Variable::CurrentTrackURI).getValue());
@@ -110,16 +109,12 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("RecordMedium",            getInstanceVariable(id, Variable::RecordStorageMedium).getValue());
             response.addArgument("WriteStatus",             getInstanceVariable(id, Variable::RecordMediumWriteStatus).getValue());
             break;
-        }
         case Action::GetTransportInfo:
-        {
             response.addArgument("CurrentTransportState",   getInstanceVariable(id, Variable::TransportState).getValue());
             response.addArgument("CurrentTransportStatus",  getInstanceVariable(id, Variable::TransportStatus).getValue());
             response.addArgument("CurrentSpeed",            getInstanceVariable(id, Variable::TransportPlaySpeed).getValue());
             break;
-        }
         case Action::GetPositionInfo:
-        {
             response.addArgument("Track",                   getInstanceVariable(id, Variable::CurrentTrack).getValue());
             response.addArgument("TrackDuration",           getInstanceVariable(id, Variable::CurrentTrackDuration).getValue());
             response.addArgument("TrackMetaData",           getInstanceVariable(id, Variable::CurrentTrackMetaData).getValue());
@@ -129,25 +124,18 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("RelCount",                getInstanceVariable(id, Variable::RelativeCounterPosition).getValue());
             response.addArgument("AbsCount",                getInstanceVariable(id, Variable::AbsoluteCounterPosition).getValue());
             break;
-        }
         case Action::GetDeviceCapabilities:
-        {
             response.addArgument("PlayMedia",               getInstanceVariable(id, Variable::PossiblePlaybackStorageMedia).getValue());
             response.addArgument("RecMedia",                getInstanceVariable(id, Variable::PossibleRecordStorageMedia).getValue());
             response.addArgument("RecQualityModes",         getInstanceVariable(id, Variable::PossibleRecordQualityModes).getValue());
             break;
-        }
         case Action::GetTransportSettings:
-        {
             response.addArgument("PlayMode",                getInstanceVariable(id, Variable::CurrentPlayMode).getValue());
             response.addArgument("RecQualityModes",         getInstanceVariable(id, Variable::CurrentRecordQualityMode).getValue());
             break;
-        }
         case Action::GetCurrentTransportActions:
-        {
             response.addArgument("Actions",                 getInstanceVariable(id, Variable::CurrentTransportActions).getValue());
             break;
-        }
         case Action::Stop:
             m_avTransport.stop(id);
             break;
@@ -175,6 +163,79 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         case Action::SetRecordQualityMode:
             m_avTransport.setRecordQualityMode(id, req.getChildNodeValue("￼NewRecordQualityMode"));
             break;
+        // AVTransport:2
+        case Action::GetMediaInfoExt:
+            response.addArgument("CurrentType",             getInstanceVariable(id, Variable::CurrentMediaCategory).getValue());
+            response.addArgument("NrTracks",                getInstanceVariable(id, Variable::NumberOfTracks).getValue());
+            response.addArgument("MediaDuration",           getInstanceVariable(id, Variable::CurrentMediaDuration).getValue());
+            response.addArgument("CurrentURI",              getInstanceVariable(id, Variable::CurrentTrackURI).getValue());
+            response.addArgument("CurrentURIMetaData",      getInstanceVariable(id, Variable::CurrentTrackMetaData).getValue());
+            response.addArgument("NextURI",                 getInstanceVariable(id, Variable::NextAVTransportURI).getValue());
+            response.addArgument("NextURIMetaData",         getInstanceVariable(id, Variable::NextAVTransportURIMetaData).getValue());
+            response.addArgument("PlayMedium",              getInstanceVariable(id, Variable::PlaybackStorageMedium).getValue());
+            response.addArgument("RecordMedium",            getInstanceVariable(id, Variable::RecordStorageMedium).getValue());
+            response.addArgument("WriteStatus",             getInstanceVariable(id, Variable::RecordMediumWriteStatus).getValue());
+            break;
+        case Action::GetDRMState:
+            response.addArgument("CurrentType",             getInstanceVariable(id, Variable::DRMState).getValue());
+            break;
+        case Action::GetStateVariables:
+            response.addArgument("StateVariableList", getStateVariables(id, req.getChildNodeValue("StateVariableList")).toString());
+            break;
+        //case Action::SetStateVariables:
+        //    break;
+        
+        // AVTransport:3
+        case Action::GetSyncOffset:
+            throwIfNoAVTransport3Support();
+            response.addArgument("CurrentSyncOffset", getInstanceVariable(id, Variable::SyncOffset).getValue());
+            break;
+        case Action::AdjustSyncOffset:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->adjustSyncOffset(id, req.getChildNodeValue("Adjustment"));
+            break;
+        case Action::SetSyncOffset:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->setSyncOffset(id, req.getChildNodeValue("NewSyncOffset"));
+            break;
+        case Action::SyncPlay:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->syncPlay(id, req.getChildNodeValue("Speed"),
+                                         seekModeFromString(req.getChildNodeValue("ReferencePositionUnits")),
+                                         req.getChildNodeValue("ReferencePosition"),
+                                         req.getChildNodeValue("ReferencePresentationTime"),
+                                         req.getChildNodeValue("ReferenceClockId"));
+            break;
+        case Action::SyncStop:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->syncStop(id, req.getChildNodeValue("StopTime"), req.getChildNodeValue("ReferenceClockId"));
+            break;
+        case Action::SyncPause:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->syncPause(id, req.getChildNodeValue("PauseTime"), req.getChildNodeValue("ReferenceClockId"));
+            break;
+        case Action::SetStaticPlaylist:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->setStaticPlaylist(id, req.getChildNodeValue("PlaylistData"),
+                                                  static_cast<uint32_t>(std::stoul(req.getChildNodeValue("PlaylistOffset"))),
+                                                  static_cast<uint32_t>(std::stoul(req.getChildNodeValue("PlaylistTotalLength"))),
+                                                  req.getChildNodeValue("PlaylistMIMEType"),
+                                                  req.getChildNodeValue("PlaylistExtendedType"),
+                                                  req.getChildNodeValue("PlaylistStartObj"),
+                                                  req.getChildNodeValue("PlaylistStartGroup"));
+            break;
+        case Action::SetStreamingPlaylist:
+            throwIfNoAVTransport3Support();
+            m_avTransport3->setStreamingPlaylist(id, req.getChildNodeValue("PlaylistData"),
+                                                     req.getChildNodeValue("PlaylistMIMEType"),
+                                                     req.getChildNodeValue("PlaylistExtendedType"),
+                                                     playlistStepFromString(req.getChildNodeValue("PlaylistStep")));
+            break;
+        case Action::GetPlaylistInfo:
+            throwIfNoAVTransport3Support();
+            response.addArgument("PlaylistInfo", m_avTransport3->getPlaylistInfo(id, playlistTypeFromString(req.getChildNodeValue("PlaylistType"))));
+            break;
+
         default:
             throw InvalidActionException();
         }
@@ -215,6 +276,57 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
 std::string Service::variableToString(Variable type) const
 {
     return AVTransport::toString(type);
+}
+
+xml::Document Service::getStateVariables(uint32_t id, const std::string& variableList) const
+{
+    try
+    {
+        xml::Document doc;
+        auto pairs = doc.createElement("stateVariableValuePairs");
+        
+        std::map<std::string, std::string> vars;
+        if (variableList == "*")
+        {
+            vars = getVariables(id);
+        }
+        else
+        {
+            for (auto& var : csvToVector(variableList))
+            {
+                vars.insert(std::make_pair(var, getInstanceVariable(id, variableFromString(var)).getValue()));
+            }
+        }
+        
+        for (auto iter = vars.begin(); iter != vars.end();)
+        {
+            if (iter->first == "LastChange" || iter->first.find("A_ARG_TYPE_" == 0))
+            {
+                // lastchange and argtype variables are excluded
+                continue;
+            }
+            
+            auto var    = doc.createElement("stateVariable");
+            auto value  = doc.createNode(iter->second);
+            var.addAttribute("variableName", iter->first);
+            var.appendChild(value);
+            pairs.appendChild(var);
+        }
+        
+        return doc;
+    }
+    catch (Exception& e)
+    {
+        throw InvalidStateVariableListException();
+    }
+}
+
+void Service::throwIfNoAVTransport3Support()
+{
+    if (!m_avTransport3)
+    {
+        throw InvalidActionException();
+    }
 }
 
 }

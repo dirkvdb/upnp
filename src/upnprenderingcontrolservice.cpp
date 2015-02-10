@@ -28,10 +28,10 @@ namespace RenderingControl
 Service::Service(IRootDevice& dev, IRenderingControl& rc)
 : DeviceService(dev, ServiceType::RenderingControl)
 , m_RenderingControl(rc)
-, m_LastChange(m_Type, std::chrono::milliseconds(200))
+, m_LastChange(m_type, std::chrono::milliseconds(200))
 {
     m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {
-        m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
+        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
     };
 }
 
@@ -105,9 +105,9 @@ xml::Document Service::getSubscriptionResponse()
     propertySet.addAttribute("xmlns:e", ns);
     
     std::stringstream ss;
-    ss << "<Event xmlns=\"" << serviceTypeToUrnMetadataString(m_Type) << "\">" << std::endl;
+    ss << "<Event xmlns=\"" << serviceTypeToUrnMetadataString(m_type) << "\">" << std::endl;
     
-    for (auto& vars : m_Variables)
+    for (auto& vars : m_variables)
     {
         ss << "<InstanceID val=\"" << vars.first << "\">";
     
@@ -261,6 +261,15 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         case Action::SetLoudness:
             m_RenderingControl.setLoudness(id, channelFromString(req.getChildNodeValue("Channel")), req.getChildNodeValue("DesiredLoudness") == "1");
             break;
+            
+          
+        // RenderingControl:2
+        //case Action::GetStateVariables:
+        //    response.addArgument("StateVariableList", getStateVariables(id, req.getChildNodeValue("StateVariableList")).toString());
+        //    break;
+        //case Action::SetStateVariables:
+        //    break;
+            
         default:
             log::warn("No handler for RenderingControl action: {}", action);
             throw InvalidActionException();

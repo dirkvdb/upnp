@@ -20,9 +20,11 @@
 #include <string>
 #include <map>
 #include <chrono>
+#include <algorithm>
 
 #include "utils/log.h"
 #include "utils/types.h"
+#include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpactionresponse.h"
 #include "upnp/upnprootdeviceinterface.h"
@@ -37,22 +39,22 @@ class DeviceService
 {
 public:
     DeviceService(IRootDevice& dev, ServiceType type)
-    : m_RootDevice(dev)
-    , m_Type(type)
+    : m_rootDevice(dev)
+    , m_type(type)
     {
-        m_Variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
+        m_variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
     }
     
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
     virtual xml::Document getSubscriptionResponse() = 0;
     
-    std::map<std::string, std::string> getVariables() const
+    std::map<std::string, std::string> getVariables(uint32_t id) const
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         std::map<std::string, std::string> vars;
-        for (auto& var : m_Variables.at(0))
+        for (auto& var : m_variables.at(id))
         {
-            vars.insert(std::make_pair(variableToString(var.first), var.second));
+            vars.insert(std::make_pair(variableToString(var.first), var.second.getValue()));
         }
         
         return vars;
@@ -65,9 +67,9 @@ public:
     
     ServiceVariable getInstanceVariable(uint32_t id, VariableType var) const
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        auto vars = m_Variables.find(id);
-        if (vars != m_Variables.end())
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto vars = m_variables.find(id);
+        if (vars != m_variables.end())
         {
             auto v = vars->second.find(var);
             if (v != vars->second.end())
@@ -81,8 +83,8 @@ public:
     
     void setVariable(VariableType var, const std::string& value)
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_Variables[0][var] = ServiceVariable(variableToString(var), value);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_variables[0][var] = ServiceVariable(variableToString(var), value);
     }
     
     void setVariable(VariableType var, const std::string& value, const std::string& attrName, const std::string& attrValue)
@@ -90,16 +92,16 @@ public:
         ServiceVariable serviceVar(variableToString(var), value);
         serviceVar.addAttribute(attrName, attrValue);
         
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_Variables[0][var] = serviceVar;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_variables[0][var] = serviceVar;
     }
     
     virtual void setInstanceVariable(uint32_t id, VariableType var, const std::string& value)
     {
         ServiceVariable serviceVar(variableToString(var), value);
         
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_Variables[id][var] = serviceVar;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_variables[id][var] = serviceVar;
     }
     
     void setInstanceVariable(uint32_t id, VariableType var, const std::string& value, const std::string& attrName, const std::string& attrValue)
@@ -107,14 +109,14 @@ public:
         ServiceVariable serviceVar(variableToString(var), value);
         serviceVar.addAttribute(attrName, attrValue);
         
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_Variables[id][var] = serviceVar;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_variables[id][var] = serviceVar;
     }
     
 //    template <typename T>
 //    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
 //    {
-//        m_Variables[0][var] = std::to_string(value);
+//        m_variables[0][var] = std::to_string(value);
 //    }
 //    
 //    template <typename T>
@@ -123,7 +125,7 @@ public:
 //        ServiceVariable serviceVar(variableToString(var), value);
 //        serviceVar.addAttribute(attrName, attrValue);
 //        
-//        m_Variables[id][var] = serviceVar;
+//        m_variables[id][var] = serviceVar;
 //    }
     
 protected:
@@ -142,7 +144,7 @@ protected:
     
         utils::log::debug("Variable change event: {}", doc.toString());
     
-        m_RootDevice.notifyEvent(serviceTypeToUrnIdString(m_Type), doc);
+        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
     }
     
     void addPropertyToElement(int32_t instanceId, VariableType variable, xml::Element& elem)
@@ -150,14 +152,24 @@ protected:
         auto doc    = elem.getOwnerDocument();
         auto prop   = doc.createElement("e:property");
         auto var    = doc.createElement(variableToString(variable));
-        auto value  = doc.createNode(m_Variables.at(instanceId)[variable].getValue());
+        auto value  = doc.createNode(m_variables.at(instanceId)[variable].getValue());
 
         var.appendChild(value);
         prop.appendChild(var);
         elem.appendChild(prop);
     }
     
-    std::string vectorToCSV(const std::vector<std::string>& items)
+    static std::vector<std::string> csvToVector(const std::string& csv)
+    {
+        auto vec = utils::stringops::tokenize(csv, ",");
+        for (auto& str : vec)
+        {
+            utils::stringops::trim(str);
+        }
+        return vec;
+    }
+    
+    static std::string vectorToCSV(const std::vector<std::string>& items)
     {
         std::stringstream ss;
         for (auto& item : items)
@@ -190,10 +202,10 @@ protected:
         return ss.str();
     }
     
-    IRootDevice&                                                    m_RootDevice;
-    ServiceType                                                     m_Type;
-    std::map<uint32_t, std::map<VariableType, ServiceVariable>>     m_Variables;
-    mutable std::mutex                                              m_Mutex;
+    IRootDevice&                                                    m_rootDevice;
+    ServiceType                                                     m_type;
+    std::map<uint32_t, std::map<VariableType, ServiceVariable>>     m_variables;
+    mutable std::mutex                                              m_mutex;
 };
 
 }

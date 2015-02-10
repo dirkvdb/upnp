@@ -30,8 +30,8 @@ class ServiceVariable
 public:
     ServiceVariable() = default;
     explicit ServiceVariable(const std::string& name, const std::string& value)
-    : m_Name(name)
-    , m_Value(value)
+    : m_name(name)
+    , m_value(value)
     {
     }
     
@@ -39,39 +39,44 @@ public:
     {
         // If the variable name and attibute matches we are dealing with the same
         // variable, value can change
-        return  m_Name == other.m_Name &&
-                m_Attribute.first == other.m_Attribute.first &&
-                m_Attribute.second == other.m_Attribute.second;
+        return  m_name == other.m_name &&
+                m_attribute.first == other.m_attribute.first &&
+                m_attribute.second == other.m_attribute.second;
     }
     
     std::string getName() const
     {
-        return m_Name;
+        return m_name;
     }
     
     std::string getValue() const
     {
-        return m_Value;
+        return m_value;
     }
     
     std::pair<std::string, std::string> getAttribute() const
     {
-        return m_Attribute;
+        return m_attribute;
     }
     
     void addAttribute(const std::string& name, const std::string& value)
     {
-        m_Attribute = std::make_pair(name, value);
+        m_attribute = std::make_pair(name, value);
+    }
+    
+    bool operator!() const
+    {
+        return !m_name.empty();
     }
     
     std::string toString() const
     {
         std::stringstream ss;
-        ss << "<" << m_Name << " val=\"" << m_Value << "\"";
+        ss << "<" << m_name << " val=\"" << m_value << "\"";
         
-        if (!m_Attribute.first.empty())
+        if (!m_attribute.first.empty())
         {
-            ss << " " << m_Attribute.first << "=\"" << m_Attribute.second << "\"";
+            ss << " " << m_attribute.first << "=\"" << m_attribute.second << "\"";
         }
         
         ss << "/>";
@@ -80,9 +85,9 @@ public:
     }
 
 private:
-    std::string                         m_Name;
-    std::string                         m_Value;
-    std::pair<std::string, std::string> m_Attribute;
+    std::string                         m_name;
+    std::string                         m_value;
+    std::pair<std::string, std::string> m_attribute;
 };
 
 }
