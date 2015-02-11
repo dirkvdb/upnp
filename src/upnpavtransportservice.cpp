@@ -300,7 +300,7 @@ xml::Document Service::getStateVariables(uint32_t id, const std::string& variabl
         
         for (auto iter = vars.begin(); iter != vars.end();)
         {
-            if (iter->first == "LastChange" || iter->first.find("A_ARG_TYPE_" == 0))
+            if (iter->first == "LastChange" || iter->first.find("A_ARG_TYPE_") == 0)
             {
                 // lastchange and argtype variables are excluded
                 continue;
