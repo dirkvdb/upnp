@@ -146,7 +146,7 @@ inline Variable variableFromString(const std::string& var)
     
     if (var == "A_ARG_TYPE_ItemInfoFilter")     return Variable::ArgumentTypeItemInfoFilter;
     if (var == "A_ARG_TYPE_Result")             return Variable::ArgumentTypeResult;
-    if (var == "A_ARG_TYPE_RenderingInfoList")  return Variable::￼ArgumentTypeRenderingInfoList;
+    if (var == "A_ARG_TYPE_RenderingInfoList")  return Variable::ArgumentTypeRenderingInfoList;
 
     throw Exception("Unknown ConnectionManager variable: {}", var);
 }
@@ -168,7 +168,7 @@ inline std::string toString(Variable var)
         
         case Variable::ArgumentTypeItemInfoFilter:      return "A_ARG_TYPE_ItemInfoFilter";
         case Variable::ArgumentTypeResult:              return "A_ARG_TYPE_Result";
-        case Variable::￼ArgumentTypeRenderingInfoList:  return "A_ARG_TYPE_￼RenderingInfoList";
+        case Variable::ArgumentTypeRenderingInfoList:   return "A_ARG_TYPE_￼RenderingInfoList";
 
         default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(var));
     }
