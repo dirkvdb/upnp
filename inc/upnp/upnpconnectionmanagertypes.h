@@ -70,7 +70,7 @@ enum class Variable
 // ConnectionManager:3
     ArgumentTypeItemInfoFilter,
     ArgumentTypeResult,
-    ￼ArgumentTypeRenderingInfoList
+    ArgumentTypeRenderingInfoList
 };
 
 enum class ConnectionStatus
@@ -147,7 +147,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_ItemInfoFilter")     return Variable::ArgumentTypeItemInfoFilter;
     if (var == "A_ARG_TYPE_Result")             return Variable::ArgumentTypeResult;
     if (var == "A_ARG_TYPE_RenderingInfoList")  return Variable::￼ArgumentTypeRenderingInfoList;
-    
+
     throw Exception("Unknown ConnectionManager variable: {}", var);
 }
 
@@ -155,21 +155,21 @@ inline std::string toString(Variable var)
 {
     switch (var)
     {
-        case Variable::SourceProtocolInfo:             return "SourceProtocolInfo";
-        case Variable::SinkProtocolInfo:               return "SinkProtocolInfo";
-        case Variable::CurrentConnectionIds:           return "CurrentConnectionIDs";
-        case Variable::ArgumentTypeConnectionStatus:   return "A_ARG_TYPE_ConnectionStatus";
-        case Variable::ArgumentTypeConnectionManager:  return "A_ARG_TYPE_ConnectionManager";
-        case Variable::ArgumentTypeDirection:          return "A_ARG_TYPE_Direction";
-        case Variable::ArgumentTypeProtocolInfo:       return "A_ARG_TYPE_ProtocolInfo";
-        case Variable::ArgumentTypeConnectionId:       return "A_ARG_TYPE_ConnectionID";
-        case Variable::ArgumentTypeAVTransportId:      return "A_ARG_TYPE_AVTransportID";
-        case Variable::ArgumentTypeRecourceId:         return "A_ARG_TYPE_RcsID";
+        case Variable::SourceProtocolInfo:              return "SourceProtocolInfo";
+        case Variable::SinkProtocolInfo:                return "SinkProtocolInfo";
+        case Variable::CurrentConnectionIds:            return "CurrentConnectionIDs";
+        case Variable::ArgumentTypeConnectionStatus:    return "A_ARG_TYPE_ConnectionStatus";
+        case Variable::ArgumentTypeConnectionManager:   return "A_ARG_TYPE_ConnectionManager";
+        case Variable::ArgumentTypeDirection:           return "A_ARG_TYPE_Direction";
+        case Variable::ArgumentTypeProtocolInfo:        return "A_ARG_TYPE_ProtocolInfo";
+        case Variable::ArgumentTypeConnectionId:        return "A_ARG_TYPE_ConnectionID";
+        case Variable::ArgumentTypeAVTransportId:       return "A_ARG_TYPE_AVTransportID";
+        case Variable::ArgumentTypeRecourceId:          return "A_ARG_TYPE_RcsID";
         
-        case Variable::ArgumentTypeItemInfoFilter:     return "A_ARG_TYPE_ItemInfoFilter";
-        case Variable::ArgumentTypeResult:             return "A_ARG_TYPE_Result";
+        case Variable::ArgumentTypeItemInfoFilter:      return "A_ARG_TYPE_ItemInfoFilter";
+        case Variable::ArgumentTypeResult:              return "A_ARG_TYPE_Result";
         case Variable::￼ArgumentTypeRenderingInfoList:  return "A_ARG_TYPE_￼RenderingInfoList";
-            
+
         default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(var));
     }
 }
