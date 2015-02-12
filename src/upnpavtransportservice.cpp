@@ -27,6 +27,7 @@ namespace AVTransport
 Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, ServiceType::AVTransport)
 , m_avTransport(av)
+, m_avTransport3(dynamic_cast<IAVTransport3*>(&av))
 , m_LastChange(m_type, std::chrono::milliseconds(200))
 {
     m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {

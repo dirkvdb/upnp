@@ -27,6 +27,7 @@ namespace ConnectionManager
 Service::Service(IRootDevice& dev, IConnectionManager& cm)
 : DeviceService(dev, ServiceType::ConnectionManager)
 , m_connectionManager(cm)
+, m_connectionManager3(dynamic_cast<IConnectionManager3*>(&cm))
 {
 }
 
@@ -97,6 +98,18 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("Status",                  toString(connInfo.connectionStatus));
             break;
         }
+        
+        case Action::GetRendererItemInfo:
+            throwIfNoConnectionManager3Support();
+            response.addArgument("ItemRenderingInfoList", m_connectionManager3->getRendererItemInfo(
+                                    csvToVector(request.getChildNodeValue("ItemInfoFilter")),
+                                    xml::Document(request.getChildNodeValue("ItemMetadataList"))).toString());
+            break;
+        case Action::GetFeatureList:
+            throwIfNoConnectionManager3Support();
+            response.addArgument("FeatureList", m_connectionManager3->getFeatureList().toString());
+            break;
+        
         default:
             throw InvalidActionException();
         }
@@ -114,6 +127,15 @@ std::string Service::variableToString(Variable type) const
 {
     return ConnectionManager::toString(type);
 }
+
+void Service::throwIfNoConnectionManager3Support()
+{
+    if (!m_connectionManager3)
+    {
+        throw InvalidActionException();
+    }
+}
+
 
 }
 }

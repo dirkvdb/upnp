@@ -27,25 +27,35 @@ namespace ConnectionManager
 static const int32_t UnknownConnectionId = -1;
 static const int32_t DefaultConnectionId = 0;
 
-DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleProtocolException,            "Incompatible protocol info",       701)
-DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleDirectionsException,          "Incompatible directions",          702)
-DEFINE_UPNP_SERVICE_EXCEPTION(InsufficientNetworkResourcesException,    "Insufficient network resources",   703)
-DEFINE_UPNP_SERVICE_EXCEPTION(LocalRestrictionsException,               "Local restrictions",               704)
-DEFINE_UPNP_SERVICE_EXCEPTION(AccessDeniedException,                    "Access denied",                    705)
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidConnectionReferenceException,      "Invalid connection reference",     706)
-DEFINE_UPNP_SERVICE_EXCEPTION(NotInNetworkException,                    "Not in network",                   707)
+DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleProtocol,                     "Incompatible protocol info",                       701)
+DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleDirections,                   "Incompatible directions",                          702)
+DEFINE_UPNP_SERVICE_EXCEPTION(InsufficientNetworkResources,             "Insufficient network resources",                   703)
+DEFINE_UPNP_SERVICE_EXCEPTION(LocalRestrictions,                        "Local restrictions",                               704)
+DEFINE_UPNP_SERVICE_EXCEPTION(AccessDenied,                             "Access denied",                                    705)
+DEFINE_UPNP_SERVICE_EXCEPTION(InvalidConnectionReference,               "Invalid connection reference",                     706)
+DEFINE_UPNP_SERVICE_EXCEPTION(NotInNetwork,                             "Not in network",                                   707)
+DEFINE_UPNP_SERVICE_EXCEPTION(ConnectionTableOverflow,                  "Connection table overflow",                        708)
+DEFINE_UPNP_SERVICE_EXCEPTION(InternalProcessingResourcesExceeded,      "Internal processing resources exceeded",           709)
+DEFINE_UPNP_SERVICE_EXCEPTION(InternalMemoryResourcesExceeded,          "Internal memory resources exceeded",               710)
+DEFINE_UPNP_SERVICE_EXCEPTION(InternalStoragSystemCapabilitiesExceeded, "Internal storage system capabilities exceeded",    711)
 
 enum class Action
 {
+// ConnectionManager:1
     GetProtocolInfo,
     PrepareForConnection, // Optional
     ConnectionComplete, // Optional
     GetCurrentConnectionIDs,
-    GetCurrentConnectionInfo
+    GetCurrentConnectionInfo,
+    
+// ConnectionManager:3
+    GetRendererItemInfo, // Optional
+    GetFeatureList
 };
 
 enum class Variable
 {
+// ConnectionManager:1
     SourceProtocolInfo,
     SinkProtocolInfo,
     CurrentConnectionIds,
@@ -55,7 +65,12 @@ enum class Variable
     ArgumentTypeProtocolInfo,
     ArgumentTypeConnectionId,
     ArgumentTypeAVTransportId,
-    ArgumentTypeRecourceId
+    ArgumentTypeRecourceId,
+
+// ConnectionManager:3
+    ArgumentTypeItemInfoFilter,
+    ArgumentTypeResult,
+    ￼ArgumentTypeRenderingInfoList
 };
 
 enum class ConnectionStatus
@@ -93,6 +108,9 @@ inline Action actionFromString(const std::string& action)
     if (action == "GetCurrentConnectionIDs")    return Action::GetCurrentConnectionIDs;
     if (action == "GetCurrentConnectionInfo")   return Action::GetCurrentConnectionInfo;
     
+    if (action == "GetRendererItemInfo")        return Action::GetRendererItemInfo;
+    if (action == "GetFeatureList")             return Action::GetFeatureList;
+    
     throw Exception("Unknown ConnectionManager action: {}", action);
 }
 
@@ -100,11 +118,14 @@ inline std::string toString(Action action)
 {
     switch (action)
     {
-        case Action::GetProtocolInfo:                return "GetProtocolInfo";
-        case Action::PrepareForConnection:           return "PrepareForConnection";
-        case Action::ConnectionComplete:             return "ConnectionComplete";
-        case Action::GetCurrentConnectionIDs:        return "GetCurrentConnectionIDs";
-        case Action::GetCurrentConnectionInfo:       return "GetCurrentConnectionInfo";
+        case Action::GetProtocolInfo:               return "GetProtocolInfo";
+        case Action::PrepareForConnection:          return "PrepareForConnection";
+        case Action::ConnectionComplete:            return "ConnectionComplete";
+        case Action::GetCurrentConnectionIDs:       return "GetCurrentConnectionIDs";
+        case Action::GetCurrentConnectionInfo:      return "GetCurrentConnectionInfo";
+        
+        case Action::GetRendererItemInfo:           return "GetRendererItemInfo";
+        case Action::GetFeatureList:                return "GetFeatureList";
 
         default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(action));
     }
@@ -123,6 +144,10 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_AVTransportID")      return Variable::ArgumentTypeAVTransportId;
     if (var == "A_ARG_TYPE_RcsID")              return Variable::ArgumentTypeRecourceId;
     
+    if (var == "A_ARG_TYPE_ItemInfoFilter")     return Variable::ArgumentTypeItemInfoFilter;
+    if (var == "A_ARG_TYPE_Result")             return Variable::ArgumentTypeResult;
+    if (var == "A_ARG_TYPE_RenderingInfoList")  return Variable::￼ArgumentTypeRenderingInfoList;
+    
     throw Exception("Unknown ConnectionManager variable: {}", var);
 }
 
@@ -140,6 +165,10 @@ inline std::string toString(Variable var)
         case Variable::ArgumentTypeConnectionId:       return "A_ARG_TYPE_ConnectionID";
         case Variable::ArgumentTypeAVTransportId:      return "A_ARG_TYPE_AVTransportID";
         case Variable::ArgumentTypeRecourceId:         return "A_ARG_TYPE_RcsID";
+        
+        case Variable::ArgumentTypeItemInfoFilter:     return "A_ARG_TYPE_ItemInfoFilter";
+        case Variable::ArgumentTypeResult:             return "A_ARG_TYPE_Result";
+        case Variable::￼ArgumentTypeRenderingInfoList:  return "A_ARG_TYPE_￼RenderingInfoList";
             
         default: throw Exception("Unknown ConnectionManager action: {}", static_cast<int32_t>(var));
     }

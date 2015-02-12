@@ -17,8 +17,12 @@
 #ifndef UPNP_CONNECTION_MANAGER_SERVICE_H
 #define UPNP_CONNECTION_MANAGER_SERVICE_H
 
+#include "upnp/upnpxml.h"
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnpconnectionmanagertypes.h"
+
+#include <vector>
+#include <string>
 
 namespace upnp
 {
@@ -30,6 +34,14 @@ public:
     virtual void prepareForConnection(const ProtocolInfo& protocolInfo, ConnectionManager::ConnectionInfo& info) = 0;
     virtual void connectionComplete(int32_t connectionId) = 0;
     virtual ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId) = 0;
+};
+
+class IConnectionManager3
+{
+public:
+    virtual ~IConnectionManager3() {}
+    virtual xml::Document getRendererItemInfo(const std::vector<std::string>& itemInfoFilter, const xml::Document& itemMetadataList) { throw InvalidActionException(); };
+    virtual xml::Document getFeatureList() = 0;
 };
 
 namespace ConnectionManager
@@ -47,7 +59,10 @@ protected:
     std::string variableToString(Variable type) const override;
 
 private:
+    void throwIfNoConnectionManager3Support();
+
     IConnectionManager&  m_connectionManager;
+    IConnectionManager3* m_connectionManager3;
 };
 
 }
