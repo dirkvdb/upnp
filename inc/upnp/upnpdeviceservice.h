@@ -21,9 +21,9 @@
 #include <map>
 #include <chrono>
 #include <algorithm>
+#include <cinttypes>
 
 #include "utils/log.h"
-#include "utils/types.h"
 #include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpactionresponse.h"
@@ -44,10 +44,10 @@ public:
     {
         m_variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
     }
-    
+
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
     virtual xml::Document getSubscriptionResponse() = 0;
-    
+
     std::map<std::string, std::string> getVariables(uint32_t id) const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -56,15 +56,15 @@ public:
         {
             vars.insert(std::make_pair(variableToString(var.first), var.second.getValue()));
         }
-        
+
         return vars;
     }
-    
+
     ServiceVariable getVariable(VariableType var) const
     {
         return getInstanceVariable(0, var);
     }
-    
+
     ServiceVariable getInstanceVariable(uint32_t id, VariableType var) const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -77,76 +77,76 @@ public:
                 return v->second;
             }
         }
-        
+
         return ServiceVariable();
     }
-    
+
     void setVariable(VariableType var, const std::string& value)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_variables[0][var] = ServiceVariable(variableToString(var), value);
     }
-    
+
     void setVariable(VariableType var, const std::string& value, const std::string& attrName, const std::string& attrValue)
     {
         ServiceVariable serviceVar(variableToString(var), value);
         serviceVar.addAttribute(attrName, attrValue);
-        
+
         std::lock_guard<std::mutex> lock(m_mutex);
         m_variables[0][var] = serviceVar;
     }
-    
+
     virtual void setInstanceVariable(uint32_t id, VariableType var, const std::string& value)
     {
         ServiceVariable serviceVar(variableToString(var), value);
-        
+
         std::lock_guard<std::mutex> lock(m_mutex);
         m_variables[id][var] = serviceVar;
     }
-    
+
     void setInstanceVariable(uint32_t id, VariableType var, const std::string& value, const std::string& attrName, const std::string& attrValue)
     {
         ServiceVariable serviceVar(variableToString(var), value);
         serviceVar.addAttribute(attrName, attrValue);
-        
+
         std::lock_guard<std::mutex> lock(m_mutex);
         m_variables[id][var] = serviceVar;
     }
-    
+
 //    template <typename T>
 //    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
 //    {
 //        m_variables[0][var] = std::to_string(value);
 //    }
-//    
+//
 //    template <typename T>
 //    typename std::enable_if<std::is_integral<T>::value, void>::type setInstanceVariable(uint32_t id, VariableType var, const T& value, const std::string& attrName, const std::string& attrValue)
 //    {
 //        ServiceVariable serviceVar(variableToString(var), value);
 //        serviceVar.addAttribute(attrName, attrValue);
-//        
+//
 //        m_variables[id][var] = serviceVar;
 //    }
-    
+
 protected:
     virtual std::string variableToString(VariableType type) const = 0;
-    
+
     void notifyVariableChange(VariableType var, uint32_t instanceId)
     {
         const std::string ns = "urn:schemas-upnp-org:event-1-0";
-    
+
         xml::Document doc;
         auto propertySet    = doc.createElement("e:propertyset");
-        
+
         addPropertyToElement(instanceId, var, propertySet);
-        
+
         doc.appendChild(propertySet);
-    
+
         utils::log::debug("Variable change event: {}", doc.toString());
-    
+
         m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
     }
-    
+
     void addPropertyToElement(int32_t instanceId, VariableType variable, xml::Element& elem)
     {
         auto doc    = elem.getOwnerDocument();
@@ -158,7 +158,7 @@ protected:
         prop.appendChild(var);
         elem.appendChild(prop);
     }
-    
+
     static std::vector<std::string> csvToVector(const std::string& csv)
     {
         auto vec = utils::stringops::tokenize(csv, ",");
@@ -168,7 +168,7 @@ protected:
         }
         return vec;
     }
-    
+
     static std::string vectorToCSV(const std::vector<std::string>& items)
     {
         std::stringstream ss;
@@ -178,10 +178,10 @@ protected:
             {
                 ss << ',';
             }
-        
+
             ss << item;
         }
-        
+
         return ss.str();
     }
 
@@ -195,13 +195,13 @@ protected:
             {
                 ss << ',';
             }
-        
+
             ss << toStringFunc(item);
         }
-        
+
         return ss.str();
     }
-    
+
     IRootDevice&                                                    m_rootDevice;
     ServiceType                                                     m_type;
     std::map<uint32_t, std::map<VariableType, ServiceVariable>>     m_variables;

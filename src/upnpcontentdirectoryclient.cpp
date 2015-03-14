@@ -52,13 +52,13 @@ void Client::setDevice(const std::shared_ptr<Device>& device)
     m_SearchCaps.clear();
     m_SortCaps.clear();
     m_SystemUpdateId.clear();
-    
+
     try { querySearchCapabilities(); }
     catch (std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
-    
+
     try { querySortCapabilities(); }
     catch (std::exception& e) { log::error("Failed to obtain sort capabilities: {}", e.what()); }
-    
+
     try { querySystemUpdateID(); }
     catch (std::exception& e) { log::error("Failed to obtain system update id: {}", e.what()); }
 }
@@ -82,7 +82,7 @@ void Client::querySearchCapabilities()
 {
     xml::Document result = executeAction(Action::GetSearchCapabilities);
     xml::Element elem = result.getFirstChild();
-    
+
     // TODO: don't fail if the search caps is an empty list
 
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SearchCaps"), ","))
@@ -95,9 +95,9 @@ void Client::querySortCapabilities()
 {
     xml::Document result = executeAction(Action::GetSortCapabilities);
     xml::Element elem = result.getFirstChild();
-    
+
     // TODO: don't fail if the sort caps is an empty list
-    
+
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
     {
         addPropertyToList(cap, m_SortCaps);
@@ -121,11 +121,11 @@ ItemPtr Client::browseMetadata(const std::string& objectId, const std::string& f
     {
         throw Exception("Failed to browse meta data");
     }
-    
+
 #ifdef DEBUG_CONTENT_BROWSING
     log::debug(browseResult.toString());
 #endif
-    
+
     return parseMetaData(browseResult);
 }
 
@@ -150,7 +150,7 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
         try { res.result = parseContainers(browseResult); }
         catch (std::exception&e ) { log::warn(e.what()); }
     }
-    
+
     if (type == ItemsOnly || type == All)
     {
         try
@@ -163,21 +163,21 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
         }
         catch (std::exception& e) { log::warn(e.what()); }
     }
-    
+
     return res;
 }
 
 ActionResult Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
-    
+
     xml::Document result = executeAction(Action::Search, { {"ObjectID", objectId},
                                                            {"SearchCriteria", criteria},
                                                            {"Filter", filter},
                                                            {"StartingIndex", numericops::toString(startIndex)},
                                                            {"RequestedCount", numericops::toString(limit)},
                                                            {"SortCriteria", sort} });
-    
+
     ActionResult searchResult;
     xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
     if (!searchResultDoc)
@@ -187,7 +187,7 @@ ActionResult Client::search(const std::string& objectId, const std::string& crit
 
     try { searchResult.result = parseContainers(searchResultDoc); }
     catch (std::exception&e ) { log::warn(e.what()); }
-    
+
     try
     {
         auto items = parseItems(searchResultDoc);
@@ -204,11 +204,11 @@ ActionResult Client::search(const std::string& objectId, const std::string& crit
 xml::Document Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     m_Abort = false;
-    
+
 #ifdef DEBUG_CONTENT_BROWSING
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
-    
+
     return executeAction(Action::Browse, { {"ObjectID", objectId},
                                            {"BrowseFlag", flag},
                                            {"Filter", filter},
@@ -222,7 +222,7 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
     std::string browseResult;
 
     assert(doc && "ParseBrowseResult: Invalid document supplied");
-    
+
     for (xml::Element elem : doc.getFirstChild().getChildNodes())
     {
         if (elem.getName() == "Result")
@@ -242,33 +242,33 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
             result.updateId = stringops::toNumeric<uint32_t>(elem.getValue());
         }
     }
-    
+
     if (browseResult.empty())
     {
         throw Exception("Failed to obtain browse result");
     }
-    
+
     return xml::Document(browseResult);
 }
 
 ItemPtr Client::parseMetaData(xml::Document& doc)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
-    
+
     try
     {
         xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
         return parseContainer(containerElem);
     }
     catch (std::exception&) {}
-    
+
     try
     {
         xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
         return xml::utils::parseItem(itemElem);
     }
     catch (std::exception&) {}
-    
+
     log::warn("No metadata could be retrieved");
     return ItemPtr();
 }
@@ -279,7 +279,7 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
     item->setObjectId(containerElem.getAttribute("id"));
     item->setParentId(containerElem.getAttribute("parentID"));
     item->setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
-    
+
     for (xml::Element elem : containerElem.getChildNodes())
     {
         Property prop = propertyFromString(elem.getName());
@@ -288,16 +288,16 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
             log::warn("Unknown property {}", elem.getName());
             continue;
         }
-        
+
         item->addMetaData(prop, elem.getValue());
     }
-    
+
     // check required properties
     if (item->getTitle().empty())
     {
         throw Exception("No title found in item");
     }
-    
+
     return item;
 }
 
@@ -319,7 +319,7 @@ std::vector<ItemPtr> Client::parseContainers(xml::Document& doc)
             log::warn("Failed to parse container, skipping ({})", e.what());
         }
     }
-    
+
     return containers;
 }
 
@@ -339,7 +339,7 @@ std::vector<ItemPtr> Client::parseItems(xml::Document& doc)
             log::error("Failed to parse item, skipping ({})", e.what());
         }
     }
-    
+
     return items;
 }
 
@@ -400,7 +400,7 @@ Variable Client::variableFromString(const std::string& var) const
     return ContentDirectory::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var) const 
+std::string Client::variableToString(Variable var) const
 {
     return ContentDirectory::toString(var);
 }

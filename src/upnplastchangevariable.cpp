@@ -43,7 +43,7 @@ LastChangeVariable::~LastChangeVariable()
         m_Stop = true;
         m_Condition.notify_all();
     }
-    
+
     if (m_Thread.joinable())
     {
         m_Thread.join();
@@ -53,13 +53,13 @@ LastChangeVariable::~LastChangeVariable()
 void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVariable& var)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    
+
     if (var.getName().empty())
     {
         log::error("Empty var added {}", var.toString());
         return;
     }
-    
+
     auto& vars = m_ChangedVariables[instanceId];
     auto iter = std::find(vars.begin(), vars.end(), var);
     if (iter == vars.end())
@@ -70,7 +70,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
     {
         *iter = var;
     }
-    
+
     m_Condition.notify_all();
 }
 
@@ -84,18 +84,18 @@ void LastChangeVariable::createLastChangeEvent()
         auto propertySet    = doc.createElement("e:propertyset");
         auto property       = doc.createElement("e:property");
         auto lastChange     = doc.createElement("LastChange");
-        
+
         propertySet.addAttribute("xmlns:e", ns);
-        
+
         auto event = doc.createElement("Event");
         event.addAttribute("xmlns", m_EventMetaNamespace);
-        
+
         for (auto& vars : m_ChangedVariables)
         {
             auto instance = xml::utils::createServiceVariablesElement(doc, vars.first, vars.second);
             event.appendChild(instance);
         }
-        
+
         auto lastChangeValue = doc.createNode(event.toString());
 
         lastChange.appendChild(lastChangeValue);
@@ -128,10 +128,10 @@ void LastChangeVariable::variableThread()
         {
             continue;
         }
-        
+
         createLastChangeEvent();
         m_ChangedVariables.clear();
-        
+
         // Wait at least MinInterval before a new update is sent or until a stop is requested
         m_Condition.wait_for(lock, m_MinInterval, [this] { return m_Stop; });
     }

@@ -20,8 +20,8 @@
 #include <string>
 #include <map>
 #include <chrono>
+#include <cinttypes>
 
-#include "utils/types.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpactionresponse.h"
 

@@ -19,8 +19,7 @@
 
 #include <string>
 #include <vector>
-
-#include "utils/types.h"
+#include <cinttypes>
 
 namespace upnp
 {
@@ -30,22 +29,22 @@ class HttpClient
 public:
 	HttpClient(int32_t commandTimeout);
     HttpClient(const HttpClient&) = delete;
-    
+
     size_t getContentLength(const std::string& url);
     std::string getText(const std::string& url);
-    
+
     std::vector<uint8_t> getData(const std::string& url);
     std::vector<uint8_t> getData(const std::string& url, uint64_t offset, uint64_t size);
-    
+
     void getData(const std::string& url, uint8_t* pData);
     void getData(const std::string& url, uint8_t* pData, uint64_t offset, uint64_t size);
-	
+
 private:
     void* open(const std::string& url, int& contentLength, int32_t& httpStatus);
     void* open(const std::string& url, int32_t& contentLength, int32_t& httpStatus, uint64_t offset, uint64_t size);
     void read(void* pHandle, uint8_t* pData, size_t dataSize);
     void throwOnBadHttpStatus(const std::string& url, int32_t status);
-    
+
 	int32_t		m_Timeout;
 };
 

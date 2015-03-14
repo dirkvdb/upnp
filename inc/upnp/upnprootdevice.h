@@ -17,29 +17,30 @@
 #ifndef UPNP_ROOT_DEVICE_H
 #define UPNP_ROOT_DEVICE_H
 
-#include "utils/types.h"
+#include <cinttypes>
+
 #include "upnp/upnptypes.h"
 #include "upnp/upnprootdeviceinterface.h"
 
 namespace upnp
 {
-    
+
 class RootDevice : public IRootDevice
 {
 public:
     RootDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds);
     ~RootDevice();
-    
+
     virtual void initialize();
     virtual void destroy();
-    
+
     virtual std::string getUniqueDeviceName();
     virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response);
     virtual void notifyEvent(const std::string& serviceId, const xml::Document& event);
-    
+
 private:
     static int upnpCallback(Upnp_EventType eventType, void* event, void* cookie);
-    
+
     UpnpDevice_Handle   m_Device;
     std::string         m_Udn;
     std::string         m_DescriptionXml;

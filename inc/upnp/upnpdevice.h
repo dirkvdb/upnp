@@ -20,8 +20,8 @@
 #include <string>
 #include <map>
 #include <chrono>
+#include <cinttypes>
 
-#include "utils/types.h"
 #include "upnp/upnptypes.h"
 
 namespace upnp
@@ -48,7 +48,7 @@ class Device
 {
 public:
     bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
-    
+
     bool implementsService(ServiceType type) const { return m_Services.find(type) != m_Services.end(); }
 
     DeviceType      m_Type;
@@ -60,11 +60,11 @@ public:
     std::string     m_PresURL;
     std::string     m_Location;
     std::string     m_ContainerId;
-    
+
     std::chrono::system_clock::time_point   m_TimeoutTime;
-    
+
     std::map<ServiceType, Service>    m_Services;
-    
+
     static const std::string deviceTypeToString(DeviceType type)
     {
         switch (type)
@@ -77,12 +77,12 @@ public:
                 throw Exception("Invalid device type encountered");
         }
     }
-    
+
     static const DeviceType stringToDeviceType(const std::string& type)
     {
         if (type == MediaServerDeviceTypeUrn)   { return DeviceType::MediaServer; }
         if (type == MediaRendererDeviceTypeUrn) { return DeviceType::MediaRenderer; }
-        
+
         return DeviceType::Unknown;
     }
 };

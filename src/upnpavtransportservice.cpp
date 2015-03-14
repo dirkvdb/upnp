@@ -48,12 +48,12 @@ xml::Document Service::getSubscriptionResponse()
     auto propertySet    = doc.createElement("e:propertyset");
     auto property       = doc.createElement("e:property");
     auto lastChange     = doc.createElement("LastChange");
-    
+
     propertySet.addAttribute("xmlns:e", ns);
-    
+
     auto event = doc.createElement("Event");
     event.addAttribute("xmlns", serviceTypeToUrnMetadataString(m_type));
-    
+
     for (auto& vars : m_variables)
     {
         auto instance = doc.createElement("InstanceID");
@@ -67,7 +67,7 @@ xml::Document Service::getSubscriptionResponse()
 
         event.appendChild(instance);
     }
-    
+
     auto lastChangeValue = doc.createNode(event.toString());
 
     lastChange.appendChild(lastChangeValue);
@@ -78,7 +78,7 @@ xml::Document Service::getSubscriptionResponse()
 #ifdef DEBUG_AVTRANSPORT
     log::debug(doc.toString());
 #endif
-    
+
     return doc;
 }
 
@@ -90,7 +90,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         ActionResponse response(action, ServiceType::AVTransport);
         auto req = doc.getFirstChild();
         uint32_t id = static_cast<uint32_t>(std::stoul(req.getChildNodeValue("InstanceID")));
-        
+
         switch (actionFromString(action))
         {
         case Action::SetAVTransportURI:
@@ -185,7 +185,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         //case Action::SetStateVariables:
         //    break;
-        
+
         // AVTransport:3
         case Action::GetSyncOffset:
             throwIfNoAVTransport3Support();
@@ -240,7 +240,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         default:
             throw InvalidActionException();
         }
-        
+
         return response;
     }
     catch (std::exception& e)
@@ -268,8 +268,8 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
         // these variable are not added to the LastChange variable
         return;
     }
-    
-    
+
+
     log::debug("Add change: {} {}", toString(var), value);
     m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
 }
@@ -285,7 +285,7 @@ xml::Document Service::getStateVariables(uint32_t id, const std::string& variabl
     {
         xml::Document doc;
         auto pairs = doc.createElement("stateVariableValuePairs");
-        
+
         std::map<std::string, std::string> vars;
         if (variableList == "*")
         {
@@ -298,7 +298,7 @@ xml::Document Service::getStateVariables(uint32_t id, const std::string& variabl
                 vars.insert(std::make_pair(var, getInstanceVariable(id, variableFromString(var)).getValue()));
             }
         }
-        
+
         for (auto iter = vars.begin(); iter != vars.end();)
         {
             if (iter->first == "LastChange" || iter->first.find("A_ARG_TYPE_") == 0)
@@ -306,14 +306,14 @@ xml::Document Service::getStateVariables(uint32_t id, const std::string& variabl
                 // lastchange and argtype variables are excluded
                 continue;
             }
-            
+
             auto var    = doc.createElement("stateVariable");
             auto value  = doc.createNode(iter->second);
             var.addAttribute("variableName", iter->first);
             var.appendChild(value);
             pairs.appendChild(var);
         }
-        
+
         return doc;
     }
     catch (Exception& e)

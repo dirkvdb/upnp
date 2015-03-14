@@ -56,19 +56,19 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
         m_Device = device;
         m_ConnectionMgr.setDevice(device);
         m_RenderingControl.setDevice(device);
-        
+
         if (m_Device->implementsService(ServiceType::AVTransport))
         {
             m_AVtransport = std::make_unique<AVTransport::Client>(m_Client);
             m_AVtransport->setDevice(device);
         }
-        
+
         // reset state related data
         m_ProtocolInfo = m_ConnectionMgr.getProtocolInfo();
         resetData();
-        
+
         activateEvents();
-        
+
         DeviceChanged(device);
     }
     catch (std::exception& e)
@@ -89,14 +89,14 @@ bool MediaRenderer::supportsPlayback(const std::shared_ptr<const upnp::Item>& it
         auto iter = std::find_if(m_ProtocolInfo.begin(), m_ProtocolInfo.end(), [res] (const ProtocolInfo& info) {
             return info.isCompatibleWith(res.getProtocolInfo());
         });
-        
+
         if (iter != m_ProtocolInfo.end())
         {
             suggestedResource = res;
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -205,7 +205,7 @@ uint32_t MediaRenderer::getCurrentTrackPosition()
         auto info = m_AVtransport->getPositionInfo(m_ConnInfo.connectionId);
         return parseDuration(info.relativeTime);
     }
-    
+
     return 0;
 }
 
@@ -216,14 +216,14 @@ MediaRenderer::PlaybackState MediaRenderer::getPlaybackState()
         throwOnUnknownConnectionId();
         return transportStateToPlaybackState(m_AVtransport->getTransportInfo(m_ConnInfo.connectionId).currentTransportState);
     }
-    
+
     return PlaybackState::Stopped;
 }
 
 std::string MediaRenderer::getCurrentTrackURI() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    
+
     auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackURI);
     return iter == m_AvTransportInfo.end() ? "" : iter->second;
 }
@@ -231,7 +231,7 @@ std::string MediaRenderer::getCurrentTrackURI() const
 uint32_t MediaRenderer::getCurrentTrackDuration() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    
+
     auto iter = m_AvTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
     return iter == m_AvTransportInfo.end() ? 0 : parseDuration(iter->second);
 }
@@ -246,9 +246,9 @@ ItemPtr MediaRenderer::getCurrentTrackInfo() const
         auto info = m_AVtransport->getMediaInfo(m_ConnInfo.connectionId);
         item = parseCurrentTrack(info.currentURIMetaData);
     }
-    
+
     return item;
-    
+
 }
 
 std::set<MediaRenderer::Action> MediaRenderer::getAvailableActions()
@@ -264,7 +264,7 @@ std::set<MediaRenderer::Action> MediaRenderer::getAvailableActions()
             actions.insert(transportActionToAction(action));
         }
     }
-    
+
     return actions;
 }
 
@@ -303,7 +303,7 @@ void MediaRenderer::activateEvents()
             m_AVtransport->LastChangeEvent.connect(std::bind(&MediaRenderer::onAVTransportLastChangeEvent, this, _1), this);
             m_AVtransport->subscribe();
         }
-        
+
         m_Active = true;
     }
 }
@@ -322,7 +322,7 @@ void MediaRenderer::deactivateEvents()
             // this can fail if the device disappeared
             log::warn(e.what());
         }
-    
+
         try
         {
             if (m_AVtransport)
@@ -336,7 +336,7 @@ void MediaRenderer::deactivateEvents()
             // this can fail if the device disappeared
             log::warn(e.what());
         }
-        
+
         m_Active = false;
     }
 }
@@ -349,7 +349,7 @@ void MediaRenderer::resetData()
 std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::string& actions) const
 {
     std::set<Action> availableActions;
-    
+
     auto actionsStrings = stringops::tokenize(actions, ",");
     std::for_each(actionsStrings.begin(), actionsStrings.end(), [&] (const std::string& action) {
         try
@@ -361,7 +361,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
             log::warn(e.what());
         }
     });
-    
+
     return availableActions;
 }
 
@@ -399,7 +399,7 @@ MediaRenderer::PlaybackState MediaRenderer::parsePlaybackState(const std::string
 void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    
+
     auto iter = vars.find(RenderingControl::Variable::Volume);
     if (iter != vars.end())
     {
@@ -410,7 +410,7 @@ void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingCo
 void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    
+
     for (auto& pair : vars)
     {
         m_AvTransportInfo[pair.first] = pair.second;
@@ -421,7 +421,7 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
     {
         AvailableActionsChanged(parseAvailableActions(iter->second));
     }
-    
+
     iter = vars.find(AVTransport::Variable::CurrentTrackMetaData);
     if (iter != vars.end())
     {
@@ -436,7 +436,7 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
             // But the track uri changed, notify with empty info
             CurrentTrackChanged(ItemPtr());
         }
-    }    
+    }
 
     iter = vars.find(AVTransport::Variable::CurrentTrackDuration);
     if (iter != vars.end())
@@ -460,11 +460,11 @@ uint32_t MediaRenderer::parseDuration(const std::string& duration) const
     {
         seconds += std::stoul(split[0]) * 3600;
         seconds += std::stoul(split[1]) * 60;
-        
+
         auto secondsSplit = stringops::tokenize(split[2], ".");
         seconds += std::stoul(secondsSplit.front());
     }
-    
+
     return seconds;
 }
 
@@ -483,7 +483,7 @@ std::string MediaRenderer::positionToString(uint32_t position) const
     {
         ss << hours << ':';
     }
-    
+
     ss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2) << std::setfill('0')  << seconds;
     return ss.str();
 }
@@ -515,7 +515,7 @@ MediaRenderer::PlaybackState MediaRenderer::transportStateToPlaybackState(AVTran
         case AVTransport::State::Transitioning:     return PlaybackState::Transitioning;
         case AVTransport::State::Stopped:
         case AVTransport::State::NoMediaPresent:    return PlaybackState::Stopped;
-        
+
         default: throw Exception("Invalid transport state");
     }
 }

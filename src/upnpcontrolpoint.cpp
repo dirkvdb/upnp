@@ -73,9 +73,9 @@ void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
     {
         throw Exception("The requested item is not supported by the renderer");
     }
-    
+
     stopPlaybackIfNecessary();
-    
+
     prepareConnection(server, resource);
     server.setTransportItem(resource);
     m_Renderer.setTransportItem(resource);
@@ -96,7 +96,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vec
 
     // create a playlist from the provided items
     throwOnMissingWebserver();
-    
+
     std::stringstream playlist;
     for (auto& item : items)
     {
@@ -119,7 +119,7 @@ void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
     {
         throw Exception("The requested item is not supported by the renderer");
     }
-    
+
     m_Renderer.setNextTransportItem(resource);
 }
 
@@ -137,7 +137,7 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
 
     // create a playlist from the provided items
     throwOnMissingWebserver();
-    
+
     std::stringstream playlist;
     for (auto& item : items)
     {
@@ -175,10 +175,10 @@ void ControlPoint::throwOnMissingWebserver()
 std::string ControlPoint::generatePlaylistFilename()
 {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    
+
     std::stringstream playlistFilename;
     playlistFilename << "playlist-" << now.time_since_epoch().count() << ".m3u";
-    
+
     return playlistFilename.str();
 }
 
@@ -187,10 +187,10 @@ std::shared_ptr<Item> ControlPoint::createPlaylistItem(const std::string& filena
     Resource res;
     res.setUrl(m_pWebServer->getWebRootUrl() + "playlists/" + filename);
     res.setProtocolInfo(ProtocolInfo("http-get:*:audio/m3u:*"));
-    
+
     auto playlistItem = std::make_shared<Item>();
     playlistItem->addResource(res);
-    
+
     return playlistItem;
 }
 
@@ -202,7 +202,7 @@ void ControlPoint::prepareConnection(MediaServer& server, Resource& resource)
         {
             server.prepareConnection(resource, m_Renderer.getPeerConnectionManager(), ConnectionManager::UnknownConnectionId);
         }
-        
+
         m_Renderer.prepareConnection(resource, server.getPeerConnectionManager(), server.getConnectionId());
     }
     else

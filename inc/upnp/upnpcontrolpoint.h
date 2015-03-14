@@ -35,47 +35,47 @@ class Item;
 class WebServer;
 class MediaServer;
 class ProtocolInfo;
-    
+
 class ControlPoint
 {
 public:
     ControlPoint(Client& client);
     ControlPoint(const ControlPoint&) = delete;
-    
+
     ControlPoint& operator=(const ControlPoint&) = delete;
-    
+
     void setWebserver(WebServer& webServer);
     void setRendererDevice(const std::shared_ptr<Device>& dev);
     MediaRenderer& getActiveRenderer();
-    
+
     void activate();
     void deactivate();
-    
+
     // these items are immediately set as the current item, send play when stopped to
     // actually start playback
     void playItem(MediaServer& server, const ItemPtr& item);
     // A playlist file is created from the items and is sent to the renderer as one item
     void playItemsAsPlaylist(MediaServer& server, const std::vector<ItemPtr>& items);
-    
+
     // these items are queued for playback after the current item, calling queue multiple times
     // will overwrite the previous queue action, you have to wait until the currently queued item
     // has been proccessed before calling queue again
     void queueItem(MediaServer& server, const ItemPtr& item);
     // A playlist file is created from the items and is queued on the renderer as one item
     void queueItemsAsPlaylist(MediaServer& server, const std::vector<ItemPtr>& items);
-    
+
 private:
     void prepareConnection(MediaServer& server, Resource& resource);
-    
+
     void throwOnMissingWebserver();
     void stopPlaybackIfNecessary();
     std::string generatePlaylistFilename();
     ItemPtr createPlaylistItem(const std::string& filename);
 
-    MediaRenderer                       m_Renderer;
-    WebServer*                          m_pWebServer;
+    MediaRenderer m_Renderer;
+    WebServer*    m_pWebServer;
 };
-    
+
 }
 
 #endif

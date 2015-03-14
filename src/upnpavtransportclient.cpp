@@ -33,7 +33,7 @@ namespace AVTransport
 {
 
 static const int32_t g_subscriptionTimeout = 1801;
-    
+
 Client::Client(IClient& client)
 : ServiceClientBase(client)
 {
@@ -90,7 +90,7 @@ TransportInfo Client::getTransportInfo(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
-    
+
     TransportInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
@@ -98,7 +98,7 @@ TransportInfo Client::getTransportInfo(int32_t connectionId)
         else if (elem.getName() == "CurrentTransportStatus")  info.currentTransportStatus   = statusFromString(elem.getValue());
         else if (elem.getName() == "CurrentSpeed")            info.currentSpeed             = elem.getValue();
     }
-    
+
     return info;
 }
 
@@ -106,7 +106,7 @@ PositionInfo Client::getPositionInfo(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
-    
+
     PositionInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
@@ -119,7 +119,7 @@ PositionInfo Client::getPositionInfo(int32_t connectionId)
         else if (elem.getName() == "RelCount")       info.relativeCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
         else if (elem.getName() == "AbsCount")       info.absoluteCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
     }
-    
+
     return info;
 }
 
@@ -127,7 +127,7 @@ MediaInfo Client::getMediaInfo(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
-    
+
     MediaInfo info;
     for (xml::Element elem : response.getChildNodes())
     {
@@ -141,15 +141,15 @@ MediaInfo Client::getMediaInfo(int32_t connectionId)
         else if (elem.getName() == "RecordMedium")          info.recordMedium       = elem.getValue();
         else if (elem.getName() == "WriteStatus")           info.writeStatus        = elem.getValue();
     }
-    
+
     return info;
 }
-    
+
 std::set<Action> Client::getCurrentTransportActions(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} });
     xml::Element response = doc.getFirstChild();
-    
+
     std::set<Action> actions;
     for (xml::Element elem : response.getChildNodes())
     {
@@ -169,7 +169,7 @@ std::set<Action> Client::getCurrentTransportActions(int32_t connectionId)
 
         }
     }
-    
+
     return actions;
 }
 
@@ -206,15 +206,15 @@ Variable Client::variableFromString(const std::string& var) const
     return AVTransport::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var) const 
+std::string Client::variableToString(Variable var) const
 {
     return AVTransport::toString(var);
 }
-    
+
 void Client::handleUPnPResult(int errorCode)
 {
     if (errorCode == UPNP_E_SUCCESS) return;
-    
+
     switch (errorCode)
     {
         case 701: throw Exception(errorCode, "Playback transition not supported at this moment");
@@ -235,7 +235,7 @@ void Client::handleUPnPResult(int errorCode)
         case 716: throw Exception(errorCode, "Resource not found");
         case 717: throw Exception(errorCode, "Play speed not supported");
         case 718: throw Exception(errorCode, "Invalid instance id");
-        
+
         default: upnp::handleUPnPResult(errorCode);
     }
 }
