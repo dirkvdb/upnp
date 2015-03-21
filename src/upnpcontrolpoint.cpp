@@ -112,7 +112,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vec
     playItem(server, createPlaylistItem(filename));
 }
 
-void ControlPoint::queueItem(MediaServer& server, const ItemPtr& item)
+void ControlPoint::queueItem(MediaServer& /*server*/, const ItemPtr& item)
 {
     Resource resource;
     if (!m_Renderer.supportsPlayback(item, resource))

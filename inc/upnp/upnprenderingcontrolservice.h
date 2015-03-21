@@ -32,28 +32,28 @@ class IRenderingControl
 {
 public:
     virtual ~IRenderingControl() {}
-    
+
     // Required
     virtual void selectPreset(uint32_t instanceId, const std::string& name) = 0;
-    
+
     // Optional
-    virtual void setBrightness(uint32_t instanceId, uint16_t)                                                    { throw InvalidActionException(); }
-    virtual void setContrast(uint32_t instanceId, uint16_t)                                                      { throw InvalidActionException(); }
-    virtual void setSharpness(uint32_t instanceId, uint16_t)                                                     { throw InvalidActionException(); }
-    virtual void setRedVideoGain(uint32_t instanceId, uint16_t)                                                  { throw InvalidActionException(); }
-    virtual void setGreenVideoGain(uint32_t instanceId, uint16_t)                                                { throw InvalidActionException(); }
-    virtual void setBlueVideoGain(uint32_t instanceId, uint16_t)                                                 { throw InvalidActionException(); }
-    virtual void setRedVideoBlackLevel(uint32_t instanceId, uint16_t)                                            { throw InvalidActionException(); }
-    virtual void setGreenVideoBlackLevel(uint32_t instanceId, uint16_t)                                          { throw InvalidActionException(); }
-    virtual void setBlueVideoBlackLevel(uint32_t instanceId, uint16_t)                                           { throw InvalidActionException(); }
-    virtual void setColorTemperature(uint32_t instanceId, uint16_t)                                              { throw InvalidActionException(); }
-    virtual void setHorizontalKeystone(uint32_t instanceId, int16_t)                                             { throw InvalidActionException(); }
-    virtual void setVerticalKeystone(uint32_t instanceId, int16_t)                                               { throw InvalidActionException(); }
-    virtual void setMute(uint32_t instanceId, RenderingControl::Channel channel, bool enabled)                   { throw InvalidActionException(); }
-    virtual void setVolume(uint32_t instanceId, RenderingControl::Channel channel, uint16_t value)               { throw InvalidActionException(); }
-    virtual int16_t setVolumeDB(uint32_t instanceId, RenderingControl::Channel channel, int16_t value)           { throw InvalidActionException(); }
-    virtual std::pair<int16_t, int16_t> getVolumeDBRange(uint32_t instanceId, RenderingControl::Channel channel) { throw InvalidActionException(); }
-    virtual void setLoudness(uint32_t instanceId, RenderingControl::Channel channel, bool enabled)               { throw InvalidActionException(); }
+    virtual void setBrightness(uint32_t /*instanceId*/, uint16_t)                                                           { throw InvalidActionException(); }
+    virtual void setContrast(uint32_t /*instanceId*/, uint16_t)                                                             { throw InvalidActionException(); }
+    virtual void setSharpness(uint32_t /*instanceId*/, uint16_t)                                                            { throw InvalidActionException(); }
+    virtual void setRedVideoGain(uint32_t /*instanceId*/, uint16_t)                                                         { throw InvalidActionException(); }
+    virtual void setGreenVideoGain(uint32_t /*instanceId*/, uint16_t)                                                       { throw InvalidActionException(); }
+    virtual void setBlueVideoGain(uint32_t /*instanceId*/, uint16_t)                                                        { throw InvalidActionException(); }
+    virtual void setRedVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                   { throw InvalidActionException(); }
+    virtual void setGreenVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                 { throw InvalidActionException(); }
+    virtual void setBlueVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                  { throw InvalidActionException(); }
+    virtual void setColorTemperature(uint32_t /*instanceId*/, uint16_t)                                                     { throw InvalidActionException(); }
+    virtual void setHorizontalKeystone(uint32_t /*instanceId*/, int16_t)                                                    { throw InvalidActionException(); }
+    virtual void setVerticalKeystone(uint32_t /*instanceId*/, int16_t)                                                      { throw InvalidActionException(); }
+    virtual void setMute(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)                  { throw InvalidActionException(); }
+    virtual void setVolume(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, uint16_t /*value*/)              { throw InvalidActionException(); }
+    virtual int16_t setVolumeDB(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, int16_t /*value*/)          { throw InvalidActionException(); }
+    virtual std::pair<int16_t, int16_t> getVolumeDBRange(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/)    { throw InvalidActionException(); }
+    virtual void setLoudness(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)              { throw InvalidActionException(); }
 };
 
 namespace RenderingControl
@@ -69,12 +69,12 @@ public:
     void setLoudness(uint32_t instanceId, Channel channel, bool enabled);
     void setVolume(uint32_t instanceId, Channel channel, uint16_t volume);
     void setVolumeDB(uint32_t instanceId, Channel channel, int16_t volume);
-    
+
     virtual xml::Document getSubscriptionResponse();
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
-    
+
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
-    
+
 protected:
     virtual std::string variableToString(Variable type) const override;
 
@@ -83,7 +83,7 @@ private:
 
     IRenderingControl&                                       m_RenderingControl;
     LastChangeVariable                                       m_LastChange;
-    
+
     // variables which are mapped per channel
     std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Mute;
     std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Loudness;

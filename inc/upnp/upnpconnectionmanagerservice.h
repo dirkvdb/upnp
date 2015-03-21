@@ -40,7 +40,7 @@ class IConnectionManager3
 {
 public:
     virtual ~IConnectionManager3() {}
-    virtual xml::Document getRendererItemInfo(const std::vector<std::string>& itemInfoFilter, const xml::Document& itemMetadataList) { throw InvalidActionException(); };
+    virtual xml::Document getRendererItemInfo(const std::vector<std::string>& /*itemInfoFilter*/, const xml::Document& /*itemMetadataList*/) { throw InvalidActionException(); };
     virtual xml::Document getFeatureList() = 0;
 };
 
@@ -51,7 +51,7 @@ class Service : public DeviceService<Variable>
 {
 public:
     Service(IRootDevice& dev, IConnectionManager& cm);
-    
+
     xml::Document getSubscriptionResponse() override;
     ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 

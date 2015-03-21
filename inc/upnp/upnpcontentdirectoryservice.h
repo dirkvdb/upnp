@@ -36,15 +36,15 @@ class IContentDirectory
 {
 public:
     virtual ~IContentDirectory() {}
-    
+
     // Required
     virtual std::vector<Property> GetSearchCapabilities() = 0;
     virtual std::vector<Property> GetSortCapabilities() = 0;
     virtual std::string GetSystemUpdateId() = 0;
     virtual ActionResult Browse(const std::string& id, BrowseFlag flag, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<SortProperty>& sortCriteria) = 0;
-    
+
     // Optional
-    virtual ActionResult Search(const std::string& id, const std::string& criteria, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<SortProperty>& sortCriteria)        { throw InvalidActionException(); }
+    virtual ActionResult Search(const std::string& /*id*/, const std::string& /*criteria*/, const std::vector<Property>& /*filter*/, uint32_t /*startIndex*/, uint32_t /*count*/, const std::vector<SortProperty>& /*sortCriteria*/)        { throw InvalidActionException(); }
     virtual void CreateObject()          { throw InvalidActionException(); }
     virtual void DestroyObject()         { throw InvalidActionException(); }
     virtual void UpdateObject()          { throw InvalidActionException(); }
@@ -58,13 +58,13 @@ class Service : public DeviceService<Variable>
 {
 public:
     Service(IRootDevice& dev, IContentDirectory& cd);
-        
+
     xml::Document getSubscriptionResponse() override;
     ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
 protected:
     std::string variableToString(Variable type) const override;
-    
+
 private:
     IContentDirectory&          m_ContentDirectory;
 };

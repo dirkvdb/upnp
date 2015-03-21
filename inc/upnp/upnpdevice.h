@@ -78,7 +78,7 @@ public:
         }
     }
 
-    static const DeviceType stringToDeviceType(const std::string& type)
+    static DeviceType stringToDeviceType(const std::string& type)
     {
         if (type == MediaServerDeviceTypeUrn)   { return DeviceType::MediaServer; }
         if (type == MediaRendererDeviceTypeUrn) { return DeviceType::MediaRenderer; }

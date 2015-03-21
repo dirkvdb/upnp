@@ -209,7 +209,7 @@ protected:
 
     virtual ServiceType getType() = 0;
     virtual int32_t getSubscriptionTimeout() = 0;
-    virtual void handleStateVariableEvent(VariableType changedVariable, const std::map<VariableType, std::string>& variables) {}
+    virtual void handleStateVariableEvent(VariableType /*changedVariable*/, const std::map<VariableType, std::string>& /*variables*/) {}
     virtual void handleUPnPResult(int errorCode) = 0;
 
     std::vector<StateVariable>              m_StateVariables;
