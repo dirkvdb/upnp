@@ -76,7 +76,7 @@ std::string Node::getName() const
     {
         throw Exception("Failed to get node name");
     }
-    
+
     return pStr;
 }
 
@@ -87,7 +87,7 @@ std::string Node::getValue() const
     {
         return "";
     }
-    
+
     return pStr;
 }
 
@@ -103,7 +103,7 @@ Node Node::getFirstChild() const
     {
         throw Exception("Failed to get first child node from node: {}", getName());
     }
-    
+
     return node;
 }
 
@@ -114,7 +114,7 @@ NodeList Node::getChildNodes() const
     {
         throw Exception("Failed to get childNodes from node: {}", getName());
     }
-    
+
     return children;
 }
 
@@ -127,7 +127,7 @@ Node Node::getChildNode(const std::string& tagName) const
             return node;
         }
     }
-    
+
     throw Exception("No child node found with name {}", tagName);
 }
 
@@ -164,7 +164,7 @@ std::string Node::toString() const
     {
         throw Exception("Failed to convert node to string");
     }
-    
+
     return str;
 }
 
@@ -188,7 +188,7 @@ Document::Document(const std::string& xml)
     {
         throw Exception("Invalid xml document string received");
     }
-    
+
     setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
 }
 
@@ -200,7 +200,8 @@ Document::Document(IXML_Document* pDoc, OwnershipType ownership)
 }
 
 Document::Document(const Document& doc)
-: m_pDoc(nullptr)
+: Node()
+, m_pDoc(nullptr)
 , m_Ownership(TakeOwnership)
 {
     // this copy constructor is only meant to be used in unit tests where the use of gmock requries copy constructors
@@ -212,12 +213,12 @@ Document::Document(const Document& doc)
         //setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
         //m_Ownership = NoOwnership;
         //return;
-    
+
         m_pDoc = ixmlDocument_createDocument();
         setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
-        
+
         //log::warn("Document copy constructor is implmented for gmock compatibility, should not get executed in code for performance reasons %", m_pDoc);
-        
+
         try
         {
             for (auto& node : doc.getChildNodes())
@@ -227,7 +228,7 @@ Document::Document(const Document& doc)
                 {
                     throw Exception("Failed to clone xml document");
                 }
-                
+
                 ixmlNode_appendChild(reinterpret_cast<IXML_Node*>(static_cast<IXML_Document*>(m_pDoc)), pNode);
             }
         }
@@ -265,7 +266,7 @@ Document& Document::operator= (Document&& other)
     other.m_Ownership 	= NoOwnership;
 
     setNodePointer(reinterpret_cast<IXML_Node*>(m_pDoc));
-    
+
     return *this;
 }
 
@@ -318,7 +319,7 @@ Node Document::createNode(const std::string& value)
     {
         throw Exception("Failed to create document node: {}", value);
     }
-    
+
     return node;
 }
 
@@ -329,7 +330,7 @@ Element Document::createElement(const std::string& name)
     {
         throw Exception("Failed to create document element: {}", name);
     }
-    
+
     return elem;
 }
 
@@ -340,7 +341,7 @@ Element Document::createElementNamespaced(const std::string& nameSpace, const st
     {
         throw Exception("Failed to create namespaced document element: {}", name);
     }
-    
+
     return elem;
 }
 
@@ -387,7 +388,7 @@ Node NodeList::getNode(uint64_t index) const
     {
         throw Exception("Failed to find node in nodelist on index: {}", index);
     }
-    
+
     return node;
 }
 
@@ -403,7 +404,7 @@ NamedNodeMap Node::getAttributes() const
     {
         throw Exception("Failed to get attribute map from node: {}", getName());
     }
-    
+
     return nodeMap;
 }
 
@@ -434,7 +435,7 @@ Node NamedNodeMap::getNode(uint64_t index) const
     {
         throw Exception("Failed to get node from named node map");
     }
-    
+
     return node;
 }
 
@@ -445,7 +446,7 @@ Node NamedNodeMap::getNode(const std::string &name) const
     {
         throw Exception("Failed to get node from named node map: {}", name);
     }
-    
+
     return node;
 }
 
@@ -530,7 +531,7 @@ std::string Element::getAttribute(const std::string& attr)
     {
         throw Exception("Failed to get attribute from element: {}", attr);
     }
-    
+
     return pAttr;
 }
 
@@ -545,7 +546,7 @@ void Element::addAttribute(const std::string& name, const std::string& value)
     auto doc = getOwnerDocument();
     auto attr = ixmlDocument_createAttribute(doc, name.c_str());
     ixmlNode_setNodeValue(reinterpret_cast<IXML_Node*>(attr), value.c_str());
-    
+
     IXML_Attr* pAttr;
     ixmlElement_setAttributeNode(m_pElement, attr, &pAttr);
 }
@@ -557,7 +558,7 @@ NodeList Element::getElementsByTagName(const std::string& tagName)
     {
         throw Exception("Failed to get element subelements with tag: {}", tagName);
     }
-    
+
     return list;
 }
 
