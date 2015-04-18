@@ -1,0 +1,41 @@
+language: cpp
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - gcc
+  - clang
+
+env:
+  - BUILD_TYPE=Debug
+  - BUILD_TYPE=Release
+
+before_install:
+  - echo "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main" | sudo tee -a /etc/apt/sources.list
+  - echo "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main" | sudo tee -a /etc/apt/sources.list
+  - echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get -qq install build-essential
+  - if [ "$CXX" = "g++" ]; then sudo apt-get -qq --allow-unauthenticated install gcc-4.9 g++-4.9; export CXX="g++-4.9" CC="gcc-4.9"; fi
+  - if [ "$CXX" = "clang++" ]; then sudo apt-get -qq --allow-unauthenticated install clang-3.6; export CXX="clang++-3.6" CC="clang-3.6"; fi
+  - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
+  - tar xf libupnp-1.6.19.tar.bz2
+  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared --enable-ipv6 --disable-samples --disable-blocking-tcp-connections && make -j4 && sudo make install
+  - cd ..
+
+before_script:
+  - git clone -b develop --single-branch --recursive https://github.com/dirkvdb/utils.git ../utils
+
+script:
+  - git submodule update --init --recursive
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
+  - make -j4
+  - make -j4 check
+  - CTEST_OUTPUT_ON_FAILURE=1 make test
+
+after_failure:
+  - cat Testing/Temporary/LastTest.log
