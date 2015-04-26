@@ -32,6 +32,7 @@ FIND_LIBRARY(THREADUTIL_LIBRARY
 )
 
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
+OPTION(ENABLE_TESTS "build unit tests" ON)
 
 IF (STANDALONE)
     ADD_SUBDIRECTORY(../utils utils)
@@ -106,4 +107,6 @@ ADD_LIBRARY(upnpframework STATIC
 
 TARGET_LINK_LIBRARIES(upnpframework ${UPNP_LIBRARY} ${THREADUTIL_LIBRARY} ${IXML_LIBRARY} utils)
 
-ADD_SUBDIRECTORY(test)
+IF (ENABLE_TESTS)
+    ADD_SUBDIRECTORY(test)
+ENDIF ()
