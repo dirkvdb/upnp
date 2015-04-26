@@ -34,7 +34,6 @@ script:
   - git submodule update --init --recursive
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
   - make -j4
-  - make -j4 check
   - CTEST_OUTPUT_ON_FAILURE=1 make test
 
 after_failure:

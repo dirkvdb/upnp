@@ -36,10 +36,9 @@ build:
                 cd "${BUILD_DIR}"
                 cmake -DSTANDALONE=1 -DCMAKE_BUILD_TYPE=Release "${SRC_DIR}"
                 make -j8
-                make check -j8
 
         - script:
             name: Run Tests
             code: |
                 cd "${BUILD_DIR}"
-                make test
+                CTEST_OUTPUT_ON_FAILURE=1 make test
