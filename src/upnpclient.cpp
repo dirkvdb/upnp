@@ -23,7 +23,7 @@
 
 #include <stdexcept>
 #include <algorithm>
-#include <cstring>
+#include <string.h>
 
 using namespace utils;
 
