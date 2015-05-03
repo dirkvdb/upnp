@@ -147,12 +147,11 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
 void Client::unsubscribeFromService(const std::string& subscriptionId) const
 {
     Upnp_SID id;
-    if ((subscriptionId.size() + 1) >= sizeof(id))
+    if (strlcpy(id, subscriptionId.c_str(), sizeof(id)) >= sizeof(id))
     {
         throw Exception("Invalid subscription Id");
     }
 
-    strcpy(id, subscriptionId.c_str());
     int rc = UpnpUnSubscribe(m_client, id);
     if (rc != UPNP_E_SUCCESS)
     {
