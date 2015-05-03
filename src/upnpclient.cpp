@@ -23,7 +23,7 @@
 
 #include <stdexcept>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 
 using namespace utils;
 
@@ -147,7 +147,11 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
 void Client::unsubscribeFromService(const std::string& subscriptionId) const
 {
     Upnp_SID id;
-    if (strlcpy(id, subscriptionId.c_str(), sizeof(id)) >= sizeof(id))
+    if (sizeof(id) >= (subscriptionId.size() + 1))
+    {
+        strcpy(id, subscriptionId.c_str());
+    }
+    else
     {
         throw Exception("Invalid subscription Id");
     }
