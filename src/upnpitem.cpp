@@ -44,7 +44,7 @@ const std::string& Resource::getMetaData(const std::string& metaKey) const
     {
         return iter->second;
     }
-    
+
     return emptyString;
 }
 
@@ -139,9 +139,9 @@ void Resource::setBitsPerSample(uint32_t bitsPerSample)
 }
 
 Item::Item(const std::string& id, const std::string& title)
-: m_ObjectId(id)
-, m_Restricted(true)
-, m_ChildCount(0)
+: m_objectId(id)
+, m_restricted(true)
+, m_childCount(0)
 {
     setTitle(title);
 }
@@ -152,41 +152,41 @@ Item::~Item()
 
 Item& Item::operator= (const Item& other)
 {
-    m_ObjectId      = other.m_ObjectId;
-    m_ParentId      = other.m_ParentId;
-    m_MetaData      = other.m_MetaData;
-    m_Resources     = other.m_Resources;
-    
-    m_ChildCount    = other.m_ChildCount;    
+    m_objectId      = other.m_objectId;
+    m_parentId      = other.m_parentId;
+    m_metaData      = other.m_metaData;
+    m_resources     = other.m_resources;
+
+    m_childCount    = other.m_childCount;
 
     return *this;
 }
 
 Item& Item::operator= (Item&& other)
 {
-    m_ObjectId      = std::move(other.m_ObjectId);
-    m_ParentId      = std::move(other.m_ParentId);
-    m_MetaData      = std::move(other.m_MetaData);
-    m_Resources     = std::move(other.m_Resources);
-    
-    m_ChildCount    = other.m_ChildCount;
-    
+    m_objectId      = std::move(other.m_objectId);
+    m_parentId      = std::move(other.m_parentId);
+    m_metaData      = std::move(other.m_metaData);
+    m_resources     = std::move(other.m_resources);
+
+    m_childCount    = other.m_childCount;
+
     return *this;
 }
 
 const std::string& Item::getObjectId() const
 {
-    return m_ObjectId;
+    return m_objectId;
 }
 
 const std::string& Item::getParentId() const
 {
-    return m_ParentId;
+    return m_parentId;
 }
 
 const std::string& Item::getRefId() const
 {
-    return m_RefId;
+    return m_refId;
 }
 
 const std::string& Item::getTitle() const
@@ -196,13 +196,13 @@ const std::string& Item::getTitle() const
 
 bool Item::restricted() const
 {
-    return m_Restricted;
+    return m_restricted;
 }
 
 bool Item::isContainer() const
 {
-    auto iter = m_MetaData.find(Property::Class);
-    if (iter == m_MetaData.end())
+    auto iter = m_metaData.find(Property::Class);
+    if (iter == m_metaData.end())
     {
         return false;
     }
@@ -212,33 +212,33 @@ bool Item::isContainer() const
 
 std::string Item::getAlbumArtUri(dlna::ProfileId profile) const
 {
-    auto iter = m_AlbumArtUris.find(profile);
-    return (iter == m_AlbumArtUris.end()) ? "" : iter->second;
+    auto iter = m_albumArtUris.find(profile);
+    return (iter == m_albumArtUris.end()) ? "" : iter->second;
 }
 
 const std::vector<Resource>& Item::getResources() const
 {
-    return m_Resources;
+    return m_resources;
 }
 
 const std::map<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
 {
-    return m_AlbumArtUris;
+    return m_albumArtUris;
 }
 
 uint32_t Item::getChildCount() const
 {
-    return m_ChildCount;
+    return m_childCount;
 }
 
 Class Item::getClass() const
 {
-    auto iter = m_MetaData.find(Property::Class);
-    if (iter == m_MetaData.end())
+    auto iter = m_metaData.find(Property::Class);
+    if (iter == m_metaData.end())
     {
         return Class::Unknown;
     }
-    
+
     const std::string& upnpClass = iter->second;
     if (0 == upnpClass.find("object.item.audioItem"))
     {
@@ -276,88 +276,88 @@ Class Item::getClass() const
     {
         return Class::Container;
     }
-    
+
     return Class::Unknown;
 }
 
 void Item::setClass(Class c)
 {
-    m_MetaData.emplace(Property::Class, toString(c));
+    m_metaData.emplace(Property::Class, toString(c));
 }
 
 void Item::setClass(const std::string& className)
 {
-    m_MetaData.emplace(Property::Class, className);
+    m_metaData.emplace(Property::Class, className);
 }
 
 std::string Item::getClassString() const
 {
-    auto iter = m_MetaData.find(Property::Class);
-    if (iter == m_MetaData.end())
+    auto iter = m_metaData.find(Property::Class);
+    if (iter == m_metaData.end())
     {
         return "Unknown";
     }
-    
+
     return iter->second;
 }
 
 void Item::setObjectId(const std::string& id)
 {
-    m_ObjectId = id;
+    m_objectId = id;
 }
 
 void Item::setParentId(const std::string& id)
 {
-    m_ParentId = id;
+    m_parentId = id;
 }
 
 void Item::setRefId(const std::string& id)
 {
-    m_RefId = id;
+    m_refId = id;
 }
 
 void Item::setTitle(const std::string& title)
 {
-    m_MetaData[Property::Title] = title;
+    m_metaData[Property::Title] = title;
 }
 
 void Item::setChildCount(uint32_t count)
 {
-    m_ChildCount = count;
+    m_childCount = count;
 }
 
 void Item::setAlbumArt(dlna::ProfileId profile, const std::string& uri)
 {
-    m_AlbumArtUris[profile] = uri;
+    m_albumArtUris[profile] = uri;
 }
 
 void Item::addMetaData(Property prop, const std::string& value)
 {
     if (!value.empty())
     {
-        m_MetaData[prop] = value;
+        m_metaData[prop] = value;
     }
 }
 
 void Item::addResource(const Resource& resource)
 {
-    m_Resources.push_back(resource);
+    m_resources.push_back(resource);
 }
 
 const std::string& Item::getMetaData(Property prop) const
 {
-    auto iter = m_MetaData.find(prop);
-    if (iter != m_MetaData.end())
+    auto iter = m_metaData.find(prop);
+    if (iter != m_metaData.end())
     {
         return iter->second;
     }
-    
+
     return emptyString;
 }
 
 std::map<Property, std::string> Item::getMetaData() const
 {
-    return m_MetaData;
+    return m_metaData;
 }
 
 }

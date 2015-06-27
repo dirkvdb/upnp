@@ -21,27 +21,27 @@
 
 namespace upnp
 {
-    
+
 class ProtocolInfo
 {
 public:
     ProtocolInfo();
     ProtocolInfo(const std::string& protocolString);
-    
+
     std::string getProtocol() const;
     std::string getNetwork() const;
     std::string getContentFormat() const;
     std::string getAdditionalInfo() const;
-    
+
     bool isCompatibleWith(const ProtocolInfo& info) const;
-    
+
     std::string toString() const;
-    
+
 private:
-    std::string m_Protocol;
-    std::string m_Network;
-    std::string m_ContentFormat;
-    std::string m_AdditionalInfo;
+    std::string m_protocol;
+    std::string m_network;
+    std::string m_contentFormat;
+    std::string m_additionalInfo;
 };
 
 }

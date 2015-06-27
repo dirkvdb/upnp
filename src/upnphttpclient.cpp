@@ -30,7 +30,7 @@ namespace upnp
 {
 
 HttpClient::HttpClient(int32_t timeout)
-: m_Timeout(timeout)
+: m_timeout(timeout)
 {
 }
 
@@ -38,10 +38,10 @@ size_t HttpClient::getContentLength(const std::string& url)
 {
 	int32_t httpStatus = 0;
     int contentLength = 0;
-	
-    void* pHandle = open(url, contentLength, httpStatus);    
+
+    void* pHandle = open(url, contentLength, httpStatus);
     UpnpCloseHttpGet(pHandle);
-    
+
     throwOnBadHttpStatus(url, httpStatus);
     return contentLength;
 }
@@ -51,14 +51,14 @@ std::string HttpClient::getText(const std::string& url)
     std::string data;
     int32_t httpStatus = 0;
     int contentLength = 0;
-	
+
     void* pHandle = open(url, contentLength, httpStatus);
     data.resize(contentLength);
     read(pHandle, reinterpret_cast<uint8_t*>(&data.front()), contentLength);
     assert(data[data.size()] == '\0');
-    
+
     UpnpCloseHttpGet(pHandle);
-    
+
     throwOnBadHttpStatus(url, httpStatus);
     return data;
 }
@@ -66,16 +66,16 @@ std::string HttpClient::getText(const std::string& url)
 std::vector<uint8_t> HttpClient::getData(const std::string& url)
 {
     std::vector<uint8_t> data;
-    
+
     int32_t httpStatus = 0;
     int contentLength = 0;
-    
+
     void* pHandle = open(url, contentLength, httpStatus);
 
 	data.resize(contentLength);
     read(pHandle, data.data(), contentLength);
     UpnpCloseHttpGet(pHandle);
-    
+
     throwOnBadHttpStatus(url, httpStatus);
     return data;
 }
@@ -83,11 +83,11 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url)
 std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset, uint64_t size)
 {
     std::vector<uint8_t> data;
-    
+
     int32_t httpStatus = 0;
     int contentLength = 0;
     void* pHandle = nullptr;
-    
+
     try
     {
         pHandle = open(url, contentLength, httpStatus, offset, size);
@@ -101,9 +101,9 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset
         UpnpCloseHttpGet(pHandle);
         throw Exception("Failed to read http data from url: {} ({})", url, e.what());
     }
-    
+
     throwOnBadHttpStatus(url, httpStatus);
-    
+
     return data;
 }
 
@@ -112,7 +112,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData)
     int32_t httpStatus = 0;
     int contentLength = 0;
     void* pHandle = nullptr;
-    
+
     try
     {
         pHandle = open(url, contentLength, httpStatus);
@@ -124,7 +124,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData)
         UpnpCloseHttpGet(pHandle);
         throw Exception("Failed to read http data from url: {} ({})", url, e.what());
     }
-    
+
     throwOnBadHttpStatus(url, httpStatus);
 }
 
@@ -133,7 +133,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData, uint64_t offset
     int32_t httpStatus = 0;
     int contentLength = 0;
     void* pHandle = nullptr;
-    
+
     try
     {
         pHandle = open(url, contentLength, httpStatus, offset, size);
@@ -145,7 +145,7 @@ void HttpClient::getData(const std::string& url, uint8_t* pData, uint64_t offset
         UpnpCloseHttpGet(pHandle);
         throw Exception("Failed to read http data from url: {} ({})", url, e.what());
     }
-    
+
     throwOnBadHttpStatus(url, httpStatus);
 }
 
@@ -154,7 +154,7 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
     void* pHandle       = nullptr;
     char* pContentType  = nullptr;
 
-    handleUPnPResult(UpnpOpenHttpGet(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, m_Timeout));
+    handleUPnPResult(UpnpOpenHttpGet(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, m_timeout));
     return pHandle;
 }
 
@@ -163,15 +163,15 @@ void* HttpClient::open(const std::string& url, int32_t& contentLength, int32_t& 
     void* pHandle       = nullptr;
     char* pContentType  = nullptr;
 
-    handleUPnPResult(UpnpOpenHttpGetEx(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size - 1), m_Timeout));
+    handleUPnPResult(UpnpOpenHttpGetEx(url.c_str(), &pHandle, &pContentType, &contentLength, &httpStatus, static_cast<int32_t>(offset), static_cast<int32_t>(offset + size - 1), m_timeout));
     return pHandle;
 }
 
 void HttpClient::read(void* pHandle, uint8_t* pData, size_t dataSize)
 {
     auto sizeCopy = dataSize;
-    handleUPnPResult(UpnpReadHttpGet(pHandle, reinterpret_cast<char*>(pData), &sizeCopy, m_Timeout));
-    
+    handleUPnPResult(UpnpReadHttpGet(pHandle, reinterpret_cast<char*>(pData), &sizeCopy, m_timeout));
+
     if (sizeCopy != dataSize)
     {
         throw Exception("Incorrect bytes read from ({} <-> {})", dataSize, sizeCopy);

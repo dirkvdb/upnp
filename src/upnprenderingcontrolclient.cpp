@@ -40,14 +40,14 @@ static const int32_t g_subscriptionTimeout = 1801;
 
 Client::Client(IClient& client)
 : ServiceClientBase(client)
-, m_MinVolume(0)
-, m_MaxVolume(100)
+, m_minVolume(0)
+, m_maxVolume(100)
 {
 }
 
 void Client::setVolume(int32_t connectionId, uint32_t value)
 {
-    numericops::clip(value, m_MinVolume, m_MaxVolume);
+    numericops::clip(value, m_minVolume, m_maxVolume);
     executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
                                        {"DesiredVolume", numericops::toString(value)} });
@@ -57,7 +57,7 @@ uint32_t Client::getVolume(int32_t connectionId)
 {
     xml::Document doc = executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
                                                            {"Channel", "Master"} });
-    
+
     xml::Element response = doc.getFirstChild();
     return stringops::toNumeric<uint32_t>(response.getChildNodeValue("CurrentVolume"));
 }
@@ -75,15 +75,15 @@ int32_t Client::getSubscriptionTimeout()
 void Client::parseServiceDescription(const std::string& descriptionUrl)
 {
     ServiceClientBase::parseServiceDescription(descriptionUrl);
-    
+
     for (auto& variable : m_StateVariables)
     {
         if (variable.name == variableToString(Variable::Volume))
         {
             if (variable.valueRange)
             {
-                m_MinVolume = variable.valueRange->minimumValue;
-                m_MaxVolume = variable.valueRange->maximumValue;
+                m_minVolume = variable.valueRange->minimumValue;
+                m_maxVolume = variable.valueRange->maximumValue;
             }
         }
     }
@@ -100,7 +100,7 @@ void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std
 void Client::handleUPnPResult(int errorCode)
 {
     if (errorCode == UPNP_E_SUCCESS) return;
-    
+
     switch (errorCode)
     {
         case 702: throw Exception(errorCode, "Invalid instance id");
@@ -123,7 +123,7 @@ Variable Client::variableFromString(const std::string& var) const
     return RenderingControl::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var) const 
+std::string Client::variableToString(Variable var) const
 {
     return RenderingControl::toString(var);
 }

@@ -34,47 +34,47 @@ ProtocolInfo::ProtocolInfo(const std::string& protocolString)
     {
         throw Exception("Invalid protocol definition: {}", protocolString);
     }
-    
-    m_Protocol          = items[0];
-    m_Network           = items[1];
-    m_ContentFormat     = items[2];
-    m_AdditionalInfo    = items[3];
+
+    m_protocol          = items[0];
+    m_network           = items[1];
+    m_contentFormat     = items[2];
+    m_additionalInfo    = items[3];
 }
 
 std::string ProtocolInfo::getProtocol() const
 {
-    return m_Protocol;
+    return m_protocol;
 }
 
 std::string ProtocolInfo::getNetwork() const
 {
-    return m_Network;
+    return m_network;
 }
 
 std::string ProtocolInfo::getContentFormat() const
 {
-    return m_ContentFormat;
+    return m_contentFormat;
 }
 
 std::string ProtocolInfo::getAdditionalInfo() const
 {
-    return m_AdditionalInfo;
+    return m_additionalInfo;
 }
 
 bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const
 {
-    return (m_Protocol == info.m_Protocol && m_ContentFormat == info.m_ContentFormat);
+    return (m_protocol == info.m_protocol && m_contentFormat == info.m_contentFormat);
 }
 
 std::string ProtocolInfo::toString() const
 {
-    if (m_Protocol.empty())
+    if (m_protocol.empty())
     {
         // empty string for default constructed object
         return "";
     }
 
-    return fmt::format("{}:{}:{}:{}", m_Protocol, m_Network, m_ContentFormat, m_AdditionalInfo);
+    return fmt::format("{}:{}:{}:{}", m_protocol, m_network, m_contentFormat, m_additionalInfo);
 }
 
 }

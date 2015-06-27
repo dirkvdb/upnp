@@ -46,14 +46,14 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc);
 std::vector<std::string> getActionsFromDescription(Document& doc);
 std::map<std::string, std::string> getEventValues(Document& doc);
 Document getItemDocument(const Item& item);
-Document getItemsDocument(const std::vector<ItemPtr>& item);
+Document getItemsDocument(const std::vector<Item>& item);
 
 Element createServiceVariablesElement(Document& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars);
 Element serviceVariableToElement(Document& doc, const ServiceVariable& var);
 
 Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
-ItemPtr parseItem(xml::Element& itemElem);
-ItemPtr parseItemDocument(Document& doc);
+Item parseItem(xml::Element& itemElem);
+Item parseItemDocument(Document& doc);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)

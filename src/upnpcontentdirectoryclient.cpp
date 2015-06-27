@@ -40,7 +40,7 @@ static const int32_t g_subscriptionTimeout = 1801;
 
 Client::Client(IClient& client)
 : ServiceClientBase(client)
-, m_Abort(false)
+, m_abort(false)
 {
     ixmlRelaxParser(1);
 }
@@ -49,9 +49,9 @@ void Client::setDevice(const std::shared_ptr<Device>& device)
 {
     ServiceClientBase::setDevice(device);
 
-    m_SearchCaps.clear();
-    m_SortCaps.clear();
-    m_SystemUpdateId.clear();
+    m_searchCaps.clear();
+    m_sortCaps.clear();
+    m_systemUpdateId.clear();
 
     try { querySearchCapabilities(); }
     catch (std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
@@ -65,17 +65,17 @@ void Client::setDevice(const std::shared_ptr<Device>& device)
 
 void Client::abort()
 {
-    m_Abort = true;
+    m_abort = true;
 }
 
 const std::vector<Property>& Client::getSearchCapabilities() const
 {
-    return m_SearchCaps;
+    return m_searchCaps;
 }
 
 const std::vector<Property>& Client::getSortCapabilities() const
 {
-    return m_SortCaps;
+    return m_sortCaps;
 }
 
 void Client::querySearchCapabilities()
@@ -87,7 +87,7 @@ void Client::querySearchCapabilities()
 
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SearchCaps"), ","))
     {
-        addPropertyToList(cap, m_SearchCaps);
+        addPropertyToList(cap, m_searchCaps);
     }
 }
 
@@ -100,7 +100,7 @@ void Client::querySortCapabilities()
 
     for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
     {
-        addPropertyToList(cap, m_SortCaps);
+        addPropertyToList(cap, m_sortCaps);
     }
 }
 
@@ -108,10 +108,10 @@ void Client::querySystemUpdateID()
 {
     xml::Document result = executeAction(Action::GetSystemUpdateID);
     xml::Element elem = result.getFirstChild();
-    m_SystemUpdateId = elem.getChildNodeValue("Id");
+    m_systemUpdateId = elem.getChildNodeValue("Id");
 }
 
-ItemPtr Client::browseMetadata(const std::string& objectId, const std::string& filter)
+Item Client::browseMetadata(const std::string& objectId, const std::string& filter)
 {
     ActionResult res;
 
@@ -169,7 +169,7 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
 
 ActionResult Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
-    m_Abort = false;
+    m_abort = false;
 
     xml::Document result = executeAction(Action::Search, { {"ObjectID", objectId},
                                                            {"SearchCriteria", criteria},
@@ -203,7 +203,7 @@ ActionResult Client::search(const std::string& objectId, const std::string& crit
 
 xml::Document Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
-    m_Abort = false;
+    m_abort = false;
 
 #ifdef DEBUG_CONTENT_BROWSING
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
@@ -251,7 +251,7 @@ xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result
     return xml::Document(browseResult);
 }
 
-ItemPtr Client::parseMetaData(xml::Document& doc)
+Item Client::parseMetaData(xml::Document& doc)
 {
     assert(doc && "ParseMetaData: Invalid document supplied");
 
@@ -270,15 +270,15 @@ ItemPtr Client::parseMetaData(xml::Document& doc)
     catch (std::exception&) {}
 
     log::warn("No metadata could be retrieved");
-    return ItemPtr();
+    return Item();
 }
 
-ItemPtr Client::parseContainer(xml::Element& containerElem)
+Item Client::parseContainer(xml::Element& containerElem)
 {
-    auto item = std::make_shared<Item>();
-    item->setObjectId(containerElem.getAttribute("id"));
-    item->setParentId(containerElem.getAttribute("parentID"));
-    item->setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
+    auto item = Item();
+    item.setObjectId(containerElem.getAttribute("id"));
+    item.setParentId(containerElem.getAttribute("parentID"));
+    item.setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
 
     for (xml::Element elem : containerElem.getChildNodes())
     {
@@ -289,11 +289,11 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
             continue;
         }
 
-        item->addMetaData(prop, elem.getValue());
+        item.addMetaData(prop, elem.getValue());
     }
 
     // check required properties
-    if (item->getTitle().empty())
+    if (item.getTitle().empty())
     {
         throw Exception("No title found in item");
     }
@@ -303,11 +303,11 @@ ItemPtr Client::parseContainer(xml::Element& containerElem)
 
 
 
-std::vector<ItemPtr> Client::parseContainers(xml::Document& doc)
+std::vector<Item> Client::parseContainers(xml::Document& doc)
 {
     assert(doc && "ParseContainers: Invalid document supplied");
 
-    std::vector<std::shared_ptr<Item>> containers;
+    std::vector<Item> containers;
     for (xml::Element elem : doc.getElementsByTagName("container"))
     {
         try
@@ -323,11 +323,11 @@ std::vector<ItemPtr> Client::parseContainers(xml::Document& doc)
     return containers;
 }
 
-std::vector<ItemPtr> Client::parseItems(xml::Document& doc)
+std::vector<Item> Client::parseItems(xml::Document& doc)
 {
     assert(doc && "ParseItems: Invalid document supplied");
 
-    std::vector<std::shared_ptr<Item>> items;
+    std::vector<Item> items;
     for (xml::Element elem : doc.getElementsByTagName("item"))
     {
         try

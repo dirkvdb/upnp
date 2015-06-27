@@ -41,10 +41,10 @@ public:
 private:
     static int upnpCallback(Upnp_EventType eventType, void* event, void* cookie);
 
-    UpnpDevice_Handle   m_Device;
-    std::string         m_Udn;
-    std::string         m_DescriptionXml;
-    int32_t             m_AdvertiseInterval;
+    UpnpDevice_Handle   m_device;
+    std::string         m_udn;
+    std::string         m_descriptionXml;
+    int32_t             m_advertiseInterval;
 };
 
 }

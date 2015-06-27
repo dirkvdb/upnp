@@ -28,36 +28,36 @@
 
 namespace upnp
 {
-    
+
 class ActionResponse
 {
 public:
     ActionResponse(const std::string& name, ServiceType serviceType);
     ActionResponse(const ActionResponse&) = delete;
     ActionResponse(ActionResponse&& other) = default;
-    
+
     void addArgument(const std::string& name, const std::string& value);
 
     const xml::Document& getActionDocument() const;
-    
+
     std::string getName() const;
     std::string getServiceTypeUrn() const;
     ServiceType getServiceType() const;
-    
+
     bool operator==(const ActionResponse& other) const;
-    
+
 private:
-    std::string                 m_Name;
-    ServiceType                 m_ServiceType;
-    
-    xml::Document               m_ActionDoc;
+    std::string                 m_name;
+    ServiceType                 m_serviceType;
+
+    xml::Document               m_actionDoc;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const ActionResponse& response)
 {
     return os << response.getActionDocument().toString();
 }
-    
+
 }
 
 #endif

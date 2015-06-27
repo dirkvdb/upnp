@@ -87,7 +87,7 @@ void addItemToDidl(Document& doc, Element& didl, const Item& item)
         }
         catch (std::exception&) { /* Unknown profileId */ }
     }
-    
+
     for (auto& res : item.getResources())
     {
         try
@@ -131,17 +131,17 @@ void addItemToDidl(Document& doc, Element& didl, const Item& item)
 std::vector<std::string> getActionsFromDescription(Document& doc)
 {
     std::vector<std::string> actions;
-    
+
     NodeList nodeList = doc.getElementsByTagName("action");
     uint64_t numActions = nodeList.size();
     actions.reserve(numActions);
-    
+
     for (uint64_t i = 0; i < numActions; ++i)
     {
         Element actionElem = nodeList.getNode(i);
         actions.push_back(actionElem.getChildNodeValue("name"));
     }
-    
+
     return actions;
 }
 
@@ -156,7 +156,7 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
             var.sendsEvents = elem.getAttribute("sendEvents") == "yes";
             var.name        = elem.getChildNodeValue("name");
             var.dataType    = elem.getChildNodeValue("dataType");
-            
+
             try
             {
                 Element rangeElement = elem.getElementsByTagName("allowedValueRange").getNode(0);
@@ -164,19 +164,19 @@ std::vector<StateVariable> getStateVariablesFromDescription(Document& doc)
                 range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("minimum"));
                 range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("maximum"));
                 range->step            = stringops::toNumeric<uint32_t>(rangeElement.getChildNodeValue("step"));
-                
+
                 var.valueRange = std::move(range);
             }
             catch(std::exception&) { /* no value range for this element, no biggy */ }
-            
+
             variables.push_back(var);
         }
         catch(std::exception& e)
         {
-            log::warn("Failed to parse state variable, skipping: %", e.what());
+            log::warn("Failed to parse state variable, skipping: {}", e.what());
         }
     }
-    
+
     return variables;
 }
 
@@ -187,7 +187,7 @@ std::map<std::string, std::string> getEventValues(Document& doc)
     {
         values.insert(std::make_pair(elem.getName(), elem.getAttribute("val")));
     }
-    
+
     return values;
 }
 
@@ -200,14 +200,14 @@ Document getItemDocument(const Item& item)
     return doc;
 }
 
-Document getItemsDocument(const std::vector<ItemPtr>& items)
+Document getItemsDocument(const std::vector<Item>& items)
 {
     Document doc;
     auto didl = createDidlForDocument(doc);
 
     for (auto& item : items)
     {
-        addItemToDidl(doc, didl, *item);
+        addItemToDidl(doc, didl, item);
     }
 
     doc.appendChild(didl);
@@ -232,13 +232,13 @@ Element serviceVariableToElement(Document& doc, const ServiceVariable& var)
 {
     auto varElem = doc.createElement(var.getName());
     varElem.addAttribute("val", var.getValue());
-    
+
     auto attr = var.getAttribute();
     if (!attr.first.empty())
     {
         varElem.addAttribute(attr.first, attr.second);
     }
-    
+
     return varElem;
 }
 
@@ -246,14 +246,14 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
 {
     Resource res;
     res.setUrl(url);
-    
+
     for (auto& node : nodeMap)
     {
         try
         {
             std::string key = node.getName();
             std::string value = node.getValue();
-            
+
             if (key == "protocolInfo")
             {
                 res.setProtocolInfo(ProtocolInfo(value));
@@ -289,16 +289,16 @@ Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url)
         }
         catch (std::exception& e) { /* skip invalid resource */ log::warn(e.what()); }
     }
-    
+
     return res;
 }
 
-static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, const ItemPtr& item)
+static void addPropertyToItem(const std::string& propertyName, const std::string& propertyValue, Item& item)
 {
     Property prop = propertyFromString(propertyName);
     if (prop != Property::Unknown)
     {
-        item->addMetaData(prop, propertyValue);
+        item.addMetaData(prop, propertyValue);
     }
     else
     {
@@ -306,11 +306,11 @@ static void addPropertyToItem(const std::string& propertyName, const std::string
     }
 }
 
-ItemPtr parseItem(xml::Element& itemElem)
+Item parseItem(xml::Element& itemElem)
 {
-    auto item = std::make_shared<Item>();
-    item->setObjectId(itemElem.getAttribute("id"));
-    item->setParentId(itemElem.getAttribute("parentID"));
+    auto item = Item();
+    item.setObjectId(itemElem.getAttribute("id"));
+    item.setParentId(itemElem.getAttribute("parentID"));
 
     try
     {
@@ -320,18 +320,18 @@ ItemPtr parseItem(xml::Element& itemElem)
             {
                 std::string key     = elem.getName();
                 std::string value   = elem.getValue();
-                
+
                 if ("res" == key)
                 {
                     auto nodeMap = elem.getAttributes();
-                    item->addResource(parseResource(nodeMap, value));
+                    item.addResource(parseResource(nodeMap, value));
                 }
                 else if ("upnp:albumArtURI" == key)
                 {
                     // multiple art uris can be present with different dlna profiles (size)
                     try
                     {
-                        item->setAlbumArt(dlna::profileIdFromString(elem.getAttribute("dlna:profileID")), value);
+                        item.setAlbumArt(dlna::profileIdFromString(elem.getAttribute("dlna:profileID")), value);
                     }
                     catch (std::exception&)
                     {
@@ -351,11 +351,11 @@ ItemPtr parseItem(xml::Element& itemElem)
     {
         log::warn("Failed to parse item");
     }
-    
+
     return item;
 }
 
-ItemPtr parseItemDocument(Document& doc)
+Item parseItemDocument(Document& doc)
 {
     auto elem = doc.getFirstChild();
     xml::Element itemElem = elem.getFirstChild();

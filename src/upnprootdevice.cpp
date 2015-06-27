@@ -30,13 +30,13 @@ namespace upnp
 {
 
 RootDevice::RootDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds)
-: m_Device(0)
-, m_Udn(udn)
-, m_DescriptionXml(descriptionXml)
-, m_AdvertiseInterval(advertiseIntervalInSeconds)
+: m_device(0)
+, m_udn(udn)
+, m_descriptionXml(descriptionXml)
+, m_advertiseInterval(advertiseIntervalInSeconds)
 {
 }
-    
+
 RootDevice::~RootDevice()
 {
     try
@@ -48,23 +48,23 @@ RootDevice::~RootDevice()
 
 void RootDevice::initialize()
 {
-    handleUPnPResult(UpnpRegisterRootDevice2(UPNPREG_BUF_DESC, m_DescriptionXml.c_str(), m_DescriptionXml.size() + 1, 1, RootDevice::upnpCallback, this, &m_Device));
-    handleUPnPResult(UpnpSendAdvertisement(m_Device, m_AdvertiseInterval));
+    handleUPnPResult(UpnpRegisterRootDevice2(UPNPREG_BUF_DESC, m_descriptionXml.c_str(), m_descriptionXml.size() + 1, 1, RootDevice::upnpCallback, this, &m_device));
+    handleUPnPResult(UpnpSendAdvertisement(m_device, m_advertiseInterval));
 }
 
 void RootDevice::destroy()
 {
-    if (m_Device != 0)
+    if (m_device != 0)
     {
         log::debug("Unregister root device");
-        handleUPnPResult(UpnpUnRegisterRootDevice(m_Device));
-        m_Device = 0;
+        handleUPnPResult(UpnpUnRegisterRootDevice(m_device));
+        m_device = 0;
     }
 }
 
 std::string RootDevice::getUniqueDeviceName()
 {
-    return m_Udn;
+    return m_udn;
 }
 
 void RootDevice::acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response)
@@ -72,7 +72,7 @@ void RootDevice::acceptSubscription(const std::string& serviceId, const std::str
     try
     {
                                                                                                          // UPnP API bug, should be const ([in] argument)
-        handleUPnPResult(UpnpAcceptSubscriptionExt(m_Device, m_Udn.c_str(), serviceId.c_str(), response, const_cast<char*>(subscriptionId.c_str())));
+        handleUPnPResult(UpnpAcceptSubscriptionExt(m_device, m_udn.c_str(), serviceId.c_str(), response, const_cast<char*>(subscriptionId.c_str())));
     }
     catch (std::exception& e)
     {
@@ -82,9 +82,9 @@ void RootDevice::acceptSubscription(const std::string& serviceId, const std::str
 
 void RootDevice::notifyEvent(const std::string& serviceId, const xml::Document& event)
 {
-    handleUPnPResult(UpnpNotifyExt(m_Device, m_Udn.c_str(), serviceId.c_str(), event));
+    handleUPnPResult(UpnpNotifyExt(m_device, m_udn.c_str(), serviceId.c_str(), event));
 }
-                     
+
 int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
     auto dev = reinterpret_cast<RootDevice*>(pCookie);
@@ -99,7 +99,7 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
                 log::warn("Invalid Event subscription request: NULL value provided");
                 return -1;
             }
-            
+
             dev->EventSubscriptionRequested(request);
 			break;
         }
@@ -109,28 +109,28 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
 		case UPNP_CONTROL_ACTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Action_Request*>(pEvent);
-        
+
             try
             {
-                // The appropriate service should fill in the result 
+                // The appropriate service should fill in the result
                 dev->ControlActionRequested(request);
             }
             catch (Exception& e)
             {
                 assert(strlen(e.what()) < 180);
-            
+
                 log::warn("Error processing request: {}", e.what());
                 request->ErrCode = e.getErrorCode();
                 strcpy(request->ErrStr, e.what());
             }
-            
+
 			break;
         }
 		default:
 			log::error("RootDevice: Unknown eventType {}", eventType);
 	}
-    
+
     return 0;
 }
-    
+
 }

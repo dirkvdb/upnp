@@ -33,35 +33,35 @@ namespace upnp
 const std::string MediaServer::rootId = "0";
 static const uint32_t g_maxNumThreads = 8;
 static const uint32_t g_requestSize =32;
-    
+
 MediaServer::MediaServer(IClient& client)
-: m_Client(client)
-, m_ContentDirectory(client)
-, m_ConnectionMgr(client)
-, m_ThreadPool(g_maxNumThreads)
-, m_Abort(false)
+: m_client(client)
+, m_contentDirectory(client)
+, m_connectionMgr(client)
+, m_threadPool(g_maxNumThreads)
+, m_abort(false)
 {
-    m_ThreadPool.start();
+    m_threadPool.start();
 }
 
 MediaServer::~MediaServer()
 {
-    m_Abort = true;
-    m_ThreadPool.stop();
+    m_abort = true;
+    m_threadPool.stop();
 }
 
 void MediaServer::setDevice(const std::shared_ptr<Device>& device)
 {
     try
     {
-        m_ContentDirectory.setDevice(device);
-        m_ConnectionMgr.setDevice(device);
-        m_Device = device;
-        
-        if (m_Device->implementsService(ServiceType::AVTransport))
+        m_contentDirectory.setDevice(device);
+        m_connectionMgr.setDevice(device);
+        m_device = device;
+
+        if (m_device->implementsService(ServiceType::AVTransport))
         {
-            m_AVTransport = std::make_unique<AVTransport::Client>(m_Client);
-            m_AVTransport->setDevice(device);
+            m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+            m_avTransport->setDevice(device);
         }
     }
     catch (std::exception& e)
@@ -72,106 +72,106 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device)
 
 std::shared_ptr<Device> MediaServer::getDevice()
 {
-    return m_Device;
+    return m_device;
 }
 
 void MediaServer::abort()
 {
-    m_Abort = true;
-    m_ContentDirectory.abort();
+    m_abort = true;
+    m_contentDirectory.abort();
 }
 
 std::string MediaServer::getPeerConnectionManager() const
 {
     std::stringstream ss;
-    ss << m_Device->m_UDN << "/";
-    
-    if (m_Device->implementsService(ServiceType::ConnectionManager))
+    ss << m_device->m_UDN << "/";
+
+    if (m_device->implementsService(ServiceType::ConnectionManager))
     {
-       ss << m_Device->m_Services[ServiceType::ConnectionManager].m_Id;
+       ss << m_device->m_Services[ServiceType::ConnectionManager].m_Id;
     }
-    
+
     return ss.str();
 }
 
 void MediaServer::resetConnection()
 {
-    m_ConnInfo.connectionId = ConnectionManager::UnknownConnectionId;
+    m_connInfo.connectionId = ConnectionManager::UnknownConnectionId;
 }
 
 void MediaServer::useDefaultConnection()
 {
-    m_ConnInfo.connectionId = ConnectionManager::DefaultConnectionId;
+    m_connInfo.connectionId = ConnectionManager::DefaultConnectionId;
 }
 
 bool MediaServer::supportsConnectionPreparation() const
 {
-    return m_ConnectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection);
+    return m_connectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection);
 }
 
 void MediaServer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t remoteConnectionId)
 {
-    m_ConnInfo = m_ConnectionMgr.prepareForConnection(res.getProtocolInfo(), peerConnectionManager,
+    m_connInfo = m_connectionMgr.prepareForConnection(res.getProtocolInfo(), peerConnectionManager,
                                                       remoteConnectionId, ConnectionManager::Direction::Output);
 }
 
 uint32_t MediaServer::getConnectionId() const
 {
-    return m_ConnInfo.connectionId;
+    return m_connInfo.connectionId;
 }
 
 bool MediaServer::canSearchForProperty(Property prop) const
 {
-    auto& props = m_ContentDirectory.getSearchCapabilities();
+    auto& props = m_contentDirectory.getSearchCapabilities();
     if (std::find(props.begin(), props.end(), prop) == props.end())
     {
         return std::find(props.begin(), props.end(), Property::All) != props.end();
     }
-    
+
     return true;
 }
 
 bool MediaServer::canSortOnProperty(Property prop) const
 {
-    auto& props = m_ContentDirectory.getSortCapabilities();
-    
+    auto& props = m_contentDirectory.getSortCapabilities();
+
     if (std::find(props.begin(), props.end(), prop) == props.end())
     {
         return std::find(props.begin(), props.end(), Property::All) != props.end();
     }
-    
+
     return true;
 }
 
 const std::vector<Property>& MediaServer::getSearchCapabilities() const
 {
-    return m_ContentDirectory.getSearchCapabilities();
+    return m_contentDirectory.getSearchCapabilities();
 }
 
 const std::vector<Property>& MediaServer::getSortCapabilities() const
 {
-    return m_ContentDirectory.getSortCapabilities();
+    return m_contentDirectory.getSortCapabilities();
 }
 
-std::vector<ItemPtr> MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+std::vector<Item> MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
 {
-    std::vector<ItemPtr> items;
-    
-    getItemsInContainer(id, [&items] (const ItemPtr& item) {
+    std::vector<Item> items;
+
+    getItemsInContainer(id, [&items] (const Item& item) {
         items.push_back(item);
     }, offset, limit, sort, mode);
 
     return items;
 }
-    
-std::vector<ItemPtr> MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
+
+std::vector<Item> MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode)
 {
-    std::vector<ItemPtr> items;
-    
-    getAllInContainer(id, [&items] (const ItemPtr& item) {
+    std::vector<Item> items;
+
+    getAllInContainer(id, [&items] (const Item& item) {
         items.push_back(item);
     }, offset, limit, sort, mode);
-    
+
     return items;
 }
 
@@ -182,7 +182,7 @@ void MediaServer::getItemsInContainer(const std::string& id, const ItemCb& onIte
 
 void MediaServer::getItemsInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, id, onItem, offset, limit, sort, sortMode));
+    m_threadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ItemsOnly, id, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getContainersInContainer(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
@@ -192,7 +192,7 @@ void MediaServer::getContainersInContainer(const std::string& id, const ItemCb& 
 
 void MediaServer::getContainersInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, id, onItem, offset, limit, sort, sortMode));
+    m_threadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::ContainersOnly, id, onItem, offset, limit, sort, sortMode));
 }
 
 void MediaServer::getAllInContainer(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
@@ -202,53 +202,53 @@ void MediaServer::getAllInContainer(const std::string& id, const ItemCb& onItem,
 
 void MediaServer::getAllInContainerAsync(const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, id, onItem, offset, limit, sort, sortMode));
+    m_threadPool.addJob(std::bind(&MediaServer::performBrowseRequestThread, this, ContentDirectory::Client::All, id, onItem, offset, limit, sort, sortMode));
 }
 
-std::vector<ItemPtr> MediaServer::search(const std::string& id, const std::string& criteria)
+std::vector<Item> MediaServer::search(const std::string& id, const std::string& criteria)
 {
-    std::vector<ItemPtr> items;
-    
-    search(id, criteria, [&items] (const ItemPtr& item) {
+    std::vector<Item> items;
+
+    search(id, criteria, [&items] (const Item& item) {
         items.push_back(item);
     });
-    
+
     return items;
 }
 
-std::vector<ItemPtr> MediaServer::search(const std::string& id, const std::map<Property, std::string>& criteria)
+std::vector<Item> MediaServer::search(const std::string& id, const std::map<Property, std::string>& criteria)
 {
-    std::vector<ItemPtr> items;
-    
-    search(id, criteria, [&items] (const ItemPtr& item) {
+    std::vector<Item> items;
+
+    search(id, criteria, [&items] (const Item& item) {
         items.push_back(item);
     });
-    
+
     return items;
 }
-    
+
 
 uint32_t MediaServer::search(const std::string& id, const std::string& criteria, const ItemCb& onItem)
 {
-    m_Abort = false;
+    m_abort = false;
     uint32_t offset = 0;
     ContentDirectory::ActionResult res;
 
     do
     {
-        auto searchRes = m_ContentDirectory.search(id, criteria, "*", offset, g_requestSize, "");
+        auto searchRes = m_contentDirectory.search(id, criteria, "*", offset, g_requestSize, "");
         for (auto& item : searchRes.result)
         {
             onItem(item);
         }
-        
+
         offset += res.numberReturned;
     }
     while (offset < res.totalMatches || (res.totalMatches == 0 && res.numberReturned != 0));
 
-    if (m_CompletedCb)
+    if (m_completedCb)
     {
-        m_CompletedCb();
+        m_completedCb();
     }
 
     return res.totalMatches;
@@ -267,8 +267,8 @@ uint32_t MediaServer::search(const std::string& id, const std::map<Property, std
         else
         {
             critString << " and ";
-        }        
-        
+        }
+
         if (!canSearchForProperty(crit.first))
         {
             throw Exception("The server does not support to search on {}", toString(crit.first));
@@ -282,45 +282,45 @@ uint32_t MediaServer::search(const std::string& id, const std::map<Property, std
 
 void MediaServer::searchAsync(const std::string& id, const ItemCb& onItem, const std::string& criteria)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::string>, this, id, onItem, criteria));
+    m_threadPool.addJob(std::bind(&MediaServer::searchThread<std::string>, this, id, onItem, criteria));
 }
 
 void MediaServer::searchAsync(const std::string& id, const ItemCb& onItem, const std::map<Property, std::string>& criteria)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, id, onItem, criteria));
+    m_threadPool.addJob(std::bind(&MediaServer::searchThread<std::map<Property, std::string>>, this, id, onItem, criteria));
 }
 
-ItemPtr MediaServer::getMetaData(const std::string& objectId)
+Item MediaServer::getMetaData(const std::string& objectId)
 {
-    return m_ContentDirectory.browseMetadata(objectId, "*");
+    return m_contentDirectory.browseMetadata(objectId, "*");
 }
 
 void MediaServer::getMetaDataAsync(const std::string& objectId, const ItemCb& onItem)
 {
-    m_ThreadPool.addJob(std::bind(&MediaServer::getMetaDataThread, this, objectId, onItem));
+    m_threadPool.addJob(std::bind(&MediaServer::getMetaDataThread, this, objectId, onItem));
 }
 
 void MediaServer::setCompletedCallback(const CompletedCb& completedCb)
 {
-    m_CompletedCb = completedCb;
+    m_completedCb = completedCb;
 }
 
 void MediaServer::setErrorCallback(const ErrorCb& errorCb)
 {
-    m_ErrorCb = errorCb;
+    m_errorCb = errorCb;
 }
 
 void MediaServer::setTransportItem(Resource& resource)
 {
-    if (m_AVTransport)
+    if (m_avTransport)
     {
-        m_AVTransport->setAVTransportURI(m_ConnInfo.connectionId, resource.getUrl(), "");
+        m_avTransport->setAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "");
     }
 }
 
 void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
 {
-    m_Abort = false;
+    m_abort = false;
 
     if (sort != Property::Unknown && !canSortOnProperty(sort))
     {
@@ -329,22 +329,22 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
 
     bool itemsLeft = true;
     uint32_t itemsReceived = 0;
-    for (uint32_t curOffset = offset; itemsLeft && !m_Abort; curOffset += g_requestSize)
+    for (uint32_t curOffset = offset; itemsLeft && !m_abort; curOffset += g_requestSize)
     {
         std::stringstream ss;
         if (sort != Property::Unknown)
         {
             ss << (sortMode == SortMode::Ascending ? "+" : "-") << toString(sort);
         }
-        
+
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
-        auto res = m_ContentDirectory.browseDirectChildren(type, id, "*", curOffset, requestSize, ss.str());
+        auto res = m_contentDirectory.browseDirectChildren(type, id, "*", curOffset, requestSize, ss.str());
         itemsReceived += res.numberReturned;
         for (auto& item : res.result)
         {
             onItem(item);
         }
-        
+
         if (limit > 0)
         {
             itemsLeft = (res.numberReturned == 0) ? false : itemsReceived < limit;
@@ -354,10 +354,10 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
             itemsLeft = res.numberReturned == g_requestSize;
         }
     }
-    
-    if (m_CompletedCb)
+
+    if (m_completedCb)
     {
-        m_CompletedCb();
+        m_completedCb();
     }
 }
 
@@ -370,9 +370,9 @@ void MediaServer::performBrowseRequestThread(ContentDirectory::Client::BrowseTyp
     catch(std::exception& e)
     {
         log::error("Exception getting items and containers: {}", e.what());
-        if (m_ErrorCb)
+        if (m_errorCb)
         {
-            m_ErrorCb(e.what());
+            m_errorCb(e.what());
         }
     }
 }
@@ -388,9 +388,9 @@ void MediaServer::searchThread(const std::string& id, const ItemCb& onItem, cons
     catch(std::exception& e)
     {
         log::error("Exception performing search: {}", e.what());
-        if (m_ErrorCb)
+        if (m_errorCb)
         {
-            m_ErrorCb(e.what());
+            m_errorCb(e.what());
         }
     }
 }
@@ -404,16 +404,16 @@ void MediaServer::getMetaDataThread(const std::string& id, const ItemCb& onItem)
     catch(std::exception& e)
     {
         log::error("Exception getting metadata: {}", e.what());
-        if (m_ErrorCb)
+        if (m_errorCb)
         {
-            m_ErrorCb(e.what());
+            m_errorCb(e.what());
         }
     }
 }
 
 ConnectionManager::Client& MediaServer::connectionManager()
 {
-    return m_ConnectionMgr;
+    return m_connectionMgr;
 }
 
 }

@@ -27,7 +27,7 @@ struct ActionResult
     uint32_t totalMatches = 0;
     uint32_t numberReturned = 0;
     uint32_t updateId = 0;
-    std::vector<ItemPtr> result;
+    std::vector<Item> result;
 };
 
 
@@ -85,7 +85,7 @@ inline Action actionFromString(const std::string& action)
     if (action == "GetSystemUpdateID")      return Action::GetSystemUpdateID;
     if (action == "Browse")                 return Action::Browse;
     if (action == "Search")                 return Action::Search;
-    
+
     throw Exception("Unknown ContentDirectory action: {}", action);
 }
 
@@ -98,7 +98,7 @@ inline std::string actionToString(Action action)
         case Action::GetSystemUpdateID:         return "GetSystemUpdateID";
         case Action::Browse:                    return "Browse";
         case Action::Search:                    return "Search";
-            
+
         default:
             throw Exception("Unknown ContentDirectory action: {}", static_cast<int32_t>(action));
     }
@@ -142,7 +142,7 @@ inline std::string toString(Variable var)
         case Variable::ArgumentTypeUpdateID:                return "A_ARG_TYPE_UpdateID";
         case Variable::SearchCapabilities:                  return "SearchCapabilities";
         case Variable::SortCapabilities:                    return "SortCapabilities";
-        
+
         default:
             throw Exception("Unknown ContentDirectory variable: {}", static_cast<int32_t>(var));
     }
@@ -152,7 +152,7 @@ inline BrowseFlag browseFlagFromString(const std::string& browseFlag)
 {
     if (browseFlag == "BrowseMetadata")         return BrowseFlag::Metadata;
     if (browseFlag == "BrowseDirectChildren")   return BrowseFlag::DirectChildren;
-    
+
     throw Exception("Unknown ContentDirectory browse flag: {}", browseFlag);
 }
 
@@ -162,7 +162,7 @@ inline std::string browseFlagToString(BrowseFlag browseFlag)
     {
         case BrowseFlag::DirectChildren:    return "BrowseDirectChildren";
         case BrowseFlag::Metadata:          return "BrowseMetadata";
-            
+
         default:
             throw Exception("Unknown ContentDirectory BrowseFlag: {}", static_cast<int32_t>(browseFlag));
     }

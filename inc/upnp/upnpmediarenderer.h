@@ -57,7 +57,7 @@ public:
         Previous,
         Record
     };
-    
+
     enum class PlaybackState
     {
         Stopped,
@@ -66,14 +66,14 @@ public:
         Paused,
         Recording
     };
-    
+
     MediaRenderer(IClient& cp);
     MediaRenderer(const MediaRenderer&) = delete;
-    
+
     std::shared_ptr<Device> getDevice();
     void setDevice(const std::shared_ptr<Device>& device);
-    bool supportsPlayback(const std::shared_ptr<const upnp::Item>& item, Resource& suggestedResource) const;
-    
+    bool supportsPlayback(const upnp::Item& item, Resource& suggestedResource) const;
+
     // Connection management
     std::string getPeerConnectionManager() const;
     void resetConnection();
@@ -92,61 +92,61 @@ public:
     void previous();
     uint32_t getCurrentTrackPosition();
     PlaybackState getPlaybackState();
-    
+
     std::string getCurrentTrackURI() const;
     uint32_t getCurrentTrackDuration() const;
-    ItemPtr getCurrentTrackInfo() const;
+    Item getCurrentTrackInfo() const;
     std::set<Action> getAvailableActions();
     static bool isActionAvailable(const std::set<Action>& actions, Action action);
-    
+
     bool supportsQueueItem() const;
-    
-    
+
+
     // Rendering control
     void setVolume(uint32_t value);
     uint32_t getVolume();
-    
+
     void activateEvents();
     void deactivateEvents();
-    
+
     utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
     utils::Signal<uint32_t>                   VolumeChanged;
-    utils::Signal<ItemPtr>                    CurrentTrackChanged;
+    utils::Signal<const Item&>                CurrentTrackChanged;
     utils::Signal<uint32_t>                   CurrentTrackDurationChanged;
     utils::Signal<std::set<Action>>           AvailableActionsChanged;
     utils::Signal<PlaybackState>              PlaybackStateChanged;
-    
+
 private:
     void throwOnUnknownConnectionId() const;
 
     void resetData();
     std::set<Action> parseAvailableActions(const std::string& actions) const;
-    ItemPtr parseCurrentTrack(const std::string& track) const;
+    Item parseCurrentTrack(const std::string& track) const;
     PlaybackState parsePlaybackState(const std::string& state) const;
-    
+
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
     uint32_t parseDuration(const std::string& duration) const;
     std::string positionToString(uint32_t position) const;
-    
+
     static Action transportActionToAction(AVTransport::Action action);
     static PlaybackState transportStateToPlaybackState(AVTransport::State state);
-    
-    std::shared_ptr<Device>                         m_Device;
-    IClient&                                        m_Client;
-    ConnectionManager::Client                       m_ConnectionMgr;
-    RenderingControl::Client                        m_RenderingControl;
-    std::unique_ptr<AVTransport::Client>            m_AVtransport;
-    
-    std::vector<ProtocolInfo>                       m_ProtocolInfo;
-    std::map<AVTransport::Variable, std::string>    m_AvTransportInfo;
-    ConnectionManager::ConnectionInfo               m_ConnInfo;
-    
-    
-    bool                                            m_Active;
-    
-    
-    mutable std::mutex                              m_Mutex;
+
+    std::shared_ptr<Device>                         m_device;
+    IClient&                                        m_client;
+    ConnectionManager::Client                       m_connectionMgr;
+    RenderingControl::Client                        m_renderingControl;
+    std::unique_ptr<AVTransport::Client>            m_avTransport;
+
+    std::vector<ProtocolInfo>                       m_protocolInfo;
+    std::map<AVTransport::Variable, std::string>    m_avTransportInfo;
+    ConnectionManager::ConnectionInfo               m_connInfo;
+
+
+    bool                                            m_active;
+
+
+    mutable std::mutex                              m_mutex;
 };
 
 }

@@ -19,14 +19,12 @@
 
 #include <map>
 #include <string>
-#include <memory>
 
 namespace upnp
 {
-    
+
 class Item;
-    
-typedef std::shared_ptr<Item> ItemPtr;
+
 typedef std::map<std::string, std::string> MetaMap;
 
 }

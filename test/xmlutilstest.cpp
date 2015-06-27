@@ -32,7 +32,7 @@ namespace upnp
 namespace test
 {
 
-static const std::string testXML = 
+static const std::string testXML =
 "<?xml version=\"1.0\"?>"
 "<scpd"
 "  xmlns=\"urn:schemas-upnp-org:service-1-0\">"
@@ -118,7 +118,7 @@ protected:
     {
         doc = ixmlParseBuffer(testXML.c_str());
     }
-    
+
     xml::Document createRValueDoc()
     {
         return xml::Document("<doc></doc>");
@@ -132,7 +132,7 @@ TEST_F(XmlUtilsTest, moveOperators)
     xml::Document doc1 = createRValueDoc();
     ASSERT_NE(nullptr, static_cast<IXML_Document*>(doc1));
     ASSERT_NE(nullptr, static_cast<IXML_Node*>(doc1));
-    
+
     xml::Document doc2(createRValueDoc());
     ASSERT_NE(nullptr, static_cast<IXML_Document*>(doc2));
     ASSERT_NE(nullptr, static_cast<IXML_Node*>(doc2));
@@ -141,7 +141,7 @@ TEST_F(XmlUtilsTest, moveOperators)
 TEST_F(XmlUtilsTest, documentGetChildElementValue)
 {
     const std::string xml = "<allowedValueRange>TestValue</allowedValueRange>";
-        
+
     xml::Document doc(ixmlParseBuffer(xml.c_str()));
     EXPECT_EQ(std::string("TestValue"), doc.getChildNodeValue("allowedValueRange"));
 }
@@ -154,7 +154,7 @@ TEST_F(XmlUtilsTest, elementGetChildElementValue)
     "    <maximum>100</maximum>"
     "    <step>1</step>"
     "</allowedValueRange>";
-    
+
     xml::Document doc(ixmlParseBuffer(xml.c_str()));
     xml::Element node = doc.getFirstChild();
     EXPECT_EQ(std::string("0"),     node.getChildNodeValue("minimum"));
@@ -169,16 +169,16 @@ TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
     auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
         return var.name == "LastChange";
     });
-    
+
     ASSERT_NE(vars.end(), iter);
     EXPECT_STREQ("LastChange", iter->name.c_str());
     EXPECT_STREQ("string", iter->dataType.c_str());
     EXPECT_EQ(nullptr, iter->valueRange);
-    
+
     iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
         return var.name == "Volume";
     });
-    
+
     ASSERT_NE(vars.end(), iter);
     EXPECT_STREQ("Volume", iter->name.c_str());
     EXPECT_STREQ("ui2", iter->dataType.c_str());
@@ -190,14 +190,14 @@ TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
 
 TEST_F(XmlUtilsTest, itemToDocument)
 {
-    Item item;
+    Item item("0");
     item.addMetaData(Property::Album, "An album");
     item.addMetaData(Property::Class, "object.container.album.musicAlbum");
-    
+
     auto doc = xml::utils::getItemDocument(item);
     auto didl = doc.getElementsByTagName("DIDL-Lite").getNode(0);
     xml::Element itemElem = didl.getFirstChild();
-    
+
     EXPECT_EQ(0U, itemElem.getAttributeAsNumeric<uint32_t>("id"));
     EXPECT_STREQ("", itemElem.getAttribute("parentID").c_str());
     EXPECT_STREQ("An album", itemElem.getChildNodeValue(toString(Property::Album)).c_str());

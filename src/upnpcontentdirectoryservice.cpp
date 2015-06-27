@@ -22,6 +22,8 @@
 #include "utils/numericoperations.h"
 #include "utils/stringoperations.h"
 
+#include "upnp/upnpitem.h"
+
 using namespace utils;
 
 namespace upnp
@@ -31,14 +33,14 @@ namespace ContentDirectory
 
 Service::Service(IRootDevice& dev, IContentDirectory& cd)
 : DeviceService(dev, ServiceType::ContentDirectory)
-, m_ContentDirectory(cd)
+, m_contentDirectory(cd)
 {
 }
 
 xml::Document Service::getSubscriptionResponse()
 {
     const std::string ns = "urn:schemas-upnp-org:event-1-0";
-    
+
     xml::Document doc;
     auto propertySet    = doc.createElement("e:propertyset");
     propertySet.addAttribute("xmlns:e", ns);
@@ -46,13 +48,13 @@ xml::Document Service::getSubscriptionResponse()
     addPropertyToElement(0, Variable::TransferIDs, propertySet);
     addPropertyToElement(0, Variable::SystemUpdateID, propertySet);
     addPropertyToElement(0, Variable::ContainerUpdateIDs, propertySet);
-    
+
     doc.appendChild(propertySet);
-    
+
 #ifdef DEBUG_CONNECTION_MANAGER
     log::debug(doc.toString());
 #endif
-    
+
     return doc;
 }
 
@@ -62,7 +64,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     {
         ActionResponse response(action, ServiceType::ContentDirectory);
         auto request = doc.getFirstChild();
-        
+
         switch (actionFromString(action))
         {
         case Action::GetSearchCapabilities:
@@ -72,7 +74,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("SortCaps", getVariable(Variable::SortCapabilities).getValue());
             break;
         case Action::GetSystemUpdateID:
-            response.addArgument("Id", m_ContentDirectory.GetSystemUpdateId());
+            response.addArgument("Id", m_contentDirectory.GetSystemUpdateId());
             break;
         case Action::Browse:
         {
@@ -98,7 +100,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
                 return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));
             });
 
-            auto res = m_ContentDirectory.Browse(id, flag, filter, startIndex, count, sort);
+            auto res = m_contentDirectory.Browse(id, flag, filter, startIndex, count, sort);
             response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
             response.addArgument("NumberReturned", std::to_string(res.numberReturned));
             response.addArgument("TotalMatches", std::to_string(res.totalMatches));
@@ -129,7 +131,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
                 return SortProperty(propertyFromString(prop.substr(1)), sortTypeFromString(prop[0]));
             });
 
-            auto res = m_ContentDirectory.Search(id, criteria, filter, startIndex, count, sort);
+            auto res = m_contentDirectory.Search(id, criteria, filter, startIndex, count, sort);
             response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
             response.addArgument("NumberReturned", std::to_string(res.numberReturned));
             response.addArgument("TotalMatches", std::to_string(res.totalMatches));
@@ -139,7 +141,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         default:
             throw InvalidActionException();
         }
-        
+
         return response;
     }
     catch (std::exception& e)

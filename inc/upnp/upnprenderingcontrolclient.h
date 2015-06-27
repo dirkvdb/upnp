@@ -42,12 +42,12 @@ class Client : public ServiceClientBase<Action, Variable>
 {
 public:
     Client(IClient& client);
-    
+
     void setVolume(int32_t connectionId, uint32_t value);
     uint32_t getVolume(int32_t connectionId);
-    
+
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
-    
+
 protected:
     virtual Action actionFromString(const std::string& action) const override;
     virtual std::string actionToString(Action action) const override;
@@ -56,15 +56,15 @@ protected:
 
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();
-    
+
     virtual void parseServiceDescription(const std::string& descriptionUrl);
 
     virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
     virtual void handleUPnPResult(int errorCode);
 
 private:
-    uint32_t                    m_MinVolume;
-    uint32_t                    m_MaxVolume;
+    uint32_t                    m_minVolume;
+    uint32_t                    m_maxVolume;
 };
 
 }

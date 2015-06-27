@@ -21,18 +21,18 @@
 
 namespace upnp
 {
-    
+
 ActionResponse::ActionResponse(const std::string& name, ServiceType serviceType)
-: m_Name(name)
-, m_ServiceType(serviceType)
-, m_ActionDoc(UpnpMakeActionResponse(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr), xml::Document::NoOwnership)
+: m_name(name)
+, m_serviceType(serviceType)
+, m_actionDoc(UpnpMakeActionResponse(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr), xml::Document::NoOwnership)
 {
 }
 
 void ActionResponse::addArgument(const std::string& name, const std::string& value)
 {
-    IXML_Document* pDoc = static_cast<IXML_Document*>(m_ActionDoc);
-    auto rc = UpnpAddToActionResponse(&pDoc, m_Name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str());
+    IXML_Document* pDoc = static_cast<IXML_Document*>(m_actionDoc);
+    auto rc = UpnpAddToActionResponse(&pDoc, m_name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str());
     if (UPNP_E_SUCCESS != rc)
     {
         throw Exception(rc, "Failed to add action to UPnP response: " + name);
@@ -41,32 +41,32 @@ void ActionResponse::addArgument(const std::string& name, const std::string& val
 
 const xml::Document& ActionResponse::getActionDocument() const
 {
-    return m_ActionDoc;
+    return m_actionDoc;
 }
 
 std::string ActionResponse::getName() const
 {
-    return m_Name;
+    return m_name;
 }
 
 std::string ActionResponse::getServiceTypeUrn() const
 {
-    return serviceTypeToUrnTypeString(m_ServiceType);
+    return serviceTypeToUrnTypeString(m_serviceType);
 }
 
 ServiceType ActionResponse::getServiceType() const
 {
-    return m_ServiceType;
+    return m_serviceType;
 }
 
 bool ActionResponse::operator==(const ActionResponse& other) const
 {
-    if (!m_ActionDoc && other.m_ActionDoc)
+    if (!m_actionDoc && other.m_actionDoc)
     {
         return false;
     }
-    
-    return m_ActionDoc.toString() == other.m_ActionDoc.toString();
+
+    return m_actionDoc.toString() == other.m_actionDoc.toString();
 }
-    
+
 }

@@ -40,18 +40,6 @@ DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsServiceException,     401, "Invali
 DEFINE_UPNP_SERVICE_EXCEPTION(InvalidSubscriptionIdException,       401, "Invalid subscription id")
 DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                501, "Action failed")
 
-/*class InvalidNameException : public ServiceException
-{
-public:
-    InvalidNameException() : ServiceException("Invalid name", 701) {}
-};
-
-class InvalidInstanceIdException : public ServiceException
-{
-public:
-    InvalidInstanceIdException() : ServiceException("Invalid InstanceID", 702) {}
-};*/
-
 }
 
 #endif

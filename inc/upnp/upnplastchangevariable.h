@@ -39,22 +39,22 @@ class LastChangeVariable
 public:
     LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventInterval);
     ~LastChangeVariable();
-    
+
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
-    
+
     std::function<void(const xml::Document&)> LastChangeEvent;
-    
+
 private:
     void variableThread();
     void createLastChangeEvent();
 
-    std::mutex                                          m_Mutex;
-    std::condition_variable                             m_Condition;
-    std::thread                                         m_Thread;
-    std::map<uint32_t, std::vector<ServiceVariable>>    m_ChangedVariables;
-    std::chrono::milliseconds                           m_MinInterval;
-    bool                                                m_Stop;
-    std::string                                         m_EventMetaNamespace;
+    std::mutex                                          m_mutex;
+    std::condition_variable                             m_condition;
+    std::thread                                         m_thread;
+    std::map<uint32_t, std::vector<ServiceVariable>>    m_changedVariables;
+    std::chrono::milliseconds                           m_minInterval;
+    bool                                                m_stop;
+    std::string                                         m_eventMetaNamespace;
 };
 
 }

@@ -28,7 +28,7 @@ class Action;
 class Device;
 class IClient;
 
-typedef std::function<void(const ItemPtr&)> ItemCb;
+typedef std::function<void(const Item&)> ItemCb;
 
 namespace ContentDirectory
 {
@@ -42,20 +42,20 @@ public:
         ItemsOnly,
         ContainersOnly
     };
-    
+
     Client(IClient& client);
-        
+
     void setDevice(const std::shared_ptr<Device>& device);
-    
+
     void abort();
-    
+
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
-    
-    ItemPtr browseMetadata(const std::string& objectId, const std::string& filter);
+
+    Item browseMetadata(const std::string& objectId, const std::string& filter);
     ActionResult browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
     ActionResult search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    
+
 protected:
     virtual Action actionFromString(const std::string& action) const override;
     virtual std::string actionToString(Action action) const override;
@@ -65,30 +65,28 @@ protected:
     virtual ServiceType getType();
     virtual int32_t getSubscriptionTimeout();
     virtual void handleUPnPResult(int errorCode);
-            
+
 private:
     xml::Document browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
 
     void querySearchCapabilities();
     void querySortCapabilities();
     void querySystemUpdateID();
-    
+
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
-    
+
     xml::Document parseBrowseResult(xml::Document& doc, ActionResult& result);
-    ItemPtr parseMetaData(xml::Document& doc);
-    ItemPtr parseContainer(xml::Element& containerElem);
+    Item parseMetaData(xml::Document& doc);
+    Item parseContainer(xml::Element& containerElem);
 
-    std::vector<ItemPtr> parseContainers(xml::Document& doc);
-    std::vector<ItemPtr> parseItems(xml::Document& doc);
-    
-    void notifySubscriber(std::vector<std::shared_ptr<Item>>& items, const ItemCb& onItem);
+    std::vector<Item> parseContainers(xml::Document& doc);
+    std::vector<Item> parseItems(xml::Document& doc);
 
-    std::vector<Property>       m_SearchCaps;
-    std::vector<Property>       m_SortCaps;
-    std::string                 m_SystemUpdateId;
-    
-    bool                        m_Abort;
+    std::vector<Property>       m_searchCaps;
+    std::vector<Property>       m_sortCaps;
+    std::string                 m_systemUpdateId;
+
+    bool                        m_abort;
 };
 
 }

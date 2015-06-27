@@ -80,7 +80,7 @@ inline std::ostream& operator<< (std::ostream& os, const Resource& res)
 class Item
 {
 public:
-    explicit Item(const std::string& id = "0", const std::string& title = "");
+    explicit Item(const std::string& id = "", const std::string& title = "");
     Item(const Item& other) = default;
     Item(Item&& other) = default;
     virtual ~Item();
@@ -95,7 +95,7 @@ public:
     bool restricted() const;
 
     bool isContainer() const;
-    
+
     // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
     std::string getAlbumArtUri(dlna::ProfileId profile) const;
 
@@ -125,17 +125,17 @@ public:
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
 
 private:
-    std::string                             m_ObjectId;
-    std::string                             m_ParentId;
-    std::string                             m_RefId;
+    std::string                             m_objectId;
+    std::string                             m_parentId;
+    std::string                             m_refId;
 
-    bool                                    m_Restricted;
-    
-    std::map<Property, std::string>         m_MetaData;
-    std::map<dlna::ProfileId, std::string>  m_AlbumArtUris;
+    bool                                    m_restricted;
 
-    std::vector<Resource>                   m_Resources;
-    uint32_t                                m_ChildCount;
+    std::map<Property, std::string>         m_metaData;
+    std::map<dlna::ProfileId, std::string>  m_albumArtUris;
+
+    std::vector<Resource>                   m_resources;
+    uint32_t                                m_childCount;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Item& item)
@@ -152,7 +152,7 @@ inline std::ostream& operator<< (std::ostream& os, const Item& item)
     if (item.getResources().empty()) os << std::endl;
 
     os << "Metadata:" << std::endl;
-    for (auto& meta : item.m_MetaData)
+    for (auto& meta : item.m_metaData)
     {
         os << toString(meta.first) << " - " << meta.second << std::endl;
     }

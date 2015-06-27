@@ -45,7 +45,7 @@ private:
     void read(void* pHandle, uint8_t* pData, size_t dataSize);
     void throwOnBadHttpStatus(const std::string& url, int32_t status);
 
-	int32_t		m_Timeout;
+	int32_t		m_timeout;
 };
 
 }

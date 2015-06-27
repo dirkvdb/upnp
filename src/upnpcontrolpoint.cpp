@@ -34,7 +34,7 @@ namespace upnp
 {
 
 ControlPoint::ControlPoint(Client& client)
-: m_Renderer(client)
+: m_renderer(client)
 , m_pWebServer(nullptr)
 {
 }
@@ -47,29 +47,29 @@ void ControlPoint::setWebserver(WebServer& webServer)
 
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
-    m_Renderer.setDevice(dev);
-    m_Renderer.useDefaultConnection();
+    m_renderer.setDevice(dev);
+    m_renderer.useDefaultConnection();
 }
 
 MediaRenderer& ControlPoint::getActiveRenderer()
 {
-    return m_Renderer;
+    return m_renderer;
 }
 
 void ControlPoint::activate()
 {
-    m_Renderer.activateEvents();
+    m_renderer.activateEvents();
 }
 
 void ControlPoint::deactivate()
 {
-    m_Renderer.deactivateEvents();
+    m_renderer.deactivateEvents();
 }
 
-void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
+void ControlPoint::playItem(MediaServer& server, const Item& item)
 {
     Resource resource;
-    if (!m_Renderer.supportsPlayback(item, resource))
+    if (!m_renderer.supportsPlayback(item, resource))
     {
         throw Exception("The requested item is not supported by the renderer");
     }
@@ -78,11 +78,11 @@ void ControlPoint::playItem(MediaServer& server, const ItemPtr& item)
 
     prepareConnection(server, resource);
     server.setTransportItem(resource);
-    m_Renderer.setTransportItem(resource);
-    m_Renderer.play();
+    m_renderer.setTransportItem(resource);
+    m_renderer.play();
 }
 
-void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
+void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item> &items)
 {
     if (items.empty())
     {
@@ -101,7 +101,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vec
     for (auto& item : items)
     {
         Resource res;
-        if (m_Renderer.supportsPlayback(item, res))
+        if (m_renderer.supportsPlayback(item, res))
         {
             playlist << res.getUrl() << std::endl;
         }
@@ -112,18 +112,18 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vec
     playItem(server, createPlaylistItem(filename));
 }
 
-void ControlPoint::queueItem(MediaServer& /*server*/, const ItemPtr& item)
+void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item)
 {
     Resource resource;
-    if (!m_Renderer.supportsPlayback(item, resource))
+    if (!m_renderer.supportsPlayback(item, resource))
     {
         throw Exception("The requested item is not supported by the renderer");
     }
 
-    m_Renderer.setNextTransportItem(resource);
+    m_renderer.setNextTransportItem(resource);
 }
 
-void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<ItemPtr> &items)
+void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item>& items)
 {
     if (items.empty())
     {
@@ -142,7 +142,7 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
     for (auto& item : items)
     {
         Resource res;
-        if (m_Renderer.supportsPlayback(item, res))
+        if (m_renderer.supportsPlayback(item, res))
         {
             playlist << res.getUrl() << std::endl;
         }
@@ -157,9 +157,9 @@ void ControlPoint::stopPlaybackIfNecessary()
 {
     try
     {
-        //if (m_Renderer.isActionAvailable(MediaRenderer::Action::Stop))
+        //if (m_renderer.isActionAvailable(MediaRenderer::Action::Stop))
         //{
-            m_Renderer.stop();
+            m_renderer.stop();
         //}
     } catch (std::exception&) {}
 }
@@ -182,33 +182,32 @@ std::string ControlPoint::generatePlaylistFilename()
     return playlistFilename.str();
 }
 
-std::shared_ptr<Item> ControlPoint::createPlaylistItem(const std::string& filename)
+Item ControlPoint::createPlaylistItem(const std::string& filename)
 {
     Resource res;
     res.setUrl(m_pWebServer->getWebRootUrl() + "playlists/" + filename);
     res.setProtocolInfo(ProtocolInfo("http-get:*:audio/m3u:*"));
 
-    auto playlistItem = std::make_shared<Item>();
-    playlistItem->addResource(res);
-
+    auto playlistItem = Item();
+    playlistItem.addResource(res);
     return playlistItem;
 }
 
 void ControlPoint::prepareConnection(MediaServer& server, Resource& resource)
 {
-    if (m_Renderer.supportsConnectionPreparation())
+    if (m_renderer.supportsConnectionPreparation())
     {
         if (server.supportsConnectionPreparation())
         {
-            server.prepareConnection(resource, m_Renderer.getPeerConnectionManager(), ConnectionManager::UnknownConnectionId);
+            server.prepareConnection(resource, m_renderer.getPeerConnectionManager(), ConnectionManager::UnknownConnectionId);
         }
 
-        m_Renderer.prepareConnection(resource, server.getPeerConnectionManager(), server.getConnectionId());
+        m_renderer.prepareConnection(resource, server.getPeerConnectionManager(), server.getConnectionId());
     }
     else
     {
         server.useDefaultConnection();
-        m_Renderer.useDefaultConnection();
+        m_renderer.useDefaultConnection();
     }
 }
 

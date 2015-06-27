@@ -27,7 +27,7 @@ class Action;
 class Device;
 class IClient;
 
-typedef std::function<void(const ItemPtr&)> ItemCb;
+typedef std::function<void(const Item&)> ItemCb;
 
 namespace ContentDirectory
 {
@@ -66,7 +66,7 @@ protected:
     std::string variableToString(Variable type) const override;
 
 private:
-    IContentDirectory&          m_ContentDirectory;
+    IContentDirectory&          m_contentDirectory;
 };
 
 }

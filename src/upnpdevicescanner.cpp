@@ -40,10 +40,10 @@ DeviceScanner::DeviceScanner(IClient& client, DeviceType type)
 }
 
 DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
-: m_Client(client)
-, m_Types(types)
-, m_Started(false)
-, m_Stop(false)
+: m_client(client)
+, m_types(types)
+, m_started(false)
+, m_stop(false)
 {
 }
 
@@ -51,77 +51,77 @@ DeviceScanner::~DeviceScanner() throw()
 {
     stop();
 }
-    
+
 void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
 {
-    std::lock_guard<std::mutex> lock(m_DataMutex);
-    auto iter = m_Devices.find(deviceId);
-    if (iter != m_Devices.end())
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    auto iter = m_devices.find(deviceId);
+    if (iter != m_devices.end())
     {
         DeviceDissapearedEvent(iter->second);
-        m_Devices.erase(iter);
+        m_devices.erase(iter);
     }
 }
 
 void DeviceScanner::start()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    if (m_Started)
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_started)
     {
         return;
     }
-    
-    log::debug("Start device scanner, known devices ({})", m_Devices.size());
 
-    m_Client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
-    m_Client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
-    
-    m_Thread = std::async(std::launch::async, std::bind(&DeviceScanner::checkForTimeoutThread, this));
-    m_DownloadPool.start();
-    m_Started = true;
+    log::debug("Start device scanner, known devices ({})", m_devices.size());
+
+    m_client.UPnPDeviceDiscoveredEvent.connect(std::bind(&DeviceScanner::onDeviceDiscovered, this, _1), this);
+    m_client.UPnPDeviceDissapearedEvent.connect(std::bind(&DeviceScanner::onDeviceDissapeared, this, _1), this);
+
+    m_thread = std::async(std::launch::async, std::bind(&DeviceScanner::checkForTimeoutThread, this));
+    m_downloadPool.start();
+    m_started = true;
 }
 
 void DeviceScanner::stop()
 {
-    {   
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        if (!m_Started)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (!m_started)
         {
             return;
         }
 
-        m_Client.UPnPDeviceDiscoveredEvent.disconnect(this);
-        m_Client.UPnPDeviceDissapearedEvent.disconnect(this);
-        
-        m_Stop = true;
-        m_Condition.notify_all();
-        m_DownloadPool.stop();
+        m_client.UPnPDeviceDiscoveredEvent.disconnect(this);
+        m_client.UPnPDeviceDissapearedEvent.disconnect(this);
+
+        m_stop = true;
+        m_condition.notify_all();
+        m_downloadPool.stop();
     }
-    
-    m_Thread.wait();
-    m_Stop = false;
-    m_Started = false;
-    
-    log::debug("Stop device scanner, known devices ({})", m_Devices.size());
+
+    m_thread.wait();
+    m_stop = false;
+    m_started = false;
+
+    log::debug("Stop device scanner, known devices ({})", m_devices.size());
 }
 
 void DeviceScanner::checkForTimeoutThread()
 {
-    while (!m_Stop)
+    while (!m_stop)
     {
-        std::unique_lock<std::mutex> lock(m_DataMutex);
-    
+        std::unique_lock<std::mutex> lock(m_dataMutex);
+
         system_clock::time_point now = system_clock::now();
-        auto mapEnd = m_Devices.end();
-        for (auto iter = m_Devices.begin(); iter != mapEnd;)
+        auto mapEnd = m_devices.end();
+        for (auto iter = m_devices.begin(); iter != mapEnd;)
         {
             if (now > iter->second->m_TimeoutTime)
             {
                 auto dev = iter->second;
-            
+
                 log::info("Device timed out removing it from the list: {}", iter->second->m_FriendlyName);
-                iter = m_Devices.erase(iter);
-                
+                iter = m_devices.erase(iter);
+
                 DeviceDissapearedEvent(dev);
             }
             else
@@ -129,9 +129,8 @@ void DeviceScanner::checkForTimeoutThread()
                 ++iter;
             }
         }
-        
-        
-        if (std::cv_status::no_timeout == m_Condition.wait_for(lock, seconds(g_timeCheckInterval)))
+
+        if (std::cv_status::no_timeout == m_condition.wait_for(lock, seconds(g_timeCheckInterval)))
         {
             return;
         }
@@ -140,61 +139,61 @@ void DeviceScanner::checkForTimeoutThread()
 
 void DeviceScanner::refresh()
 {
-    if (m_Types.size() == 1)
+    if (m_types.size() == 1)
     {
-        m_Client.searchDevicesOfType(*m_Types.begin(), g_searchTimeoutInSec);
+        m_client.searchDevicesOfType(*m_types.begin(), g_searchTimeoutInSec);
     }
     else
     {
-        m_Client.searchAllDevices(g_searchTimeoutInSec);
+        m_client.searchAllDevices(g_searchTimeoutInSec);
     }
 }
 
 uint32_t DeviceScanner::getDeviceCount() const
 {
-    std::lock_guard<std::mutex> lock(m_DataMutex);
-    return static_cast<uint32_t>(m_Devices.size());
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return static_cast<uint32_t>(m_devices.size());
 }
-    
+
 std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
 {
-    std::lock_guard<std::mutex> lock(m_DataMutex);
-    return m_Devices.at(udn);
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return m_devices.at(udn);
 }
 
 std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
 {
-    std::lock_guard<std::mutex> lock(m_DataMutex);
-    return m_Devices;
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return m_devices;
 }
 
 void DeviceScanner::obtainDeviceDetails(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device)
 {
-    xml::Document doc = m_Client.downloadXmlDocument(info.location);
-    
+    xml::Document doc = m_client.downloadXmlDocument(info.location);
+
     device->m_Location      = info.location;
     device->m_UDN           = doc.getChildNodeValueRecursive("UDN");
     device->m_Type          = Device::stringToDeviceType(doc.getChildNodeValueRecursive("deviceType"));
     device->m_TimeoutTime   = system_clock::now() + seconds(info.expirationTime);
-    
-    assert(m_Types.find(device->m_Type) != m_Types.end());
-    
+
+    assert(m_types.find(device->m_Type) != m_types.end());
+
     if (device->m_UDN.empty())
     {
         return;
     }
-    
+
     device->m_FriendlyName   = doc.getChildNodeValueRecursive("friendlyName");
     try { device->m_BaseURL  = doc.getChildNodeValueRecursive("URLBase"); } catch (std::exception&) {}
     try { device->m_RelURL   = doc.getChildNodeValueRecursive("presentationURL"); } catch (std::exception&) {}
-    
+
     char presURL[200];
     int ret = UpnpResolveURL((device->m_BaseURL.empty() ? device->m_BaseURL.c_str() : info.location.c_str()), device->m_RelURL.empty() ? nullptr : device->m_RelURL.c_str(), presURL);
     if (UPNP_E_SUCCESS == ret)
     {
         device->m_PresURL = presURL;
     }
-    
+
     if (device->m_Type == DeviceType::MediaServer)
     {
         if (findAndParseService(doc, ServiceType::ContentDirectory, device))
@@ -219,34 +218,34 @@ void DeviceScanner::obtainDeviceDetails(const DeviceDiscoverInfo& info, const st
 xml::NodeList DeviceScanner::getFirstServiceList(xml::Document& doc)
 {
     xml::NodeList serviceList;
-    
+
     xml::NodeList servlistNodelist = doc.getElementsByTagName("serviceList");
     if (servlistNodelist.size() > 0)
     {
         xml::Element servlistElem = servlistNodelist.getNode(0);
         return servlistElem.getElementsByTagName("service");
     }
-    
+
     return serviceList;
 }
 
 bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType serviceType, const std::shared_ptr<Device>& device)
 {
     bool found = false;
-    
+
     xml::NodeList serviceList = getFirstServiceList(doc);
     if (!serviceList)
     {
         return found;
     }
-    
+
     std::string base = device->m_BaseURL.empty() ? device->m_Location : device->m_BaseURL;
-    
+
     unsigned long numServices = serviceList.size();
     for (unsigned long i = 0; i < numServices; ++i)
     {
         xml::Element serviceElem = serviceList.getNode(i);
-        
+
         Service service;
         service.m_Type = serviceTypeUrnStringToService(serviceElem.getChildNodeValue("serviceType"));
         if (service.m_Type == serviceType)
@@ -255,7 +254,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             std::string relControlURL       = serviceElem.getChildNodeValue("controlURL");
             std::string relEventURL         = serviceElem.getChildNodeValue("eventSubURL");
             std::string scpURL              = serviceElem.getChildNodeValue("SCPDURL");
-            
+
             char url[512];
             int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
@@ -266,7 +265,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             {
                 service.m_ControlURL = url;
             }
-            
+
             ret = UpnpResolveURL(base.c_str(), relEventURL.c_str(), url);
             if (ret != UPNP_E_SUCCESS)
             {
@@ -286,14 +285,14 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
             {
                 service.m_SCPDUrl = url;
             }
-            
+
             device->m_Services[serviceType] = service;
-            
+
             found = true;
             break;
         }
     }
-    
+
     return found;
 }
 
@@ -301,20 +300,20 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
 void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
 {
     auto deviceType = Device::stringToDeviceType(info.deviceType);
-    if (m_Types.find(deviceType) == m_Types.end())
+    if (m_types.find(deviceType) == m_types.end())
     {
         return;
     }
-    
-    {
-        std::lock_guard<std::mutex> lock(m_DataMutex);
 
-        auto iter = m_Devices.find(info.deviceId);
-        if (iter != m_Devices.end())
+    {
+        std::lock_guard<std::mutex> lock(m_dataMutex);
+
+        auto iter = m_devices.find(info.deviceId);
+        if (iter != m_devices.end())
         {
             // device already known, just update the timeout time
             iter->second->m_TimeoutTime =  system_clock::now() + seconds(info.expirationTime);
-        
+
             // check if the location is still the same (perhaps a new ip or port)
             if (iter->second->m_Location != std::string(info.location))
             {
@@ -322,26 +321,26 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
                 log::debug("Update device, location has changed: {} -> {}", iter->second->m_Location, std::string(info.location));
                 updateDevice(info, iter->second);
             }
-            
+
             return;
         }
     }
-    
-    m_DownloadPool.addJob([this, info] () {
+
+    m_downloadPool.addJob([this, info] () {
         try
         {
             auto device = std::make_shared<Device>();
             obtainDeviceDetails(info, device);
 
             {
-                std::lock_guard<std::mutex> lock(m_DataMutex);
-                auto iter = m_Devices.find(device->m_UDN);
-                if (iter == m_Devices.end())
+                std::lock_guard<std::mutex> lock(m_dataMutex);
+                auto iter = m_devices.find(device->m_UDN);
+                if (iter == m_devices.end())
                 {
                     log::info("Device added to the list: {} ({})", device->m_FriendlyName, device->m_UDN);
-                    m_Devices.emplace(device->m_UDN, device);
+                    m_devices.emplace(device->m_UDN, device);
 
-                    m_DataMutex.unlock();
+                    m_dataMutex.unlock();
                     DeviceDiscoveredEvent(device);
                 }
             }
@@ -355,7 +354,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
 
 void DeviceScanner::updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device)
 {
-    m_DownloadPool.addJob([this, info, device] () {
+    m_downloadPool.addJob([this, info, device] () {
         try
         {
             obtainDeviceDetails(info, device);

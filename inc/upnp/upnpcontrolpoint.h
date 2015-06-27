@@ -53,16 +53,16 @@ public:
 
     // these items are immediately set as the current item, send play when stopped to
     // actually start playback
-    void playItem(MediaServer& server, const ItemPtr& item);
+    void playItem(MediaServer& server, const Item& item);
     // A playlist file is created from the items and is sent to the renderer as one item
-    void playItemsAsPlaylist(MediaServer& server, const std::vector<ItemPtr>& items);
+    void playItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items);
 
     // these items are queued for playback after the current item, calling queue multiple times
     // will overwrite the previous queue action, you have to wait until the currently queued item
     // has been proccessed before calling queue again
-    void queueItem(MediaServer& server, const ItemPtr& item);
+    void queueItem(MediaServer& server, const Item& item);
     // A playlist file is created from the items and is queued on the renderer as one item
-    void queueItemsAsPlaylist(MediaServer& server, const std::vector<ItemPtr>& items);
+    void queueItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items);
 
 private:
     void prepareConnection(MediaServer& server, Resource& resource);
@@ -70,9 +70,9 @@ private:
     void throwOnMissingWebserver();
     void stopPlaybackIfNecessary();
     std::string generatePlaylistFilename();
-    ItemPtr createPlaylistItem(const std::string& filename);
+    Item createPlaylistItem(const std::string& filename);
 
-    MediaRenderer m_Renderer;
+    MediaRenderer m_renderer;
     WebServer*    m_pWebServer;
 };
 

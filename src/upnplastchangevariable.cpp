@@ -29,30 +29,30 @@ namespace upnp
 {
 
 LastChangeVariable::LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventIntervalInMilliSecs)
-: m_Thread(std::bind(&LastChangeVariable::variableThread, this))
-, m_MinInterval(minEventIntervalInMilliSecs)
-, m_Stop(false)
-, m_EventMetaNamespace(serviceTypeToUrnMetadataString(type))
+: m_thread(std::bind(&LastChangeVariable::variableThread, this))
+, m_minInterval(minEventIntervalInMilliSecs)
+, m_stop(false)
+, m_eventMetaNamespace(serviceTypeToUrnMetadataString(type))
 {
 }
 
 LastChangeVariable::~LastChangeVariable()
 {
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        m_Stop = true;
-        m_Condition.notify_all();
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_stop = true;
+        m_condition.notify_all();
     }
 
-    if (m_Thread.joinable())
+    if (m_thread.joinable())
     {
-        m_Thread.join();
+        m_thread.join();
     }
 }
 
 void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVariable& var)
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     if (var.getName().empty())
     {
@@ -60,7 +60,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
         return;
     }
 
-    auto& vars = m_ChangedVariables[instanceId];
+    auto& vars = m_changedVariables[instanceId];
     auto iter = std::find(vars.begin(), vars.end(), var);
     if (iter == vars.end())
     {
@@ -71,7 +71,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
         *iter = var;
     }
 
-    m_Condition.notify_all();
+    m_condition.notify_all();
 }
 
 void LastChangeVariable::createLastChangeEvent()
@@ -88,9 +88,9 @@ void LastChangeVariable::createLastChangeEvent()
         propertySet.addAttribute("xmlns:e", ns);
 
         auto event = doc.createElement("Event");
-        event.addAttribute("xmlns", m_EventMetaNamespace);
+        event.addAttribute("xmlns", m_eventMetaNamespace);
 
-        for (auto& vars : m_ChangedVariables)
+        for (auto& vars : m_changedVariables)
         {
             auto instance = xml::utils::createServiceVariablesElement(doc, vars.first, vars.second);
             event.appendChild(instance);
@@ -120,20 +120,20 @@ void LastChangeVariable::createLastChangeEvent()
 
 void LastChangeVariable::variableThread()
 {
-    while (!m_Stop)
+    while (!m_stop)
     {
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        m_Condition.wait(lock, [this] { return (!m_ChangedVariables.empty()) || m_Stop; });
-        if (m_Stop)
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_condition.wait(lock, [this] { return (!m_changedVariables.empty()) || m_stop; });
+        if (m_stop)
         {
             continue;
         }
 
         createLastChangeEvent();
-        m_ChangedVariables.clear();
+        m_changedVariables.clear();
 
         // Wait at least MinInterval before a new update is sent or until a stop is requested
-        m_Condition.wait_for(lock, m_MinInterval, [this] { return m_Stop; });
+        m_condition.wait_for(lock, m_minInterval, [this] { return m_stop; });
     }
 }
 

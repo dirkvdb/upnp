@@ -81,14 +81,14 @@ protected:
 private:
     void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);
 
-    IRenderingControl&                                       m_RenderingControl;
-    LastChangeVariable                                       m_LastChange;
+    IRenderingControl&                                       m_renderingControl;
+    LastChangeVariable                                       m_lastChange;
 
     // variables which are mapped per channel
-    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Mute;
-    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Loudness;
-    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_Volumes;
-    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_DBVolumes;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_mute;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_loudness;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_volumes;
+    std::map<uint32_t, std::map<Channel, ServiceVariable>>   m_dbVolumes;
 };
 
 }
