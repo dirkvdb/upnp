@@ -71,14 +71,14 @@ protected:
         contentDirectory = std::make_unique<ContentDirectory::Client>(client);
 
         Service service;
-        service.m_Type = ServiceType::ContentDirectory;
-        service.m_ControlURL = g_controlUrl;
-        service.m_EventSubscriptionURL = g_subscriptionUrl;
-        service.m_SCPDUrl = g_serviceDescriptionUrl;
+        service.m_type                  = ServiceType::ContentDirectory;
+        service.m_controlURL            = g_controlUrl;
+        service.m_eventSubscriptionURL  = g_subscriptionUrl;
+        service.m_scpdUrl               = g_serviceDescriptionUrl;
 
         auto device = std::make_shared<Device>();
-        device->m_Type = DeviceType::MediaServer;
-        device->m_Services[service.m_Type] = service;
+        device->m_type = DeviceType::MediaServer;
+        device->m_services[service.m_type] = service;
 
         // set a valid device
         EXPECT_CALL(client, downloadXmlDocument(g_serviceDescriptionUrl))

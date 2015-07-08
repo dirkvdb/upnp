@@ -54,66 +54,66 @@ class AVTransportTest : public Test
 {
 public:
     virtual ~AVTransportTest() {}
-    
+
 protected:
     void SetUp()
     {
         avtransport = std::make_unique<AVTransport::Client>(client);
-        
+
         Service service;
-        service.m_Type                  = ServiceType::AVTransport;
-        service.m_ControlURL            = g_controlUrl;
-        service.m_EventSubscriptionURL  = g_subscriptionUrl;
-        service.m_SCPDUrl               = g_serviceDescriptionUrl;
-        
+        service.m_type                  = ServiceType::AVTransport;
+        service.m_controlURL            = g_controlUrl;
+        service.m_eventSubscriptionURL  = g_subscriptionUrl;
+        service.m_scpdUrl               = g_serviceDescriptionUrl;
+
         auto device = std::make_shared<Device>();
-        device->m_Type = DeviceType::MediaRenderer;
-        device->m_Services[service.m_Type] = service;
-        
+        device->m_type = DeviceType::MediaRenderer;
+        device->m_services[service.m_type] = service;
+
         // set a valid device
         EXPECT_CALL(client, downloadXmlDocument(g_serviceDescriptionUrl))
             .WillOnce(Return(xml::Document(testxmls::avtransportServiceDescription)));
         avtransport->setDevice(device);
-        
+
         subscribe();
-        
+
         Mock::VerifyAndClearExpectations(&client);
     }
-    
+
     void TearDown()
     {
         Mock::VerifyAndClearExpectations(&client);
 
         unsubscribe();
         Mock::VerifyAndClearExpectations(&client);
-        
+
         avtransport.reset();
     }
-    
+
     void subscribe()
     {
         EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _))
             .WillOnce(Invoke([&] (const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>& cb) { callback = cb; }));
-        
+
         avtransport->StateVariableEvent.connect(std::bind(&EventListenerMock::AVTransportLastChangedEvent, &eventListener, _1, _2), this);
         avtransport->subscribe();
-        
+
         Upnp_Event_Subscribe event;
         event.ErrCode = UPNP_E_SUCCESS;
         strcpy(event.PublisherUrl, g_subscriptionUrl.c_str());
         strcpy(event.Sid, g_subscriptionId);
-        
+
         callback->onServiceEvent(UPNP_EVENT_SUBSCRIBE_COMPLETE, &event);
     }
-    
+
     void unsubscribe()
     {
         EXPECT_CALL(client, unsubscribeFromService(callback));
-        
+
         avtransport->StateVariableEvent.disconnect(this);
         avtransport->unsubscribe();
     }
-    
+
     void triggerLastChangeUpdate()
     {
         std::vector<testxmls::EventValue> ev = { { "TransportState", "PLAYING" },
@@ -144,16 +144,16 @@ protected:
                                                  { "A_ARG_TYPE_SeekMode", "TRACK_NR" },
                                                  { "A_ARG_TYPE_SeekTarget", "target" },
                                                  { "A_ARG_TYPE_InstanceID", "InstanceId" } };
-        
+
         xml::Document doc(testxmls::generateStateVariableChangeEvent("LastChange", g_eventNameSpaceId, ev));
-        
+
         Upnp_Event event;
         event.ChangedVariables = doc;
         strcpy(event.Sid, g_subscriptionId);
-        
+
         client.UPnPEventOccurredEvent(&event);
     }
-    
+
     std::unique_ptr<AVTransport::Client>    avtransport;
     StrictMock<ClientMock>                  client;
     StrictMock<EventListenerMock>           eventListener;
@@ -176,7 +176,7 @@ TEST_F(AVTransportTest, supportedActions)
     EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::SetAVTransportURI));
     EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::SetPlayMode));
     EXPECT_TRUE(avtransport->supportsAction(AVTransport::Action::Stop));
-    
+
     EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::Record));
     EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::SetRecordQualityMode));
     EXPECT_FALSE(avtransport->supportsAction(AVTransport::Action::SetNextAVTransportURI));
@@ -187,9 +187,9 @@ TEST_F(AVTransportTest, lastChangeEvent)
     std::map<AVTransport::Variable, std::string> lastChange;
     EXPECT_CALL(eventListener, AVTransportLastChangedEvent(AVTransport::Variable::LastChange, _))
         .WillOnce(SaveArg<1>(&lastChange));
-    
+
     triggerLastChangeUpdate();
-    
+
     EXPECT_EQ("PLAYING",            lastChange[AVTransport::Variable::TransportState]);
     EXPECT_EQ("OK",                 lastChange[AVTransport::Variable::TransportStatus]);
     EXPECT_EQ("NETWORK",            lastChange[AVTransport::Variable::PlaybackStorageMedium]);
@@ -218,7 +218,7 @@ TEST_F(AVTransportTest, lastChangeEvent)
     EXPECT_EQ("TRACK_NR",           lastChange[AVTransport::Variable::ArgumentTypeSeekMode]);
     EXPECT_EQ("target",             lastChange[AVTransport::Variable::ArgumentTypeSeekTarget]);
     EXPECT_EQ("InstanceId",         lastChange[AVTransport::Variable::ArgumentTypeInstanceId]);
-    
+
 }
 
 TEST_F(AVTransportTest, playDefaultSpeed)
@@ -226,10 +226,10 @@ TEST_F(AVTransportTest, playDefaultSpeed)
     Action expectedAction("Play", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     expectedAction.addArgument("Speed", "1");
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->play(g_connectionId);
 }
 
@@ -238,10 +238,10 @@ TEST_F(AVTransportTest, play)
     Action expectedAction("Play", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
     expectedAction.addArgument("Speed", "2");
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->play(g_connectionId, "2");
 }
 
@@ -249,10 +249,10 @@ TEST_F(AVTransportTest, stop)
 {
     Action expectedAction("Stop", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->stop(g_connectionId);
 }
 
@@ -260,10 +260,10 @@ TEST_F(AVTransportTest, pause)
 {
     Action expectedAction("Pause", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->pause(g_connectionId);
 }
 
@@ -271,10 +271,10 @@ TEST_F(AVTransportTest, previous)
 {
     Action expectedAction("Previous", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->previous(g_connectionId);
 }
 
@@ -282,10 +282,10 @@ TEST_F(AVTransportTest, next)
 {
     Action expectedAction("Next", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType())));
-    
+
     avtransport->next(g_connectionId);
 }
 
@@ -293,13 +293,13 @@ TEST_F(AVTransportTest, getTransportInfo)
 {
     Action expectedAction("GetTransportInfo", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
                                                 { "CurrentTransportState",  "PLAYING" },
                                                 { "CurrentTransportStatus", "OK" },
                                                 { "CurrentSpeed",           "Speed"} } )));
-    
+
     AVTransport::TransportInfo info = avtransport->getTransportInfo(g_connectionId);
     EXPECT_EQ(AVTransport::State::Playing,      info.currentTransportState);
     EXPECT_EQ(AVTransport::Status::Ok,          info.currentTransportStatus);
@@ -310,7 +310,7 @@ TEST_F(AVTransportTest, getPositionInfo)
 {
     Action expectedAction("GetPositionInfo", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
-    
+
     EXPECT_CALL(client, sendAction(expectedAction))
         .WillOnce(Return(generateActionResponse(expectedAction.getName(), expectedAction.getServiceType(), {
                                                 { "AbsCount",      "1" },
@@ -321,7 +321,7 @@ TEST_F(AVTransportTest, getPositionInfo)
                                                 { "TrackDuration", "Duration" },
                                                 { "TrackMetaData", "Meta" },
                                                 { "TrackURI",      "URI"} } )));
-    
+
     auto info = avtransport->getPositionInfo(g_connectionId);
     EXPECT_EQ(1, info.absoluteCount);
     EXPECT_EQ(2, info.relativeCount);

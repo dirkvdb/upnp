@@ -36,34 +36,34 @@ namespace
 class Service
 {
 public:
-    ServiceType     m_Type;
-    std::string     m_Id;
-    std::string     m_SCPDUrl;
-    std::string     m_ControlURL;
-    std::string     m_EventSubscriptionURL;
-    std::string     m_EventSubscriptionID;
+    ServiceType     m_type;
+    std::string     m_id;
+    std::string     m_scpdUrl;
+    std::string     m_controlURL;
+    std::string     m_eventSubscriptionURL;
+    std::string     m_eventSubscriptionID;
 };
 
 class Device
 {
 public:
-    bool operator==(const Device& otherDevice) const { return m_UDN == otherDevice.m_UDN; }
+    bool operator==(const Device& otherDevice) const { return m_udn == otherDevice.m_udn; }
 
-    bool implementsService(ServiceType type) const { return m_Services.find(type) != m_Services.end(); }
+    bool implementsService(ServiceType type) const { return m_services.find(type) != m_services.end(); }
 
-    DeviceType      m_Type;
-    std::string     m_UserDefinedName;
-    std::string     m_FriendlyName;
-    std::string     m_UDN;
-    std::string     m_BaseURL;
-    std::string     m_RelURL;
-    std::string     m_PresURL;
-    std::string     m_Location;
-    std::string     m_ContainerId;
+    DeviceType      m_type;
+    std::string     m_userDefinedName;
+    std::string     m_friendlyName;
+    std::string     m_udn;
+    std::string     m_baseURL;
+    std::string     m_relURL;
+    std::string     m_presURL;
+    std::string     m_location;
+    std::string     m_containerId;
 
-    std::chrono::system_clock::time_point   m_TimeoutTime;
+    std::chrono::system_clock::time_point   m_timeoutTime;
 
-    std::map<ServiceType, Service>    m_Services;
+    std::map<ServiceType, Service>    m_services;
 
     static const std::string deviceTypeToString(DeviceType type)
     {

@@ -102,7 +102,7 @@ bool MediaRenderer::supportsPlayback(const upnp::Item& item, Resource& suggested
 
 std::string MediaRenderer::getPeerConnectionManager() const
 {
-    return fmt::format("{}/{}", m_device->m_UDN, m_device->m_Services[ServiceType::ConnectionManager].m_Id);
+    return fmt::format("{}/{}", m_device->m_udn, m_device->m_services[ServiceType::ConnectionManager].m_id);
 }
 
 void MediaRenderer::resetConnection()

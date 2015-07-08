@@ -63,8 +63,8 @@ public:
     {
         if (device->implementsService(getType()))
         {
-            m_service = device->m_Services[getType()];
-            parseServiceDescription(m_service.m_SCPDUrl);
+            m_service = device->m_services[getType()];
+            parseServiceDescription(m_service.m_scpdUrl);
         }
     }
 
@@ -76,7 +76,7 @@ public:
         std::lock_guard<std::mutex> lock(m_eventMutex);
         m_subscriber = std::make_shared<ServiceSubscriber>(std::bind(&ServiceClientBase::eventCb, this, std::placeholders::_1, std::placeholders::_2));
         m_client.UPnPEventOccurredEvent.connect([this] (Upnp_Event* arg) { eventOccurred(arg); }, this);
-        m_client.subscribeToService(m_service.m_EventSubscriptionURL, getSubscriptionTimeout(), m_subscriber);
+        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), m_subscriber);
     }
 
     void unsubscribe()
@@ -185,7 +185,7 @@ protected:
 
     xml::Document executeAction(ActionType actionType, const std::map<std::string, std::string>& args)
     {
-        Action action(actionToString(actionType), m_service.m_ControlURL, getType());
+        Action action(actionToString(actionType), m_service.m_controlURL, getType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
