@@ -49,7 +49,6 @@ public:
 
     virtual ~ServiceClientBase()
     {
-        utils::log::debug("DEST {}", (void*)this);
         try
         {
             unsubscribe();
@@ -58,7 +57,6 @@ public:
         {
             utils::log::error(e.what());
         }
-        utils::log::debug("RUCT {}", (void*) this);
     }
 
     virtual void setDevice(const std::shared_ptr<Device>& device)
@@ -218,7 +216,6 @@ private:
     void eventCb(Upnp_EventType eventType, void* pEvent)
     {
         std::lock_guard<std::mutex> lock(m_eventMutex);
-        utils::log::debug("eventCb");
         switch (eventType)
         {
             case UPNP_EVENT_SUBSCRIBE_COMPLETE:

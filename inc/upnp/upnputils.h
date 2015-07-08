@@ -39,6 +39,15 @@ inline void throwOnNull(const void* pPtr, const char* pMsg)
     }
 }
 
+template <typename... T>
+inline void handleUPnPResult(int rc, T&&... args)
+{
+    if (UPNP_E_SUCCESS != rc)
+    {
+        throw Exception(rc, std::forward<T&&>(args)...);
+    }
+}
+
 inline void handleUPnPResult(int errorCode)
 {
     if (UPNP_E_SUCCESS == errorCode)

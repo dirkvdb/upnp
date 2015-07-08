@@ -24,11 +24,12 @@
 
 #include "utils/bufferedreader.h"
 
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpclient.h"
 #include "upnp/upnphttpreader.h"
 #include "upnp/upnpxmlutils.h"
+#include "upnp/upnpfactory.h"
 
 using namespace utils;
 using namespace testing;
@@ -43,24 +44,24 @@ class HttpReaderTest : public Test
 {
 public:
     HttpReaderTest()
-    : httpClient(5)
+    : client(factory::createClient())
+    , httpClient(5)
     {
     }
-    virtual ~HttpReaderTest() {}
 
 protected:
     void SetUp()
     {
-        client.initialize();
+        client->initialize();
         webserver = std::make_unique<WebServer>("/");
     }
-    
+
     void TearDown()
     {
         webserver.reset();
-        client.destroy();
+        client->destroy();
     }
-    
+
     std::vector<uint8_t> createBinaryFile()
     {
         std::vector<uint8_t> data;
@@ -68,40 +69,40 @@ protected:
         {
             data.push_back(i + 1);
         }
-        
+
         return data;
     }
-    
-    Client                      client;
-    HttpClient                  httpClient;
+
+    std::unique_ptr<IClient>    client;
     std::unique_ptr<WebServer>  webserver;
+    HttpClient                  httpClient;
 };
 
 TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
 {
     constexpr size_t fileSize = 1024 * 1024 * 1; //10MB
     std::vector<uint8_t> data(fileSize);
-    
+
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", data);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
-    
+
     BufferedReader reader(std::make_unique<HttpReader>(), 128 * 1024);
     reader.open(url);
     EXPECT_EQ(fileSize, reader.getContentLength());
-    
-    
+
+
     std::vector<uint8_t> result(fileSize, '\0');
     size_t currentPos = 0;
     size_t increment = 65536;
-    
+
     do
     {
         auto bytesRead = reader.read(&result[currentPos], increment);
         currentPos += bytesRead;
     }
     while (!reader.eof());
-    
+
     EXPECT_EQ(0, memcmp(data.data(), result.data(), data.size()));
 }
 

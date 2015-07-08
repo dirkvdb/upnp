@@ -28,7 +28,7 @@
 
 namespace upnp
 {
-    
+
 namespace
 {
     static const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
@@ -40,7 +40,7 @@ namespace
     static const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
     static const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
     static const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
-    
+
     static const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
     static const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
     static const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
@@ -108,22 +108,22 @@ enum class Class
 class Exception : public std::runtime_error
 {
 public:
-    Exception(const char* msg) : std::runtime_error(msg), m_ErrorCode(0) {}
+    Exception(const char* msg) : std::runtime_error(msg), m_errorCode(0) {}
     Exception(const std::string& msg) : Exception(msg.c_str()) {}
 
     template<typename... T>
     Exception(const char* fmt, const T&... args) : Exception(0, fmt, std::forward<const T>(args)...) {}
 
-    Exception(int32_t errorCode, const char* msg) : std::runtime_error(msg), m_ErrorCode(errorCode) {}
+    Exception(int32_t errorCode, const char* msg) : std::runtime_error(msg), m_errorCode(errorCode) {}
     Exception(int32_t errorCode, const std::string& msg) : Exception(errorCode, msg.c_str()) {}
 
     template<typename... T>
-    Exception(int32_t errorCode, const char* fmt, const T&... args) : Exception(errorCode, fmt::format(fmt, std::forward<const T>(args)...)) {}
+    Exception(int32_t errorCode, const char* fmt, T&&... args) : Exception(errorCode, fmt::format(fmt, std::forward<T&&>(args)...)) {}
 
-    int32_t getErrorCode() { return m_ErrorCode; }
-    
+    int32_t getErrorCode() { return m_errorCode; }
+
 private:
-    int32_t     m_ErrorCode;
+    int32_t     m_errorCode;
 };
 
 inline ServiceType serviceTypeFromString(const std::string& name)
@@ -132,7 +132,7 @@ inline ServiceType serviceTypeFromString(const std::string& name)
     if (name == "RenderingControl")     return ServiceType::RenderingControl;
     if (name == "ConnectionManager")    return ServiceType::ConnectionManager;
     if (name == "AVTransport")          return ServiceType::AVTransport;
-    
+
     return ServiceType::Unknown;
 }
 
@@ -143,7 +143,7 @@ inline std::string serviceTypeToTypeString(ServiceType type)
     if (type == ServiceType::ConnectionManager)     return "ConnectionManager";
     if (type == ServiceType::AVTransport)           return "AVTransport";
     if (type == ServiceType::Unknown)               return "UnknownServiceType";
-    
+
     throw Exception("Invalid service type received");
 }
 
@@ -153,7 +153,7 @@ inline std::string serviceTypeToUrnTypeString(ServiceType type)
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
-    
+
     throw Exception("Invalid service type received for urn");
 }
 
@@ -162,7 +162,7 @@ inline std::string serviceTypeToUrnIdString(ServiceType type)
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
-    
+
     throw Exception("Invalid service type received for id urn");
 }
 
@@ -171,7 +171,7 @@ inline std::string serviceTypeToUrnMetadataString(ServiceType type)
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
     if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
-    
+
     throw Exception("Invalid service type received for id urn");
 }
 
@@ -181,7 +181,7 @@ inline ServiceType serviceTypeUrnStringToService(const std::string& type)
     if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
     if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
     if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
-    
+
     return ServiceType::Unknown;
 }
 
@@ -191,7 +191,7 @@ inline ServiceType serviceIdUrnStringToService(const std::string& type)
     if (type == RenderingControlServiceIdUrn)    return ServiceType::RenderingControl;
     if (type == ConnectionManagerServiceIdUrn)   return ServiceType::ConnectionManager;
     if (type == AVTransportServiceIdUrn)         return ServiceType::AVTransport;
-    
+
     return ServiceType::Unknown;
 }
 
@@ -221,7 +221,7 @@ inline Property propertyFromString(const std::string& name)
     if (name == "upnp:actor")               return Property::Actor;
     if (name == "upnp:storageUsed")         return Property::StorageUsed;
     if (name == "*")                        return Property::All;
-    
+
     return Property::Unknown;
 }
 

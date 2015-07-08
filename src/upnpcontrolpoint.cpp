@@ -19,7 +19,6 @@
 #include <chrono>
 #include <condition_variable>
 
-#include "upnp/upnpclient.h"
 #include "upnp/upnpmediaserver.h"
 #include "upnp/upnpmediarenderer.h"
 #include "upnp/upnpprotocolinfo.h"
@@ -33,7 +32,7 @@ using namespace utils;
 namespace upnp
 {
 
-ControlPoint::ControlPoint(Client& client)
+ControlPoint::ControlPoint(IClient& client)
 : m_renderer(client)
 , m_pWebServer(nullptr)
 {

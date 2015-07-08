@@ -38,7 +38,7 @@ IF (STANDALONE)
     ADD_SUBDIRECTORY(../utils utils)
     GET_DIRECTORY_PROPERTY(UTILS_INCLUDE_DIRS   DIRECTORY ../utils INCLUDE_DIRECTORIES)
 
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Weffc++")
     SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
     ADD_DEFINITIONS("-std=c++1y")
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
@@ -67,7 +67,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpavtransportclient.h            src/upnpavtransportclient.cpp
     inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
     inc/upnp/upnpavtransporttypes.h
-    inc/upnp/upnpclient.h                       src/upnpclient.cpp
     inc/upnp/upnpclientinterface.h
     inc/upnp/upnpconnectionmanagerclient.h      src/upnpconnectionmanagerclient.cpp
     inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
@@ -81,6 +80,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnpdevicescanner.h                src/upnpdevicescanner.cpp
     inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
+    inc/upnp/upnpfactory.h                      src/upnpfactory.cpp
     inc/upnp/upnpfwd.h
     inc/upnp/upnphttpclient.h                   src/upnphttpclient.cpp
     inc/upnp/upnphttpreader.h                   src/upnphttpreader.cpp
@@ -102,6 +102,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
+    src/upnpclient.h                            src/upnpclient.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnpframework ${UPNP_LIBRARY} ${THREADUTIL_LIBRARY} ${IXML_LIBRARY} utils)

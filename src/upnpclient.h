@@ -30,36 +30,41 @@ public:
     virtual ~Client();
 
     Client& operator=(const Client&) = delete;
-    
+
     virtual void initialize(const char* interfaceName = nullptr, int port = 0) override;
     virtual void destroy() override;
     virtual void reset() override;
-    
+
     virtual std::string getIpAddress() const override;
     virtual int32_t getPort() const override;
-    
+
     virtual void searchDevicesOfType(DeviceType type, int32_t timeout) const override;
     virtual void searchAllDevices(int32_t timeout) const override;
-    
+
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const override;
     virtual void unsubscribeFromService(const std::string& subscriptionId) const override;
-    
+
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const override;
     virtual void unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const override;
-    
+
     virtual xml::Document sendAction(const Action& action) const override;
     virtual xml::Document downloadXmlDocument(const std::string& url) const override;
- 
+
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
     static int upnpServiceCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
     static const char* deviceTypeToString(DeviceType type);
 
-    UpnpClient_Handle   m_client;
-    static std::mutex   m_mutex;
-    static std::map<IServiceSubscriber*, std::weak_ptr<IServiceSubscriber>> m_serviceSubscriptions;
+    class UpnpInitialization;
+    class ClientHandle;
+
+    std::unique_ptr<UpnpInitialization>                                         m_upnp;
+    std::unique_ptr<ClientHandle>                                               m_client;
+
+    static std::mutex                                                           m_mutex;
+    static std::map<IServiceSubscriber*, std::weak_ptr<IServiceSubscriber>>     m_serviceSubscriptions;
 };
-    
+
 }
 
 #endif

@@ -96,6 +96,7 @@ public:
         deviceDissapeared
     };
 
+    virtual ~IDeviceSubscriber() = default;
     virtual void onUPnPDeviceEvent(const Device& item, DeviceEvent event) = 0;
 };
 

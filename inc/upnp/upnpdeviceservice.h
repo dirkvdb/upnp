@@ -45,6 +45,8 @@ public:
         m_variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
     }
 
+    virtual ~DeviceService() = default;
+
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
     virtual xml::Document getSubscriptionResponse() = 0;
 

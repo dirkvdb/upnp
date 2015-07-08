@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpclient.h"
+#include "upnpclient.h"
 
 #include <upnp/upnpconfig.h>
 
@@ -35,10 +35,47 @@ namespace upnp
 std::map<IServiceSubscriber*, std::weak_ptr<IServiceSubscriber>> Client::m_serviceSubscriptions;
 std::mutex Client::m_mutex;
 
-Client::Client()
-: m_client(0)
+class Client::UpnpInitialization
 {
-}
+public:
+    UpnpInitialization(const char* interfaceName, int port)
+    {
+    #ifdef UPNP_ENABLE_IPV6
+        handleUPnPResult(UpnpInit2(interfaceName, port), "Failed to initialize UPnP stack");
+    #else
+        handleUPnPResult(UpnpInit(interfaceName, port), "Failed to initialize UPnP stack");
+    #endif
+    }
+
+    ~UpnpInitialization()
+    {
+        UpnpFinish();
+    }
+};
+
+class Client::ClientHandle
+{
+public:
+    ClientHandle(Upnp_FunPtr cb, const void* cookie)
+    {
+        handleUPnPResult(UpnpRegisterClient(cb, cookie, &m_handle), "Error registering Control Point");
+    }
+
+    ~ClientHandle()
+    {
+        UpnpUnRegisterClient(m_handle);
+    }
+
+    operator UpnpClient_Handle() const
+    {
+        return m_handle;
+    }
+
+private:
+    UpnpClient_Handle   m_handle;
+};
+
+Client::Client() = default;
 
 Client::~Client()
 {
@@ -49,47 +86,20 @@ void Client::initialize(const char* interfaceName, int port)
 {
     log::debug("Initializing UPnP SDK");
 
-#ifdef UPNP_ENABLE_IPV6
-    int rc = UpnpInit2(interfaceName, port);
-#else
-    int rc = UpnpInit(interfaceName, port);
-#endif
-    if (UPNP_E_SUCCESS != rc && UPNP_E_INIT != rc)
-    {
-        UpnpFinish();
-        log::error("UpnpInit() Error: {}", rc);
-        throw Exception(rc, "Failed to initialize UPnP stack");
-    }
+    auto upnp   = std::make_unique<UpnpInitialization>(interfaceName, port);
+    m_client    = std::make_unique<ClientHandle>(upnpCallback, this);
+    m_upnp = std::move(upnp);
 
-    rc = UpnpRegisterClient(upnpCallback, this, &m_client);
-    if (UPNP_E_SUCCESS == rc)
-    {
-        UpnpSetMaxContentLength(1024 * 1024);
-    }
-    else if (UPNP_E_ALREADY_REGISTERED == rc)
-    {
-        log::warn("Control Point was already registered");
-    }
-    else if (UPNP_E_SUCCESS != rc)
-    {
-        log::error("Error registering Control Point: {}", rc);
-        UpnpFinish();
-        throw Exception(rc, "Error registering Control Point");
-    }
+    UpnpSetMaxContentLength(1024 * 1024);
 
     log::debug("Initialized: {}:{}", UpnpGetServerIpAddress(), UpnpGetServerPort());
 }
 
 void Client::destroy()
 {
-	if (m_client)
-    {
-		UpnpUnRegisterClient(m_client);
-		UpnpFinish();
-		m_client = 0;
-
-		log::debug("Destroyed UPnP SDK");
-    }
+    m_client.reset();
+    m_upnp.reset();
+    log::debug("Destroyed UPnP SDK");
 }
 
 void Client::reset()
@@ -111,23 +121,13 @@ int32_t Client::getPort() const
 void Client::searchDevicesOfType(DeviceType type, int32_t timeout) const
 {
     log::debug("Send UPnP discovery");
-
-    int rc = UpnpSearchAsync(m_client, timeout, Device::deviceTypeToString(type).c_str(), this);
-    if (UPNP_E_SUCCESS != rc)
-    {
-        log::error("Error sending search request: {}", rc);
-    }
+    handleUPnPResult(UpnpSearchAsync(*m_client, timeout, Device::deviceTypeToString(type).c_str(), this), "Error sending search request");
 }
 
 void Client::searchAllDevices(int32_t timeout) const
 {
     log::debug("Send UPnP discovery");
-
-    int rc = UpnpSearchAsync(m_client, timeout, "ssdp:all", this);
-    if (UPNP_E_SUCCESS != rc)
-    {
-        log::error("Error sending search request: {}", rc);
-    }
+    handleUPnPResult(UpnpSearchAsync(*m_client, timeout, "ssdp:all", this), "Error sending search request");
 }
 
 std::string Client::subscribeToService(const std::string& publisherUrl, int32_t& timeout) const
@@ -135,12 +135,7 @@ std::string Client::subscribeToService(const std::string& publisherUrl, int32_t&
     log::debug("Subscribe to service: {}", publisherUrl);
 
     Upnp_SID subscriptionId;
-    int rc = UpnpSubscribe(m_client, publisherUrl.c_str(), &timeout, subscriptionId);
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Failed to subscribe to UPnP device service");
-    }
-
+    handleUPnPResult(UpnpSubscribe(*m_client, publisherUrl.c_str(), &timeout, subscriptionId), "Failed to subscribe to UPnP device service");
     return subscriptionId;
 }
 
@@ -156,36 +151,21 @@ void Client::unsubscribeFromService(const std::string& subscriptionId) const
         throw Exception("Invalid subscription Id");
     }
 
-    int rc = UpnpUnSubscribe(m_client, id);
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Failed to unsubscribe from UPnP device service");
-    }
+    handleUPnPResult(UpnpUnSubscribe(*m_client, id), "Failed to unsubscribe from UPnP device service");
 }
 
 void Client::subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     log::debug("Subscribe to service: {}", publisherUrl);
-
-    int rc = UpnpSubscribeAsync(m_client, publisherUrl.c_str(), timeout, &Client::upnpServiceCallback, sub.get());
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Failed to subscribe to UPnP device service");
-    }
-
+    handleUPnPResult(UpnpSubscribeAsync(*m_client, publisherUrl.c_str(), timeout, &Client::upnpServiceCallback, sub.get()), "Failed to subscribe to UPnP device service");
     m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
 }
 
 void Client::unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    auto iter = m_serviceSubscriptions.find(sub.get());
-    if (iter != m_serviceSubscriptions.end())
-    {
-        m_serviceSubscriptions.erase(iter);
-    }
-
+    m_serviceSubscriptions.erase(sub.get());
     unsubscribeFromService(sub->getSubscriptionId());
 }
 
@@ -196,7 +176,7 @@ xml::Document Client::sendAction(const Action& action) const
 #endif
 
     IXML_Document* pDoc = nullptr;
-    handleUPnPResult(UpnpSendAction(m_client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &pDoc));
+    handleUPnPResult(UpnpSendAction(*m_client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &pDoc));
 
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
@@ -208,25 +188,20 @@ xml::Document Client::sendAction(const Action& action) const
 xml::Document Client::downloadXmlDocument(const std::string& url) const
 {
     IXML_Document* pDoc;
-    int rc = UpnpDownloadXmlDoc(url.c_str(), &pDoc);
-    if (rc != UPNP_E_SUCCESS)
-    {
-        throw Exception(rc, "Error downloading xml document from {}", url);
-    }
-
+    handleUPnPResult(UpnpDownloadXmlDoc(url.c_str(), &pDoc), "Error downloading xml document from {}", url);
     return xml::Document(pDoc);
 }
 
 int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
-    Client* pClient = reinterpret_cast<Client*>(pCookie);
+    auto pClient = reinterpret_cast<Client*>(pCookie);
 
     switch (eventType)
     {
     case UPNP_DISCOVERY_ADVERTISEMENT_ALIVE:
     case UPNP_DISCOVERY_SEARCH_RESULT:
     {
-        struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
+        auto pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
             log::error("Error in Discovery Alive Callback: {}", pDiscEvent->ErrCode);
@@ -247,7 +222,7 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
     }
     case UPNP_DISCOVERY_ADVERTISEMENT_BYEBYE:
     {
-        struct Upnp_Discovery* pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
+        auto pDiscEvent = reinterpret_cast<struct Upnp_Discovery*>(pEvent);
         if (pDiscEvent->ErrCode != UPNP_E_SUCCESS)
         {
             log::error("Error in Discovery Bye Bye Callback: {}", pDiscEvent->ErrCode);
@@ -259,10 +234,8 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
         break;
     }
     case UPNP_EVENT_RECEIVED:
-    {
         pClient->UPnPEventOccurredEvent(reinterpret_cast<Upnp_Event*>(pEvent));
         break;
-    }
     default:
         break;
     }
@@ -273,16 +246,26 @@ int Client::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 int Client::upnpServiceCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    auto* subPtr = reinterpret_cast<IServiceSubscriber*>(pCookie);
-    auto iter = m_serviceSubscriptions.find(subPtr);
-    if (iter != m_serviceSubscriptions.end())
+
+    try
     {
-        auto sub = iter->second.lock();
+        auto sub = m_serviceSubscriptions.at(reinterpret_cast<IServiceSubscriber*>(pCookie)).lock();
         if (sub)
         {
             sub->onServiceEvent(eventType, pEvent);
         }
     }
+    catch (std::out_of_range&) {}
+
+    // auto iter = m_serviceSubscriptions.find(subPtr);
+    // if (iter != m_serviceSubscriptions.end())
+    // {
+    //     auto sub = iter->second.lock();
+    //     if (sub)
+    //     {
+    //         sub->onServiceEvent(eventType, pEvent);
+    //     }
+    // }
 
     return 0;
 }

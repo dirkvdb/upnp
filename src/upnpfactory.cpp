@@ -14,36 +14,18 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ROOT_DEVICE_INTERFACE_H
-#define UPNP_ROOT_DEVICE_INTERFACE_H
-
-#include <string>
-#include <upnp/upnp.h>
-
-#include "utils/signal.h"
-
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnpfactory.h"
+#include "upnpclient.h"
 
 namespace upnp
 {
-
-class IRootDevice
+namespace factory
 {
-public:
-    virtual ~IRootDevice() = default;
 
-    virtual void initialize() = 0;
-    virtual void destroy() = 0;
-
-    virtual std::string getUniqueDeviceName() = 0;
-    virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response) = 0;
-    virtual void notifyEvent(const std::string& serviceId, const xml::Document& event) = 0;
-
-    utils::Signal<Upnp_Action_Request*> ControlActionRequested;
-    utils::Signal<Upnp_Subscription_Request*> EventSubscriptionRequested;
-};
-
+std::unique_ptr<IClient> createClient()
+{
+    return std::make_unique<Client>();
 }
 
-#endif
-
+}
+}

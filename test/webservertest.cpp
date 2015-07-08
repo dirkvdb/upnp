@@ -24,11 +24,11 @@
 #include <vector>
 #include <algorithm>
 
-#include "upnp/upnpclient.h"
+#include "upnp/upnpclientinterface.h"
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpclient.h"
 #include "upnp/upnphttpreader.h"
-
+#include "upnp/upnpfactory.h"
 
 using namespace utils;
 using namespace testing;
@@ -54,7 +54,8 @@ class WebServerTest : public Test
 {
 public:
     WebServerTest()
-    : httpClient(5)
+    : client(factory::createClient())
+    , httpClient(5)
     {
     }
     virtual ~WebServerTest() {}
@@ -62,16 +63,16 @@ public:
 protected:
     void SetUp()
     {
-        client.initialize();
+        client->initialize();
         webserver = std::make_unique<WebServer>("/");
     }
-    
+
     void TearDown()
     {
         webserver.reset();
-        client.destroy();
+        client->destroy();
     }
-    
+
     std::string createTextFile()
     {
         std::stringstream ss;
@@ -79,10 +80,10 @@ protected:
         {
             ss << i << ";";
         }
-        
+
         return ss.str();
     }
-    
+
     std::vector<uint8_t> createBinaryFile()
     {
         std::vector<uint8_t> data;
@@ -90,13 +91,13 @@ protected:
         {
             data.push_back(i + 1);
         }
-        
+
         return data;
     }
-    
-    Client                      client;
-    HttpClient                  httpClient;
+
+    std::unique_ptr<IClient>    client;
     std::unique_ptr<WebServer>  webserver;
+    HttpClient                  httpClient;
 };
 
 TEST_F(WebServerTest, downloadTextFile)
@@ -104,9 +105,9 @@ TEST_F(WebServerTest, downloadTextFile)
     auto file = createTextFile();
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);
-    
+
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
-    
+
     EXPECT_EQ(file.size(), httpClient.getContentLength(url));
     EXPECT_EQ(file, httpClient.getText(url));
 }
@@ -114,13 +115,13 @@ TEST_F(WebServerTest, downloadTextFile)
 TEST_F(WebServerTest, downloadBinaryFile)
 {
     auto file = createBinaryFile();
-    
+
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", file);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
-    
+
     auto result = httpClient.getData(url);
-    
+
     EXPECT_EQ(file.size(), httpClient.getContentLength(url));
     EXPECT_EQ(0, memcmp(file.data(), result.data(), file.size()));
 }
@@ -128,20 +129,20 @@ TEST_F(WebServerTest, downloadBinaryFile)
 TEST_F(WebServerTest, downloadPartialBinaryFile)
 {
     auto file = createBinaryFile();
-    
+
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", file);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
-    
+
     // read byte 1 and 2
     auto result = httpClient.getData(url, 0, 2);
     EXPECT_EQ(2U, result.size());
     EXPECT_EQ(1U, result[0]);
     EXPECT_EQ(2U, result[1]);
-    
+
     // read byte 5 and 6
     result = httpClient.getData(url, 4, 2);
-    
+
     EXPECT_EQ(2U, result.size());
     EXPECT_EQ(5U, result[0]);
     EXPECT_EQ(6U, result[1]);
@@ -154,12 +155,12 @@ TEST_F(WebServerTest, downloadTextFileThroughCalllback)
     auto file = createTextFile();
     auto filePath = "virtualDir/?id=@100";
     auto requestedFilePath = fmt::format("/{}", filePath);
-    
+
     fileops::FileSystemEntryInfo info;
     info.modifyTime = 200;
     info.sizeInBytes = file.size();
     info.type = fileops::FileSystemEntryType::File;
-    
+
     auto fileInfoCb = [&] (const std::string& path) {
         EXPECT_EQ(requestedFilePath, path);
         return info;
@@ -168,18 +169,18 @@ TEST_F(WebServerTest, downloadTextFileThroughCalllback)
         EXPECT_EQ(requestedFilePath, path);
         return cb;
     };
-    
+
     webserver->addVirtualDirectory("virtualDir", fileInfoCb, requestCb);
-    
+
     EXPECT_CALL(*cb, read(_, file.size())).WillRepeatedly(Invoke([&] (uint8_t* pData, uint64_t size) -> uint64_t {
         memcpy(pData, file.data(), size);
         return size;
     }));
     EXPECT_CALL(*cb, close());
-    
+
     std::string url = webserver->getWebRootUrl() + filePath;
     EXPECT_EQ(file, httpClient.getText(url));
-    
+
     // we should have the last reference to the mock now, the server should have released the callback
     EXPECT_TRUE(cb.unique());
 }
@@ -187,13 +188,13 @@ TEST_F(WebServerTest, downloadTextFileThroughCalllback)
 TEST_F(WebServerTest, downloadBinaryFileThroughCalllback)
 {
 //    auto file = createBinaryFile();
-//    
+//
 //    webserver->addVirtualDirectory("virtualDir");
 //    webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", file);
 //    std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
-//    
+//
 //    auto result = httpClient.getData(url);
-//    
+//
 //    EXPECT_EQ(file.size(), httpClient.getContentLength(url));
 //    EXPECT_EQ(0, memcmp(file.data(), result.data(), file.size()));
 }
@@ -202,29 +203,29 @@ TEST_F(WebServerTest, downloadBinaryFileThroughCalllback)
 TEST_F(WebServerTest, downloadBinaryFileUsingHttpReader)
 {
     auto file = createBinaryFile();
-    
+
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.bin", "application/octet-stream", file);
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.bin";
-    
+
     HttpReader reader;
     EXPECT_THROW(reader.getContentLength(), Exception);
     EXPECT_THROW(reader.currentPosition(), Exception);
-    
+
     reader.open(url);
     EXPECT_EQ(file.size(), reader.getContentLength());
     EXPECT_EQ(0U, reader.currentPosition());
-    
+
     uint64_t size = reader.getContentLength();
     std::vector<uint8_t> result(size, '\0');
-    
+
     // read the file in blocks of 1kb
     for (uint64_t i = 0; i + 1 < size; i += 1024)
     {
         uint64_t reqSize = std::min<uint64_t>(size - i, 1024);
         reader.read(result.data() + i, reqSize);
     }
-    
+
     EXPECT_EQ(0, memcmp(file.data(), result.data(), file.size()));
 }
 
@@ -232,15 +233,15 @@ TEST_F(WebServerTest, addRemoveVirtualDir)
 {
     std::string contents = "testfilecontents";
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
-    
+
     EXPECT_THROW(httpClient.getContentLength(url), Exception);
-    
+
     webserver->addVirtualDirectory("virtualDir");
     EXPECT_THROW(httpClient.getContentLength(url), Exception);
-    
+
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", contents);
     EXPECT_NO_THROW(httpClient.getContentLength(url));
-    
+
     webserver->removeVirtualDirectory("virtualDir");
     EXPECT_THROW(httpClient.getContentLength(url), Exception);
 }
@@ -250,20 +251,20 @@ TEST_F(WebServerTest, restartServer)
     auto file = createTextFile();
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);
-    
+
     std::string url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
 
     EXPECT_EQ(file.size(), httpClient.getContentLength(url));
     EXPECT_EQ(file, httpClient.getText(url));
 
     webserver.reset();
-    client.destroy();
-    client.initialize();
+    client->destroy();
+    client->initialize();
     webserver = std::make_unique<WebServer>("/");
 
     webserver->addVirtualDirectory("virtualDir");
     webserver->addFile("virtualDir", "testfile.txt", "text/plain", file);
-    
+
     url = webserver->getWebRootUrl() + "virtualDir/testfile.txt";
 
     EXPECT_EQ(file.size(), httpClient.getContentLength(url));

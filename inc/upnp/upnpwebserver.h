@@ -29,7 +29,7 @@ namespace upnp
 class IVirtualDirCallback
 {
 public:
-    virtual ~IVirtualDirCallback() {}
+    virtual ~IVirtualDirCallback() = default;
 
     virtual uint64_t read(uint8_t* buf, uint64_t buflen) = 0;
     virtual void seekAbsolute(uint64_t position) = 0;
@@ -40,19 +40,19 @@ public:
 
 using FileInfoCb = std::function<utils::fileops::FileSystemEntryInfo(const std::string&)>;
 using RequestCb = std::function<std::shared_ptr<IVirtualDirCallback>(const std::string&)>;
-    
+
 class WebServer
 {
 public:
     WebServer(const std::string& webRoot);
     ~WebServer();
-    
+
     void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::string& data);
     void addFile(const std::string& virtualDir, const std::string& filename, const std::string& contentType, const std::vector<uint8_t>& data);
     void removeFile(const std::string& virtualDir, const std::string& filename);
-    
+
     void clearFiles();
-    
+
     // adds a virtual directory, in memory files can be added using addFile
     void addVirtualDirectory(const std::string& virtualDirName);
     // adds a virtual directory, the callback is called on incoming requests in this directory
@@ -60,7 +60,7 @@ public:
     void removeVirtualDirectory(const std::string& virtualDirName);
 
     std::string getWebRootUrl();
-    
+
 private:
     std::string m_webRoot;
 };
