@@ -1,4 +1,4 @@
-box: dirkvdb/arch
+box: dirkvdb/arch:gcc-5.2.0
 no-response-timeout: 10
 build:
     steps:
