@@ -1,38 +1,20 @@
-box: dirkvdb/cxx14
+box: dirkvdb/arch:latest
 no-response-timeout: 10
 build:
     steps:
         - script:
             name: Setup environnement variables
             code: |
-                SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                SRC_DIR="$(pwd)"
                 BUILD_DIR="${SRC_DIR}/build"
-                UPNP_VER="1.6.19"
                 echo "SRC_DIR ${SRC_DIR}"
                 echo "BUILD_DIR ${BUILD_DIR}"
-
-        - script:
-            name: Install dependencies
-            code: |
-                sudo apt-get update
-                sudo apt-get install libxdg-basedir-dev
-                wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%20${UPNP_VER}/libupnp-${UPNP_VER}.tar.bz2
-                tar xf libupnp-${UPNP_VER}.tar.bz2
-                cd libupnp-${UPNP_VER}
-                ./configure --enable-ipv6 --disable-shared
-                make
-                sudo make install
 
         - script:
             name: Compile UPnP
             code: |
                 mkdir -p "${BUILD_DIR}"
-                cd "${SRC_DIR}"
-                cd ..
-                git clone https://github.com/dirkvdb/utils.git
-                cd utils
-                git checkout develop
-                git submodule update --init --recursive
+                git -C "${SRC_DIR}/.." clone https://github.com/dirkvdb/utils.git -b develop
                 cd "${BUILD_DIR}"
                 cmake -DSTANDALONE=1 -DCMAKE_BUILD_TYPE=Release "${SRC_DIR}"
                 make -j8
@@ -41,4 +23,4 @@ build:
             name: Run Tests
             code: |
                 cd "${BUILD_DIR}"
-                CTEST_OUTPUT_ON_FAILURE=1 make test
+                CTEST_OUTPUT_ON_FAILURE=1 LC_CTYPE=en_US.UTF-8 make test
