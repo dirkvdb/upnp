@@ -46,10 +46,10 @@ protected:
     virtual Variable variableFromString(const std::string& var) const override;
     virtual std::string variableToString(Variable var) const override;
 
-    ServiceType getType();
-    int32_t getSubscriptionTimeout();
+    ServiceType getType() override;
+    int32_t getSubscriptionTimeout() override;
     
-    void handleUPnPResult(int errorCode);
+    void handleUPnPResult(int errorCode) override;
 };
     
 }
