@@ -25,7 +25,7 @@
 #include "upnp/upnpprotocolinfo.h"
 #include "upnprenderingcontroltypes.h"
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 #include <set>
 #include <memory>
 
@@ -54,13 +54,13 @@ protected:
     virtual Variable variableFromString(const std::string& var) const override;
     virtual std::string variableToString(Variable var) const override;
 
-    virtual ServiceType getType();
-    virtual int32_t getSubscriptionTimeout();
+    virtual ServiceType getType() override;
+    virtual int32_t getSubscriptionTimeout() override;
 
-    virtual void parseServiceDescription(const std::string& descriptionUrl);
+    virtual void parseServiceDescription(const std::string& descriptionUrl) override;
 
-    virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
-    virtual void handleUPnPResult(int errorCode);
+    virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
+    virtual void handleUPnPResult(int errorCode) override;
 
 private:
     uint32_t                    m_minVolume;

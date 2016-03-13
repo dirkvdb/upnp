@@ -20,7 +20,7 @@
 #include "upnp/upnpdeviceserviceexceptions.h"
 
 #include <cstring>
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include "utils/log.h"
 

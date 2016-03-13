@@ -1,0 +1,3 @@
+[submodule "subprojects/utils"]
+	path = subprojects/utils
+	url = https://github.com/dirkvdb/utils.git

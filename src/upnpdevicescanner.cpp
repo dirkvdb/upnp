@@ -22,7 +22,7 @@
 
 #include <chrono>
 #include <algorithm>
-#include <upnp/upnptools.h>
+#include <upnptools.h>
 
 
 namespace upnp

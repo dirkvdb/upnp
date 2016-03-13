@@ -18,7 +18,7 @@
 #define UPNP_ROOT_DEVICE_INTERFACE_H
 
 #include <string>
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include "utils/signal.h"
 

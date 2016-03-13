@@ -22,7 +22,7 @@
 #include <vector>
 #include <cassert>
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include "utils/stringoperations.h"
 

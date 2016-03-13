@@ -45,7 +45,7 @@ public:
 
     Client(IClient& client);
 
-    void setDevice(const std::shared_ptr<Device>& device);
+    void setDevice(const std::shared_ptr<Device>& device) override;
 
     void abort();
 
@@ -62,9 +62,9 @@ protected:
     virtual Variable variableFromString(const std::string& var) const override;
     virtual std::string variableToString(Variable var) const override;
 
-    virtual ServiceType getType();
-    virtual int32_t getSubscriptionTimeout();
-    virtual void handleUPnPResult(int errorCode);
+    virtual ServiceType getType() override;
+    virtual int32_t getSubscriptionTimeout() override;
+    virtual void handleUPnPResult(int errorCode) override;
 
 private:
     xml::Document browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);

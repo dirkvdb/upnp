@@ -17,7 +17,6 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnputils.h"
 
-#include <upnp/upnp.h>
 #include <chrono>
 #include <cstring>
 #include <sstream>
@@ -25,7 +24,7 @@
 #include <mutex>
 #include <memory>
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"

@@ -22,8 +22,8 @@
 #include <sstream>
 #include <iomanip>
 
-#include <upnp/upnp.h>
-#include <upnp/upnptools.h>
+#include <upnp.h>
+#include <upnptools.h>
 
 #include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"

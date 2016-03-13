@@ -22,13 +22,12 @@
 #include <vector>
 #include <cassert>
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include "upnp/upnpxml.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "utils/stringoperations.h"
-#include "utils/cppcompat.h"
 
 namespace upnp
 {

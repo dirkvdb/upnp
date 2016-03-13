@@ -16,7 +16,7 @@
 
 #include "upnpclient.h"
 
-#include <upnp/upnpconfig.h>
+#include <upnpconfig.h>
 
 #include "utils/log.h"
 #include "upnp/upnputils.h"

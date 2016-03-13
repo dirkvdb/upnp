@@ -24,7 +24,7 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 
 #include <set>
 #include <map>
@@ -284,7 +284,7 @@ private:
             m_subscriptionId = id;
         }
 
-        std::string getSubscriptionId()
+        std::string getSubscriptionId() override
         {
             return m_subscriptionId;
         }

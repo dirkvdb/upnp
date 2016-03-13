@@ -16,7 +16,7 @@
 
 #include "upnp/upnphttpclient.h"
 
-#include <upnp/upnp.h>
+#include <upnp.h>
 #include <cassert>
 #include <stdexcept>
 #include <sstream>

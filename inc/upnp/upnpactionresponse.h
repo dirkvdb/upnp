@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include <upnp/upnp.h>
-#include <upnp/upnptools.h>
+#include <upnp.h>
+#include <upnptools.h>
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnpxmlutils.h"

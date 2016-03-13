@@ -29,41 +29,41 @@ class Action;
 
 namespace AVTransport
 {
-    
+
 class Client : public ServiceClientBase<Action, Variable>
 {
 public:
     Client(IClient& client);
-    
+
     void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
     void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData = "");
-    
+
     void play(int32_t connectionId, const std::string& speed = "1");
     void pause(int32_t);
     void stop(int32_t);
     void previous(int32_t connectionId);
     void seek(int32_t connectionId, SeekMode mode, const std::string& target);
     void next(int32_t connectionId);
-    
+
     PositionInfo getPositionInfo(int32_t connectionId);
     MediaInfo getMediaInfo(int32_t connectionId);
     TransportInfo getTransportInfo(int32_t connectionId);
     std::set<Action> getCurrentTransportActions(int32_t connectionId);
-    
+
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
-    
+
     virtual Action actionFromString(const std::string& action) const  override;
     virtual std::string actionToString(Action action) const  override;
     virtual Variable variableFromString(const std::string& var) const  override;
     virtual std::string variableToString(Variable var) const  override;
-    
-protected:
-    void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables);
 
-    ServiceType getType();
-    int32_t getSubscriptionTimeout();
-    
-    void handleUPnPResult(int errorCode);
+protected:
+    void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
+
+    ServiceType getType() override;
+    int32_t getSubscriptionTimeout() override;
+
+    void handleUPnPResult(int errorCode) override;
 };
 
 }
