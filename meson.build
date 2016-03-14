@@ -4,10 +4,7 @@ if not meson.is_subproject()
     utilssub = subproject('utils')
 endif
 
-utilsinc = utilssub.get_variable('utilsinc')
-utilslib = utilssub.get_variable('utilslib')
-
-upnpinc = include_directories('inc')
+upnpinc = include_directories(meson.current_source_dir() + '/inc')
 
 upnpfiles = files(
     'inc/upnp/upnpaction.h',                       'src/upnpaction.cpp',
@@ -55,11 +52,11 @@ upnpfiles = files(
 
 libupnp_dep = dependency('libupnp')
 
-config = configuration_data()
-
 upnplib = static_library('upnp',
                           upnpfiles,
-                          include_directories : [utilsinc, upnpinc],
-                          dependencies : libupnp_dep)
+                          include_directories : upnpinc,
+                          dependencies : [libupnp_dep, utilssub.get_variable('utils_dep')])
+
+upnp_dep = declare_dependency(link_with : upnplib, include_directories : [upnpinc, utilssub.get_variable('utilsinc')])
 
 subdir('test')

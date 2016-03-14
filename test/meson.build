@@ -22,8 +22,7 @@ testinc = include_directories(meson.current_build_dir() + '/..')
 
 upnptest = executable('upnptest',
                       upnptestfiles,
-                      include_directories : [utilsinc, upnpinc, testinc],
-                      link_with : [upnplib, utilslib],
-                      dependencies : libupnp_dep)
+                      include_directories : testinc,
+                      dependencies : [upnp_dep, libupnp_dep])
 
 test('upnp test', upnptest)
