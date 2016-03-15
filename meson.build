@@ -1,10 +1,7 @@
 project('upnp', 'cpp', default_options : ['cpp_std=c++14'])
 
-if not meson.is_subproject()
-    utilssub = subproject('utils')
-endif
-
-upnpinc = include_directories(meson.current_source_dir() + '/inc')
+utilssub = subproject('utils')
+upnpinc = include_directories('inc')
 
 upnpfiles = files(
     'inc/upnp/upnpaction.h',                       'src/upnpaction.cpp',
