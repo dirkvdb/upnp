@@ -85,11 +85,11 @@ std::vector<uint8_t> HttpClient::getData(const std::string& url, uint64_t offset
     std::vector<uint8_t> data;
 
     int32_t httpStatus = 0;
-    int contentLength = 0;
     void* pHandle = nullptr;
 
     try
     {
+        int contentLength = 0;
         pHandle = open(url, contentLength, httpStatus, offset, size);
 
         data.resize(contentLength);
