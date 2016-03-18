@@ -156,7 +156,8 @@ Item& Item::operator= (const Item& other)
     m_parentId      = other.m_parentId;
     m_metaData      = other.m_metaData;
     m_resources     = other.m_resources;
-
+    m_restricted    = other.m_restricted;
+    m_albumArtUris  = other.m_albumArtUris;
     m_childCount    = other.m_childCount;
 
     return *this;
@@ -168,7 +169,8 @@ Item& Item::operator= (Item&& other)
     m_parentId      = std::move(other.m_parentId);
     m_metaData      = std::move(other.m_metaData);
     m_resources     = std::move(other.m_resources);
-
+    m_restricted    = std::move(other.m_restricted);
+    m_albumArtUris  = std::move(other.m_albumArtUris);
     m_childCount    = other.m_childCount;
 
     return *this;

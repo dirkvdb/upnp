@@ -712,7 +712,7 @@
 				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
-					/opt/ioslibs/include,
+					/opt/ioslibs/include/upnp,
 					"$(SRCROOT)/modules/gmock/inc",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/ioslibs/lib;
@@ -747,7 +747,7 @@
 				GCC_WARN_SHADOW = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
-					/opt/ioslibs/include,
+					/opt/ioslibs/include/upnp,
 					"$(SRCROOT)/modules/gmock/inc",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/ioslibs/lib;
@@ -778,7 +778,7 @@
 				GCC_PREFIX_HEADER = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = YES;
-				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -807,7 +807,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = YES;
-				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -826,6 +826,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -834,12 +836,11 @@
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
-				VALID_ARCHS = "armv7 i386 x86_64";
 				VERSIONING_SYSTEM = "";
 			};
 			name = Debug;
@@ -848,15 +849,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = "";
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)";
-				VALID_ARCHS = "armv7 i386 x86_64";
 				VERSIONING_SYSTEM = "";
 			};
 			name = Release;
@@ -873,7 +875,7 @@
 				GCC_PREFIX_HEADER = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = YES;
-				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -900,7 +902,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_SHADOW = YES;
-				HEADER_SEARCH_PATHS = /opt/ioslibs/include;
+				HEADER_SEARCH_PATHS = /opt/ioslibs/include/upnp;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
