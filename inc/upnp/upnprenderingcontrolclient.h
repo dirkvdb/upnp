@@ -25,7 +25,6 @@
 #include "upnp/upnpprotocolinfo.h"
 #include "upnprenderingcontroltypes.h"
 
-#include <upnp.h>
 #include <set>
 #include <memory>
 

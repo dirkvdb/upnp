@@ -25,6 +25,7 @@
 #include "upnp/upnpxmlutils.h"
 
 #include <upnp.h>
+#include <upnptools.h>
 
 #include <set>
 #include <map>

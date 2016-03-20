@@ -22,8 +22,6 @@
 #include <vector>
 #include <cassert>
 
-#include <upnp.h>
-
 #include "upnp/upnpxml.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"

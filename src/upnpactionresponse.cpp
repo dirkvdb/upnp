@@ -17,7 +17,7 @@
 #include "utils/log.h"
 #include "upnp/upnpactionresponse.h"
 
-#include <stdexcept>
+#include <upnptools.h>
 
 namespace upnp
 {

@@ -18,7 +18,6 @@
 #define UPNP_CLIENT_INTERFACE_H
 
 #include <string>
-#include <upnp.h>
 
 #include "utils/signal.h"
 
@@ -26,6 +25,8 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpaction.h"
 #include "upnp/upnpxmlutils.h"
+
+struct Upnp_Event;
 
 namespace upnp
 {
@@ -47,7 +48,7 @@ public:
     virtual void onServiceEvent(Upnp_EventType eventType, void* pEvent) = 0;
     virtual std::string getSubscriptionId() = 0;
 };
-    
+
 class IClient
 {
 public:
@@ -56,30 +57,30 @@ public:
     virtual void initialize(const char* interfaceName = nullptr, int32_t port = 0) = 0;
     virtual void destroy() = 0;
     virtual void reset() = 0;
-    
+
     virtual std::string getIpAddress() const = 0;
     virtual int32_t getPort() const = 0;
     virtual void searchDevicesOfType(DeviceType type, int32_t timeout) const = 0;
     virtual void searchAllDevices(int32_t timeout) const = 0;
-    
+
     // synchronously subscribe to the service, returns the subscription id
     virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const = 0;
     // synchronously unsubscribe from the service
     virtual void unsubscribeFromService(const std::string& subscriptionId) const = 0;
-    
+
     // asynchronously subscribe to the service
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const = 0;
     // synchronously unsubscribe from the service
     virtual void unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const = 0;
-    
+
     virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;
-    
+
     utils::Signal<const DeviceDiscoverInfo&> UPnPDeviceDiscoveredEvent;
     utils::Signal<const std::string&> UPnPDeviceDissapearedEvent;
     utils::Signal<Upnp_Event*> UPnPEventOccurredEvent;
 };
-    
+
 }
 
 #endif

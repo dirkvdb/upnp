@@ -19,7 +19,6 @@
 
 #include <string>
 #include <mutex>
-#include <upnp.h>
 
 #include "utils/signal.h"
 

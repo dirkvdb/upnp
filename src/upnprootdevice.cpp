@@ -17,10 +17,6 @@
 
 #include "upnp/upnprootdevice.h"
 #include "upnp/upnputils.h"
-#include "upnp/upnpdeviceserviceexceptions.h"
-
-#include <cstring>
-#include <upnp.h>
 
 #include "utils/log.h"
 

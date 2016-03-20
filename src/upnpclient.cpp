@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cstring>
+#include <upnp.h>
 
 using namespace utils;
 

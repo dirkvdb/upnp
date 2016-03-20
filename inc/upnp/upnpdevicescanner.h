@@ -25,8 +25,6 @@
 #include <future>
 #include <thread>
 
-#include <upnp.h>
-
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpxmlutils.h"

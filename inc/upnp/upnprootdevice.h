@@ -29,7 +29,7 @@ class RootDevice : public IRootDevice
 {
 public:
     RootDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds);
-    ~RootDevice();
+    virtual ~RootDevice();
 
     virtual void initialize();
     virtual void destroy();

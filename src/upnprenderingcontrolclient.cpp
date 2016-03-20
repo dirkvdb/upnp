@@ -17,13 +17,8 @@
 #include "upnp/upnprenderingcontrolclient.h"
 
 #include "upnp/upnputils.h"
-#include "upnp/upnpclientinterface.h"
-#include "upnp/upnpaction.h"
 #include "upnp/upnpcontrolpoint.h"
-#include "upnp/upnpxmlutils.h"
 
-#include "utils/log.h"
-#include "utils/stringoperations.h"
 #include "utils/numericoperations.h"
 
 using namespace utils;
