@@ -30,7 +30,6 @@ ADD_EXECUTABLE(upnptest
 
 TARGET_LINK_LIBRARIES(upnptest
     upnpframework
-    utils
 )
 
 ADD_TEST(NAME UPnPTests COMMAND upnptest)
