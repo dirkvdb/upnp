@@ -26,6 +26,7 @@ ADD_EXECUTABLE(upnptest
     upnpcontentdirectorytest.cpp
     upnprenderingcontroltest.cpp
     upnpservicebasetest.cpp
+    upnpssdpservertest.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnptest

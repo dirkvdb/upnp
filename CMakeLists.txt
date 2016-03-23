@@ -1,10 +1,11 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 ENABLE_TESTING()
 
 SET(CMAKE_MODULES_PATH modules)
 
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(UPNP_PKG libupnp REQUIRED)
+PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
 
 FIND_PATH(UPNP_INCLUDE_DIR
     NAMES upnp.h
@@ -26,6 +27,16 @@ FIND_LIBRARY(THREADUTIL_LIBRARY
     PATHS ${UPNP_PKG_LIBRARY_DIRS}
 )
 
+FIND_PATH(LBUV_INCLUDE_DIR
+    NAMES uv.h
+    PATHS ${LIBUV_PKG_INCLUDE_DIRS}
+)
+
+FIND_LIBRARY(LIBUV_LIBRARY
+    NAMES uv
+    PATHS ${LIBUV_PKG_LIBRARY_DIRS}
+)
+
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
 
@@ -45,6 +56,7 @@ SET (UPNPFRAMEWORK_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
     ${UTILS_INCLUDE_DIRS}
     ${UPNP_INCLUDE_DIR}
+    ${LIBUV_INCLUDE_DIR}
 )
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
@@ -93,10 +105,11 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
+    inc/upnp/upnpssdpserver.h                   src/upnpssdpserver.cpp
     src/upnpclient.h                            src/upnpclient.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
+TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
 
 IF (ENABLE_TESTS)
     ADD_SUBDIRECTORY(test)
