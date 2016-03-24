@@ -15,9 +15,8 @@ namespace ssdp
 class Server
 {
 public:
-    template <typename LoopType>
-    Server(LoopType& loop)
-    : m_socket(loop, "0.0.0.0", 0, static_cast<uint32_t>(socket::UdpFlags::ReuseAddress))
+    Server(uv::Loop& loop)
+    : m_socket(loop)
     {
         run();
     }
@@ -25,7 +24,7 @@ public:
 private:
     void run();
 
-    socket::Udp m_socket;
+    uv::socket::Udp m_socket;
 };
 
 }

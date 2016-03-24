@@ -9,6 +9,8 @@ namespace ssdp
 
 void Server::run()
 {
+    m_socket.bind("0.0.0.0", 0, uv::socket::UdpFlag::ReuseAddress);
+
     m_socket.read([] (uv_udp_t* /*req*/, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* /*addr*/, unsigned /*flags*/) {
         if (nread < 0)
         {
