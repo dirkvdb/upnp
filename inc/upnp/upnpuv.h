@@ -7,7 +7,8 @@
 #include <functional>
 #include <system_error>
 
-#include <uv.h>
+#include "uv.h"
+#include "utils/log.h"
 
 namespace uv
 {
@@ -245,16 +246,56 @@ public:
         checkRc(uv_udp_bind(get(), reinterpret_cast<sockaddr*>(&addr), flags));
     }
 
-    template <typename Callback>
-    void read(Callback&& cb)
+    void setMemberShip(const std::string& ip)
     {
-        checkRc(uv_udp_recv_start(get(), allocateBuffer, cb));
+        checkRc(uv_udp_set_membership(get(), ip.c_str(), nullptr, UV_JOIN_GROUP));
     }
 
-    void close() noexcept
+    void read(std::function<void(std::string)> cb)
     {
-        Handle<uv_udp_t>::close([] () {});
+        m_readCb = std::move(cb);
+
+        checkRc(uv_udp_recv_start(get(), allocateBuffer, [] (uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* /*addr*/, unsigned /*flags*/){
+            auto* instance = reinterpret_cast<Udp*>(req->data);
+
+            if (nread < 0)
+            {
+                utils::log::error("Read error: {}", uv_err_name(nread));
+                free(buf->base);
+                return;
+            }
+
+            if (nread == 0)
+            {
+                instance->m_readCb("");
+                return;
+            }
+
+            instance->m_readCb(std::string(buf->base, nread));
+        }));
     }
+
+    void send(const std::string& msg, const std::string& address, int32_t port)
+    {
+        sockaddr_in addr;
+        checkRc(uv_ip4_addr(address.c_str(), port, &addr));
+
+        auto buf = uv_buf_init(const_cast<char*>(&msg[0]), static_cast<int32_t>(msg.size()));
+
+        uv_udp_send_t* req = new uv_udp_send_t();
+        checkRc(uv_udp_send(req, get(), &buf, 1, reinterpret_cast<const sockaddr*>(&addr), [] (uv_udp_send_t* req, int status) {
+            assert(status == 0);
+            //uv_close(reinterpret_cast<uv_handle_t*>(req->handle), [] (uv_handle_t* /*handle*/) {
+            //    std::cout << "close completed" << std::endl;
+            //});
+
+            std::cout << "send completed" << std::endl;
+            delete reinterpret_cast<uv_udp_send_t*>(req);
+        }));
+    }
+
+private:
+    std::function<void(std::string)>    m_readCb;
 };
 
 }

@@ -28,12 +28,6 @@ protected:
     ssdp::Server    m_server;
 };
 
-TEST_F(SsdpServerTest, SsdpServer)
-{
-    //utils::log::info("SsdpServer");
-    //m_loop.run(uv::RunMode::Default);
-}
-
 TEST_F(SsdpServerTest, TimerTestOnce)
 {
     uv::Timer t(m_loop);
@@ -62,6 +56,24 @@ TEST_F(SsdpServerTest, TimerTest)
     });
 
     m_loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SsdpServer)
+{
+    utils::log::info("SsdpServer");
+
+    m_server.setDiscoverCallback([&] (auto&& msg) {
+        utils::log::info("@@@ DiscoverCallback {}", msg);
+        m_loop.stop();
+    });
+
+    m_server.search();
+
+    auto t = std::thread([&] () {
+        m_loop.run(uv::RunMode::Default);
+    });
+
+    t.join();
 }
 
 }

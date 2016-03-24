@@ -21,10 +21,15 @@ public:
         run();
     }
 
+    void search();
+    void setDiscoverCallback(std::function<void(std::string)> cb);
+    void stop();
+
 private:
     void run();
 
     uv::socket::Udp m_socket;
+    std::function<void(std::string)> m_cb;
 };
 
 }
