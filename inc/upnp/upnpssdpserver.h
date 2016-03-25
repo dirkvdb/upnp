@@ -21,9 +21,13 @@ public:
         run();
     }
 
-    void search();
-    void setDiscoverCallback(std::function<void(std::string)> cb);
+    // Search for any device that provides the serviceType
+    void search(const std::string& serviceType);
+    // Search for a specific device that provides the serviceType
+    void search(const std::string& serviceType, const std::string& deviceIp);
     void stop();
+
+    void setDiscoverCallback(std::function<void(std::string)> cb);
 
 private:
     void run();

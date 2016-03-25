@@ -67,13 +67,23 @@ TEST_F(SsdpServerTest, SsdpServer)
         m_loop.stop();
     });
 
-    m_server.search();
+    m_server.search("ssdp:all");
 
     auto t = std::thread([&] () {
         m_loop.run(uv::RunMode::Default);
     });
 
     t.join();
+}
+
+TEST_F(SsdpServerTest, ListInterfaces)
+{
+    for (auto& addr : uv::getInterfaceAddresses())
+    {
+        std::cout << "Name: " << addr.name << std::endl
+                  << "Addr: " << addr.ipName() << std::endl
+                  << "Internal:" << addr.isInternal << std::endl;
+    }
 }
 
 }
