@@ -9,7 +9,7 @@
 #include <functional>
 #include <system_error>
 
-#include "uv.h"
+#include <uv.h>
 #include "utils/log.h"
 
 namespace uv
@@ -123,6 +123,8 @@ public:
     }
 
 protected:
+    ~Handle() = default;
+
     template <typename InitFunc>
     void init(Loop& loop, InitFunc func)
     {
@@ -140,7 +142,7 @@ private:
     HandleType              m_handle;
 };
 
-class Idler : private Handle<uv_idle_t>
+class Idler : public Handle<uv_idle_t>
 {
 public:
     template <typename Callback>
@@ -162,7 +164,7 @@ private:
     std::function<void()>   m_callback;
 };
 
-class Signal : private Handle<uv_signal_t>
+class Signal : public Handle<uv_signal_t>
 {
 public:
     Signal(Loop& loop)
@@ -187,7 +189,7 @@ private:
     std::function<void()>   m_callback;
 };
 
-class Timer : private Handle<uv_timer_t>
+class Timer : public Handle<uv_timer_t>
 {
 public:
     Timer(Loop& loop)
@@ -217,6 +219,48 @@ private:
     std::function<void()>   m_callback;
 };
 
+class Address
+{
+public:
+    static Address createIp4(const std::string& ip, int32_t port)
+    {
+        Address addr;
+        checkRc(uv_ip4_addr(ip.c_str(), port, &addr.m_address.address4));
+        return addr;
+    }
+
+    static Address createIp6(const std::string& ip, int32_t port)
+    {
+        Address addr;
+        checkRc(uv_ip6_addr(ip.c_str(), port, &addr.m_address.address6));
+        return addr;
+    }
+
+    bool isIpv4() const noexcept
+    {
+        return m_address.address4.sin_family == AF_INET;
+    }
+
+    bool isIpv6() const noexcept
+    {
+        return m_address.address4.sin_family == AF_INET6;
+    }
+
+    const sockaddr_in* get() const noexcept
+    {
+        return &m_address.address4;
+    }
+
+private:
+    Address() = default;
+
+    union
+    {
+        struct sockaddr_in address4;
+        struct sockaddr_in6 address6;
+    } m_address;
+};
+
 namespace socket
 {
 
@@ -233,7 +277,7 @@ inline Flags<T> operator | (T lhs, T rhs)
     return Flags<T>(lhs, rhs);
 }
 
-class Udp : private Handle<uv_udp_t>
+class Udp : public Handle<uv_udp_t>
 {
 public:
     enum class MemberShip : uint32_t
@@ -247,11 +291,9 @@ public:
         init(loop, uv_udp_init);
     }
 
-    void bind(const std::string& ip, int32_t port, Flags<UdpFlag> flags = uv::Flags<UdpFlag>())
+    void bind(const Address& addr, Flags<UdpFlag> flags = uv::Flags<UdpFlag>())
     {
-        struct sockaddr_in addr;
-        checkRc(uv_ip4_addr(ip.c_str(), port, &addr));
-        checkRc(uv_udp_bind(get(), reinterpret_cast<sockaddr*>(&addr), flags));
+        checkRc(uv_udp_bind(get(), reinterpret_cast<const sockaddr*>(addr.get()), flags));
     }
 
     void setMemberShip(const std::string& ip, MemberShip memberShip)
@@ -305,6 +347,7 @@ public:
             }
 
             instance->m_recvCb(std::string(buf->base, nread));
+            free(buf->base);
         }));
     }
 
@@ -313,17 +356,13 @@ public:
         checkRc(uv_udp_recv_stop(get()));
     }
 
-    template <typename AddrType>
-    void send(const AddrType& addr, const std::string& message, std::function<void(int32_t)> cb)
+    void send(const Address& addr, const std::string& message, std::function<void(int32_t)> cb)
     {
-        static_assert(std::is_same<AddrType, sockaddr_in>::value || std::is_same<AddrType, sockaddr_in6>::value,
-                      "Invalid address type provided");
-
         auto buf = uv_buf_init(const_cast<char*>(&message[0]), static_cast<int32_t>(message.size()));
 
         auto req = std::make_unique<uv_udp_send_t>();
         req->data = new std::function<void(int32_t)>(cb);
-        checkRc(uv_udp_send(req.release(), get(), &buf, 1, reinterpret_cast<const sockaddr*>(&addr), [] (uv_udp_send_t* req, int status) {
+        checkRc(uv_udp_send(req.release(), get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
             std::unique_ptr<uv_udp_send_t> reqInst(reinterpret_cast<uv_udp_send_t*>(req));
             std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(reqInst->data));
             assert(cb);
@@ -350,12 +389,8 @@ inline void stopLoopAndCloseRequests(Loop& loop)
     }, nullptr);
 }
 
-struct InterfaceAddress
+struct InterfaceInfo
 {
-    std::string         name;
-    std::array<char, 6> physicalAddress;
-    bool                isInternal;
-
     std::string ipName() const
     {
         std::array<char, 512> name;
@@ -385,6 +420,10 @@ struct InterfaceAddress
         return address.address4.sin_family == AF_INET6;
     }
 
+    std::string         name;
+    std::array<char, 6> physicalAddress;
+    bool                isInternal;
+
     union
     {
         struct sockaddr_in address4;
@@ -412,9 +451,9 @@ inline sockaddr_in6 createIp6Address(const std::string& ip, int32_t port)
     return addr;
 }
 
-inline std::vector<InterfaceAddress> getInterfaceAddresses()
+inline std::vector<InterfaceInfo> getInterfaces()
 {
-    std::vector<InterfaceAddress> res;
+    std::vector<InterfaceInfo> res;
     uv_interface_address_s* addresses = nullptr;
     int count = 0;
 
@@ -422,7 +461,7 @@ inline std::vector<InterfaceAddress> getInterfaceAddresses()
 
     for (int i = 0; i < count; ++i)
     {
-        InterfaceAddress addr;
+        InterfaceInfo addr;
         addr.name = addresses[i].name;
         addr.isInternal = addresses[i].is_internal == 1;
 

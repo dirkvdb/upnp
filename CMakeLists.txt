@@ -27,7 +27,7 @@ FIND_LIBRARY(THREADUTIL_LIBRARY
     PATHS ${UPNP_PKG_LIBRARY_DIRS}
 )
 
-FIND_PATH(LBUV_INCLUDE_DIR
+FIND_PATH(LIBUV_INCLUDE_DIR
     NAMES uv.h
     PATHS ${LIBUV_PKG_INCLUDE_DIRS}
 )
@@ -46,7 +46,7 @@ IF (STANDALONE)
 
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
     SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
-    ADD_DEFINITIONS("-std=c++1y")
+    ADD_DEFINITIONS("-std=c++14")
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     ENDIF ()
@@ -105,8 +105,11 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
-    inc/upnp/upnpssdpserver.h                   src/upnpssdpserver.cpp
+    inc/upnp/upnpssdpclient.h                   src/upnpssdpclient.cpp
     src/upnpclient.h                            src/upnpclient.cpp
+    src/upnphttpparser.h
+    src/upnp.ssdp.parseutils.h
+    src/http_parser.h                           src/http_parser.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})

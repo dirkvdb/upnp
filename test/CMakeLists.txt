@@ -1,7 +1,12 @@
 INCLUDE_DIRECTORIES(
     ${UTILS_INCLUDE_DIRS}
-	${UPNPFRAMEWORK_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}
+    ${UPNPFRAMEWORK_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+)
+
+INCLUDE_DIRECTORIES(SYSTEM
+    ${CMAKE_CURRENT_SOURCE_DIR}/testframework
 )
 
 LINK_DIRECTORIES(
@@ -26,11 +31,21 @@ ADD_EXECUTABLE(upnptest
     upnpcontentdirectorytest.cpp
     upnprenderingcontroltest.cpp
     upnpservicebasetest.cpp
-    upnpssdpservertest.cpp
+)
+
+ADD_EXECUTABLE(upnpframeworkest
+    testrunner.cpp
+    upnpssdpclienttest.cpp
+    upnpssdptest.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnptest
     upnpframework
 )
 
+TARGET_LINK_LIBRARIES(upnpframeworkest
+    upnpframework
+)
+
 ADD_TEST(NAME UPnPTests COMMAND upnptest)
+ADD_TEST(NAME UPnPFrameworkTests COMMAND upnpframeworktest)

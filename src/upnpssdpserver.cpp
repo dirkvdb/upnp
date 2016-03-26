@@ -2,6 +2,7 @@
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
+#include "upnp.upnp.ssdp.parseutils.h"
 
 namespace upnp
 {
