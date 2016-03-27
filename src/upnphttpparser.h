@@ -37,29 +37,40 @@ class Parser
 {
 public:
     Parser(Type type)
+    : m_lastHeader(nullptr)
+    , m_lastHeaderSize(0)
     {
         m_settings.on_message_begin = [] (http_parser*) { return 0; };
         m_settings.on_message_complete = [] (http_parser*) { return 0; };
+        m_settings.on_headers_complete = [] (http_parser*) { return 1; };
 
-        m_settings.on_url = [] (http_parser*, const char* at, size_t) -> int {
-            utils::log::debug("URL: {}", at);
+        m_settings.on_url = nullptr;
+
+        m_settings.on_header_value = [] (http_parser* parser, const char* str, size_t length) -> int {
+            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+            if (thisPtr->m_headerCb)
+            {
+                thisPtr->m_headerCb(thisPtr->m_lastHeader, thisPtr->m_lastHeaderSize, str, length);
+            }
             return 0;
         };
 
-        m_settings.on_header_value = [] (http_parser*, const char* at, size_t) -> int {
-            utils::log::debug("Value: {}", at);
-            return 0;
-        };
-
-        m_settings.on_header_field = [] (http_parser*, const char* at, size_t) -> int {
-            utils::log::debug("Field: {}", at);
+        m_settings.on_header_field = [] (http_parser* parser, const char* str, size_t length) -> int {
+            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+            thisPtr->m_lastHeader = str;
+            thisPtr->m_lastHeaderSize = length;
             return 0;
         };
 
         http_parser_init(&m_parser, static_cast<http_parser_type>(type));
         m_parser.data = this;
     }
-
+    
+    void setHeaderCallback(std::function<void(const char*, size_t, const char*, size_t)> cb)
+    {
+        m_headerCb = cb;
+    }
+    
     void parse(const std::string& data)
     {
         http_parser_execute(&m_parser, &m_settings, data.c_str(), data.size());
@@ -70,8 +81,13 @@ public:
     }
 
 private:
-    http_parser_settings    m_settings;
-    http_parser             m_parser;
+    http_parser_settings m_settings;
+    http_parser m_parser;
+    
+    const char* m_lastHeader;
+    size_t m_lastHeaderSize;
+    
+    std::function<void(const char*, size_t, const char*, size_t)> m_headerCb;
 };
 
 }

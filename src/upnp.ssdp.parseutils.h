@@ -5,37 +5,18 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp/upnpssdpclient.h"
+#include "upnphttpparser.h"
 
 namespace upnp
 {
 namespace ssdp
 {
 
-std::vector<std::pair<const char*, uint32_t>> tokenize(const std::string& str, const std::string& delimiter)
-{
-    std::vector<std::pair<const char*, uint32_t>> tokens;
-    size_t pos = 0;
-    size_t index = 0;
-
-    while ((pos = str.find(delimiter, index)) != std::string::npos)
-    {
-        tokens.emplace_back(&str[index], pos - index);
-        index = pos + delimiter.size();
-    }
-
-    if (index < str.size())
-    {
-        tokens.emplace_back(&str[index], str.size() - index);
-    }
-
-    return tokens;
-}
-
-void parseUSN(const std::string& usn, DeviceDiscoverInfo& info)
+inline void parseUSN(const std::string& usn, DeviceDiscoverInfo& info)
 {
     try
     {
-        std::regex re(R"((uuid:\S{36})(?:::(\S*))?)");
+        std::regex re(R"((uuid:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:::(\S*))?)");
         std::smatch match;
         if (std::regex_match(usn, match, re))
         {
@@ -46,6 +27,10 @@ void parseUSN(const std::string& usn, DeviceDiscoverInfo& info)
                 info.deviceType = match.str(2);
             }
         }
+        else
+        {
+            throw std::runtime_error("Failed to parse USN");
+        }
     }
     catch (const std::regex_error& e)
     {
@@ -53,7 +38,7 @@ void parseUSN(const std::string& usn, DeviceDiscoverInfo& info)
     }
 }
 
-uint32_t parseCacheControl(const std::string& cacheControl)
+inline uint32_t parseCacheControl(const std::string& cacheControl)
 {
     try
     {
@@ -72,38 +57,31 @@ uint32_t parseCacheControl(const std::string& cacheControl)
     }
 }
 
-DeviceDiscoverInfo parseNotification(const std::string& message)
+inline DeviceDiscoverInfo parseNotification(const std::string& msg)
 {
     DeviceDiscoverInfo info;
-    auto tokens = tokenize(message, "\r\n");
+            
+    http::Parser parser(http::Type::Request);
+    parser.setHeaderCallback([&] (const char* field, size_t fieldLength, const char* value, size_t valueLength) {
+        if (strncasecmp(field, "LOCATION", fieldLength) == 0)
+        {
+            info.location = std::string(value, valueLength);
+        }
+        else if (strncasecmp(field, "NT", fieldLength) == 0)
+        {
+            info.deviceType = std::string(value, valueLength);
+        }
+        else if (strncasecmp(field, "USN", fieldLength) == 0)
+        {
+            parseUSN(std::string(value, valueLength), info);
+        }
+        else if (strncasecmp(field, "CACHE-CONTROL", fieldLength) == 0)
+        {
+            info.expirationTime = parseCacheControl(std::string(value, valueLength));
+        }
+    });
 
-    for (auto& token : tokens)
-    {
-        const auto line = std::string(token.first, token.second);
-        auto pos = line.find_first_of(':');
-        if (pos == std::string::npos)
-        {
-            continue;
-        }
-
-        if (utils::stringops::startsWith(line, "LOCATION:"))
-        {
-            info.location = utils::stringops::trim(&line[pos + 1]);
-        }
-        if (utils::stringops::startsWith(line, "NT:"))
-        {
-            info.deviceType = utils::stringops::trim(&line[pos + 1]);
-        }
-        if (utils::stringops::startsWith(line, "USN:"))
-        {
-            parseUSN(utils::stringops::trim(utils::stringops::trim(&line[pos + 1])), info);
-        }
-        if (utils::stringops::startsWith(line, "CACHE-CONTROL:"))
-        {
-            info.expirationTime = parseCacheControl(utils::stringops::trim(&line[pos + 1]));
-        }
-    }
-
+    parser.parse(msg);
     return info;
 }
 

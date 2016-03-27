@@ -10,7 +10,7 @@ namespace test
 
 using namespace std::chrono_literals;
 
-TEST_CASE("SSDP Client", "[SSDP]")
+TEST_CASE("SSDP Client", "[.][SSDP]")
 {
     uv::Loop        m_loop;
     ssdp::Client    m_client(m_loop);
