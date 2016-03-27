@@ -49,7 +49,7 @@ TEST_CASE("SSDP Client", "[.][SSDP]")
     {
         utils::log::info("SsdpServer");
 
-        m_client.setDiscoverCallback([&] (auto&& msg) {
+        m_client.setDeviceNotificationCallback([&] (auto&& msg) {
             utils::log::warn("@@@ DiscoverCallback ID {} TYPE {} EXP {}", msg.deviceId, msg.deviceType, msg.expirationTime);
             m_loop.stop();
         });

@@ -94,7 +94,7 @@ void Client::search(const std::string& serviceType, const std::string& deviceIp)
     }
 }
 
-void Client::setDiscoverCallback(std::function<void(const DeviceDiscoverInfo&)> cb)
+void Client::setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb)
 {
     m_cb = std::move(cb);
 }

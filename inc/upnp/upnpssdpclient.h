@@ -12,14 +12,21 @@ class Loop;
 namespace ssdp
 {
 
-struct DeviceDiscoverInfo
+enum class NotificationType
 {
-    uint32_t        expirationTime;
-    std::string     deviceId;
-    std::string     deviceType;
-    std::string     serviceType;
-    std::string     serviceVersion;
-    std::string     location;
+    Alive,
+    ByeBye
+};
+
+struct DeviceNotificationInfo
+{
+    uint32_t            expirationTime;
+    std::string         deviceId;
+    std::string         deviceType;
+    std::string         serviceType;
+    std::string         serviceVersion;
+    std::string         location;
+    NotificationType    type;
 };
 
 class Client
@@ -36,11 +43,11 @@ public:
     // Search for a specific device that provides the serviceType
     void search(const std::string& serviceType, const std::string& deviceIp);
 
-    void setDiscoverCallback(std::function<void(const DeviceDiscoverInfo&)> cb);
+    void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
     uv::socket::Udp m_socket;
-    std::function<void(const DeviceDiscoverInfo&)> m_cb;
+    std::function<void(const DeviceNotificationInfo&)> m_cb;
 };
 
 }

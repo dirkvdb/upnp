@@ -12,7 +12,7 @@ namespace upnp
 namespace ssdp
 {
 
-inline void parseUSN(const std::string& usn, DeviceDiscoverInfo& info)
+inline void parseUSN(const std::string& usn, DeviceNotificationInfo& info)
 {
     try
     {
@@ -57,9 +57,23 @@ inline uint32_t parseCacheControl(const std::string& cacheControl)
     }
 }
 
-inline DeviceDiscoverInfo parseNotification(const std::string& msg)
+inline NotificationType notificationTypeFromString(const char* type, size_t length)
 {
-    DeviceDiscoverInfo info;
+    if (strncmp(type, "ssdp:alive", length) == 0)
+    {
+        return NotificationType::Alive;
+    }
+    else if (strncmp(type, "ssdp:byebye", length) == 0)
+    {
+        return NotificationType::ByeBye;
+    }
+
+    throw std::runtime_error("Invalid notification type: " + std::string(type, length));
+}
+
+inline DeviceNotificationInfo parseNotification(const std::string& msg)
+{
+    DeviceNotificationInfo info;
             
     http::Parser parser(http::Type::Request);
     parser.setHeaderCallback([&] (const char* field, size_t fieldLength, const char* value, size_t valueLength) {
@@ -70,6 +84,10 @@ inline DeviceDiscoverInfo parseNotification(const std::string& msg)
         else if (strncasecmp(field, "NT", fieldLength) == 0)
         {
             info.deviceType = std::string(value, valueLength);
+        }
+        else if (strncasecmp(field, "NTS", fieldLength) == 0)
+        {
+            info.type = notificationTypeFromString(value, valueLength);
         }
         else if (strncasecmp(field, "USN", fieldLength) == 0)
         {
