@@ -45,6 +45,7 @@ public:
         m_settings.on_headers_complete = [] (http_parser*) { return 1; };
 
         m_settings.on_url = nullptr;
+        m_settings.on_status = nullptr;
 
         m_settings.on_header_value = [] (http_parser* parser, const char* str, size_t length) -> int {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);

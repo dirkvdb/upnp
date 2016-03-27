@@ -30,31 +30,32 @@ void Client::run()
 
 void Client::run(const std::string& address)
 {
-    m_socket.bind(uv::Address::createIp4(address, g_ssdpPort), uv::socket::UdpFlag::ReuseAddress);
-    m_socket.setBroadcast(true);
+    m_socket.bind(uv::Address::createIp4(address, 0), uv::socket::UdpFlag::ReuseAddress);
 
     // join the multicast channel
+    m_socket.setBroadcast(true);
     m_socket.setMemberShip(g_ssdpIp, uv::socket::Udp::MemberShip::JoinGroup);
+    m_socket.setTtl(4);
 
     m_socket.recv([=] (const std::string& msg) {
-        if (msg.empty())
+        if (msg.empty() || !m_cb)
         {
-            utils::log::info("Read done");
             return;
         }
         
         try
         {
-            utils::log::info("Read {}", msg);
-            if (m_cb && utils::stringops::startsWith(msg, "NOTIFY"))
+            //utils::log::debug("Read {}", msg);
+            if (   utils::stringops::startsWith(msg, "HTTP/1.1 200 OK")
+                || utils::stringops::startsWith(msg, "NOTIFY"))
             {
                 try
                 {
-                    m_cb(parseNotification(msg.substr(19)));
+                    m_cb(parseNotification(msg));
                 }
                 catch (std::exception& e)
                 {
-                    utils::log::warn("Failed to parse http notification: %s", e.what());
+                    utils::log::warn("Failed to parse http notification: {}", e.what());
                 }
             }
         }

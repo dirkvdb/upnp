@@ -35,7 +35,7 @@ public:
     Client(uv::Loop& loop);
 
     void run();
-    void run(const std::string& interface);
+    void run(const std::string& address);
     void stop();
 
     // Search for any device that provides the serviceType
