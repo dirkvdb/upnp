@@ -72,13 +72,18 @@ public:
         m_headerCb = cb;
     }
     
-    void parse(const std::string& data)
+    void parse(const char* data, size_t dataSize)
     {
-        http_parser_execute(&m_parser, &m_settings, data.c_str(), data.size());
+        http_parser_execute(&m_parser, &m_settings, data, dataSize);
         if (m_parser.http_errno)
         {
             throw std::runtime_error(fmt::format("Failed to parse http message: {}", http_errno_description(HTTP_PARSER_ERRNO(&m_parser))));
         }
+    }
+    
+    void parse(const std::string& data)
+    {
+        parse(data.c_str(), data.size());
     }
 
 private:

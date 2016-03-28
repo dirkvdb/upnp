@@ -66,9 +66,16 @@ class Flags
 {
 public:
     Flags() = default;
+    Flags(const Flags<T, ValueType>& other) = default;
+    Flags(Flags<T, ValueType>&& other) = default;
 
     Flags(T flag)
     : m_flags(getValue(flag))
+    {
+    }
+    
+    Flags(ValueType flags)
+    : m_flags(flags)
     {
     }
 
@@ -78,7 +85,7 @@ public:
     {
     }
 
-    operator ValueType()
+    operator ValueType() const noexcept
     {
         return m_flags;
     }
@@ -97,6 +104,12 @@ private:
 
     ValueType m_flags = 0;
 };
+    
+template <typename T>
+inline Flags<T> operator | (T lhs, T rhs)
+{
+    return Flags<T>(lhs, rhs);
+}
 
 enum class RunMode : uint32_t
 {
@@ -168,6 +181,13 @@ protected:
     void init(Loop& loop, InitFunc func)
     {
         checkRc(func(loop.get(), &m_handle));
+        m_handle.data = this;
+    }
+    
+    template <typename InitFunc, typename Arg>
+    void init(Loop& loop, InitFunc func, Arg&& arg)
+    {
+        checkRc(func(loop.get(), &m_handle, arg));
         m_handle.data = this;
     }
 
@@ -254,6 +274,60 @@ public:
 
 private:
     std::function<void()>   m_callback;
+};
+    
+enum class PollEvent : int32_t
+{
+    Readable = UV_READABLE,
+    Writable = UV_WRITABLE
+    // Version 1.9.0
+    //Disconnect = UV_DISCONNECT
+};
+    
+struct OsSocket
+{
+    OsSocket(uv_os_sock_t sock)
+    : m_sock(sock)
+    {
+    }
+    
+    operator uv_os_sock_t() noexcept
+    {
+        return m_sock;
+    }
+    
+private:
+    uv_os_sock_t m_sock;
+};
+    
+class Poll : public Handle<uv_poll_t>
+{
+public:
+    Poll(Loop& loop, int32_t fd)
+    {
+        init(loop, uv_poll_init, fd);
+    }
+    
+    Poll(Loop& loop, OsSocket sock)
+    {
+        init(loop, uv_poll_init_socket, sock);
+    }
+    
+    void start(Flags<PollEvent> events, std::function<void(int32_t, Flags<PollEvent>)> cb)
+    {
+        m_callback = std::move(cb);
+        checkRc(uv_poll_start(get(), events, [] (auto* handle, int status, int events) {
+            reinterpret_cast<Poll*>(handle->data)->m_callback(status, events);
+        }));
+    }
+    
+    void stop() noexcept
+    {
+        uv_poll_stop(get());
+    }
+    
+private:
+    std::function<void(int32_t, Flags<PollEvent>)> m_callback;
 };
 
 class Connection : public Handle<uv_connect_t>
@@ -465,14 +539,15 @@ public:
         checkRc(uv_tcp_keepalive(get(), enabled ? 1 : 0, delay));
     }
 
-    void connect(const Address& addr, std::function<void(Connection, int32_t)> cb)
+    void connect(const Address& addr, std::function<void(int32_t)> cb)
     {
         auto conn = std::make_unique<uv_connect_t>();
-        conn->data = new std::function<void(Connection, int32_t)>(cb);
+        conn->data = new std::function<void(int32_t)>(cb);
 
         checkRc(uv_tcp_connect(conn.release(), get(), reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_connect_t* req, int status) {
-            std::unique_ptr<std::function<void(Connection, int32_t)>> cb(reinterpret_cast<std::function<void(Connection, int32_t)>*>(req->data));
-            (*cb)(Connection(), status);
+            std::unique_ptr<uv_connect_t> conn(req);
+            std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(req->data));
+            (*cb)(status);
         }));
     }
 };

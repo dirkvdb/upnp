@@ -6,6 +6,7 @@ SET(CMAKE_MODULES_PATH modules)
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(UPNP_PKG libupnp REQUIRED)
 PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
+PKG_CHECK_MODULES(CURL_PKG libcurl REQUIRED)
 
 FIND_PATH(UPNP_INCLUDE_DIR
     NAMES upnp.h
@@ -37,6 +38,16 @@ FIND_LIBRARY(LIBUV_LIBRARY
     PATHS ${LIBUV_PKG_LIBRARY_DIRS}
 )
 
+FIND_PATH(CURL_INCLUDE_DIR
+    NAMES curl/curl.h
+    PATHS ${CURL_PKG_INCLUDE_DIRS}
+)
+
+FIND_LIBRARY(CURL_LIBRARY
+    NAMES curl
+    PATHS ${CURL_PKG_LIBRARY_DIRS}
+)
+
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
 
@@ -57,6 +68,7 @@ SET (UPNPFRAMEWORK_INCLUDE_DIRS
     ${UTILS_INCLUDE_DIRS}
     ${UPNP_INCLUDE_DIR}
     ${LIBUV_INCLUDE_DIR}
+    ${CURL_INCLUDE_DIR}
 )
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
@@ -106,6 +118,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
     inc/upnp/upnpssdpclient.h                   src/upnpssdpclient.cpp
+    inc/upnp/upnpuv.h
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnphttpparser.h
     src/upnp.ssdp.parseutils.h
@@ -113,7 +126,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/http_parser.h                           src/http_parser.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
+TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
 
 IF (ENABLE_TESTS)
     ADD_SUBDIRECTORY(test)

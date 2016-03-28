@@ -36,6 +36,7 @@ ADD_EXECUTABLE(upnptest
 ADD_EXECUTABLE(upnpframeworkest
     testrunner.cpp
     upnpssdpclienttest.cpp
+    upnphttpclienttest.cpp
     upnpssdptest.cpp
 )
 

@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <cinttypes>
+#include <curl/curl.h>
 
 #include "upnp/upnpuv.h"
 
@@ -33,17 +34,25 @@ public:
     Client(uv::Loop& loop);
     Client(const Client&) = delete;
 
-    size_t getContentLength(const std::string& url);
-    std::string getText(const std::string& url);
+    void setTimeout(std::chrono::milliseconds timeout) noexcept;
 
-    std::vector<uint8_t> getData(const std::string& url);
-    std::vector<uint8_t> getData(const std::string& url, uint64_t offset, uint64_t size);
+    void getContentLength(const std::string& url, std::function<void(int32_t, size_t)> cb);
+    void get(const std::string& url, std::function<void(int32_t, std::string)> cb);
+    void get(const std::string& url, std::function<void(int32_t, std::vector<uint8_t>)> cb);
+    void get(const std::string& url, uint8_t* data, std::function<void(int32_t, uint8_t*)> cb);
 
-    void getData(const std::string& url, uint8_t* pData);
-    void getData(const std::string& url, uint8_t* pData, uint64_t offset, uint64_t size);
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, std::vector<uint8_t>)> cb);
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(int32_t, uint8_t*)> cb);
+
+    static const char* errorToString(int32_t errorCode);
 
 private:
-    uv::socket::Tcp m_socket;
+    static int handleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp);
+
+    uv::Loop& m_loop;
+    uv::Timer m_timer;
+    uint32_t m_timeout;
+    CURLM* m_multiHandle;
 };
 
 }
