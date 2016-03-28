@@ -33,6 +33,34 @@ void allocateBuffer(uv_handle_t* /*handle*/, size_t suggested_size, uv_buf_t* bu
 
 }
 
+class Buffer
+{
+public:
+    Buffer(uint8_t* data, size_t size)
+    : m_handle(uv_buf_init(reinterpret_cast<char*>(data), size))
+    {
+    }
+
+    template <typename T>
+    Buffer(T& data)
+    : m_handle(uv_buf_init(reinterpret_cast<char*>(data.data()), data.size()))
+    {
+    }
+
+    uv_buf_t* get()
+    {
+        return &m_handle;
+    }
+
+    const uv_buf_t* get() const
+    {
+        return &m_handle;
+    }
+
+private:
+    uv_buf_t m_handle;
+};
+
 template<typename T, typename ValueType = typename std::underlying_type<T>::type>
 class Flags
 {
@@ -122,8 +150,19 @@ public:
         });
     }
 
+    HandleType* get() noexcept
+    {
+        return &m_handle;
+    }
+
 protected:
+    Handle() = default;
     ~Handle() = default;
+
+    Handle(HandleType handle)
+    : m_handle(handle)
+    {
+    }
 
     template <typename InitFunc>
     void init(Loop& loop, InitFunc func)
@@ -132,14 +171,42 @@ protected:
         m_handle.data = this;
     }
 
-    HandleType* get()
-    {
-        return &m_handle;
-    }
-
 private:
     std::function<void()>   m_closeCallback;
     HandleType              m_handle;
+};
+
+template <typename HandleType>
+class Stream : public Handle<HandleType>
+{
+public:
+    void read(std::function<void(std::string)> cb)
+    {
+        m_readCb = std::move(cb);
+        checkRc(uv_read_start(this->get(), allocateBuffer, [] (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+            auto* thisPtr = reinterpret_cast<Stream*>(stream->data);
+            thisPtr->m_readCb(std::string(buf->base, nread));
+        }));
+    }
+
+    void stopRead()
+    {
+        checkRc(uv_read_stop(this->get()));
+    }
+
+    void write(const Buffer& buf, std::function<void(int32_t)> cb)
+    {
+        auto write = std::make_unique<uv_write_t>();
+        write->data = new std::function<void(int32_t)>(cb);
+        checkRc(uv_write(write.release(), this->get(), buf.get(), 1, [] (uv_write_t* req, int status) {
+            std::unique_ptr<uv_write_t> writePtr(req);
+            std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(writePtr->data));
+            (*cb)(status);
+        }));
+    }
+
+private:
+    std::function<void(std::string)> m_readCb;
 };
 
 class Idler : public Handle<uv_idle_t>
@@ -187,6 +254,12 @@ public:
 
 private:
     std::function<void()>   m_callback;
+};
+
+class Connection : public Handle<uv_connect_t>
+{
+public:
+    Connection() = default;
 };
 
 class Timer : public Handle<uv_timer_t>
@@ -372,6 +445,36 @@ public:
 
 private:
     std::function<void(std::string)>    m_recvCb;
+};
+
+class Tcp : public Handle<uv_tcp_t>
+{
+public:
+    Tcp(Loop& loop)
+    {
+        init(loop, uv_tcp_init);
+    }
+
+    void setNoDelay(bool enabled)
+    {
+        checkRc(uv_tcp_nodelay(get(), enabled ? 1 : 0));
+    }
+
+    void setKeepAlive(bool enabled, int32_t delay)
+    {
+        checkRc(uv_tcp_keepalive(get(), enabled ? 1 : 0, delay));
+    }
+
+    void connect(const Address& addr, std::function<void(Connection, int32_t)> cb)
+    {
+        auto conn = std::make_unique<uv_connect_t>();
+        conn->data = new std::function<void(Connection, int32_t)>(cb);
+
+        checkRc(uv_tcp_connect(conn.release(), get(), reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_connect_t* req, int status) {
+            std::unique_ptr<std::function<void(Connection, int32_t)>> cb(reinterpret_cast<std::function<void(Connection, int32_t)>*>(req->data));
+            (*cb)(Connection(), status);
+        }));
+    }
 };
 
 }
