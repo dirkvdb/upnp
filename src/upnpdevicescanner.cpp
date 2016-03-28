@@ -44,27 +44,23 @@ DeviceScanner::DeviceScanner(uv::Loop& loop, std::set<DeviceType> types)
 , m_ssdpClient(loop)
 , m_timer(loop)
 , m_types(types)
-, m_started(false)
 {
     m_ssdpClient.setDeviceNotificationCallback([=] (const ssdp::DeviceNotificationInfo& info) {
         if (info.type == ssdp::NotificationType::Alive)
         {
+            onDeviceDiscovered(info);
         }
         else if (info.type == ssdp::NotificationType::ByeBye)
         {
+            onDeviceDissapeared(info);
         }
     });
 }
 
-DeviceScanner::~DeviceScanner() throw()
-{
-    stop();
-}
-
-void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
+void DeviceScanner::onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info)
 {
     std::lock_guard<std::mutex> lock(m_dataMutex);
-    auto iter = m_devices.find(deviceId);
+    auto iter = m_devices.find(info.deviceId);
     if (iter != m_devices.end())
     {
         DeviceDissapearedEvent(iter->second);
@@ -75,10 +71,11 @@ void DeviceScanner::onDeviceDissapeared(const std::string& deviceId)
 void DeviceScanner::start()
 {
     log::debug("Start device scanner, known devices ({})", m_devices.size());
+
+    m_ssdpClient.run();
     m_timer.start(g_timeCheckInterval, g_timeCheckInterval, [=] () {
         checkForDeviceTimeouts();
     });
-    m_started = true;
 }
 
 void DeviceScanner::stop()
@@ -147,7 +144,7 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
             log::error("Failed to download device info {} ({})", url, http::Client::errorToString(status));
             return;
         }
-        
+
         cb(std::move(xml));
     });
 }
@@ -277,7 +274,7 @@ bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType se
 }
 
 
-void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
+void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
     auto deviceType = Device::stringToDeviceType(info.deviceType);
     if (m_types.find(deviceType) == m_types.end())
@@ -291,15 +288,27 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
         auto iter = m_devices.find(info.deviceId);
         if (iter != m_devices.end())
         {
+            auto device = iter->second;
+
             // device already known, just update the timeout time
-            iter->second->m_timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
+            device->m_timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
 
             // check if the location is still the same (perhaps a new ip or port)
-            if (iter->second->m_location != std::string(info.location))
+            if (device->m_location != std::string(info.location))
             {
                 // update the device, ip or port has changed
-                log::debug("Update device, location has changed: {} -> {}", iter->second->m_location, std::string(info.location));
-                updateDevice(info, iter->second);
+                log::debug("Update device, location has changed: {} -> {}", device->m_location, std::string(info.location));
+                downloadDeviceXml(info.location, [this, device, exp = info.expirationTime] (const std::string& xml) {
+                    try
+                    {
+                        device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
+                        parseDeviceInfo(xml, device);
+                    }
+                    catch (std::exception& e)
+                    {
+                        log::error(e.what());
+                    }
+                });
             }
 
             return;
@@ -313,7 +322,7 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
             device->m_location = loc;
             device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
             parseDeviceInfo(xml, device);
-            
+
             std::lock_guard<std::mutex> lock(m_dataMutex);
             auto iter = m_devices.find(device->m_udn);
             if (iter == m_devices.end())
@@ -324,21 +333,6 @@ void DeviceScanner::onDeviceDiscovered(const DeviceDiscoverInfo& info)
                 m_dataMutex.unlock();
                 DeviceDiscoveredEvent(device);
             }
-        }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
-    });
-}
-
-void DeviceScanner::updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device)
-{
-    downloadDeviceXml(info.location, [this, device, exp = info.expirationTime] (const std::string& xml) {
-        try
-        {
-            device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
-            parseDeviceInfo(xml, device);
         }
         catch (std::exception& e)
         {

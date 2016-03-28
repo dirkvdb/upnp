@@ -38,6 +38,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnpssdpclienttest.cpp
     upnphttpclienttest.cpp
     upnpssdptest.cpp
+    upnpdevicescannertest.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnptest

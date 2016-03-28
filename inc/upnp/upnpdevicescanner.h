@@ -46,7 +46,6 @@ class DeviceScanner
 public:
     DeviceScanner(uv::Loop& loop, DeviceType type);
     DeviceScanner(uv::Loop& loop, std::set<DeviceType> types);
-    ~DeviceScanner() noexcept;
 
     void start();
     void stop();
@@ -60,9 +59,8 @@ public:
     utils::Signal<std::shared_ptr<Device>> DeviceDissapearedEvent;
 
 private:
-    void onDeviceDiscovered(const DeviceDiscoverInfo& info);
-    void onDeviceDissapeared(const std::string& deviceId);
-    void updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
+    void onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info);
+    void onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info);
     void downloadDeviceXml(const std::string& url, std::function<void(std::string)>);
     static void parseDeviceInfo(const std::string& xml, const std::shared_ptr<Device>& dev);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
@@ -76,8 +74,6 @@ private:
     const std::set<DeviceType>                      m_types;
     std::map<std::string, std::shared_ptr<Device>>  m_devices;
     mutable std::mutex                              m_dataMutex;
-
-    bool                                            m_started;
 };
 
 }
