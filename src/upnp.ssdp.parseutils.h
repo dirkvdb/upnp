@@ -1,10 +1,11 @@
-#include "upnp/upnpssdpclient.h"
+#pragma once
+
+#include "upnp/upnp.ssdp.client.h"
 
 #include <regex>
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnp/upnpssdpclient.h"
 #include "upnphttpparser.h"
 
 namespace upnp

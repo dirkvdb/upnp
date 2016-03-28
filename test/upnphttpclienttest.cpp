@@ -1,7 +1,7 @@
 #include <catch.hpp>
 
 #include "utils/log.h"
-#include "upnp.http.client.h"
+#include "upnp/upnp.http.client.h"
 
 namespace upnp
 {

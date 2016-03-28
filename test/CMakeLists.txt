@@ -33,7 +33,7 @@ ADD_EXECUTABLE(upnptest
     upnpservicebasetest.cpp
 )
 
-ADD_EXECUTABLE(upnpframeworkest
+ADD_EXECUTABLE(upnpframeworktest
     testrunner.cpp
     upnpssdpclienttest.cpp
     upnphttpclienttest.cpp
@@ -44,7 +44,7 @@ TARGET_LINK_LIBRARIES(upnptest
     upnpframework
 )
 
-TARGET_LINK_LIBRARIES(upnpframeworkest
+TARGET_LINK_LIBRARIES(upnpframeworktest
     upnpframework
 )
 

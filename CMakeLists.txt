@@ -117,12 +117,12 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
-    inc/upnp/upnpssdpclient.h                   src/upnpssdpclient.cpp
+    inc/upnp/upnp.ssdp.client.h                 src/upnp.ssdp.client.cpp
+    inc/upnp/upnp.http.client.h                 src/upnp.http.client.cpp
     inc/upnp/upnpuv.h
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnphttpparser.h
     src/upnp.ssdp.parseutils.h
-    src/upnp.http.client.h                      src/upnp.http.client.cpp
     src/http_parser.h                           src/http_parser.cpp
 )
 

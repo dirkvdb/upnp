@@ -1,7 +1,7 @@
 #include <catch.hpp>
 
 #include "utils/log.h"
-#include "upnp/upnpssdpclient.h"
+#include "upnp/upnp.ssdp.client.h"
 
 namespace upnp
 {
@@ -55,7 +55,7 @@ TEST_CASE("SSDP Client", "[SSDP]")
         });
 
         m_client.run();
-        m_client.search("ssdp:all");
+        m_client.search();
 
         auto t = std::thread([&] () {
             m_loop.run(uv::RunMode::Default);

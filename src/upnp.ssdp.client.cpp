@@ -1,4 +1,4 @@
-#include "upnp/upnpssdpclient.h"
+#include "upnp/upnp.ssdp.client.h"
 
 #include <regex>
 
@@ -19,7 +19,8 @@ static const uint32_t g_broadcastRepeatCount = 5;
 static const uv::Address g_ssdpAddressIpv4 = uv::Address::createIp4(g_ssdpIp, g_ssdpPort);
 
 Client::Client(uv::Loop& loop)
-: m_socket(loop)
+: m_searchTimeout(3)
+, m_socket(loop)
 {
 }
 
@@ -73,6 +74,16 @@ void Client::stop()
     });
 }
 
+void Client::setSearchTimeout(std::chrono::seconds timeout)
+{
+    m_searchTimeout = timeout.count();
+}
+
+void Client::search()
+{
+    search("ssdp:all");
+}
+
 void Client::search(const std::string& serviceType)
 {
     search(serviceType, g_ssdpIp);
@@ -83,9 +94,9 @@ void Client::search(const std::string& serviceType, const std::string& deviceIp)
     std::string req = fmt::format("M-SEARCH * HTTP/1.1\r\n"
                                   "HOST:{}:{}\r\n"
                                   "MAN:\"ssdp:discover\"\r\n"
-                                  "MX:3\r\n"
+                                  "MX:{}\r\n"
                                   "ST:{}\r\n"
-                                  "\r\n", deviceIp, g_ssdpPort, serviceType);
+                                  "\r\n", deviceIp, g_ssdpPort, m_searchTimeout, serviceType);
 
     for (uint32_t i = 0; i < g_broadcastRepeatCount; ++i)
     {

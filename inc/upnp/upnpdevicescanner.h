@@ -28,9 +28,15 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpxmlutils.h"
+#include "upnp/upnp.ssdp.client.h"
+#include "upnp/upnp.http.client.h"
+
 #include "utils/signal.h"
-#include "utils/workerthread.h"
-#include "utils/threadpool.h"
+
+namespace uv
+{
+    class Loop;
+}
 
 namespace upnp
 {
@@ -38,9 +44,9 @@ namespace upnp
 class DeviceScanner
 {
 public:
-    DeviceScanner(IClient& client, DeviceType type);
-    DeviceScanner(IClient& client, std::set<DeviceType> types);
-    ~DeviceScanner() throw();
+    DeviceScanner(uv::Loop& loop, DeviceType type);
+    DeviceScanner(uv::Loop& loop, std::set<DeviceType> types);
+    ~DeviceScanner() noexcept;
 
     void start();
     void stop();
@@ -57,24 +63,21 @@ private:
     void onDeviceDiscovered(const DeviceDiscoverInfo& info);
     void onDeviceDissapeared(const std::string& deviceId);
     void updateDevice(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
-    void obtainDeviceDetails(const DeviceDiscoverInfo& info, const std::shared_ptr<Device>& device);
+    void downloadDeviceXml(const std::string& url, std::function<void(std::string)>);
+    static void parseDeviceInfo(const std::string& xml, const std::shared_ptr<Device>& dev);
     static xml::NodeList getFirstServiceList(xml::Document& doc);
     static bool findAndParseService(xml::Document& doc, ServiceType serviceType, const std::shared_ptr<Device>& device);
 
-    void checkForTimeoutThread();
+    void checkForDeviceTimeouts();
 
-    IClient&                                        m_client;
+    http::Client                                    m_httpClient;
+    ssdp::Client                                    m_ssdpClient;
+    uv::Timer                                       m_timer;
     const std::set<DeviceType>                      m_types;
     std::map<std::string, std::shared_ptr<Device>>  m_devices;
-    mutable std::mutex                              m_mutex;
     mutable std::mutex                              m_dataMutex;
 
-    std::future<void>                               m_thread;
-    utils::ThreadPool                               m_downloadPool;
-    std::condition_variable                         m_condition;
     bool                                            m_started;
-    bool                                            m_stop;
-
 };
 
 }
