@@ -56,15 +56,13 @@ Server::Server(uv::Loop& loop, int32_t port)
 
 Server::~Server()
 {
-    log::info("~Server");
-
     m_timer.stop();
-    m_timer.close([] () {
-        log::info("Timer closed");
-    });
-    log::info("mg_mgr_free");
     mg_mgr_free(&m_mgr);
-    log::info("mg_mgr_free done");
+}
+
+void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents)
+{
+    m_serverdFiles.emplace(urlPath, HostedFile{contentType, contents});
 }
 
 void Server::eventHandler(mg_connection* conn, int event, void* eventData)
@@ -76,7 +74,19 @@ void Server::eventHandler(mg_connection* conn, int event, void* eventData)
     {
     case MG_EV_HTTP_REQUEST:
         log::info("HTTP request: {}", std::string(message->uri.p, message->uri.len));
-        mg_serve_http(conn, message, thisPtr->m_serverOptions);  /* Serve static content */
+        try
+        {
+            auto& file = thisPtr->m_serverdFiles.at(std::string(message->uri.p, message->uri.len));
+            mg_printf(conn, "HTTP/1.1 200 OK\r\n"
+                            "Content-type: %s\r\n"
+                            "Content-length: %lu\r\n"
+                            "\r\n%s", file.contentType.c_str(), file.data.size(), file.data.c_str());
+        }
+        catch (std::exception&)
+        {
+            // Serve static content
+            mg_serve_http(conn, message, thisPtr->m_serverOptions);
+        }
         break;
     default:
       break;

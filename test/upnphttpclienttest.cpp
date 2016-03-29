@@ -9,6 +9,7 @@ namespace upnp
 namespace test
 {
 
+using namespace std::string_literals;
 using namespace std::chrono_literals;
 
 TEST_CASE("HTTP Client", "[HTTP]")
@@ -60,8 +61,6 @@ TEST_CASE("HTTP Client", "[HTTP]")
         auto data = std::make_unique<std::vector<uint8_t>>(1024 * 128, 0);
         uint8_t* originalDataPtr = data->data();
         client.get("http://www.google.be", originalDataPtr, [&] (int32_t status, uint8_t* dataPtr) {
-            std::cout << status << std::endl << std::flush;
-
             INFO("GET Failed: " << http::Client::errorToString(status));
             CHECK(status == 0);
             CHECK(dataPtr[0] != 0);
@@ -108,13 +107,18 @@ TEST_CASE("HTTP Client Server", "[HTTP]")
     http::Client    client(loop);
     http::Server    server(loop, 8080);
     bool gotCallback = false;
+    
+    auto servedFile = "This is my amazing file"s;
+    server.addFile("/test.txt", "text/plain", servedFile);
 
     client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
         INFO("GET Failed: " << http::Client::errorToString(status));
         CHECK(status == 0);
 
-        CHECK_FALSE(contents.empty());
+        CHECK(contents == servedFile);
         gotCallback = true;
+        
+        stopLoopAndCloseRequests(loop);
     });
 
     loop.run(uv::RunMode::Default);

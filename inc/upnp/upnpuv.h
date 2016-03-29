@@ -562,7 +562,7 @@ inline void stopLoopAndCloseRequests(Loop& loop)
         assert(handleInstance);
         if (!handleInstance->isClosing())
         {
-            handleInstance->close([] () { std::cout << "closed" << std::endl; });
+            handleInstance->close([] () {});
         }
     }, nullptr);
 }

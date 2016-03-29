@@ -16,8 +16,9 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
-#include "mongoose.h"
+#include <mongoose.h>
 #include "upnp/upnpuv.h"
 
 namespace upnp
@@ -31,13 +32,23 @@ public:
     Server(uv::Loop& loop, int32_t port);
     ~Server();
 
+    void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
+
 private:
     static void eventHandler(mg_connection* nc, int event, void* eventData);
+    
+    struct HostedFile
+    {
+        std::string contentType;
+        std::string data;
+    };
 
     uv::Timer m_timer;
     mg_mgr m_mgr;
     mg_connection* m_connection;
     mg_serve_http_opts m_serverOptions;
+
+    std::unordered_map<std::string, HostedFile> m_serverdFiles;
 };
 
 }
