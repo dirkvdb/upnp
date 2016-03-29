@@ -59,6 +59,7 @@ enum class DeviceType
 {
     MediaServer,
     MediaRenderer,
+    InternetGateway,
     Unknown
 };
 

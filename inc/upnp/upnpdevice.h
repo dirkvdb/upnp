@@ -31,6 +31,7 @@ namespace
 {
     static const char* MediaServerDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaServer:1";
     static const char* MediaRendererDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaRenderer:1";
+    static const char* InternetGatewayDeviceTypeUrn = "urn:schemas-upnp-org:device:InternetGatewayDevice:1";
 }
 
 class Service
@@ -73,6 +74,8 @@ public:
                 return MediaServerDeviceTypeUrn;
             case DeviceType::MediaRenderer:
                 return MediaRendererDeviceTypeUrn;
+            case DeviceType::InternetGateway:
+                return InternetGatewayDeviceTypeUrn;
             default:
                 throw Exception("Invalid device type encountered");
         }
@@ -80,8 +83,9 @@ public:
 
     static DeviceType stringToDeviceType(const std::string& type)
     {
-        if (type == MediaServerDeviceTypeUrn)   { return DeviceType::MediaServer; }
-        if (type == MediaRendererDeviceTypeUrn) { return DeviceType::MediaRenderer; }
+        if (type == MediaServerDeviceTypeUrn)       { return DeviceType::MediaServer; }
+        if (type == MediaRendererDeviceTypeUrn)     { return DeviceType::MediaRenderer; }
+        if (type == InternetGatewayDeviceTypeUrn)   { return DeviceType::InternetGateway; }
 
         return DeviceType::Unknown;
     }
