@@ -7,6 +7,7 @@ FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(UPNP_PKG libupnp REQUIRED)
 PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
 PKG_CHECK_MODULES(CURL_PKG libcurl REQUIRED)
+PKG_CHECK_MODULES(MONGOOSE_PKG mongoose REQUIRED)
 
 FIND_PATH(UPNP_INCLUDE_DIR
     NAMES upnp.h
@@ -48,6 +49,16 @@ FIND_LIBRARY(CURL_LIBRARY
     PATHS ${CURL_PKG_LIBRARY_DIRS}
 )
 
+FIND_PATH(MONGOOSE_INCLUDE_DIR
+    NAMES mongoose.h
+    PATHS ${MONGOOSE_PKG_INCLUDE_DIRS}
+)
+
+FIND_LIBRARY(MONGOOSE_LIBRARY
+    NAMES mongoose
+    PATHS ${MONGOOSE_PKG_LIBRARY_DIRS}
+)
+
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
 
@@ -69,6 +80,7 @@ SET (UPNPFRAMEWORK_INCLUDE_DIRS
     ${UPNP_INCLUDE_DIR}
     ${LIBUV_INCLUDE_DIR}
     ${CURL_INCLUDE_DIR}
+    ${MONGOOSE_INCLUDE_DIR}
 )
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
@@ -119,6 +131,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
     inc/upnp/upnp.ssdp.client.h                 src/upnp.ssdp.client.cpp
     inc/upnp/upnp.http.client.h                 src/upnp.http.client.cpp
+    inc/upnp/upnp.http.server.h                 src/upnp.http.server.cpp
     inc/upnp/upnpuv.h
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnphttpparser.h
@@ -126,7 +139,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/http_parser.h                           src/http_parser.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
+TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${MONGOOSE_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
 
 IF (ENABLE_TESTS)
     ADD_SUBDIRECTORY(test)
