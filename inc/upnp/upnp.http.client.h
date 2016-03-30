@@ -21,7 +21,7 @@
 #include <cinttypes>
 #include <curl/curl.h>
 
-#include "upnp/upnpuv.h"
+#include "upnp/upnp.uv.h"
 
 namespace upnp
 {

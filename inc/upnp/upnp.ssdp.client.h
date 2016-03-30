@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "upnp/upnpuv.h"
+#include "upnp/upnp.uv.h"
 
 namespace upnp
 {
@@ -37,7 +37,7 @@ public:
     void run();
     void run(const std::string& address);
     void stop();
-    
+
     void setSearchTimeout(std::chrono::seconds timeout);
 
     // Search for any device that provides any service type

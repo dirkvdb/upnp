@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_DEVICE_SCANNER
-#define UPNP_DEVICE_SCANNER
+#pragma once
 
 #include <map>
 #include <set>
@@ -27,7 +26,6 @@
 
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpclientinterface.h"
-#include "upnp/upnpxmlutils.h"
 #include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.http.client.h"
 
@@ -62,10 +60,6 @@ private:
     void onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info);
     void onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info);
     void downloadDeviceXml(const std::string& url, std::function<void(std::string)>);
-    static void parseDeviceInfo(const std::string& xml, const std::shared_ptr<Device>& dev);
-    static xml::NodeList getFirstServiceList(xml::Document& doc);
-    static bool findAndParseService(xml::Document& doc, ServiceType serviceType, const std::shared_ptr<Device>& device);
-
     void checkForDeviceTimeouts();
 
     http::Client                                    m_httpClient;
@@ -77,5 +71,3 @@ private:
 };
 
 }
-
-#endif

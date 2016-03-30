@@ -14,16 +14,13 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpdevicescanner.h"
-#include "upnp/upnpclientinterface.h"
-#include "upnp/upnptypes.h"
+#include "upnp/upnp.devicescanner.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 #include "utils/log.h"
 
 #include <chrono>
 #include <algorithm>
-#include <upnptools.h>
-
 
 namespace upnp
 {
@@ -149,131 +146,6 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
     });
 }
 
-void DeviceScanner::parseDeviceInfo(const std::string& xml, const std::shared_ptr<Device>& device)
-{
-    xml::Document doc(xml);
-
-    device->m_udn           = doc.getChildNodeValueRecursive("UDN");
-    device->m_type          = Device::stringToDeviceType(doc.getChildNodeValueRecursive("deviceType"));
-
-    if (device->m_udn.empty())
-    {
-        return;
-    }
-
-    device->m_friendlyName   = doc.getChildNodeValueRecursive("friendlyName");
-    try { device->m_baseURL  = doc.getChildNodeValueRecursive("URLBase"); } catch (std::exception&) {}
-    try { device->m_relURL   = doc.getChildNodeValueRecursive("presentationURL"); } catch (std::exception&) {}
-
-    char presURL[200];
-    int ret = UpnpResolveURL((device->m_baseURL.empty() ? device->m_baseURL.c_str() : device->m_location.c_str()), device->m_relURL.empty() ? nullptr : device->m_relURL.c_str(), presURL);
-    if (UPNP_E_SUCCESS == ret)
-    {
-        device->m_presURL = presURL;
-    }
-
-    if (device->m_type == DeviceType::MediaServer)
-    {
-        if (findAndParseService(doc, ServiceType::ContentDirectory, device))
-        {
-            // try to obtain the optional services
-            findAndParseService(doc, ServiceType::AVTransport, device);
-            findAndParseService(doc, ServiceType::ConnectionManager, device);
-        }
-    }
-    else if (device->m_type == DeviceType::MediaRenderer)
-    {
-        if (findAndParseService(doc, ServiceType::RenderingControl, device) &&
-            findAndParseService(doc, ServiceType::ConnectionManager, device))
-        {
-            // try to obtain the optional services
-            findAndParseService(doc, ServiceType::AVTransport, device);
-        }
-    }
-}
-
-xml::NodeList DeviceScanner::getFirstServiceList(xml::Document& doc)
-{
-    xml::NodeList serviceList;
-
-    xml::NodeList servlistNodelist = doc.getElementsByTagName("serviceList");
-    if (servlistNodelist.size() > 0)
-    {
-        xml::Element servlistElem = servlistNodelist.getNode(0);
-        return servlistElem.getElementsByTagName("service");
-    }
-
-    return serviceList;
-}
-
-bool DeviceScanner::findAndParseService(xml::Document& doc, const ServiceType serviceType, const std::shared_ptr<Device>& device)
-{
-    bool found = false;
-
-    xml::NodeList serviceList = getFirstServiceList(doc);
-    if (!serviceList)
-    {
-        return found;
-    }
-
-    std::string base = device->m_baseURL.empty() ? device->m_location : device->m_baseURL;
-
-    unsigned long numServices = serviceList.size();
-    for (unsigned long i = 0; i < numServices; ++i)
-    {
-        xml::Element serviceElem = serviceList.getNode(i);
-
-        Service service;
-        service.m_type = serviceTypeUrnStringToService(serviceElem.getChildNodeValue("serviceType"));
-        if (service.m_type == serviceType)
-        {
-            service.m_id                    = serviceElem.getChildNodeValue("serviceId");
-            std::string relControlURL       = serviceElem.getChildNodeValue("controlURL");
-            std::string relEventURL         = serviceElem.getChildNodeValue("eventSubURL");
-            std::string scpURL              = serviceElem.getChildNodeValue("SCPDURL");
-
-            char url[512];
-            int ret = UpnpResolveURL(base.c_str(), relControlURL.c_str(), url);
-            if (ret != UPNP_E_SUCCESS)
-            {
-                log::error("Error generating controlURL from {} and {}", base, relControlURL);
-            }
-            else
-            {
-                service.m_controlURL = url;
-            }
-
-            ret = UpnpResolveURL(base.c_str(), relEventURL.c_str(), url);
-            if (ret != UPNP_E_SUCCESS)
-            {
-                log::error("Error generating eventURL from {} and {}", base, relEventURL);
-            }
-            else
-            {
-                service.m_eventSubscriptionURL = url;
-            }
-
-            ret = UpnpResolveURL(base.c_str(), scpURL.c_str(), url);
-            if (ret != UPNP_E_SUCCESS)
-            {
-                log::error("Error generating eventURL from {} and {}", base, scpURL);
-            }
-            else
-            {
-                service.m_scpdUrl = url;
-            }
-
-            device->m_services[serviceType] = service;
-
-            found = true;
-            break;
-        }
-    }
-
-    return found;
-}
-
-
 void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
     auto deviceType = Device::stringToDeviceType(info.deviceType);
@@ -302,7 +174,7 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
                     try
                     {
                         device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
-                        parseDeviceInfo(xml, device);
+                        xml::parseDeviceInfo(xml, *device);
                     }
                     catch (std::exception& e)
                     {
@@ -321,7 +193,7 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
             auto device = std::make_shared<Device>();
             device->m_location = loc;
             device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
-            parseDeviceInfo(xml, device);
+            xml::parseDeviceInfo(xml, *device);
 
             std::lock_guard<std::mutex> lock(m_dataMutex);
             auto iter = m_devices.find(device->m_udn);

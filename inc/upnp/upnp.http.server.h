@@ -19,7 +19,7 @@
 #include <unordered_map>
 
 #include <mongoose.h>
-#include "upnp/upnpuv.h"
+#include "upnp/upnp.uv.h"
 
 namespace upnp
 {
@@ -36,7 +36,7 @@ public:
 
 private:
     static void eventHandler(mg_connection* nc, int event, void* eventData);
-    
+
     struct HostedFile
     {
         std::string contentType;

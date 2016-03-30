@@ -115,7 +115,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpdevice.h
     inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
-    inc/upnp/upnpdevicescanner.h                src/upnpdevicescanner.cpp
+    inc/upnp/upnp.devicescanner.h               src/upnp.devicescanner.cpp
     inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
     inc/upnp/upnpfactory.h                      src/upnpfactory.cpp
     inc/upnp/upnpfwd.h
@@ -143,7 +143,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.http.client.h                 src/upnp.http.client.cpp
     inc/upnp/upnp.http.server.h                 src/upnp.http.server.cpp
     inc/upnp/upnp.xml.parseutils.h              src/upnp.xml.parseutils.cpp
-    inc/upnp/upnpuv.h
+    inc/upnp/upnp.uv.h
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnphttpparser.h
     src/upnp.ssdp.parseutils.h
@@ -152,6 +152,10 @@ ADD_LIBRARY(upnpframework STATIC
 )
 
 TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${MONGOOSE_LIBRARY} ${PUGIXXML_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
+
+IF (MINGW)
+    TARGET_LINK_LIBRARIES(upnpframework ws2_32)
+ENDIF ()
 
 IF (ENABLE_TESTS)
     ADD_SUBDIRECTORY(test)

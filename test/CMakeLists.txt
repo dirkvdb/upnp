@@ -35,10 +35,10 @@ ADD_EXECUTABLE(upnptest
 
 ADD_EXECUTABLE(upnpframeworktest
     testrunner.cpp
-    upnpssdpclienttest.cpp
-    upnphttpclienttest.cpp
-    upnpssdptest.cpp
-    upnpdevicescannertest.cpp
+    upnp.ssdp.clienttest.cpp
+    upnp.ssdp.test.cpp
+    upnp.http.clienttest.cpp
+    upnp.devicescannertest.cpp
     upnp.xml.parseutilstest.cpp
 )
 

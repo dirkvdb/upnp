@@ -1,8 +1,8 @@
 #include <catch.hpp>
 
 #include "utils/log.h"
-#include "upnp/upnpdevicescanner.h"
-#include "upnp/upnpuv.h"
+#include "upnp/upnp.devicescanner.h"
+#include "upnp/upnp.uv.h"
 
 namespace upnp
 {

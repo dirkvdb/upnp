@@ -43,7 +43,7 @@ inline uint32_t parseCacheControl(const std::string& cacheControl)
 {
     try
     {
-        std::regex re(R"(max-age=(\d+)))");
+        std::regex re(R"(max-age=(\d+))");
         std::smatch match;
         if (std::regex_match(cacheControl, match, re))
         {
@@ -54,7 +54,7 @@ inline uint32_t parseCacheControl(const std::string& cacheControl)
     }
     catch (const std::regex_error& e)
     {
-        throw std::runtime_error(fmt::format("Failed to parse Cache Control: {}", e.what()));
+        throw std::runtime_error(fmt::format("Failed to parse Cache Control: {} ({})", cacheControl, e.what()));
     }
 }
 
@@ -75,10 +75,10 @@ inline NotificationType notificationTypeFromString(const char* type, size_t leng
 inline DeviceNotificationInfo parseNotification(const std::string& msg)
 {
     DeviceNotificationInfo info;
-    
+
     // Direct responses do not fill in the NTS, mark them as alive
     info.type = NotificationType::Alive;
-            
+
     http::Parser parser(http::Type::Both);
     parser.setHeaderCallback([&] (const char* field, size_t fieldLength, const char* value, size_t valueLength) {
         if (strncasecmp(field, "LOCATION", fieldLength) == 0)
