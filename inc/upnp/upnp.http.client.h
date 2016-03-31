@@ -36,13 +36,20 @@ public:
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
 
-    void getContentLength(const std::string& url, std::function<void(int32_t, size_t)> cb);
-    void get(const std::string& url, std::function<void(int32_t, std::string)> cb);
-    void get(const std::string& url, std::function<void(int32_t, std::vector<uint8_t>)> cb);
-    void get(const std::string& url, uint8_t* data, std::function<void(int32_t, uint8_t*)> cb);
+    void getContentLength(const std::string& url, std::function<void(int32_t, int32_t, size_t)> cb);
+    void get(const std::string& url, std::function<void(int32_t, int32_t, std::string)> cb);
+    void get(const std::string& url, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb);
+    void get(const std::string& url, uint8_t* data, std::function<void(int32_t, int32_t, uint8_t*)> cb);
 
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, std::vector<uint8_t>)> cb);
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(int32_t, uint8_t*)> cb);
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb);
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(int32_t, int32_t, uint8_t*)> cb);
+    
+    void soapAction(const std::string& url,
+                    const std::string& actionName,
+                    const std::string& serviceName,
+                    const std::string& envelope,
+                    std::function<void(int32_t, int32_t, std::string)> cb);
+
 
     static const char* errorToString(int32_t errorCode);
 

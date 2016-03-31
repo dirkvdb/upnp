@@ -55,25 +55,31 @@ enum class RequestType
 
 struct CallBackData
 {
-    CallBackData(RequestType t) : type(t)
+    CallBackData(RequestType t) : type(t), headerData(nullptr)
     {
     }
 
+    ~CallBackData()
+    {
+        curl_slist_free_all(headerData);
+    }
+
     RequestType type;
+    curl_slist* headerData;
 };
 
 struct ContentLengthCallBackData : public CallBackData
 {
     ContentLengthCallBackData() : CallBackData(RequestType::ContentLength) {}
 
-    std::function<void(int32_t, size_t)> callback;
+    std::function<void(int32_t, int32_t, size_t)> callback;
 };
 
 struct GetAsStringCallBackData : public CallBackData
 {
     GetAsStringCallBackData() : CallBackData(RequestType::GetAsString) {}
 
-    std::function<void(int32_t, std::string)> callback;
+    std::function<void(int32_t, int32_t, std::string)> callback;
     std::string data;
 };
 
@@ -81,7 +87,7 @@ struct GetAsVectorCallBackData : public CallBackData
 {
     GetAsVectorCallBackData() : CallBackData(RequestType::GetAsVector) {}
 
-    std::function<void(int32_t, std::vector<uint8_t>)> callback;
+    std::function<void(int32_t, int32_t, std::vector<uint8_t>)> callback;
     std::vector<uint8_t> data;
 };
 
@@ -94,7 +100,7 @@ struct GetAsRawDataCallBackData : public CallBackData
     {
     }
 
-    std::function<void(int32_t, uint8_t*)> callback;
+    std::function<void(int32_t, int32_t, uint8_t*)> callback;
     uint8_t* data;
     size_t writeOffset;
 };
@@ -111,6 +117,8 @@ void checkMultiInfo(CURLM* curlHandle)
         case CURLMSG_DONE:
         {
             CallBackData* pCbData = nullptr;
+            int32_t httpResponse;
+            curl_easy_getinfo(message->easy_handle, CURLINFO_RESPONSE_CODE, &httpResponse);
             curl_easy_getinfo(message->easy_handle, CURLINFO_PRIVATE, &pCbData);
             if (pCbData->type == RequestType::ContentLength)
             {
@@ -119,27 +127,27 @@ void checkMultiInfo(CURLM* curlHandle)
                 {
                     double contentLength;
                     curl_easy_getinfo(message->easy_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
-                    cbData->callback(contentLength < 0 ? -1 : 0, static_cast<int32_t>(contentLength));
+                    cbData->callback(contentLength < 0 ? -1 : 0, httpResponse, static_cast<int32_t>(contentLength));
                 }
                 else
                 {
-                    cbData->callback(-message->data.result, 0);
+                    cbData->callback(-message->data.result, httpResponse, 0);
                 }
             }
             else if (pCbData->type == RequestType::GetAsString)
             {
                 std::unique_ptr<GetAsStringCallBackData> cbData(reinterpret_cast<GetAsStringCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, std::move(cbData->data));
+                cbData->callback(-message->data.result, httpResponse, std::move(cbData->data));
             }
             else if (pCbData->type == RequestType::GetAsVector)
             {
                 std::unique_ptr<GetAsVectorCallBackData> cbData(reinterpret_cast<GetAsVectorCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, std::move(cbData->data));
+                cbData->callback(-message->data.result, httpResponse, std::move(cbData->data));
             }
             else if (pCbData->type == RequestType::GetAsRawData)
             {
                 std::unique_ptr<GetAsRawDataCallBackData> cbData(reinterpret_cast<GetAsRawDataCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, cbData->data);
+                cbData->callback(-message->data.result, httpResponse, cbData->data);
             }
 
             curl_multi_remove_handle(curlHandle, message->easy_handle);
@@ -253,7 +261,7 @@ void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
     m_timeout = timeout.count();
 }
 
-void Client::getContentLength(const std::string& url, std::function<void(int32_t, size_t)> cb)
+void Client::getContentLength(const std::string& url, std::function<void(int32_t, int32_t, size_t)> cb)
 {
     auto* data = new ContentLengthCallBackData();
     data->callback = std::move(cb);
@@ -266,7 +274,7 @@ void Client::getContentLength(const std::string& url, std::function<void(int32_t
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
-void Client::get(const std::string& url, std::function<void(int32_t, std::string)> cb)
+void Client::get(const std::string& url, std::function<void(int32_t, int32_t, std::string)> cb)
 {
     auto* data = new GetAsStringCallBackData();
     data->callback = std::move(cb);
@@ -281,7 +289,7 @@ void Client::get(const std::string& url, std::function<void(int32_t, std::string
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
-void Client::get(const std::string& url, std::function<void(int32_t, std::vector<uint8_t>)> cb)
+void Client::get(const std::string& url, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb)
 {
     auto* data = new GetAsVectorCallBackData();
     data->callback = std::move(cb);
@@ -296,7 +304,7 @@ void Client::get(const std::string& url, std::function<void(int32_t, std::vector
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
-void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, std::vector<uint8_t>)> cb)
+void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb)
 {
     auto* data = new GetAsVectorCallBackData();
     data->callback = std::move(cb);
@@ -312,7 +320,7 @@ void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, st
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
-void Client::get(const std::string& url, uint8_t* data, std::function<void(int32_t, uint8_t*)> cb)
+void Client::get(const std::string& url, uint8_t* data, std::function<void(int32_t, int32_t, uint8_t*)> cb)
 {
     auto* cbData = new GetAsRawDataCallBackData();
     cbData->data = data;
@@ -328,7 +336,7 @@ void Client::get(const std::string& url, uint8_t* data, std::function<void(int32
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
-void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* data, std::function<void(int32_t, uint8_t*)> cb)
+void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* data, std::function<void(int32_t, int32_t, uint8_t*)> cb)
 {
     auto* cbData = new GetAsRawDataCallBackData();
     cbData->data = data;
@@ -342,6 +350,34 @@ void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, ui
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, writeToArray);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, cbData);
     curl_easy_setopt(handle, CURLOPT_RANGE, fmt::format("{}-{}", offset, offset + size).c_str());
+    curl_multi_add_handle(m_multiHandle, handle);
+}
+
+void Client::soapAction(const std::string& url,
+                        const std::string& actionName,
+                        const std::string& serviceName,
+                        const std::string& envelope,
+                        std::function<void(int32_t, int32_t, std::string)> cb)
+{
+    auto* data = new GetAsStringCallBackData();
+    data->callback = std::move(cb);
+
+    curl_slist* list = nullptr;
+    list = curl_slist_append(list, fmt::format("SOAPACTION: urn:schemas-upnp-org:service:{}#{}", serviceName, actionName).c_str());
+    list = curl_slist_append(list, "CONTENT-TYPE: text/xml; charset=\"utf-8\"");
+    data->headerData = list;
+
+    CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
+    curl_easy_setopt(handle, CURLOPT_HEADER, 1);
+    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, list);
+    curl_easy_setopt(handle, CURLOPT_PRIVATE, data);
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, writeToString);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &data->data);
+    curl_easy_setopt(handle, CURLOPT_POST, 1);
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, envelope.size());
+    curl_easy_setopt(handle, CURLOPT_COPYPOSTFIELDS, envelope.c_str());
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
@@ -368,7 +404,7 @@ int Client::handleSocket(CURL* /*easy*/, curl_socket_t s, int action, void* user
     switch (action)
     {
     case CURL_POLL_IN:
-        context->poll.start(uv::PollEvent::Readable, [client, context] (uv::Flags<uv::PollEvent> events, int32_t status) {
+        context->poll.start(uv::PollEvent::Readable, [client, context] (int32_t status, uv::Flags<uv::PollEvent> events) {
             client->m_timer.stop();
             int runningHandles;
             curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);
@@ -376,7 +412,7 @@ int Client::handleSocket(CURL* /*easy*/, curl_socket_t s, int action, void* user
         });
         break;
     case CURL_POLL_OUT:
-        context->poll.start(uv::PollEvent::Writable, [client, context] (uv::Flags<uv::PollEvent> events, int32_t status) {
+        context->poll.start(uv::PollEvent::Writable, [client, context] (int32_t status, uv::Flags<uv::PollEvent> events) {
             client->m_timer.stop();
             int runningHandles;
             curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);

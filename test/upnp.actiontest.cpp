@@ -27,11 +27,12 @@ TEST_CASE("Create action", "[XML]")
     action.addArgument("Channel", "Master");
     action.addArgument("DesiredVolume", "49");
     action.addArgument("InstanceID", "0");
-    CHECK(action.toString() == expected);
+    
     CHECK(action.getName() == "SetVolume");
     CHECK(action.getUrl() == "url");
     CHECK(action.getServiceType() == ServiceType::RenderingControl);
     CHECK(action.getServiceTypeUrn() == "urn:schemas-upnp-org:service:RenderingControl:1");
+    CHECK(action.toString() == expected);
 }
 
 }
