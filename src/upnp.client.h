@@ -36,18 +36,17 @@ public:
 
     virtual void initialize(const std::string& interfaceName, int32_t port = 0);
     virtual void uninitialize();
-    virtual void reset();
 
     virtual std::string getIpAddress() const;
-    virtual int32_t     getPort() const;
+    virtual int32_t getPort() const;
 
-    virtual std::string subscribeToService(const std::string& publisherUrl, int32_t& timeout) const;
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, std::function<void(int32_t /*status*/, std::string /*subId*/)>) const;
     virtual void unsubscribeFromService(const std::string& subscriptionId) const;
 
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, IServiceSubscriber& sub) const;
     virtual void unsubscribeFromService(IServiceSubscriber& sub) const;
 
-    virtual void sendAction(const Action& action) const;
+    virtual void sendAction(const Action& action, std::function(void(int32_t /*status*/, std::string /*actionResult*/)> cb) const;
 
 private:
     uv::Loop&                        m_loop;
