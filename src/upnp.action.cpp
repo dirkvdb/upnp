@@ -17,8 +17,6 @@
 #include "upnp/upnp.action.h"
 #include "utils/log.h"
 
-#include <pugixml.hpp>
-
 namespace upnp
 {
 
@@ -26,26 +24,41 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
 : m_name(name)
 , m_url(url)
 , m_serviceType(serviceType)
-, m_doc(std::make_unique<pugi::xml_document>())
 {
-    m_actionDoc = UpnpMakeAction(name.c_str(), getServiceTypeUrn().c_str(), 0, nullptr);
+    auto env = m_doc.append_child("s:Envelope");
+    env.append_attribute("xmlns:s").set_value("http://schemas.xmlsoap.org/soap/envelope/");
+    env.append_attribute("s:encodingStyle").set_value("http://schemas.xmlsoap.org/soap/encoding/");
+    auto body = env.append_child("s:Body");
+    m_action = body.append_child(("u:" + name).c_str());
+    m_action.append_attribute("xmlns:u").set_value(getServiceTypeUrn().c_str());
 }
-
-Action::~Action() = default;
 
 void Action::addArgument(const std::string& name, const std::string& value)
 {
-    IXML_Document* pDoc = static_cast<IXML_Document*>(m_actionDoc);
-    auto rc = UpnpAddToAction(&pDoc, m_name.c_str(), getServiceTypeUrn().c_str(), name.c_str(), value.c_str());
-    if (UPNP_E_SUCCESS != rc)
+    if (!m_action.append_child(name.c_str()).text().set(value.c_str()))
     {
-        throw Exception(rc, "Failed to add action to UPnP request: {}", name);
+        throw std::runtime_error(fmt::format("Failed to add action to UPnP request: {}", name));
     }
 }
 
-const xml::Document& Action::getActionDocument() const
+std::string Action::toString() const
 {
-    return m_actionDoc;
+    class StringWriter : public pugi::xml_writer
+    {
+    public:
+        StringWriter(std::string& str) : m_str(str) {}
+        void write(const void* data, size_t size) override
+        {
+            m_str.append(static_cast<const char*>(data), size);
+        }
+    private:
+        std::string& m_str;
+    };
+    
+    std::string result;
+    StringWriter writer(result);
+    m_doc.save(writer, "", pugi::format_raw);
+    return result;
 }
 
 std::string Action::getName() const
@@ -70,12 +83,12 @@ ServiceType Action::getServiceType() const
 
 bool Action::operator==(const Action& other) const
 {
-    if (!m_actionDoc && other.m_actionDoc)
+    if (m_doc.empty() && !other.m_doc.empty())
     {
         return false;
     }
 
-    return m_actionDoc.toString() == other.m_actionDoc.toString();
+    return toString() == other.toString();
 }
 
 }

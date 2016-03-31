@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <pugixml.hpp>
 
 #include "upnp/upnptypes.h"
 
@@ -35,7 +36,7 @@ public:
 
     void addArgument(const std::string& name, const std::string& value);
 
-    const std::string& toString() const;
+    std::string toString() const;
 
     std::string getName() const;
     std::string getUrl() const;
@@ -49,7 +50,8 @@ private:
     std::string                 m_url;
     ServiceType                 m_serviceType;
 
-    std::unique_ptr<pugi::xml_document> m_doc;
+    pugi::xml_document m_doc;
+    pugi::xml_node m_action;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Action& action)

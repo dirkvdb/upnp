@@ -100,6 +100,7 @@ INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
 
 ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpaction.h                       src/upnpaction.cpp
+    inc/upnp/upnp.action.h                      src/upnp.action.cpp
     inc/upnp/upnpactionresponse.h               src/upnpactionresponse.cpp
     inc/upnp/upnpavtransportclient.h            src/upnpavtransportclient.cpp
     inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
