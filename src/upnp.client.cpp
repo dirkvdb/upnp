@@ -17,6 +17,8 @@
 #include "upnp.client.h"
 
 #include "utils/log.h"
+#include "upnp/upnp.uv.h"
+#include "upnp/upnp.action.h"
 #include "upnp/upnp.http.client.h"
 
 #include <stdexcept>
@@ -35,14 +37,22 @@ Client2::Client2(uv::Loop& loop)
 {
 }
 
-void Client2::initialize(const std::string& /*interfaceName*/, int32_t /*port*/)
+void Client2::initialize(const std::string& interfaceName, int32_t port)
 {
     log::debug("Initializing UPnP SDK");
+    for (auto& intf : uv::getNetworkInterfaces())
+    {
+        if (intf.name == interfaceName)
+        {
+        }
+    }
+
+    throw std::runtime_error("Could not find network interface with name: " + interfaceName);
 }
 
-void Client2::destroy()
+void Client2::uninitialize()
 {
-    log::debug("Destroyed UPnP SDK");
+    log::debug("Uninitialized UPnP SDK");
 }
 
 std::string Client2::getIpAddress() const
@@ -55,39 +65,39 @@ int32_t Client2::getPort() const
     return 0;
 }
 
-std::string Client2::subscribeToService(const std::string& publisherUrl, int32_t& /*timeout*/) const
+void Client2::subscribeToService(const std::string& publisherUrl, int32_t /*timeout*/, std::function<void(int32_t status, std::string subId)> /*cb*/) const
 {
     log::debug("Subscribe to service: {}", publisherUrl);
 
     //Upnp_SID subscriptionId;
     //handleUPnPResult(UpnpSubscribe(*m_client, publisherUrl.c_str(), &timeout, subscriptionId), "Failed to subscribe to UPnP device service");
-    return "";
 }
 
 void Client2::unsubscribeFromService(const std::string& /*subscriptionId*/) const
 {
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, int32_t /*timeout*/, IServiceSubscriber& /*sub*/) const
-{
-    log::debug("Subscribe to service: {}", publisherUrl);
-    //handleUPnPResult(UpnpSubscribeAsync(*m_client, publisherUrl.c_str(), timeout, &Client2::upnpServiceCallback, sub.get()), "Failed to subscribe to UPnP device service");
-    //m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
-}
+// void Client2::subscribeToService(const std::string& publisherUrl, int32_t /*timeout*/, IServiceSubscriber& /*sub*/) const
+// {
+//     log::debug("Subscribe to service: {}", publisherUrl);
+//     //handleUPnPResult(UpnpSubscribeAsync(*m_client, publisherUrl.c_str(), timeout, &Client2::upnpServiceCallback, sub.get()), "Failed to subscribe to UPnP device service");
+//     //m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
+// }
 
-void Client2::unsubscribeFromService(IServiceSubscriber& /*sub*/) const
-{
-    //m_serviceSubscriptions.erase(sub.get());
-    //unsubscribeFromService(sub->getSubscriptionId());
-}
+// void Client2::unsubscribeFromService(IServiceSubscriber& /*sub*/) const
+// {
+//     //m_serviceSubscriptions.erase(sub.get());
+//     //unsubscribeFromService(sub->getSubscriptionId());
+// }
 
-void Client2::sendAction(const Action& action, std::function(void(int32_t, std::string)> cb) const
+void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb) const
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    //handleUPnPResult(UpnpSendAction(*m_client, action.getUrl().c_str(), action.getServiceTypeUrn().c_str(), nullptr, action.getActionDocument(), &pDoc));
+    http::Client client(m_loop);
+    client.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
 
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());

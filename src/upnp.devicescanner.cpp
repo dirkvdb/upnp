@@ -135,8 +135,8 @@ std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
 
 void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void(std::string)> cb)
 {
-    m_httpClient.get(url, [=] (int32_t status, int32_t, std::string xml) {
-        if (status < 0)
+    m_httpClient.get(url, [=] (int32_t status, std::string xml) {
+        if (status != 200)
         {
             log::error("Failed to download device info {} ({})", url, http::Client::errorToString(status));
             return;

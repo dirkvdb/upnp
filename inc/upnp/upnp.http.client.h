@@ -36,22 +36,28 @@ public:
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
 
-    void getContentLength(const std::string& url, std::function<void(int32_t, int32_t, size_t)> cb);
-    void get(const std::string& url, std::function<void(int32_t, int32_t, std::string)> cb);
-    void get(const std::string& url, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb);
-    void get(const std::string& url, uint8_t* data, std::function<void(int32_t, int32_t, uint8_t*)> cb);
+    void getContentLength(const std::string& url, std::function<void(int32_t status, size_t length)> cb);
+    void get(const std::string& url, std::function<void(int32_t status, std::string data)> cb);
+    void get(const std::string& url, std::function<void(int32_t status, std::vector<uint8_t> data)> cb);
+    void get(const std::string& url, uint8_t* data, std::function<void(int32_t status, uint8_t* data)> cb);
 
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t, int32_t, std::vector<uint8_t>)> cb);
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(int32_t, int32_t, uint8_t*)> cb);
-    
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(int32_t status, std::vector<uint8_t> data)> cb);
+    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(int32_t status, uint8_t* data)> cb);
+
+    void subscribe(const std::string& url, const std::string& callbackUrl, std::chrono::seconds timeout,
+                   std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
+    void renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout,
+                           std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
+    void unsubscribe(const std::string& url, const std::string& sid, std::function<void(int32_t status, std::string response)> cb);
+
     void soapAction(const std::string& url,
                     const std::string& actionName,
                     const std::string& serviceName,
                     const std::string& envelope,
-                    std::function<void(int32_t, int32_t, std::string)> cb);
+                    std::function<void(int32_t status, std::string data)> cb);
 
-
-    static const char* errorToString(int32_t errorCode);
+    // Should only be called with negative error codes
+    static std::string errorToString(int32_t errorCode);
 
 private:
     static int handleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp);

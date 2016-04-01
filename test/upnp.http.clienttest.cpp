@@ -22,7 +22,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("ContentLength not provided")
     {
-        client.getContentLength("http://www.google.be", [&] (int32_t status, int32_t, size_t /*size*/) {
+        client.getContentLength("http://www.google.be", [&] (int32_t status, size_t /*size*/) {
             CHECK(status < 0);
             gotCallback = true;
         });
@@ -40,7 +40,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("Get as string")
     {
-        client.get("http://www.google.be", [&] (int32_t status, int32_t, std::string contents) {
+        client.get("http://www.google.be", [&] (int32_t status, std::string contents) {
             INFO("GET Failed: " << http::Client::errorToString(status));
             CHECK(status == 0);
             CHECK_FALSE(contents.empty());
@@ -50,7 +50,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("Get as vector")
     {
-        client.get("http://www.google.be", [&] (int32_t status, int32_t, std::vector<uint8_t> data) {
+        client.get("http://www.google.be", [&] (int32_t status, std::vector<uint8_t> data) {
             INFO("GET Failed: " << http::Client::errorToString(status));
             CHECK(status == 0);
             CHECK_FALSE(data.empty());
@@ -62,7 +62,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
     {
         auto data = std::make_unique<std::vector<uint8_t>>(1024 * 128, 0);
         uint8_t* originalDataPtr = data->data();
-        client.get("http://www.google.be", originalDataPtr, [&] (int32_t status, int32_t, uint8_t* dataPtr) {
+        client.get("http://www.google.be", originalDataPtr, [&] (int32_t status, uint8_t* dataPtr) {
             INFO("GET Failed: " << http::Client::errorToString(status));
             CHECK(status == 0);
             CHECK(dataPtr[0] != 0);
@@ -73,7 +73,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("Get invalid url as string")
     {
-        client.get("http://www.googlegooglegooglegooglegooglegoogle.be", [&] (int32_t status, int32_t, std::string contents) {
+        client.get("http://www.googlegooglegooglegooglegooglegoogle.be", [&] (int32_t status, std::string contents) {
             CHECK(status < 0);
             CHECK(contents.empty());
             gotCallback = true;
@@ -82,7 +82,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("Get server url")
     {
-        client.get("http://localhost:8080/test.txt", [&] (int32_t status, int32_t, std::string contents) {
+        client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
             CHECK(status < 0);
             CHECK(contents.empty());
             gotCallback = true;
@@ -92,9 +92,9 @@ TEST_CASE("HTTP Client", "[HTTP]")
     SECTION("Invalid url")
     {
         client.setTimeout(5ms);
-        client.getContentLength("http://192.168.55.245/index.html", [&] (int32_t status, int32_t, size_t /*size*/) {
+        client.getContentLength("http://192.168.55.245/index.html", [&] (int32_t status, size_t /*size*/) {
             CHECK(status < 0);
-            CHECK(strcmp(http::Client::errorToString(status), "Timeout was reached") == 0);
+            CHECK(http::Client::errorToString(status) == "Timeout was reached");
             gotCallback = true;
         });
     }
@@ -113,7 +113,7 @@ TEST_CASE("HTTP Client Server", "[HTTP]")
     auto servedFile = "This is my amazing file"s;
     server.addFile("/test.txt", "text/plain", servedFile);
 
-    client.get("http://localhost:8080/test.txt", [&] (int32_t status, int32_t, std::string contents) {
+    client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
         INFO("GET Failed: " << http::Client::errorToString(status));
         CHECK(status == 0);
 
@@ -140,13 +140,10 @@ TEST_CASE("HTTP Client Soap action invalid url", "[SOAP]")
                       action.getName(),
                       action.getServiceTypeUrn(),
                       action.toString(),
-                      [&] (int32_t status, int32_t httpCode, std::string /*res*/) {
-        INFO("SOAP Action Failed: " << http::Client::errorToString(status));
-        CHECK(status == 0);
-        
-        INFO("Unexpected HTTP code: " << httpCode);
-        CHECK(httpCode == 500);
-        
+                      [&] (int32_t status, std::string /*res*/) {
+        INFO("Unexpected status code: " << http::Client::errorToString(status));
+        CHECK(status == 500);
+
         //log::info(res);
         gotCallback = true;
         stopLoopAndCloseRequests(loop);

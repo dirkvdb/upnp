@@ -8,7 +8,6 @@ PKG_CHECK_MODULES(UPNP_PKG libupnp REQUIRED)
 PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
 PKG_CHECK_MODULES(CURL_PKG libcurl REQUIRED)
 PKG_CHECK_MODULES(CURL_PKG pugixml REQUIRED)
-#PKG_CHECK_MODULES(MONGOOSE_PKG mongoose REQUIRED)
 
 FIND_PATH(UPNP_INCLUDE_DIR
     NAMES upnp.h
@@ -83,24 +82,32 @@ IF (STANDALONE)
     ENDIF ()
 ENDIF ()
 
-SET (UPNPFRAMEWORK_INCLUDE_DIRS
-    "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
-    ${UTILS_INCLUDE_DIRS}
-    ${UPNP_INCLUDE_DIR}
+SET (UPNPFRAMEWORK_SYS_INCLUDE_DIRS
     ${LIBUV_INCLUDE_DIR}
     ${CURL_INCLUDE_DIR}
     ${MONGOOSE_INCLUDE_DIR}
     ${PUGIXXML_INCLUDE_DIR}
 )
+
+SET (UPNPFRAMEWORK_INCLUDE_DIRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
+    ${UTILS_INCLUDE_DIRS}
+    ${UPNP_INCLUDE_DIR}
+)
+
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
 
+INCLUDE_DIRECTORIES(SYSTEM
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gsl
+    ${UPNPFRAMEWORK_SYS_INCLUDE_DIRS}
+)
+
 ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpaction.h                       src/upnpaction.cpp
-    inc/upnp/upnp.action.h                      src/upnp.action.cpp
     inc/upnp/upnpactionresponse.h               src/upnpactionresponse.cpp
     inc/upnp/upnpavtransportclient.h            src/upnpavtransportclient.cpp
     inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
@@ -140,11 +147,13 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
+    inc/upnp/upnp.action.h                      src/upnp.action.cpp
     inc/upnp/upnp.ssdp.client.h                 src/upnp.ssdp.client.cpp
     inc/upnp/upnp.http.client.h                 src/upnp.http.client.cpp
     inc/upnp/upnp.http.server.h                 src/upnp.http.server.cpp
     inc/upnp/upnp.xml.parseutils.h              src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.uv.h
+    src/upnp.client.h                           src/upnp.client.cpp
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnphttpparser.h
     src/upnp.ssdp.parseutils.h

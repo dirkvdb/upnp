@@ -16,17 +16,20 @@
 
 #pragma once
 
-#include "upnp/upnpclientinterface.h"
+#include <vector>
+#include <functional>
+
+//#include "upnp/upnpclientinterface.h"
+
+namespace uv
+{
+    class Loop;
+}
 
 namespace upnp
 {
 
-class uv::loop;
-
-// namespace uv
-// {
-//     class loop;
-// }
+class Action;
 
 class Client2
 {
@@ -40,16 +43,16 @@ public:
     virtual std::string getIpAddress() const;
     virtual int32_t getPort() const;
 
-    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, std::function<void(int32_t /*status*/, std::string /*subId*/)>) const;
+    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, std::function<void(int32_t status, std::string subId)> cb) const;
     virtual void unsubscribeFromService(const std::string& subscriptionId) const;
 
-    virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, IServiceSubscriber& sub) const;
-    virtual void unsubscribeFromService(IServiceSubscriber& sub) const;
+    // virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, IServiceSubscriber& sub) const;
+    // virtual void unsubscribeFromService(IServiceSubscriber& sub) const;
 
-    virtual void sendAction(const Action& action, std::function(void(int32_t /*status*/, std::string /*actionResult*/)> cb) const;
+    virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb) const;
 
 private:
     uv::Loop&                        m_loop;
-    std::vector<IServiceSubscriber*> m_serviceSubscriptions;
+    //std::vector<IServiceSubscriber*> m_serviceSubscriptions;
 };
 }

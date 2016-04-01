@@ -67,7 +67,7 @@ TEST_CASE("SSDP Client", "[SSDP]")
 
 TEST_CASE("List interfaces", "[uv]")
 {
-    for (auto& addr : uv::getInterfaces())
+    for (auto& addr : uv::getNetworkInterfaces())
     {
         std::cout << "Name: " << addr.name << std::endl
                   << "Addr: " << addr.ipName() << std::endl

@@ -73,7 +73,7 @@ public:
     : m_flags(getValue(flag))
     {
     }
-    
+
     Flags(ValueType flags)
     : m_flags(flags)
     {
@@ -104,7 +104,7 @@ private:
 
     ValueType m_flags = 0;
 };
-    
+
 template <typename T>
 inline Flags<T> operator | (T lhs, T rhs)
 {
@@ -183,7 +183,7 @@ protected:
         checkRc(func(loop.get(), &m_handle));
         m_handle.data = this;
     }
-    
+
     template <typename InitFunc, typename Arg>
     void init(Loop& loop, InitFunc func, Arg&& arg)
     {
@@ -275,7 +275,7 @@ public:
 private:
     std::function<void()>   m_callback;
 };
-    
+
 enum class PollEvent : int32_t
 {
     Readable = UV_READABLE,
@@ -283,23 +283,23 @@ enum class PollEvent : int32_t
     // Version 1.9.0
     //Disconnect = UV_DISCONNECT
 };
-    
+
 struct OsSocket
 {
     OsSocket(uv_os_sock_t sock)
     : m_sock(sock)
     {
     }
-    
+
     operator uv_os_sock_t() noexcept
     {
         return m_sock;
     }
-    
+
 private:
     uv_os_sock_t m_sock;
 };
-    
+
 class Poll : public Handle<uv_poll_t>
 {
 public:
@@ -307,12 +307,12 @@ public:
     {
         init(loop, uv_poll_init, fd);
     }
-    
+
     Poll(Loop& loop, OsSocket sock)
     {
         init(loop, uv_poll_init_socket, sock);
     }
-    
+
     void start(Flags<PollEvent> events, std::function<void(int32_t, Flags<PollEvent>)> cb)
     {
         m_callback = std::move(cb);
@@ -320,12 +320,12 @@ public:
             reinterpret_cast<Poll*>(handle->data)->m_callback(status, events);
         }));
     }
-    
+
     void stop() noexcept
     {
         uv_poll_stop(get());
     }
-    
+
 private:
     std::function<void(int32_t, Flags<PollEvent>)> m_callback;
 };
@@ -629,7 +629,7 @@ inline sockaddr_in6 createIp6Address(const std::string& ip, int32_t port)
     return addr;
 }
 
-inline std::vector<InterfaceInfo> getInterfaces()
+inline std::vector<InterfaceInfo> getNetworkInterfaces()
 {
     std::vector<InterfaceInfo> res;
     uv_interface_address_s* addresses = nullptr;
