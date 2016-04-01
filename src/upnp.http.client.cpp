@@ -162,28 +162,28 @@ void checkMultiInfo(CURLM* curlHandle)
                 }
                 else
                 {
-                    cbData->callback(-message->data.result, 0);
+                    cbData->callback(statusCode, 0);
                 }
             }
             else if (pCbData->type == RequestType::GetAsString)
             {
                 std::unique_ptr<GetAsStringCallBackData> cbData(reinterpret_cast<GetAsStringCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, std::move(cbData->data));
+                cbData->callback(statusCode, std::move(cbData->data));
             }
             else if (pCbData->type == RequestType::GetAsVector)
             {
                 std::unique_ptr<GetAsVectorCallBackData> cbData(reinterpret_cast<GetAsVectorCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, std::move(cbData->data));
+                cbData->callback(statusCode, std::move(cbData->data));
             }
             else if (pCbData->type == RequestType::GetAsRawData)
             {
                 std::unique_ptr<GetAsRawDataCallBackData> cbData(reinterpret_cast<GetAsRawDataCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, cbData->data);
+                cbData->callback(statusCode, cbData->data);
             }
             else if (pCbData->type == RequestType::Subscribe)
             {
                 std::unique_ptr<SubscribeCallBackData> cbData(reinterpret_cast<SubscribeCallBackData*>(pCbData));
-                cbData->callback(-message->data.result, std::move(cbData->sid), cbData->timeout, std::move(cbData->data));
+                cbData->callback(statusCode, std::move(cbData->sid), cbData->timeout, std::move(cbData->data));
             }
 
             curl_multi_remove_handle(curlHandle, message->easy_handle);

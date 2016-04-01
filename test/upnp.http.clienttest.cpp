@@ -42,7 +42,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
     {
         client.get("http://www.google.be", [&] (int32_t status, std::string contents) {
             INFO("GET Failed: " << http::Client::errorToString(status));
-            CHECK(status == 0);
+            CHECK(status == 200);
             CHECK_FALSE(contents.empty());
             gotCallback = true;
         });
@@ -52,7 +52,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
     {
         client.get("http://www.google.be", [&] (int32_t status, std::vector<uint8_t> data) {
             INFO("GET Failed: " << http::Client::errorToString(status));
-            CHECK(status == 0);
+            CHECK(status == 200);
             CHECK_FALSE(data.empty());
             gotCallback = true;
         });
@@ -64,7 +64,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
         uint8_t* originalDataPtr = data->data();
         client.get("http://www.google.be", originalDataPtr, [&] (int32_t status, uint8_t* dataPtr) {
             INFO("GET Failed: " << http::Client::errorToString(status));
-            CHECK(status == 0);
+            CHECK(status == 200);
             CHECK(dataPtr[0] != 0);
             CHECK(originalDataPtr == dataPtr);
             gotCallback = true;
@@ -115,7 +115,7 @@ TEST_CASE("HTTP Client Server", "[HTTP]")
 
     client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
         INFO("GET Failed: " << http::Client::errorToString(status));
-        CHECK(status == 0);
+        CHECK(status == 200);
 
         CHECK(contents == servedFile);
         gotCallback = true;
