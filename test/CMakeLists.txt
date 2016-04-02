@@ -35,12 +35,14 @@ ADD_EXECUTABLE(upnptest
 
 ADD_EXECUTABLE(upnpframeworktest
     testrunner.cpp
+    upnp.clienttest.cpp
     upnp.ssdp.clienttest.cpp
     upnp.ssdp.test.cpp
     upnp.http.clienttest.cpp
     upnp.actiontest.cpp
     upnp.devicescannertest.cpp
     upnp.xml.parseutilstest.cpp
+    upnp.soap.parseutilstest.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnptest

@@ -14,12 +14,12 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp.client.h"
+#include "upnp/upnp.client.h"
 
 #include "utils/log.h"
 #include "upnp/upnp.uv.h"
 #include "upnp/upnp.action.h"
-#include "upnp/upnp.http.client.h"
+#include "upnp.gena.server.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -34,16 +34,23 @@ namespace upnp
 
 Client2::Client2(uv::Loop& loop)
 : m_loop(loop)
+, m_http(loop)
 {
 }
+
+Client2::~Client2() = default;
 
 void Client2::initialize(const std::string& interfaceName, int32_t port)
 {
     log::debug("Initializing UPnP SDK");
     for (auto& intf : uv::getNetworkInterfaces())
     {
-        if (intf.name == interfaceName)
+        if (intf.isIpv4() && intf.name == interfaceName)
         {
+            auto addr = uv::Address::createIp4(intf.address.address4);
+            addr.setPort(port);
+            m_eventServer = std::make_unique<gena::Server>(m_loop, addr);
+            return;
         }
     }
 
@@ -53,51 +60,51 @@ void Client2::initialize(const std::string& interfaceName, int32_t port)
 void Client2::uninitialize()
 {
     log::debug("Uninitialized UPnP SDK");
+    m_eventServer.reset();
 }
 
 std::string Client2::getIpAddress() const
 {
-    return "";
+    return m_eventServer->getAddress().ip();
 }
 
 int32_t Client2::getPort() const
 {
-    return 0;
+    return m_eventServer->getAddress().port();
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, int32_t /*timeout*/, std::function<void(int32_t status, std::string subId)> /*cb*/) const
+void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     log::debug("Subscribe to service: {}", publisherUrl);
-
-    //Upnp_SID subscriptionId;
-    //handleUPnPResult(UpnpSubscribe(*m_client, publisherUrl.c_str(), &timeout, subscriptionId), "Failed to subscribe to UPnP device service");
+    
+    if (!m_eventServer)
+    {
+        throw std::runtime_error("UPnP library is not properly initialized");
+    }
+    
+    auto addr = m_eventServer->getAddress();
+    log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
+    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
+        log::debug("Subscribe response: {}", response);
+        cb(status, subId, timeout);
+    });
 }
 
-void Client2::unsubscribeFromService(const std::string& /*subscriptionId*/) const
+void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb)
 {
+    m_http.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
+        log::debug("Unsubscribe response: {}", response);
+        cb(status);
+    });
 }
 
-// void Client2::subscribeToService(const std::string& publisherUrl, int32_t /*timeout*/, IServiceSubscriber& /*sub*/) const
-// {
-//     log::debug("Subscribe to service: {}", publisherUrl);
-//     //handleUPnPResult(UpnpSubscribeAsync(*m_client, publisherUrl.c_str(), timeout, &Client2::upnpServiceCallback, sub.get()), "Failed to subscribe to UPnP device service");
-//     //m_serviceSubscriptions.insert(std::make_pair(sub.get(), std::weak_ptr<IServiceSubscriber>(sub)));
-// }
-
-// void Client2::unsubscribeFromService(IServiceSubscriber& /*sub*/) const
-// {
-//     //m_serviceSubscriptions.erase(sub.get());
-//     //unsubscribeFromService(sub->getSubscriptionId());
-// }
-
-void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb) const
+void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    http::Client client(m_loop);
-    client.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
+    m_http.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
 
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());

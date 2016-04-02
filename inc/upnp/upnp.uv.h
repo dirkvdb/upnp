@@ -40,6 +40,11 @@ public:
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data), size))
     {
     }
+    
+    Buffer(const uv_buf_t* buffer)
+    : m_handle(*buffer)
+    {
+    }
 
     template <typename T>
     Buffer(T& data)
@@ -55,6 +60,21 @@ public:
     const uv_buf_t* get() const
     {
         return &m_handle;
+    }
+    
+    char* data()
+    {
+        return m_handle.base;
+    }
+    
+    const char* data() const noexcept
+    {
+        return m_handle.base;
+    }
+    
+    size_t size() const noexcept
+    {
+        return m_handle.len;
     }
 
 private:
@@ -152,18 +172,32 @@ class Handle
 public:
     bool isClosing()
     {
-        return uv_is_closing(get()) != 0;
+        return uv_is_closing(reinterpret_cast<uv_handle_t*>(get())) != 0;
     }
 
     void close(std::function<void()> cb)
     {
+        if (isClosing())
+        {
+            return;
+        }
+        
         m_closeCallback = std::move(cb);
         uv_close(reinterpret_cast<uv_handle_t*>(get()), [] (auto* handle) {
-            reinterpret_cast<Handle<HandleType>*>(handle->data)->m_closeCallback();
+            auto thisPtr = reinterpret_cast<Handle<HandleType>*>(handle->data);
+            if (thisPtr->m_closeCallback)
+            {
+                thisPtr->m_closeCallback();
+            }
         });
     }
 
     HandleType* get() noexcept
+    {
+        return &m_handle;
+    }
+    
+    const HandleType* get() const noexcept
     {
         return &m_handle;
     }
@@ -200,12 +234,13 @@ template <typename HandleType>
 class Stream : public Handle<HandleType>
 {
 public:
-    void read(std::function<void(std::string)> cb)
+    void read(std::function<void(ssize_t, Buffer)> cb)
     {
         m_readCb = std::move(cb);
-        checkRc(uv_read_start(this->get(), allocateBuffer, [] (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+        checkRc(uv_read_start(reinterpret_cast<uv_stream_t*>(this->get()), allocateBuffer, [] (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
             auto* thisPtr = reinterpret_cast<Stream*>(stream->data);
-            thisPtr->m_readCb(std::string(buf->base, nread));
+            thisPtr->m_readCb(nread, Buffer(buf));
+            free(buf->base);
         }));
     }
 
@@ -224,9 +259,24 @@ public:
             (*cb)(status);
         }));
     }
-
+    
+    void listen(int32_t backlog, std::function<void(int32_t)> cb)
+    {
+        m_listenCb = std::move(cb);
+        checkRc(uv_listen(reinterpret_cast<uv_stream_t*>(this->get()), backlog, [] (uv_stream_t* req, int status) {
+            auto* thisPtr = reinterpret_cast<Stream*>(req->data);
+            thisPtr->m_listenCb(status);
+        }));
+    }
+    
+    void accept(Stream& client)
+    {
+        checkRc(uv_accept(reinterpret_cast<uv_stream_t*>(this->get()), reinterpret_cast<uv_stream_t*>(client.get())));
+    }
+    
 private:
-    std::function<void(std::string)> m_readCb;
+    std::function<void(ssize_t, Buffer)> m_readCb;
+    std::function<void(int32_t)> m_listenCb;
 };
 
 class Idler : public Handle<uv_idle_t>
@@ -330,12 +380,6 @@ private:
     std::function<void(int32_t, Flags<PollEvent>)> m_callback;
 };
 
-class Connection : public Handle<uv_connect_t>
-{
-public:
-    Connection() = default;
-};
-
 class Timer : public Handle<uv_timer_t>
 {
 public:
@@ -369,6 +413,20 @@ private:
 class Address
 {
 public:
+    static Address create(const sockaddr_storage& address, int length)
+    {
+        Address addr;
+        memcpy(&addr.m_address, &address, length);
+        return addr;
+    }
+
+    static Address createIp4(sockaddr_in address)
+    {
+        Address addr;
+        addr.m_address.address4 = address;
+        return addr;
+    }
+
     static Address createIp4(const std::string& ip, int32_t port)
     {
         Address addr;
@@ -382,6 +440,18 @@ public:
         checkRc(uv_ip6_addr(ip.c_str(), port, &addr.m_address.address6));
         return addr;
     }
+    
+    void setPort(int32_t port)
+    {
+        if (isIpv4())
+        {
+            m_address.address4.sin_port = port;
+        }
+        else
+        {
+            m_address.address6.sin6_port = port;
+        }
+    }
 
     bool isIpv4() const noexcept
     {
@@ -391,6 +461,41 @@ public:
     bool isIpv6() const noexcept
     {
         return m_address.address4.sin_family == AF_INET6;
+    }
+    
+    std::string ip() const
+    {
+        std::array<char, 512> name;
+        if (isIpv4())
+        {
+            checkRc(uv_ip4_name(&m_address.address4, name.data(), name.size()));
+        }
+        else if (isIpv6())
+        {
+            checkRc(uv_ip6_name(&m_address.address6, name.data(), name.size()));
+        }
+        else
+        {
+            throw std::runtime_error("Invalid address family");
+        }
+
+        return name.data();
+    }
+    
+    int32_t port() const
+    {
+        if (isIpv4())
+        {
+            return m_address.address4.sin_port;
+        }
+        else if (isIpv6())
+        {
+            return m_address.address6.sin6_port;
+        }
+        else
+        {
+            throw std::runtime_error("Invalid address family");
+        }
     }
 
     const sockaddr_in* get() const noexcept
@@ -521,7 +626,12 @@ private:
     std::function<void(std::string)>    m_recvCb;
 };
 
-class Tcp : public Handle<uv_tcp_t>
+enum class TcpFlag : uint32_t
+{
+    Ipv6Only = UV_TCP_IPV6ONLY
+};
+
+class Tcp : public Stream<uv_tcp_t>
 {
 public:
     Tcp(Loop& loop)
@@ -538,7 +648,12 @@ public:
     {
         checkRc(uv_tcp_keepalive(get(), enabled ? 1 : 0, delay));
     }
-
+    
+    void bind(const Address& addr, Flags<TcpFlag> flags = uv::Flags<TcpFlag>())
+    {
+        checkRc(uv_tcp_bind(get(), reinterpret_cast<const sockaddr*>(addr.get()), flags));
+    }
+    
     void connect(const Address& addr, std::function<void(int32_t)> cb)
     {
         auto conn = std::make_unique<uv_connect_t>();
@@ -549,6 +664,15 @@ public:
             std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(req->data));
             (*cb)(status);
         }));
+    }
+    
+    Address getSocketName() const
+    {
+        sockaddr_storage addr;
+        int namelen = sizeof(sockaddr_storage);
+        checkRc(uv_tcp_getsockname(get(), reinterpret_cast<sockaddr*>(&addr), &namelen));
+        
+        return Address::create(addr, namelen);
     }
 };
 

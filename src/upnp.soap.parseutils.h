@@ -12,14 +12,14 @@ namespace soap
 
 inline std::chrono::seconds parseTimeout(const std::string& timeout)
 {
-    if (timeout == "Seconds-infinite")
+    if (timeout == "Second-infinite")
     {
         return std::chrono::seconds(0);
     }
 
     try
     {
-        std::regex re(R"((Seconds-(\d)+)");
+        std::regex re(R"(Second-(\d+))");
         std::smatch match;
         if (std::regex_match(timeout, match, re))
         {

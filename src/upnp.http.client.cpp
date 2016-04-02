@@ -287,7 +287,13 @@ size_t getSubscribeHeaders(char* buffer, size_t size, size_t nitems, void* userd
 {
     auto dataSize = size * nitems;
 
-    gsl::span<char> header(buffer, size);
+    if ((buffer[0] == '\r') || (memcmp("HTTP/1.1", buffer, 8) == 0))
+    {
+        // first header
+        return dataSize;
+    }
+
+    gsl::span<char> header(buffer, dataSize);
     auto iter = std::find(header.begin(), header.end(), ':');
     if (iter == header.end())
     {
@@ -297,14 +303,14 @@ size_t getSubscribeHeaders(char* buffer, size_t size, size_t nitems, void* userd
 
     auto& data = *reinterpret_cast<SubscribeCallBackData*>(userdata);
 
-    auto value = std::string(iter, header.end());
+    auto value = std::string(iter + 1, header.end());
     utils::stringops::trim(value);
 
-    if (strncasecmp(buffer, "sid", dataSize) == 0)
+    if (strncasecmp(buffer, "sid", 3) == 0)
     {
         data.sid = std::move(value);
     }
-    else if (strncasecmp(buffer, "timeout", dataSize) == 0)
+    else if (strncasecmp(buffer, "timeout", 6) == 0)
     {
         try
         {
@@ -444,7 +450,8 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     data->callback = std::move(cb);
 
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, fmt::format("CALLBACK: {}", callbackUrl).c_str());
+    list = curl_slist_append(list, "Accept:");
+    list = curl_slist_append(list, fmt::format("CALLBACK: <{}>", callbackUrl).c_str());
     list = curl_slist_append(list, "NT: upnp:event");
     list = curl_slist_append(list, createTimeoutHeader(timeout).c_str());
     data->headerData = list;
@@ -453,7 +460,6 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "SUBSCRIBE");
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
-    curl_easy_setopt(handle, CURLOPT_HEADER, 0);
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, list);
     curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, getSubscribeHeaders);
     curl_easy_setopt(handle, CURLOPT_HEADERDATA, data);
@@ -469,6 +475,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     data->sid = sid;
 
     curl_slist* list = nullptr;
+    list = curl_slist_append(list, "Accept:");
     list = curl_slist_append(list, fmt::format("SID: {}", sid).c_str());
     list = curl_slist_append(list, createTimeoutHeader(timeout).c_str());
     data->headerData = list;
@@ -489,6 +496,7 @@ void Client::unsubscribe(const std::string& url, const std::string& sid, std::fu
     data->callback = std::move(cb);
 
     curl_slist* list = nullptr;
+    list = curl_slist_append(list, "Accept:");
     list = curl_slist_append(list, fmt::format("SID: {}", sid).c_str());
     data->headerData = list;
 
