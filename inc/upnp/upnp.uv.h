@@ -41,6 +41,11 @@ public:
     {
     }
     
+    Buffer(char* data, size_t size)
+    : m_handle(uv_buf_init(data, size))
+    {
+    }
+    
     Buffer(const uv_buf_t* buffer)
     : m_handle(*buffer)
     {
@@ -51,7 +56,7 @@ public:
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data.data()), data.size()))
     {
     }
-
+    
     uv_buf_t* get()
     {
         return &m_handle;
@@ -253,7 +258,7 @@ public:
     {
         auto write = std::make_unique<uv_write_t>();
         write->data = new std::function<void(int32_t)>(cb);
-        checkRc(uv_write(write.release(), this->get(), buf.get(), 1, [] (uv_write_t* req, int status) {
+        checkRc(uv_write(write.release(), reinterpret_cast<uv_stream_t*>(this->get()), buf.get(), 1, [] (uv_write_t* req, int status) {
             std::unique_ptr<uv_write_t> writePtr(req);
             std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(writePtr->data));
             (*cb)(status);
@@ -445,11 +450,11 @@ public:
     {
         if (isIpv4())
         {
-            m_address.address4.sin_port = port;
+            m_address.address4.sin_port = htons(port);
         }
         else
         {
-            m_address.address6.sin6_port = port;
+            m_address.address6.sin6_port = htons(port);
         }
     }
 
