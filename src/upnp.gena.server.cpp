@@ -77,9 +77,8 @@ Server::~Server() noexcept
 
 uv::Address Server::getAddress() const
 {
-    log::debug("Get gena address");
     auto addr = m_socket.getSocketName();
-    log::debug("Got gena address: {} {}", addr.ip(), addr.port());
+    log::debug("GENA address: {} {}", addr.ip(), addr.port());
     return addr;
 }
 

@@ -13,7 +13,7 @@ using namespace utils;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
-TEST_CASE("UPnP Client", "[.][UPNP]")
+TEST_CASE("UPnP Client", "[.][upnp]")
 {
     uv::Loop loop;
     Client2 client(loop);

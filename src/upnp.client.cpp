@@ -40,7 +40,7 @@ Client2::Client2(uv::Loop& loop)
 
 Client2::~Client2() = default;
 
-void Client2::initialize(const std::string& interfaceName, int32_t port)
+void Client2::initialize(const std::string& interfaceName, uint16_t port)
 {
     log::debug("Initializing UPnP SDK");
     for (auto& intf : uv::getNetworkInterfaces())
@@ -68,7 +68,7 @@ std::string Client2::getIpAddress() const
     return m_eventServer->getAddress().ip();
 }
 
-int32_t Client2::getPort() const
+uint16_t Client2::getPort() const
 {
     return m_eventServer->getAddress().port();
 }

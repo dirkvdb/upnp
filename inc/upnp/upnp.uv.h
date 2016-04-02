@@ -432,21 +432,21 @@ public:
         return addr;
     }
 
-    static Address createIp4(const std::string& ip, int32_t port)
+    static Address createIp4(const std::string& ip, uint16_t port)
     {
         Address addr;
         checkRc(uv_ip4_addr(ip.c_str(), port, &addr.m_address.address4));
         return addr;
     }
 
-    static Address createIp6(const std::string& ip, int32_t port)
+    static Address createIp6(const std::string& ip, uint16_t port)
     {
         Address addr;
         checkRc(uv_ip6_addr(ip.c_str(), port, &addr.m_address.address6));
         return addr;
     }
     
-    void setPort(int32_t port)
+    void setPort(uint16_t port)
     {
         if (isIpv4())
         {
@@ -487,15 +487,15 @@ public:
         return name.data();
     }
     
-    int32_t port() const
+    uint16_t port() const
     {
         if (isIpv4())
         {
-            return m_address.address4.sin_port;
+            return ntohs(m_address.address4.sin_port);
         }
         else if (isIpv6())
         {
-            return m_address.address6.sin6_port;
+            return ntohs(m_address.address6.sin6_port);
         }
         else
         {
@@ -744,14 +744,14 @@ struct InterfaceInfo
     } netmask;
 };
 
-inline sockaddr_in createIp4Address(const std::string& ip, int32_t port)
+inline sockaddr_in createIp4Address(const std::string& ip, uint16_t port)
 {
     sockaddr_in addr;
     checkRc(uv_ip4_addr(ip.c_str(), port, &addr));
     return addr;
 }
 
-inline sockaddr_in6 createIp6Address(const std::string& ip, int32_t port)
+inline sockaddr_in6 createIp6Address(const std::string& ip, uint16_t port)
 {
     sockaddr_in6 addr;
     checkRc(uv_ip6_addr(ip.c_str(), port, &addr));
