@@ -84,7 +84,7 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
     
     auto addr = m_eventServer->getAddress();
     log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
-    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
+    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
         log::debug("Subscribe response: {}", response);
         cb(status, subId, timeout);
     });

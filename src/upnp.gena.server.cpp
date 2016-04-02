@@ -32,9 +32,10 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
     log::info("GENA: Start server on http://{}:{}", address.ip(), address.port());
     
     m_socket.bind(address);
-    m_socket.listen(100, [this] (int32_t status) {
+    m_socket.listen(128, [this] (int32_t status) {
         if (status == 0)
         {
+            log::info("GENA: Connection attempt");
             auto client = std::make_unique<uv::socket::Tcp>(m_loop);
             
             try
@@ -61,6 +62,10 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
                 log::error("GENA: Failed to accept connection: {}", e.what());
                 client->close(nullptr);
             }
+        }
+        else
+        {
+            log::error("GENA: Failed to listen on socket: {}", status);
         }
     });
 }
