@@ -49,7 +49,13 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
         {
             auto addr = uv::Address::createIp4(intf.address.address4);
             addr.setPort(port);
-            m_eventServer = std::make_unique<gena::Server>(m_loop, addr);
+            m_eventServer = std::make_unique<gena::Server>(m_loop, addr, [&] (const SubscriptionEvent& ev) {
+                auto iter = m_eventCallbacks.find(ev.sid);
+                if (iter != m_eventCallbacks.end())
+                {
+                    iter->second(ev);
+                }
+            });
             return;
         }
     }
@@ -73,7 +79,7 @@ uint16_t Client2::getPort() const
     return m_eventServer->getAddress().port();
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
+void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     log::debug("Subscribe to service: {}", publisherUrl);
     
@@ -86,7 +92,7 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
     log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
     m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
         log::debug("Subscribe response: {}", response);
-        cb(status, subId, timeout);
+        m_eventCallbacks.emplace(subId, cb(status, subId, timeout));
     });
 }
 
@@ -109,6 +115,15 @@ void Client2::sendAction(const Action& action, std::function<void(int32_t, std::
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
 #endif
+}
+
+void Client2::handlEvent(const SubscriptionEvent& event)
+{
+    auto iter = m_eventCallbacks.find(event.sid);
+    if (iter != m_eventCallbacks.end())
+    {
+        iter->second(event);
+    }
 }
 
 // int Client2::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)

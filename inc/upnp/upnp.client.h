@@ -20,9 +20,10 @@
 #include <vector>
 #include <cinttypes>
 #include <functional>
+#include <unordered_map>
 
+#include "upnp/upnp.types.h"
 #include "upnp/upnp.http.client.h"
-//#include "upnp/upnpclientinterface.h"
 
 namespace uv
 {
@@ -53,15 +54,18 @@ public:
     virtual std::string getIpAddress() const;
     virtual uint16_t getPort() const;
 
-    virtual void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb);
+    virtual void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb);
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb);
 
     virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb);
 
 private:
+    void handlEvent(const SubscriptionEvent& event);
+
     uv::Loop& m_loop;
     http::Client m_http;
     std::unique_ptr<gena::Server> m_eventServer;
-    //std::vector<IServiceSubscriber*> m_serviceSubscriptions;
+    std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;
 };
+
 }

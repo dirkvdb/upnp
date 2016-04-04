@@ -17,44 +17,75 @@
 #include "upnp.gena.server.h"
 
 #include "utils/log.h"
+#include "upnp.http.parser.h"
 
 namespace upnp
 {
 namespace gena
 {
 
-using namespace utils;
+static std::string okResponse =
+"HTTP/1.1 200 OK\r\n"
+"SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+"CONNECTION: close\r\n"
+"CONTENT-LENGTH: 41\r\n"
+"CONTENT-TYPE: text/html\r\n"
+"\r\n"
+"<html><body><h1>200 OK</h1></body></html>";
 
-Server::Server(uv::Loop& loop, const uv::Address& address)
+
+using namespace utils;
+using namespace std::placeholders;
+
+Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb)
 : m_loop(loop)
 , m_socket(loop)
+, m_eventCb(std::move(cb))
+, m_gotHeader(false)
 {
+    assert(m_eventCb);
     log::info("GENA: Start server on http://{}:{}", address.ip(), address.port());
-    
+
     m_socket.bind(address);
     m_socket.listen(128, [this] (int32_t status) {
         if (status == 0)
         {
             log::info("GENA: Connection attempt");
             auto client = std::make_unique<uv::socket::Tcp>(m_loop);
-            
+
             try
             {
                 m_socket.accept(*client);
-                client->read([=] (ssize_t nread, uv::Buffer data) {
+                client->read([=, cl = client.get()] (ssize_t nread, uv::Buffer data) {
                     if (nread < 0)
                     {
                         if (nread != UV_EOF)
                         {
                             log::error("Failed to read from socket");
                         }
+                        else
+                        {
+                            log::info("End of stream");
+                        }
                     }
                     else
                     {
-                        handleEvent(data);
+                        // TODO: data comes in chunks, we need to handle that
+                        if (handleEvent(data, nread))
+                        {
+                            assert(cl);
+                            // return the response if needed
+
+                            cl->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
+                                if (status != 0)
+                                {
+                                    log::error("Failed to write response: {}", status);
+                                }
+                            });
+                        }
                     }
                 });
-                
+
                 m_clients.emplace_back(std::move(client));
             }
             catch (std::exception& e)
@@ -82,9 +113,51 @@ uv::Address Server::getAddress() const
     return addr;
 }
 
-void Server::handleEvent(const uv::Buffer& data)
+bool Server::handleEvent(const uv::Buffer& data, ssize_t size)
 {
-    log::info("GENA: Event -> {}", std::string(data.data(), data.size()));
+    if (m_gotHeader)
+    {
+        log::info("GENA: Event DATA -> {}", std::string(data.data(), size));
+
+        m_gotHeader = false;
+        m_currentEvent.data.assign(data.data(), size);
+        m_eventCb(m_currentEvent);
+        return true;
+    }
+
+    log::info("GENA: Event HEADER -> {}", std::string(data.data(), size));
+
+    try
+    {
+        uint32_t parsedFields = 0;
+
+        http::Parser parser(http::Type::Request);
+        parser.setHeaderCallback([this, &parsedFields] (const char* field, size_t fieldSize, const char* value, size_t valueSize) {
+            if (fieldSize == 3 && strncasecmp(field, "SID", fieldSize) == 0)
+            {
+                m_currentEvent.sid.assign(value, valueSize);
+                ++parsedFields;
+            }
+            else if (fieldSize == 3 && strncasecmp(field, "SEQ", fieldSize) == 0)
+            {
+                m_currentEvent.sequence = std::stoi(std::string(value, valueSize));
+                ++parsedFields;
+            }
+        });
+
+        parser.parse(data.data(), size);
+
+        if (parsedFields == 2)
+        {
+            m_gotHeader = true;
+        }
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+    }
+
+    return false;
 }
 
 }

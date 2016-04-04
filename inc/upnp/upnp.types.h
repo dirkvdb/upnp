@@ -16,36 +16,18 @@
 
 #pragma once
 
-#include <vector>
-#include <functional>
-
-#include "upnp/upnp.uv.h"
-#include "upnp/upnp.types.h"
+#include <string>
+#include <cinttypes>
 
 namespace upnp
 {
-namespace gena
-{
 
-class Server
+struct SubscriptionEvent
 {
-public:
-    Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb);
-    ~Server() noexcept;
-    
-    uv::Address getAddress() const;
-    
-private:
-    bool handleEvent(const uv::Buffer& data, ssize_t size);
-
-    uv::Loop& m_loop;
-    uv::socket::Tcp m_socket;
-    std::function<void(const SubscriptionEvent&)> m_eventCb;
-    std::vector<std::unique_ptr<uv::socket::Tcp>> m_clients;
-    
-    SubscriptionEvent m_currentEvent;
-    bool m_gotHeader;
+    std::string sid;
+    std::string data;
+    uint32_t sequence = 0;
 };
 
 }
-}
+

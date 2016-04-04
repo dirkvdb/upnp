@@ -3,7 +3,7 @@
 #include "utils/log.h"
 #include "upnp.ssdp.parseutils.h"
 
-#include "upnphttpparser.h"
+#include "upnp.http.parser.h"
 
 namespace upnp
 {

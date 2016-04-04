@@ -6,7 +6,7 @@
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnphttpparser.h"
+#include "upnp.http.parser.h"
 
 namespace upnp
 {
