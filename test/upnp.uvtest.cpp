@@ -45,19 +45,19 @@ TEST_CASE("UV Test", "[uv]")
 
         loop.run(uv::RunMode::Default);
     }
-    
+
     SECTION("TcpTest", "[uv]")
     {
         uv::socket::Tcp server(loop);
         uv::socket::Tcp client(loop);
-        
+
         auto data = "HELLO"s;
 
         server.bind(uv::Address::createIp4("127.0.0.1", 8888));
         server.listen(128, [&] (int32_t status) {
             CHECK(status == 0);
-            
-            auto s = std::make_shared<uv::socket::Tcp>(loop);
+
+            auto s = new uv::socket::Tcp(loop);
             server.accept(*s);
             s->read([=, &server] (ssize_t count, const uv::Buffer& buf) {
                 if (count > 0)
@@ -68,13 +68,14 @@ TEST_CASE("UV Test", "[uv]")
                 else
                 {
                     CHECK(count == UV_EOF);
-                    s->close([&] () {
+                    s->close([&server, s] () {
                         server.close(nullptr);
+                        delete s;
                     });
                 }
             });
         });
-        
+
         client.connect(uv::Address::createIp4("127.0.0.1", 8888), [&] (int32_t status) {
             CHECK(status == 0);
             client.write(uv::Buffer(&data.front(), data.size()), [&] (int32_t status) {
@@ -85,12 +86,12 @@ TEST_CASE("UV Test", "[uv]")
 
         loop.run(uv::RunMode::Default);
     }
-    
+
     SECTION("TcpTest modified port", "[uv]")
     {
         uv::socket::Tcp server(loop);
         uv::socket::Tcp client(loop);
-        
+
         auto data = "HELLO"s;
         auto addr = uv::Address::createIp4(uv::createIp4Address("127.0.0.1", 80));
         addr.setPort(8888);
@@ -98,10 +99,10 @@ TEST_CASE("UV Test", "[uv]")
         server.bind(addr);
         server.listen(128, [&] (int32_t status) {
             CHECK(status == 0);
-            
-            auto s = std::make_shared<uv::socket::Tcp>(loop);
+
+            auto s = new uv::socket::Tcp(loop);
             server.accept(*s);
-            s->read([=, &server] (ssize_t count, const uv::Buffer& buf) {
+            s->read([data, &server, s] (ssize_t count, const uv::Buffer& buf) {
                 if (count > 0)
                 {
                     CHECK(count == data.size());
@@ -110,13 +111,14 @@ TEST_CASE("UV Test", "[uv]")
                 else
                 {
                     CHECK(count == UV_EOF);
-                    s->close([&] () {
+                    s->close([&server, s] () {
                         server.close(nullptr);
+                        delete s;
                     });
                 }
             });
         });
-        
+
         client.connect(server.getSocketName(), [&] (int32_t status) {
             CHECK(status == 0);
             client.write(uv::Buffer(&data.front(), data.size()), [&] (int32_t status) {

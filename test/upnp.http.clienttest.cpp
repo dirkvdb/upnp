@@ -102,7 +102,6 @@ TEST_CASE("HTTP Client", "[HTTP]")
     }
 
     loop.run(uv::RunMode::Default);
-    uv::stopLoopAndCloseRequests(loop);
     CHECK(gotCallback);
 }
 
@@ -123,7 +122,7 @@ TEST_CASE("HTTP Client Server", "[HTTP]")
         CHECK(contents == servedFile);
         gotCallback = true;
 
-        stopLoopAndCloseRequests(loop);
+        loop.stop();
     });
 
     loop.run(uv::RunMode::Default);
@@ -147,9 +146,7 @@ TEST_CASE("HTTP Client Soap action invalid url", "[SOAP]")
         INFO("Unexpected status code: " << http::Client::errorToString(status));
         CHECK(status == 500);
 
-        //log::info(res);
         gotCallback = true;
-        stopLoopAndCloseRequests(loop);
     });
 
     loop.run(uv::RunMode::Default);

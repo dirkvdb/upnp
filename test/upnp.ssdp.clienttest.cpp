@@ -12,23 +12,23 @@ using namespace std::chrono_literals;
 
 TEST_CASE("SSDP Client", "[SSDP]")
 {
-    uv::Loop        m_loop;
-    ssdp::Client    m_client(m_loop);
+    uv::Loop        loop;
+    ssdp::Client    client(loop);
 
     SECTION("Ssdp client", "[SSDP]")
     {
         utils::log::info("SsdpServer");
 
-        m_client.setDeviceNotificationCallback([&] (auto&& msg) {
+        client.setDeviceNotificationCallback([&] (auto&& msg) {
             utils::log::warn("@@@ DiscoverCallback ID {} TYPE {} EXP {}", msg.deviceId, msg.deviceType, msg.expirationTime);
-            m_loop.stop();
+            loop.stop();
         });
 
-        m_client.run();
-        m_client.search();
+        client.run();
+        client.search();
 
         auto t = std::thread([&] () {
-            m_loop.run(uv::RunMode::Default);
+            loop.run(uv::RunMode::Default);
         });
 
         t.join();

@@ -33,6 +33,9 @@ void allocateBuffer(uv_handle_t* /*handle*/, size_t suggested_size, uv_buf_t* bu
 
 }
 
+class Loop;
+void stopLoopAndCloseRequests(Loop& loop);
+
 class Buffer
 {
 public:
@@ -154,6 +157,8 @@ public:
 
     ~Loop()
     {
+        stopLoopAndCloseRequests(*this);
+
         uv_loop_close(&m_handle);
     }
 
@@ -604,6 +609,7 @@ public:
 
             if (nread == 0)
             {
+                free(buf->base);
                 instance->m_recvCb("");
                 return;
             }
@@ -700,14 +706,12 @@ inline void stopLoopAndCloseRequests(Loop& loop)
         if (!handleInstance->isClosing())
         {
             handleInstance->close(nullptr);
-             utils::log::debug("closed handle");
              *reinterpret_cast<bool*>(arg) = true;
         }
     }, &closed);
 
     if (closed)
     {
-        utils::log::debug("Run once more");
         loop.run(RunMode::Once);
     }
 }
