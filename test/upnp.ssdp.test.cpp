@@ -12,7 +12,7 @@ namespace test
 
 using namespace std::literals::string_literals;
 
-TEST_CASE("Parse cache control", "[Parse]")
+TEST_CASE("Parse cache control", "[parse]")
 {
     CHECK(60 == ssdp::parseCacheControl("max-age=60"));
     CHECK(0 == ssdp::parseCacheControl("max-age=0"));
@@ -25,7 +25,7 @@ TEST_CASE("Parse cache control", "[Parse]")
     CHECK_THROWS_AS(ssdp::parseCacheControl("max-age=55555555555555555555555555555555"), std::out_of_range);
 }
 
-TEST_CASE("PARSE USN", "[Parse]")
+TEST_CASE("PARSE USN", "[parse]")
 {
     ssdp::DeviceNotificationInfo info;
 
@@ -52,7 +52,7 @@ TEST_CASE("PARSE USN", "[Parse]")
     }
 }
 
-TEST_CASE("PARSE notify", "[Parse]")
+TEST_CASE("PARSE notify", "[parse]")
 {
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"
@@ -76,7 +76,7 @@ TEST_CASE("PARSE notify", "[Parse]")
     CHECK(info.type == ssdp::NotificationType::Alive);
 }
 
-TEST_CASE("PARSE notify no spaces", "[Parse]")
+TEST_CASE("PARSE notify no spaces", "[parse]")
 {
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"
@@ -100,7 +100,7 @@ TEST_CASE("PARSE notify no spaces", "[Parse]")
     CHECK(info.type == ssdp::NotificationType::Alive);
 }
 
-TEST_CASE("PARSE notify lowercase fields", "[Parse]")
+TEST_CASE("PARSE notify lowercase fields", "[parse]")
 {
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"
@@ -124,7 +124,7 @@ TEST_CASE("PARSE notify lowercase fields", "[Parse]")
     CHECK(info.type == ssdp::NotificationType::Alive);
 }
 
-TEST_CASE("PARSE notify byebye", "[Parse]")
+TEST_CASE("PARSE notify byebye", "[parse]")
 {
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"
@@ -147,7 +147,7 @@ TEST_CASE("PARSE notify byebye", "[Parse]")
     CHECK(info.type == ssdp::NotificationType::ByeBye);
 }
 
-TEST_CASE("PARSE notify invalid type", "[Parse]")
+TEST_CASE("PARSE notify invalid type", "[parse]")
 {
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"

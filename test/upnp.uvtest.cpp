@@ -113,7 +113,7 @@ TEST_CASE("UV Test", "[uv]")
                 {
                     CHECK(count == UV_EOF);
                     server.close(nullptr);
-                    delete s;
+                    //delete s;
                 }
             });
         });

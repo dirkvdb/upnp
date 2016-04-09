@@ -36,15 +36,12 @@ public:
     uv::Address getAddress() const;
     
 private:
-    bool handleEvent(const uv::Buffer& data, ssize_t size);
-
     uv::Loop& m_loop;
     uv::socket::Tcp m_socket;
     std::function<void(const SubscriptionEvent&)> m_eventCb;
     std::vector<std::unique_ptr<uv::socket::Tcp>> m_clients;
     
     SubscriptionEvent m_currentEvent;
-    bool m_gotHeader;
 };
 
 }

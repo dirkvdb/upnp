@@ -72,38 +72,40 @@ inline NotificationType notificationTypeFromString(const char* type, size_t leng
     throw std::runtime_error("Invalid notification type: " + std::string(type, length));
 }
 
+inline NotificationType notificationTypeFromString(const std::string& str)
+{
+    return notificationTypeFromString(str.data(), str.size());
+}
+
 inline DeviceNotificationInfo parseNotification(const std::string& msg)
 {
     DeviceNotificationInfo info;
-
-    // Direct responses do not fill in the NTS, mark them as alive
-    info.type = NotificationType::Alive;
-
+    
     http::Parser parser(http::Type::Both);
-    parser.setHeaderCallback([&] (const char* field, size_t fieldLength, const char* value, size_t valueLength) {
-        if (strncasecmp(field, "LOCATION", fieldLength) == 0)
+
+    parser.setHeadersCompletedCallback([&] () {
+        parseUSN(parser.headerValue("USN"), info);
+        info.location = parser.headerValue("LOCATION");
+        info.expirationTime = parseCacheControl(parser.headerValue("CACHE-CONTROL"));
+        
+        if (parser.getMethod() == http::Method::Notify)
         {
-            info.location = std::string(value, valueLength);
+            // spontaneous notify message
+            info.type = notificationTypeFromString(parser.headerValue("NTS"));
+            info.deviceType = parser.headerValue("NT");
         }
-        else if (strncasecmp(field, "NT", fieldLength) == 0)
+        else
         {
-            info.deviceType = std::string(value, valueLength);
-        }
-        else if (strncasecmp(field, "NTS", fieldLength) == 0)
-        {
-            info.type = notificationTypeFromString(value, valueLength);
-        }
-        else if (strncasecmp(field, "USN", fieldLength) == 0)
-        {
-            parseUSN(std::string(value, valueLength), info);
-        }
-        else if (strncasecmp(field, "CACHE-CONTROL", fieldLength) == 0)
-        {
-            info.expirationTime = parseCacheControl(std::string(value, valueLength));
+            assert(parser.getStatus() == 200);
+            // response to a search
+            // direct responses do not fill in the NTS, mark them as alive
+            info.type = NotificationType::Alive;
+            info.deviceType = parser.headerValue("ST");
         }
     });
-
+    
     parser.parse(msg);
+    assert(!info.deviceType.empty());
     return info;
 }
 

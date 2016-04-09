@@ -41,7 +41,6 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
 : m_loop(loop)
 , m_socket(loop)
 , m_eventCb(std::move(cb))
-, m_gotHeader(false)
 {
     assert(m_eventCb);
     log::info("GENA: Start server on http://{}:{}", address.ip(), address.port());
@@ -52,6 +51,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
         {
             log::info("GENA: Connection attempt");
             auto client = std::make_unique<uv::socket::Tcp>(m_loop);
+            auto parser = std::make_shared<http::Parser>(http::Type::Request);
 
             try
             {
@@ -70,18 +70,41 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                     }
                     else
                     {
-                        // TODO: data comes in chunks, we need to handle that
-                        if (handleEvent(data, nread))
+                        parser->setCompletedCallback([&] () {
+                            try
+                            {
+                                m_currentEvent.sid = parser->headerValue("SID");
+                                m_currentEvent.sid = parser->headerValue("SEQ");
+                                
+                                assert(cl);
+                                // return the response
+                                cl->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
+                                    if (status != 0)
+                                    {
+                                        log::error("Failed to write response: {}", status);
+                                    }
+                                });
+                            }
+                            catch (std::exception& e)
+                            {
+                                log::error(e.what());
+                                // TODO: return error response
+                            }
+                        });
+                        
+                        auto* dataPtr = data.data();
+                        auto size = data.size();
+                        
+                        for (;;)
                         {
-                            assert(cl);
-                            // return the response if needed
+                            size_t nparsed = parser->parse(dataPtr, size);
+                            if (nparsed == data.size())
+                            {
+                                return;
+                            }
 
-                            cl->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
-                                if (status != 0)
-                                {
-                                    log::error("Failed to write response: {}", status);
-                                }
-                            });
+                            dataPtr += nparsed;
+                            size -= nparsed;
                         }
                     }
                 });
@@ -111,53 +134,6 @@ uv::Address Server::getAddress() const
     auto addr = m_socket.getSocketName();
     log::debug("GENA address: {} {}", addr.ip(), addr.port());
     return addr;
-}
-
-bool Server::handleEvent(const uv::Buffer& data, ssize_t size)
-{
-    if (m_gotHeader)
-    {
-        log::info("GENA: Event DATA -> {}", std::string(data.data(), size));
-
-        m_gotHeader = false;
-        m_currentEvent.data.assign(data.data(), size);
-        m_eventCb(m_currentEvent);
-        return true;
-    }
-
-    log::info("GENA: Event HEADER -> {}", std::string(data.data(), size));
-
-    try
-    {
-        uint32_t parsedFields = 0;
-
-        http::Parser parser(http::Type::Request);
-        parser.setHeaderCallback([this, &parsedFields] (const char* field, size_t fieldSize, const char* value, size_t valueSize) {
-            if (fieldSize == 3 && strncasecmp(field, "SID", fieldSize) == 0)
-            {
-                m_currentEvent.sid.assign(value, valueSize);
-                ++parsedFields;
-            }
-            else if (fieldSize == 3 && strncasecmp(field, "SEQ", fieldSize) == 0)
-            {
-                m_currentEvent.sequence = std::stoi(std::string(value, valueSize));
-                ++parsedFields;
-            }
-        });
-
-        parser.parse(data.data(), size);
-
-        if (parsedFields == 2)
-        {
-            m_gotHeader = true;
-        }
-    }
-    catch (std::exception& e)
-    {
-        log::error(e.what());
-    }
-
-    return false;
 }
 
 }
