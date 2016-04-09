@@ -346,6 +346,12 @@ Client::Client(uv::Loop& loop)
     curl_multi_setopt(m_multiHandle, CURLMOPT_TIMERDATA, &m_timer);
 }
 
+Client::~Client() noexcept
+{
+    curl_multi_cleanup(m_multiHandle);
+    curl_global_cleanup();
+}
+
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 {
     m_timeout = timeout.count();

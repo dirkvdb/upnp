@@ -40,12 +40,12 @@ public:
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data), size))
     {
     }
-    
+
     Buffer(char* data, size_t size)
     : m_handle(uv_buf_init(data, size))
     {
     }
-    
+
     Buffer(const uv_buf_t* buffer)
     : m_handle(*buffer)
     {
@@ -56,7 +56,7 @@ public:
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data.data()), data.size()))
     {
     }
-    
+
     uv_buf_t* get()
     {
         return &m_handle;
@@ -66,17 +66,17 @@ public:
     {
         return &m_handle;
     }
-    
+
     char* data()
     {
         return m_handle.base;
     }
-    
+
     const char* data() const noexcept
     {
         return m_handle.base;
     }
-    
+
     size_t size() const noexcept
     {
         return m_handle.len;
@@ -152,6 +152,11 @@ public:
         m_handle.data = this;
     }
 
+    ~Loop()
+    {
+        uv_loop_close(&m_handle);
+    }
+
     uv_loop_t* get() noexcept
     {
         return &m_handle;
@@ -186,7 +191,7 @@ public:
         {
             return;
         }
-        
+
         m_closeCallback = std::move(cb);
         uv_close(reinterpret_cast<uv_handle_t*>(get()), [] (auto* handle) {
             auto thisPtr = reinterpret_cast<Handle<HandleType>*>(handle->data);
@@ -201,7 +206,7 @@ public:
     {
         return &m_handle;
     }
-    
+
     const HandleType* get() const noexcept
     {
         return &m_handle;
@@ -264,7 +269,7 @@ public:
             (*cb)(status);
         }));
     }
-    
+
     void listen(int32_t backlog, std::function<void(int32_t)> cb)
     {
         m_listenCb = std::move(cb);
@@ -273,12 +278,12 @@ public:
             thisPtr->m_listenCb(status);
         }));
     }
-    
+
     void accept(Stream& client)
     {
         checkRc(uv_accept(reinterpret_cast<uv_stream_t*>(this->get()), reinterpret_cast<uv_stream_t*>(client.get())));
     }
-    
+
 private:
     std::function<void(ssize_t, Buffer)> m_readCb;
     std::function<void(int32_t)> m_listenCb;
@@ -445,7 +450,7 @@ public:
         checkRc(uv_ip6_addr(ip.c_str(), port, &addr.m_address.address6));
         return addr;
     }
-    
+
     void setPort(uint16_t port)
     {
         if (isIpv4())
@@ -467,7 +472,7 @@ public:
     {
         return m_address.address4.sin_family == AF_INET6;
     }
-    
+
     std::string ip() const
     {
         std::array<char, 512> name;
@@ -486,7 +491,7 @@ public:
 
         return name.data();
     }
-    
+
     uint16_t port() const
     {
         if (isIpv4())
@@ -653,12 +658,12 @@ public:
     {
         checkRc(uv_tcp_keepalive(get(), enabled ? 1 : 0, delay));
     }
-    
+
     void bind(const Address& addr, Flags<TcpFlag> flags = uv::Flags<TcpFlag>())
     {
         checkRc(uv_tcp_bind(get(), reinterpret_cast<const sockaddr*>(addr.get()), flags));
     }
-    
+
     void connect(const Address& addr, std::function<void(int32_t)> cb)
     {
         auto conn = std::make_unique<uv_connect_t>();
@@ -670,13 +675,13 @@ public:
             (*cb)(status);
         }));
     }
-    
+
     Address getSocketName() const
     {
         sockaddr_storage addr;
         int namelen = sizeof(sockaddr_storage);
         checkRc(uv_tcp_getsockname(get(), reinterpret_cast<sockaddr*>(&addr), &namelen));
-        
+
         return Address::create(addr, namelen);
     }
 };
@@ -686,14 +691,25 @@ public:
 inline void stopLoopAndCloseRequests(Loop& loop)
 {
     loop.stop();
-    uv_walk(loop.get(), [] (uv_handle_t* handle, void* /*arg*/) {
+    loop.run(RunMode::Once);
+
+    bool closed = false;
+    uv_walk(loop.get(), [] (uv_handle_t* handle, void* arg) {
         auto* handleInstance = reinterpret_cast<Handle<uv_handle_t>*>(handle->data);
         assert(handleInstance);
         if (!handleInstance->isClosing())
         {
-            handleInstance->close([] () {});
+            handleInstance->close(nullptr);
+             utils::log::debug("closed handle");
+             *reinterpret_cast<bool*>(arg) = true;
         }
-    }, nullptr);
+    }, &closed);
+
+    if (closed)
+    {
+        utils::log::debug("Run once more");
+        loop.run(RunMode::Once);
+    }
 }
 
 struct InterfaceInfo

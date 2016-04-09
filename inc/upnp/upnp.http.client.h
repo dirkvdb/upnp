@@ -33,6 +33,7 @@ class Client
 public:
     Client(uv::Loop& loop);
     Client(const Client&) = delete;
+    ~Client() noexcept;
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
 

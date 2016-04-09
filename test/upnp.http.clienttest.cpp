@@ -28,15 +28,15 @@ TEST_CASE("HTTP Client", "[HTTP]")
         });
     }
 
-    // SECTION("Content length")
-    // {
-    //     client.getContentLength("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291468.mp3", [&] (int32_t status, size_t size) {
-    //         INFO("GET Failed: " << http::Client::errorToString(status));
-    //         CHECK(status == 0);
-    //         CHECK(size > 0);
-    //         gotCallback = true;
-    //     });
-    // }
+    SECTION("Content length")
+    {
+        client.getContentLength("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291468.mp3", [&] (int32_t status, size_t size) {
+            INFO("GET Failed: " << http::Client::errorToString(status));
+            CHECK(status == 0);
+            CHECK(size > 0);
+            gotCallback = true;
+        });
+    }
 
     SECTION("Get as string")
     {
@@ -60,9 +60,11 @@ TEST_CASE("HTTP Client", "[HTTP]")
 
     SECTION("Get as array")
     {
-        auto data = std::make_unique<std::vector<uint8_t>>(1024 * 128, 0);
-        uint8_t* originalDataPtr = data->data();
-        client.get("http://www.google.be", originalDataPtr, [&] (int32_t status, uint8_t* dataPtr) {
+        std::array<uint8_t, 1024 * 128> array;
+        array.fill(0);
+        uint8_t* originalDataPtr = array.data();
+
+        client.get("http://www.google.be", originalDataPtr, [&, data = std::move(array)] (int32_t status, uint8_t* dataPtr) {
             INFO("GET Failed: " << http::Client::errorToString(status));
             CHECK(status == 200);
             CHECK(dataPtr[0] != 0);
@@ -100,6 +102,7 @@ TEST_CASE("HTTP Client", "[HTTP]")
     }
 
     loop.run(uv::RunMode::Default);
+    uv::stopLoopAndCloseRequests(loop);
     CHECK(gotCallback);
 }
 
