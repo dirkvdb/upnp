@@ -28,7 +28,6 @@ TEST_CASE("HTTP Parse response", "[http]")
             "CONTENT-TYPE: text/html\r\n"
             "CONNECTION: closed\r\n"
             "\r\n"s;
-            "<html><body><h1>200 OK</h1></body></html>"s;
         
     auto messageBody = "<html><body><h1>200 OK</h1></body></html>"s;
 

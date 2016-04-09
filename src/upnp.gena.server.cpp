@@ -50,13 +50,36 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
         if (status == 0)
         {
             log::info("GENA: Connection attempt");
-            auto client = std::make_unique<uv::socket::Tcp>(m_loop);
+            auto client = std::make_shared<uv::socket::Tcp>(m_loop);
             auto parser = std::make_shared<http::Parser>(http::Type::Request);
+            
+            parser->setCompletedCallback([=] () {
+                try
+                {
+                    m_currentEvent.sid = parser->headerValue("SID");
+                    m_currentEvent.sequence = std::stoi(parser->headerValue("SEQ"));
+                    m_currentEvent.data = parser->stealBody();
+                    m_eventCb(m_currentEvent);
+                    
+                    // return the response
+                    client->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
+                        if (status != 0)
+                        {
+                            log::error("Failed to write response: {}", status);
+                        }
+                    });
+                }
+                catch (std::exception& e)
+                {
+                    log::error(e.what());
+                    // TODO: return error response
+                }
+            });
 
             try
             {
                 m_socket.accept(*client);
-                client->read([=, cl = client.get()] (ssize_t nread, uv::Buffer data) {
+                client->read([=] (ssize_t nread, uv::Buffer data) {
                     if (nread < 0)
                     {
                         if (nread != UV_EOF)
@@ -70,46 +93,16 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                     }
                     else
                     {
-                        parser->setCompletedCallback([&] () {
-                            try
-                            {
-                                m_currentEvent.sid = parser->headerValue("SID");
-                                m_currentEvent.sid = parser->headerValue("SEQ");
-                                
-                                assert(cl);
-                                // return the response
-                                cl->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
-                                    if (status != 0)
-                                    {
-                                        log::error("Failed to write response: {}", status);
-                                    }
-                                });
-                            }
-                            catch (std::exception& e)
-                            {
-                                log::error(e.what());
-                                // TODO: return error response
-                            }
-                        });
-                        
-                        auto* dataPtr = data.data();
-                        auto size = data.size();
-                        
-                        for (;;)
+                        try
                         {
-                            size_t nparsed = parser->parse(dataPtr, size);
-                            if (nparsed == data.size())
-                            {
-                                return;
-                            }
-
-                            dataPtr += nparsed;
-                            size -= nparsed;
+                            parser->parse(data.data(), nread);
+                        }
+                        catch (std::exception& e)
+                        {
+                            log::error("Failed to parse request: {}", e.what());
                         }
                     }
                 });
-
-                m_clients.emplace_back(std::move(client));
             }
             catch (std::exception& e)
             {

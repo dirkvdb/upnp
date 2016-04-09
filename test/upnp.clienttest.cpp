@@ -17,7 +17,6 @@ TEST_CASE("UPnP Client", "[.][upnp]")
 {
     uv::Loop loop;
     Client2 client(loop);
-    bool gotCallback = false;
     
     auto url = "http://192.168.1.184:8080/RenderingControl/evt"s;
     
@@ -34,12 +33,11 @@ TEST_CASE("UPnP Client", "[.][upnp]")
             client.unsubscribeFromService(url, sid, [&client] (int32_t status) {
                 CHECK(status == 200);
                 client.uninitialize();
-        });
+            });
         };
     });
 
     loop.run(uv::RunMode::Default);
-    //CHECK(gotCallback);
 }
 
 }
