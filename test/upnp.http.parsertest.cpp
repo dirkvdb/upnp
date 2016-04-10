@@ -43,6 +43,19 @@ TEST_CASE("HTTP Parse response", "[http]")
         parser.parse(messageBody);
     }
     
+    SECTION("Completely chunked")
+    {
+        parser.parse(messageHeaders.substr(0, 20));
+        CHECK_FALSE(completed);
+        parser.parse(messageHeaders.substr(20, 8));
+        CHECK_FALSE(completed);
+        parser.parse(messageHeaders.substr(28, 15));
+        CHECK_FALSE(completed);
+        parser.parse(messageHeaders.substr(43));
+        CHECK_FALSE(completed);
+        parser.parse(messageBody);
+    }
+    
     CHECK(completed);
     CHECK(parser.getStatus() == 200);
     CHECK(parser.headerValue("SERVER") == "Darwin/15.4.0, UPnP/1.0");
