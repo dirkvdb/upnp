@@ -17,9 +17,6 @@
 #pragma once
 
 #include "http_parser.h"
-
-#include "utils/log.h"
-
 #include <algorithm>
 
 namespace upnp
@@ -63,19 +60,14 @@ public:
     : m_state(State::Initial)
     {
         m_settings.on_headers_complete = nullptr;
-        m_settings.on_message_begin = nullptr;
+        m_settings.on_message_begin = [] (http_parser* parser) -> int {
+            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+            thisPtr->m_state = State::Initial;
+            return 0;
+        };
         m_settings.on_message_complete = nullptr;
-        m_settings.on_url = [] (http_parser* parser, const char* /*str*/, size_t /*length*/) -> int {
-            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            thisPtr->m_state = State::Initial;
-            return 0;
-        };
-        
-        m_settings.on_status = [] (http_parser* parser, const char* /*str*/, size_t /*length*/) -> int {
-            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            thisPtr->m_state = State::Initial;
-            return 0;
-        };
+        m_settings.on_url = nullptr;
+        m_settings.on_status = nullptr;
 
         m_settings.on_header_value = [] (http_parser* parser, const char* str, size_t length) -> int {
             if (length > 0)
@@ -115,8 +107,20 @@ public:
         };
 
         m_settings.on_body = [] (http_parser* parser, const char* str, size_t length) -> int {
-            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            thisPtr->m_body = std::string(str, length);
+            if (length > 0)
+            {
+                auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+                if (thisPtr->m_state == State::ParsingBody)
+                {
+                    thisPtr->m_body.append(str, length);
+                }
+                else
+                {
+                    thisPtr->m_body.assign(str, length);
+                }
+                
+                thisPtr->m_state = State::ParsingBody;
+            }
             return 0;
         };
 
@@ -199,7 +203,8 @@ private:
     {
         Initial,
         ParsingField,
-        ParsingFieldValue
+        ParsingFieldValue,
+        ParsingBody
     };
 
     http_parser_settings m_settings;

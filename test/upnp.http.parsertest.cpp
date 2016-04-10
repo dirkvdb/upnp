@@ -53,7 +53,9 @@ TEST_CASE("HTTP Parse response", "[http]")
         CHECK_FALSE(completed);
         parser.parse(messageHeaders.substr(43));
         CHECK_FALSE(completed);
-        parser.parse(messageBody);
+        parser.parse(messageBody.substr(0, 10));
+        CHECK_FALSE(completed);
+        parser.parse(messageBody.substr(10));
     }
     
     CHECK(completed);
