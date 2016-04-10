@@ -144,6 +144,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpstatevariable.h
     inc/upnp/upnptypes.h
     inc/upnp/upnp.types.h
+    inc/upnp/upnp.flags.h
     inc/upnp/upnputils.h
     inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
     inc/upnp/upnpxml.h                          src/upnpxml.cpp

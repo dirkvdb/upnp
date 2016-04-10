@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include "http_parser.h"
 #include <algorithm>
+
+#include "http_parser.h"
+#include "upnp/upnp.flags.h"
 
 namespace upnp
 {
@@ -53,9 +55,27 @@ struct Header
     std::string value;
 };
 
+namespace
+{
+    const std::string g_emptyString;
+}
+
 class Parser
 {
 public:
+
+    enum class Flag : uint32_t
+    {
+        Chunked = F_CHUNKED,
+        KeepAlive = F_CONNECTION_KEEP_ALIVE,
+        ConnectionClose = F_CONNECTION_CLOSE,
+        ConnectionUpgrade = F_CONNECTION_UPGRADE,
+        Trailing = F_TRAILING,
+        Upgrade = F_UPGRADE,
+        SkipBody = F_SKIPBODY,
+        ContentLength = F_CONTENTLENGTH
+    };
+
     Parser(Type type)
     : m_state(State::Initial)
     {
@@ -170,12 +190,7 @@ public:
             return strcasecmp(hdr.field.data(), name) == 0;
         });
 
-        if (iter == m_headers.end())
-        {
-            throw std::runtime_error("Header not found: " + std::string(name));
-        }
-
-        return iter->value;
+        return iter == m_headers.end() ? g_emptyString : iter->value;
     }
 
     Method getMethod() const noexcept
@@ -196,6 +211,27 @@ public:
     const std::vector<Header>& headers() const
     {
         return m_headers;
+    }
+    
+    Flags<Flag> getFlags() const noexcept
+    {
+        return Flags<Flag>(m_parser.flags);
+    }
+    
+    static const char* methodToString(Method m) noexcept
+    {
+        switch (m)
+        {
+        case Method::Notify: return "NOTIFY";
+        case Method::Search: return "SEARCH";
+        case Method::Subscribe: return "SUBSCRIBE";
+        case Method::Unsubscribe: return "UNSUBSCRIBE";
+        case Method::Get: return "GET";
+        case Method::Head: return "HEAD";
+        case Method::Post: return "POST";
+        default:
+            return "";
+        }
     }
 
 private:

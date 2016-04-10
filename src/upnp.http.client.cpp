@@ -213,7 +213,7 @@ void startTimeout(CURLM* curlHandle, long timeoutMs, void* userp)
     });
 }
 
-int createCurlFlags(const uv::Flags<uv::PollEvent>& events, int status)
+int createCurlFlags(const Flags<uv::PollEvent>& events, int status)
 {
     int flags = 0;
 
@@ -578,7 +578,7 @@ int Client::handleSocket(CURL* /*easy*/, curl_socket_t s, int action, void* user
     switch (action)
     {
     case CURL_POLL_IN:
-        context->poll.start(uv::PollEvent::Readable, [client, context] (int32_t status, uv::Flags<uv::PollEvent> events) {
+        context->poll.start(uv::PollEvent::Readable, [client, context] (int32_t status, Flags<uv::PollEvent> events) {
             client->m_timer.stop();
             int runningHandles;
             curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);
@@ -586,7 +586,7 @@ int Client::handleSocket(CURL* /*easy*/, curl_socket_t s, int action, void* user
         });
         break;
     case CURL_POLL_OUT:
-        context->poll.start(uv::PollEvent::Writable, [client, context] (int32_t status, uv::Flags<uv::PollEvent> events) {
+        context->poll.start(uv::PollEvent::Writable, [client, context] (int32_t status, Flags<uv::PollEvent> events) {
             client->m_timer.stop();
             int runningHandles;
             curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);

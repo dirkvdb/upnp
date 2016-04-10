@@ -18,24 +18,54 @@
 
 #include "utils/log.h"
 #include "upnp.http.parser.h"
+#include "upnp.ssdp.parseutils.h"
 
 namespace upnp
 {
 namespace gena
 {
 
-static std::string okResponse =
-"HTTP/1.1 200 OK\r\n"
-"SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
-"CONNECTION: close\r\n"
-"CONTENT-LENGTH: 41\r\n"
-"CONTENT-TYPE: text/html\r\n"
-"\r\n"
-"<html><body><h1>200 OK</h1></body></html>";
+static const std::string okResponse =
+    "HTTP/1.1 200 OK\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: 41\r\n"
+    "CONTENT-TYPE: text/html\r\n"
+    "\r\n"
+    "<html><body><h1>200 OK</h1></body></html>";
 
 
 using namespace utils;
 using namespace std::placeholders;
+
+namespace
+{
+    const std::string& required(const std::string& value)
+    {
+        if (value.empty())
+        {
+            throw std::runtime_error("Required value not present");
+        }
+        
+        return value;
+    }
+    
+    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
+    {
+        client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [client, closeConnection] (int32_t status) {
+            if (status != 0)
+            {
+                log::error("Failed to write response: {}", status);
+            }
+            
+            if (closeConnection)
+            {
+                client->close([client] () {
+                    delete client;
+                });
+            }
+        });
+    }
+}
 
 Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb)
 : m_loop(loop)
@@ -50,24 +80,35 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
         if (status == 0)
         {
             log::info("GENA: Connection attempt");
-            auto client = std::make_shared<uv::socket::Tcp>(m_loop);
+            auto client = new uv::socket::Tcp(m_loop);
             auto parser = std::make_shared<http::Parser>(http::Type::Request);
             
-            parser->setCompletedCallback([=] () {
+            parser->setCompletedCallback([this, parser, client] () {
                 try
                 {
-                    m_currentEvent.sid = parser->headerValue("SID");
-                    m_currentEvent.sequence = std::stoi(parser->headerValue("SEQ"));
-                    m_currentEvent.data = parser->stealBody();
-                    m_eventCb(m_currentEvent);
-                    
-                    // return the response
-                    client->write(uv::Buffer(&okResponse[0], okResponse.size()), [] (int32_t status) {
-                        if (status != 0)
+                    if (parser->getMethod() == http::Method::Notify)
+                    {
+                        m_currentEvent.sid = required(parser->headerValue("SID"));
+                        m_currentEvent.sequence = std::stoi(required(parser->headerValue("SEQ")));
+                        m_currentEvent.data = parser->stealBody();
+                        if (parser->headerValue("NT") != "upnp:event")
                         {
-                            log::error("Failed to write response: {}", status);
+                            throw std::runtime_error("Invalid notification type: " + parser->headerValue("NT"));
                         }
-                    });
+                        
+                        if (parser->headerValue("NTS") != "upnp:propchange")
+                        {
+                            throw std::runtime_error("Invalid notification sub type: " + parser->headerValue("NTS"));
+                        }
+                        
+                        m_eventCb(m_currentEvent);
+                        
+                        writeResponse(client, okResponse, parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
+                    }
+                    else
+                    {
+                        log::warn("GENA: Unexpected method type recieved: {}", http::Parser::methodToString(parser->getMethod()));
+                    }
                 }
                 catch (std::exception& e)
                 {
@@ -79,7 +120,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
             try
             {
                 m_socket.accept(*client);
-                client->read([=] (ssize_t nread, uv::Buffer data) {
+                client->read([=] (ssize_t nread, const uv::Buffer& data) {
                     if (nread < 0)
                     {
                         if (nread != UV_EOF)

@@ -11,7 +11,10 @@
 
 #include <uv.h>
 #include "utils/log.h"
+#include "upnp/upnp.flags.h"
 
+namespace upnp
+{
 namespace uv
 {
 
@@ -39,26 +42,59 @@ void stopLoopAndCloseRequests(Loop& loop);
 class Buffer
 {
 public:
-    Buffer(uint8_t* data, size_t size)
+    enum class Ownership
+    {
+        Yes,
+        No
+    };
+
+    Buffer(uint8_t* data, size_t size, Ownership o)
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data), size))
+    , m_ownership(o)
     {
     }
 
-    Buffer(char* data, size_t size)
+    Buffer(char* data, size_t size, Ownership o)
     : m_handle(uv_buf_init(data, size))
+    , m_ownership(o)
     {
     }
 
-    Buffer(const uv_buf_t* buffer)
+    Buffer(const uv_buf_t* buffer, Ownership o)
     : m_handle(*buffer)
+    , m_ownership(o)
     {
     }
 
     template <typename T>
-    Buffer(T& data)
+    Buffer(T& data, Ownership o)
     : m_handle(uv_buf_init(reinterpret_cast<char*>(data.data()), data.size()))
+    , m_ownership(o)
     {
     }
+
+    template <typename T>
+    Buffer(const T& data, Ownership o)
+    : m_handle(uv_buf_init(const_cast<char*>(reinterpret_cast<const char*>(data.data())), data.size()))
+    , m_ownership(o)
+    {
+        // Client have to remain owner of constant object we cannot free them
+        assert(m_ownership == Ownership::No);
+    }
+
+    ~Buffer() noexcept
+    {
+        if (m_ownership == Ownership::Yes)
+        {
+            free(m_handle.base);
+        }
+    }
+
+    Buffer(Buffer&&) = default;
+    Buffer& operator= (Buffer&&) = default;
+
+    Buffer(const Buffer&) = delete;
+    Buffer& operator= (const Buffer&) = delete;
 
     uv_buf_t* get()
     {
@@ -87,57 +123,8 @@ public:
 
 private:
     uv_buf_t m_handle;
+    Ownership m_ownership;
 };
-
-template<typename T, typename ValueType = typename std::underlying_type<T>::type>
-class Flags
-{
-public:
-    Flags() = default;
-    Flags(const Flags<T, ValueType>& other) = default;
-    Flags(Flags<T, ValueType>&& other) = default;
-
-    Flags(T flag)
-    : m_flags(getValue(flag))
-    {
-    }
-
-    Flags(ValueType flags)
-    : m_flags(flags)
-    {
-    }
-
-    template <typename... Flag>
-    Flags(Flag&&... flags)
-    : m_flags(getValue(std::forward<Flag&&>(flags)...))
-    {
-    }
-
-    operator ValueType() const noexcept
-    {
-        return m_flags;
-    }
-
-private:
-    ValueType getValue(T flag)
-    {
-        return static_cast<ValueType>(flag);
-    }
-
-    template <typename... Flag>
-    ValueType getValue(T flag, Flag&&... flags)
-    {
-        return getValue(flag) | getValue(std::forward<T>(flags)...);
-    }
-
-    ValueType m_flags = 0;
-};
-
-template <typename T>
-inline Flags<T> operator | (T lhs, T rhs)
-{
-    return Flags<T>(lhs, rhs);
-}
 
 enum class RunMode : uint32_t
 {
@@ -254,8 +241,7 @@ public:
         m_readCb = std::move(cb);
         checkRc(uv_read_start(reinterpret_cast<uv_stream_t*>(this->get()), allocateBuffer, [] (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
             auto* thisPtr = reinterpret_cast<Stream*>(stream->data);
-            thisPtr->m_readCb(nread, Buffer(buf));
-            free(buf->base);
+            thisPtr->m_readCb(nread, Buffer(buf, Buffer::Ownership::Yes));
         }));
     }
 
@@ -558,7 +544,7 @@ public:
         init(loop, uv_udp_init);
     }
 
-    void bind(const Address& addr, Flags<UdpFlag> flags = uv::Flags<UdpFlag>())
+    void bind(const Address& addr, Flags<UdpFlag> flags = Flags<UdpFlag>())
     {
         checkRc(uv_udp_bind(get(), reinterpret_cast<const sockaddr*>(addr.get()), flags));
     }
@@ -665,7 +651,7 @@ public:
         checkRc(uv_tcp_keepalive(get(), enabled ? 1 : 0, delay));
     }
 
-    void bind(const Address& addr, Flags<TcpFlag> flags = uv::Flags<TcpFlag>())
+    void bind(const Address& addr, Flags<TcpFlag> flags = Flags<TcpFlag>())
     {
         checkRc(uv_tcp_bind(get(), reinterpret_cast<const sockaddr*>(addr.get()), flags));
     }
@@ -804,4 +790,5 @@ inline std::vector<InterfaceInfo> getNetworkInterfaces()
     return res;
 }
 
+}
 }

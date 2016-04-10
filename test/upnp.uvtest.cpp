@@ -51,7 +51,7 @@ TEST_CASE("UV Test", "[uv]")
         uv::socket::Tcp server(loop);
         uv::socket::Tcp client(loop);
 
-        auto data = "HELLO"s;
+        const auto data = "HELLO"s;
 
         server.bind(uv::Address::createIp4("127.0.0.1", 8888));
         server.listen(128, [&] (int32_t status) {
@@ -78,7 +78,7 @@ TEST_CASE("UV Test", "[uv]")
 
         client.connect(uv::Address::createIp4("127.0.0.1", 8888), [&] (int32_t status) {
             CHECK(status == 0);
-            client.write(uv::Buffer(&data.front(), data.size()), [&] (int32_t status) {
+            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
                 CHECK(status == 0);
                 client.close(nullptr);
             });
@@ -92,7 +92,7 @@ TEST_CASE("UV Test", "[uv]")
         uv::socket::Tcp server(loop);
         uv::socket::Tcp client(loop);
 
-        auto data = "HELLO"s;
+        const auto data = "HELLO"s;
         auto addr = uv::Address::createIp4(uv::createIp4Address("127.0.0.1", 80));
         addr.setPort(8888);
 
@@ -121,7 +121,7 @@ TEST_CASE("UV Test", "[uv]")
 
         client.connect(server.getSocketName(), [&] (int32_t status) {
             CHECK(status == 0);
-            client.write(uv::Buffer(&data.front(), data.size()), [&] (int32_t status) {
+            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
                 CHECK(status == 0);
                 client.close(nullptr);
             });
