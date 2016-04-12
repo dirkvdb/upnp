@@ -114,6 +114,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                 {
                     log::error(e.what());
                     // TODO: return error response
+                    delete client;
                 }
             });
 

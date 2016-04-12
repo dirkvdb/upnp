@@ -68,7 +68,7 @@ public:
 
     template <typename T>
     Buffer(T& data, Ownership o)
-    : m_handle(uv_buf_init(reinterpret_cast<char*>(data.data()), data.size()))
+    : m_handle(uv_buf_init(const_cast<char*>(reinterpret_cast<const char*>(data.data())), data.size()))
     , m_ownership(o)
     {
     }

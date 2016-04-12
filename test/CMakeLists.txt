@@ -41,6 +41,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.ssdp.test.cpp
     upnp.http.clienttest.cpp
     upnp.http.parsertest.cpp
+    upnp.gena.servertest.cpp
     upnp.actiontest.cpp
     upnp.devicescannertest.cpp
     upnp.xml.parseutilstest.cpp
