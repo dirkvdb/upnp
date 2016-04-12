@@ -82,7 +82,7 @@ public:
         m_settings.on_headers_complete = nullptr;
         m_settings.on_message_begin = [] (http_parser* parser) -> int {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            thisPtr->m_state = State::Initial;
+            thisPtr->reset();
             return 0;
         };
         m_settings.on_message_complete = nullptr;
@@ -90,21 +90,17 @@ public:
         m_settings.on_status = nullptr;
 
         m_settings.on_header_value = [] (http_parser* parser, const char* str, size_t length) -> int {
-            if (length > 0)
+            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+            if (thisPtr->m_state == State::ParsingFieldValue)
             {
-                auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-                if (thisPtr->m_state == State::ParsingFieldValue)
-                {
-                    thisPtr->m_headers.back().value.append(str, length);
-                }
-                else
-                {
-                    thisPtr->m_headers.back().value.assign(str, length);
-                }
-                
-                thisPtr->m_state = State::ParsingFieldValue;
+                thisPtr->m_headers.back().value.append(str, length);
+            }
+            else
+            {
+                thisPtr->m_headers.back().value.assign(str, length);
             }
             
+            thisPtr->m_state = State::ParsingFieldValue;
             return 0;
         };
 
@@ -222,7 +218,7 @@ public:
     {
         return http_method_str(static_cast<http_method>(m));
     }
-
+    
 private:
     enum class State
     {
@@ -231,6 +227,13 @@ private:
         ParsingFieldValue,
         ParsingBody
     };
+    
+    void reset()
+    {
+        m_headers.clear();
+        m_body.clear();
+        m_state = State::Initial;
+    }
 
     http_parser_settings m_settings;
     http_parser m_parser;

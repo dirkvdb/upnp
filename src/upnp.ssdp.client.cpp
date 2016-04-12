@@ -52,7 +52,7 @@ void Client::run(const std::string& address)
         
         try
         {
-            utils::log::debug("Read {}", msg);
+            //utils::log::debug("Read {}", msg);
             auto parsed = m_parser->parse(msg);
             assert(parsed == msg.size());
         }
