@@ -27,14 +27,18 @@ namespace upnp
 namespace gena
 {
 
+
+// TODO: handle message with chunked encoding
 class Server
 {
 public:
     Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb);
     ~Server() noexcept;
-    
+
+    void stop(std::function<void()> cb);
+
     uv::Address getAddress() const;
-    
+
 private:
     uv::Loop& m_loop;
     uv::socket::Tcp m_socket;

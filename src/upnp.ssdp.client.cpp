@@ -12,6 +12,8 @@ namespace upnp
 namespace ssdp
 {
 
+using namespace utils;
+
 static const std::string g_ssdpIp = "239.255.255.250";
 static const std::string g_anyAddress = "0.0.0.0";
 static const int32_t g_ssdpPort = 1900;
@@ -21,8 +23,12 @@ static const uv::Address g_ssdpAddressIpv4 = uv::Address::createIp4(g_ssdpIp, g_
 Client::Client(uv::Loop& loop)
 : m_searchTimeout(3)
 , m_socket(loop)
+, m_parser(std::make_unique<http::Parser>(http::Type::Both))
 {
+    m_parser->setHeadersCompletedCallback([this] () { parseData(); });
 }
+
+Client::~Client() noexcept = default;
 
 void Client::run()
 {
@@ -46,23 +52,13 @@ void Client::run(const std::string& address)
         
         try
         {
-            //utils::log::debug("Read {}", msg);
-            if (   utils::stringops::startsWith(msg, "HTTP/1.1 200 OK")
-                || utils::stringops::startsWith(msg, "NOTIFY"))
-            {
-                try
-                {
-                    m_cb(parseNotification(msg));
-                }
-                catch (std::exception& e)
-                {
-                    utils::log::warn("Failed to parse http notification: {}", e.what());
-                }
-            }
+            utils::log::debug("Read {}", msg);
+            auto parsed = m_parser->parse(msg);
+            assert(parsed == msg.size());
         }
-        catch (std::runtime_error& e)
+        catch (std::exception& e)
         {
-            utils::log::warn(e.what());
+            log::warn("Failed to parse http notification: {}", e.what());
         }
     });
 }
@@ -70,7 +66,7 @@ void Client::run(const std::string& address)
 void Client::stop()
 {
     m_socket.close([] () {
-        utils::log::debug("SSDP client socket closed");
+        log::debug("SSDP client socket closed");
     });
 }
 
@@ -101,7 +97,7 @@ void Client::search(const std::string& serviceType, const std::string& deviceIp)
     for (uint32_t i = 0; i < g_broadcastRepeatCount; ++i)
     {
         m_socket.send(g_ssdpAddressIpv4, req, [] (int32_t status) {
-            utils::log::info("Send completed {}", status);
+            log::info("Send completed {}", status);
         });
     }
 }
@@ -109,6 +105,49 @@ void Client::search(const std::string& serviceType, const std::string& deviceIp)
 void Client::setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb)
 {
     m_cb = std::move(cb);
+}
+
+void Client::parseData()
+{
+    if (!m_cb)
+    {
+        return;
+    }
+    
+    try
+    {
+        DeviceNotificationInfo info;
+        parseUSN(m_parser->headerValue("USN"), info);
+        info.location = m_parser->headerValue("LOCATION");
+        info.expirationTime = parseCacheControl(m_parser->headerValue("CACHE-CONTROL"));
+        
+        if (m_parser->getMethod() == http::Method::Notify)
+        {
+            // spontaneous notify message
+            info.type = notificationTypeFromString(m_parser->headerValue("NTS"));
+            info.deviceType = m_parser->headerValue("NT");
+        }
+        else
+        {
+            // response to a search
+            
+            if (m_parser->getStatus() != 200)
+            {
+                log::warn("Error status in search response: {}", m_parser->getStatus());
+                return;
+            }
+            
+            // direct responses do not fill in the NTS, mark them as alive
+            info.type = NotificationType::Alive;
+            info.deviceType = m_parser->headerValue("ST");
+        }
+        
+        m_cb(info);
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse http notification data: {}", e.what());
+    }
 }
 
 }

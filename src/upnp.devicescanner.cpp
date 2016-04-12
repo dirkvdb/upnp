@@ -166,10 +166,10 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
             device->m_timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
 
             // check if the location is still the same (perhaps a new ip or port)
-            if (device->m_location != std::string(info.location))
+            if (device->m_location != info.location)
             {
                 // update the device, ip or port has changed
-                log::debug("Update device, location has changed: {} -> {}", device->m_location, std::string(info.location));
+                log::debug("Update device, location has changed: {} -> {}", device->m_location, info.location);
                 downloadDeviceXml(info.location, [this, device, exp = info.expirationTime] (const std::string& xml) {
                     try
                     {
@@ -187,11 +187,13 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
         }
     }
 
-    downloadDeviceXml(info.location, [this, loc = info.location, exp = info.expirationTime] (const std::string& xml) {
+    auto location = info.location;
+    log::debug("download xml: {}", location);
+    downloadDeviceXml(info.location, [this, location, exp = info.expirationTime] (const std::string& xml) {
         try
         {
             auto device = std::make_shared<Device>();
-            device->m_location = loc;
+            device->m_location = location;
             device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
             xml::parseDeviceInfo(xml, *device);
 

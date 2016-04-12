@@ -12,7 +12,7 @@ namespace test
 using namespace utils;
 using namespace std::chrono_literals;
 
-TEST_CASE("Device discover Client", "[Scan]")
+TEST_CASE("Device discover Client", "[scan]")
 {
     uv::Loop loop;
     DeviceScanner scanner(loop, { DeviceType::MediaServer, DeviceType::MediaRenderer });

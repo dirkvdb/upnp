@@ -7,7 +7,7 @@
 namespace upnp
 {
 
-class Loop;
+namespace http { class Parser; }
 
 namespace ssdp
 {
@@ -33,6 +33,7 @@ class Client
 {
 public:
     Client(uv::Loop& loop);
+    ~Client() noexcept;
 
     void run();
     void run(const std::string& address);
@@ -50,9 +51,12 @@ public:
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
+    void parseData();
+
     uint32_t m_searchTimeout;
     uv::socket::Udp m_socket;
     std::function<void(const DeviceNotificationInfo&)> m_cb;
+    std::unique_ptr<http::Parser> m_parser;
 };
 
 }

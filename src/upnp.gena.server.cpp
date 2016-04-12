@@ -17,6 +17,7 @@
 #include "upnp.gena.server.h"
 
 #include "utils/log.h"
+#include "upnp/upnptypes.h"
 #include "upnp.http.parser.h"
 #include "upnp.ssdp.parseutils.h"
 
@@ -33,35 +34,49 @@ static const std::string okResponse =
     "\r\n"
     "<html><body><h1>200 OK</h1></body></html>";
 
+static const std::string errorResponse =
+    "HTTP/1.1 200 OK\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: {}\r\n"
+    "CONTENT-TYPE: text/html\r\n"
+    "\r\n"
+    "{}";
+
+static const std::string g_body = "<html><body><h1>{} {}</h1></body></html>";
 
 using namespace utils;
 using namespace std::placeholders;
 
 namespace
 {
+    void closeConnection(uv::socket::Tcp* client)
+    {
+        client->close([client] () {
+            delete client;
+        });
+    }
+
     const std::string& required(const std::string& value)
     {
         if (value.empty())
         {
             throw std::runtime_error("Required value not present");
         }
-        
+
         return value;
     }
-    
-    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
+
+    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnectionAfterWrite)
     {
-        client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [client, closeConnection] (int32_t status) {
+        client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [client, closeConnectionAfterWrite] (int32_t status) {
             if (status != 0)
             {
                 log::error("Failed to write response: {}", status);
             }
-            
-            if (closeConnection)
+
+            if (closeConnectionAfterWrite)
             {
-                client->close([client] () {
-                    delete client;
-                });
+                closeConnection(client);
             }
         });
     }
@@ -82,7 +97,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
             log::info("GENA: Connection attempt");
             auto client = new uv::socket::Tcp(m_loop);
             auto parser = std::make_shared<http::Parser>(http::Type::Request);
-            
+
             parser->setCompletedCallback([this, parser, client] () {
                 try
                 {
@@ -93,16 +108,16 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                         m_currentEvent.data = parser->stealBody();
                         if (parser->headerValue("NT") != "upnp:event")
                         {
-                            throw std::runtime_error("Invalid notification type: " + parser->headerValue("NT"));
+                            throw Exception(ErrorCode::BadRequest);
                         }
-                        
+
                         if (parser->headerValue("NTS") != "upnp:propchange")
                         {
-                            throw std::runtime_error("Invalid notification sub type: " + parser->headerValue("NTS"));
+                            throw Exception(ErrorCode::BadRequest);
                         }
-                        
+
                         m_eventCb(m_currentEvent);
-                        
+
                         writeResponse(client, okResponse, parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                     }
                     else
@@ -110,10 +125,16 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                         log::warn("GENA: Unexpected method type recieved: {}", http::Parser::methodToString(parser->getMethod()));
                     }
                 }
+                catch (Exception& e)
+                {
+                    auto body = fmt::format(g_body, e.getErrorCode(), e.what());
+                    writeResponse(client, fmt::format(errorResponse, body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
+                    delete client;
+                }
                 catch (std::exception& e)
                 {
-                    log::error(e.what());
-                    // TODO: return error response
+                    auto body = fmt::format(g_body, static_cast<int32_t>(ErrorCode::BadRequest), e.what());
+                    writeResponse(client, fmt::format(errorResponse, body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                     delete client;
                 }
             });
@@ -161,7 +182,13 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
 
 Server::~Server() noexcept
 {
-    m_socket.close(nullptr);
+    // Stop has to be called before destruction
+    assert(m_socket.isClosing());
+}
+
+void Server::stop(std::function<void()> cb)
+{
+    m_socket.close(cb);
 }
 
 uv::Address Server::getAddress() const

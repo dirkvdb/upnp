@@ -179,9 +179,9 @@ public:
         return size;
     }
 
-    void parse(const std::string& data)
+    size_t parse(const std::string& data)
     {
-        parse(data.data(), data.size());
+        return parse(data.data(), data.size());
     }
 
     const std::string& headerValue(const char* name)
@@ -220,18 +220,7 @@ public:
     
     static const char* methodToString(Method m) noexcept
     {
-        switch (m)
-        {
-        case Method::Notify: return "NOTIFY";
-        case Method::Search: return "SEARCH";
-        case Method::Subscribe: return "SUBSCRIBE";
-        case Method::Unsubscribe: return "UNSUBSCRIBE";
-        case Method::Get: return "GET";
-        case Method::Head: return "HEAD";
-        case Method::Post: return "POST";
-        default:
-            return "";
-        }
+        return http_method_str(static_cast<http_method>(m));
     }
 
 private:

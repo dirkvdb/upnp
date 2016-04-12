@@ -77,37 +77,5 @@ inline NotificationType notificationTypeFromString(const std::string& str)
     return notificationTypeFromString(str.data(), str.size());
 }
 
-inline DeviceNotificationInfo parseNotification(const std::string& msg)
-{
-    DeviceNotificationInfo info;
-    
-    http::Parser parser(http::Type::Both);
-
-    parser.setHeadersCompletedCallback([&] () {
-        parseUSN(parser.headerValue("USN"), info);
-        info.location = parser.headerValue("LOCATION");
-        info.expirationTime = parseCacheControl(parser.headerValue("CACHE-CONTROL"));
-        
-        if (parser.getMethod() == http::Method::Notify)
-        {
-            // spontaneous notify message
-            info.type = notificationTypeFromString(parser.headerValue("NTS"));
-            info.deviceType = parser.headerValue("NT");
-        }
-        else
-        {
-            assert(parser.getStatus() == 200);
-            // response to a search
-            // direct responses do not fill in the NTS, mark them as alive
-            info.type = NotificationType::Alive;
-            info.deviceType = parser.headerValue("ST");
-        }
-    });
-    
-    parser.parse(msg);
-    assert(!info.deviceType.empty());
-    return info;
-}
-
 }
 }

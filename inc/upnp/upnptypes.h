@@ -108,6 +108,22 @@ enum class Class
     Unknown
 };
 
+enum class ErrorCode : int32_t
+{
+    BadRequest = 400,
+    PreconditionFailed = 412
+};
+
+inline std::string errorCodeToString(ErrorCode code)
+{
+    switch (code)
+    {
+    case ErrorCode::BadRequest:             return "Bad request";
+    case ErrorCode::PreconditionFailed:     return "Precondition Failed";
+    default:                                return "Unspecified error";
+    }
+}
+
 class Exception : public std::runtime_error
 {
 public:
@@ -119,6 +135,8 @@ public:
 
     Exception(int32_t errorCode, const char* msg) : std::runtime_error(msg), m_errorCode(errorCode) {}
     Exception(int32_t errorCode, const std::string& msg) : Exception(errorCode, msg.c_str()) {}
+
+    Exception(ErrorCode errorCode) : Exception(static_cast<int32_t>(errorCode), errorCodeToString(errorCode)) {}
 
     template<typename... T>
     Exception(int32_t errorCode, const char* fmt, T&&... args) : Exception(errorCode, fmt::format(fmt, std::forward<T&&>(args)...)) {}
@@ -282,3 +300,4 @@ inline std::string toString(Class c)
 }
 
 #endif
+
