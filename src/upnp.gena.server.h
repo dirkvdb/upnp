@@ -17,7 +17,10 @@
 #pragma once
 
 #include <vector>
+#include <memory>
+#include <string>
 #include <functional>
+#include <unordered_map>
 
 #include "upnp/upnp.uv.h"
 #include "upnp/upnp.types.h"
@@ -26,7 +29,6 @@ namespace upnp
 {
 namespace gena
 {
-
 
 // TODO: handle message with chunked encoding
 class Server
@@ -40,10 +42,14 @@ public:
     uv::Address getAddress() const;
 
 private:
+    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection);
+    void cleanupClient(uv::socket::Tcp* client) noexcept;
+
     uv::Loop& m_loop;
     uv::socket::Tcp m_socket;
     std::function<void(const SubscriptionEvent&)> m_eventCb;
     SubscriptionEvent m_currentEvent;
+    std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
 };
 
 }

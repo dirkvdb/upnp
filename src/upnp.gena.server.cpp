@@ -35,7 +35,7 @@ static const std::string okResponse =
     "<html><body><h1>200 OK</h1></body></html>";
 
 static const std::string errorResponse =
-    "HTTP/1.1 200 OK\r\n"
+    "HTTP/1.1 {} {}\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
     "CONTENT-LENGTH: {}\r\n"
     "CONTENT-TYPE: text/html\r\n"
@@ -49,13 +49,6 @@ using namespace std::placeholders;
 
 namespace
 {
-    void closeConnection(uv::socket::Tcp* client)
-    {
-        client->close([client] () {
-            delete client;
-        });
-    }
-
     const std::string& required(const std::string& value)
     {
         if (value.empty())
@@ -64,21 +57,6 @@ namespace
         }
 
         return value;
-    }
-
-    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnectionAfterWrite)
-    {
-        client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [client, closeConnectionAfterWrite] (int32_t status) {
-            if (status != 0)
-            {
-                log::error("Failed to write response: {}", status);
-            }
-
-            if (closeConnectionAfterWrite)
-            {
-                closeConnection(client);
-            }
-        });
     }
 }
 
@@ -95,10 +73,13 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
         if (status == 0)
         {
             log::info("GENA: Connection attempt");
-            auto client = new uv::socket::Tcp(m_loop);
+            auto client = std::make_unique<uv::socket::Tcp>(m_loop);
             auto parser = std::make_shared<http::Parser>(http::Type::Request);
 
-            parser->setCompletedCallback([this, parser, client] () {
+            auto clientPtr = client.get();
+            m_clients.emplace(clientPtr, std::move(client));
+
+            parser->setCompletedCallback([this, parser, client = clientPtr] () {
                 try
                 {
                     if (parser->getMethod() == http::Method::Notify)
@@ -128,21 +109,20 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                 catch (Exception& e)
                 {
                     auto body = fmt::format(g_body, e.getErrorCode(), e.what());
-                    writeResponse(client, fmt::format(errorResponse, body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
-                    delete client;
+                    writeResponse(client, fmt::format(errorResponse, e.getErrorCode(), e.what(), body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                 }
                 catch (std::exception& e)
                 {
-                    auto body = fmt::format(g_body, static_cast<int32_t>(ErrorCode::BadRequest), e.what());
-                    writeResponse(client, fmt::format(errorResponse, body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
-                    delete client;
+                    auto ec = static_cast<int32_t>(ErrorCode::BadRequest);
+                    auto body = fmt::format(g_body, ec, e.what());
+                    writeResponse(client, fmt::format(errorResponse, ec, e.what(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                 }
             });
 
             try
             {
-                m_socket.accept(*client);
-                client->read([=] (ssize_t nread, const uv::Buffer& data) {
+                m_socket.accept(*clientPtr);
+                clientPtr->read([this, clientPtr, parser] (ssize_t nread, const uv::Buffer& data) {
                     if (nread < 0)
                     {
                         if (nread != UV_EOF)
@@ -151,7 +131,8 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                         }
                         else
                         {
-                            log::info("End of stream");
+                            log::debug("Conection closed by client");
+                            cleanupClient(clientPtr);
                         }
                     }
                     else
@@ -163,6 +144,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                         catch (std::exception& e)
                         {
                             log::error("Failed to parse request: {}", e.what());
+                            cleanupClient(clientPtr);
                         }
                     }
                 });
@@ -170,7 +152,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
             catch (std::exception& e)
             {
                 log::error("GENA: Failed to accept connection: {}", e.what());
-                client->close(nullptr);
+                cleanupClient(clientPtr);
             }
         }
         else
@@ -196,6 +178,28 @@ uv::Address Server::getAddress() const
     auto addr = m_socket.getSocketName();
     log::debug("GENA address: {} {}", addr.ip(), addr.port());
     return addr;
+}
+
+void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
+{
+    client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
+        if (status != 0)
+        {
+            log::error("Failed to write response: {}", status);
+        }
+
+        if (closeConnection)
+        {
+            cleanupClient(client);
+        }
+    });
+}
+
+void Server::cleanupClient(uv::socket::Tcp* client) noexcept
+{
+    client->close([=] () {
+        m_clients.erase(client);
+    });
 }
 
 }

@@ -82,12 +82,12 @@ uint16_t Client2::getPort() const
 void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     log::debug("Subscribe to service: {}", publisherUrl);
-    
+
     if (!m_eventServer)
     {
         throw std::runtime_error("UPnP library is not properly initialized");
     }
-    
+
     auto addr = m_eventServer->getAddress();
     log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
     m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
@@ -125,21 +125,5 @@ void Client2::handlEvent(const SubscriptionEvent& event)
         iter->second(event);
     }
 }
-
-// int Client2::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCookie)
-// {
-//     auto pClient = reinterpret_cast<Client*>(pCookie);
-
-//     switch (eventType)
-//     {
-//     case UPNP_EVENT_RECEIVED:
-//         pClient->UPnPEventOccurredEvent(reinterpret_cast<Upnp_Event*>(pEvent));
-//         break;
-//     default:
-//         break;
-//     }
-
-//     return 0;
-// }
 
 }
