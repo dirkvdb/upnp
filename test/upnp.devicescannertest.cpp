@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <gtest/gtest.h>
 
 #include "utils/log.h"
 #include "upnp/upnp.devicescanner.h"
@@ -12,7 +12,7 @@ namespace test
 using namespace utils;
 using namespace std::chrono_literals;
 
-TEST_CASE("Device discover Client", "[scan]")
+TEST(DeviceDiscoverTest, DiscoverClient)
 {
     uv::Loop loop;
     DeviceScanner scanner(loop, { DeviceType::MediaServer, DeviceType::MediaRenderer });

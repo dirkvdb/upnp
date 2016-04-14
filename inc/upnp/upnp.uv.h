@@ -174,6 +174,11 @@ class Handle
 public:
     bool isClosing()
     {
+        if (!m_handle)
+        {
+            return true;
+        }
+    
         return uv_is_closing(reinterpret_cast<uv_handle_t*>(get())) != 0;
     }
 
@@ -183,53 +188,60 @@ public:
         {
             return;
         }
+        
+        assert(m_handle);
 
-        m_closeCallback = std::move(cb);
-        uv_close(reinterpret_cast<uv_handle_t*>(get()), [] (auto* handle) {
-            auto thisPtr = reinterpret_cast<Handle<HandleType>*>(handle->data);
-            if (thisPtr->m_closeCallback)
+        m_handle->data = new std::function<void()>(std::move(cb));
+        uv_close(reinterpret_cast<uv_handle_t*>(m_handle.release()), [] (auto* handle) {
+            std::unique_ptr<HandleType> handlePtr(reinterpret_cast<HandleType*>(handle));
+            std::unique_ptr<std::function<void()>> cb(reinterpret_cast<std::function<void()>*>(handlePtr->data));
+            if (cb && *cb)
             {
-                thisPtr->m_closeCallback();
+                (*cb)();
             }
         });
     }
 
     HandleType* get() noexcept
     {
-        return &m_handle;
+        return m_handle.get();
     }
 
     const HandleType* get() const noexcept
     {
-        return &m_handle;
+        return m_handle.get();
     }
 
 protected:
-    Handle() = default;
-    ~Handle() = default;
-
-    Handle(HandleType handle)
-    : m_handle(handle)
+    Handle()
+    : m_handle(std::make_unique<HandleType>())
     {
+    }
+    
+    ~Handle()
+    {
+        if (m_handle && !isClosing())
+        {
+            close(nullptr);
+        }
     }
 
     template <typename InitFunc>
     void init(Loop& loop, InitFunc func)
     {
-        checkRc(func(loop.get(), &m_handle));
-        m_handle.data = this;
+        checkRc(func(loop.get(), m_handle.get()));
+        m_handle->data = this;
     }
 
     template <typename InitFunc, typename Arg>
     void init(Loop& loop, InitFunc func, Arg&& arg)
     {
-        checkRc(func(loop.get(), &m_handle, arg));
-        m_handle.data = this;
+        checkRc(func(loop.get(), m_handle.get(), arg));
+        m_handle->data = this;
     }
 
 private:
-    std::function<void()>   m_closeCallback;
-    HandleType              m_handle;
+    std::unique_ptr<HandleType> m_handle;
 };
 
 template <typename HandleType>
@@ -659,7 +671,7 @@ public:
     void connect(const Address& addr, std::function<void(int32_t)> cb)
     {
         auto conn = std::make_unique<uv_connect_t>();
-        conn->data = new std::function<void(int32_t)>(cb);
+        conn->data = new std::function<void(int32_t)>(std::move(cb));
 
         checkRc(uv_tcp_connect(conn.release(), get(), reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_connect_t* req, int status) {
             std::unique_ptr<uv_connect_t> conn(req);
@@ -687,12 +699,10 @@ inline void stopLoopAndCloseRequests(Loop& loop)
 
     bool closed = false;
     uv_walk(loop.get(), [] (uv_handle_t* handle, void* arg) {
-        auto* handleInstance = reinterpret_cast<Handle<uv_handle_t>*>(handle->data);
-        assert(handleInstance);
-        if (!handleInstance->isClosing())
+        if (uv_is_closing(handle) == 0)
         {
-            handleInstance->close(nullptr);
-             *reinterpret_cast<bool*>(arg) = true;
+            uv_close(handle, nullptr);
+            *reinterpret_cast<bool*>(arg) = true;
         }
     }, &closed);
 

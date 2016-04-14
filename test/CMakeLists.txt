@@ -14,7 +14,7 @@ LINK_DIRECTORIES(
 )
 
 ADD_EXECUTABLE(upnptest
-    gmock-gtest-all.cpp
+    testframework/gmock-gtest-all.cpp
     main.cpp
 
     devicediscover.h
@@ -34,18 +34,19 @@ ADD_EXECUTABLE(upnptest
 )
 
 ADD_EXECUTABLE(upnpframeworktest
-    testrunner.cpp
+    testframework/gmock-gtest-all.cpp
+    main.cpp
     upnp.uvtest.cpp
     upnp.clienttest.cpp
     upnp.ssdp.clienttest.cpp
     upnp.ssdp.test.cpp
     upnp.http.clienttest.cpp
-    upnp.http.parsertest.cpp
-    upnp.gena.servertest.cpp
+    #upnp.http.parsertest.cpp
+    #upnp.gena.servertest.cpp
     upnp.actiontest.cpp
     upnp.devicescannertest.cpp
-    upnp.xml.parseutilstest.cpp
-    upnp.soap.parseutilstest.cpp
+    #upnp.xml.parseutilstest.cpp
+    #upnp.soap.parseutilstest.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnptest
