@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <gtest/gtest.h>
 #include <pugixml.hpp>
 #include <sstream>
 
@@ -11,6 +11,7 @@ namespace upnp
 namespace test
 {
 
+using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
@@ -122,85 +123,101 @@ static const std::string mediaServerRootDesc =
 "   </device>"
 "</root>";
 
-TEST_CASE("XML Parse Gateway Device info", "[XML]")
+TEST(XmlParseTest, GatewayDeviceInfo)
 {
     Device dev;
     dev.m_location = "http://192.168.1.1:5000/rootDesc.xml";
 
     xml::parseDeviceInfo(gatewayRootDesc, dev);
 
-    CHECK(dev.m_udn == "uuid:A37351C5-8521-4c24-A43E-5C353B9982A9");
-    CHECK(dev.m_friendlyName == "Compal Broadband Networks, Inc CH6643");
-    CHECK(dev.m_baseURL.empty());
-    CHECK(dev.m_type == DeviceType::InternetGateway);
-    CHECK(dev.m_presURL.empty());
+    EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, dev.m_udn);
+    EXPECT_EQ("Compal Broadband Networks, Inc CH6643"s, dev.m_friendlyName);
+    EXPECT_TRUE(dev.m_baseURL.empty());
+    EXPECT_EQ(DeviceType::InternetGateway, dev.m_type);
+    EXPECT_TRUE(dev.m_presURL.empty());
 }
 
-TEST_CASE("XML Parse Media server info", "[XML]")
+TEST(XmlParseTest, MediaServerInfo)
 {
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
     xml::parseDeviceInfo(mediaServerRootDesc, dev);
 
-    CHECK(dev.m_udn == "uuid:55076f6e-6b79-1d65-a4eb-00089be34071");
-    CHECK(dev.m_friendlyName == "NAS");
-    CHECK(dev.m_baseURL.empty());
-    CHECK(dev.m_type == DeviceType::MediaServer);
-    CHECK(dev.m_presURL == "http://192.168.1.13:9000/");
+    EXPECT_EQ("uuid:55076f6e-6b79-1d65-a4eb-00089be34071"s, dev.m_udn);
+    EXPECT_EQ("NAS"s, dev.m_friendlyName);
+    EXPECT_TRUE(dev.m_baseURL.empty());
+    EXPECT_EQ(DeviceType::MediaServer, dev.m_type);
+    EXPECT_EQ("http://192.168.1.13:9000/"s, dev.m_presURL);
 
-    CHECK(dev.m_services.size() == 2);
+    EXPECT_EQ(2u, dev.m_services.size());
 
     auto& connMgrSvc = dev.m_services.at(ServiceType::ConnectionManager);
-    CHECK(connMgrSvc.m_type                     == ServiceType::ConnectionManager);
-    CHECK(connMgrSvc.m_id                       == "urn:upnp-org:serviceId:ConnectionManager");
-    CHECK(connMgrSvc.m_controlURL               == "http://192.168.1.13:9000/dev0/srv0/control");
-    CHECK(connMgrSvc.m_eventSubscriptionURL     == "http://192.168.1.13:9000/dev0/srv0/event");
-    CHECK(connMgrSvc.m_scpdUrl                  == "http://192.168.1.13:9000/dev0/srv0.xml");
+    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.m_type);
+    EXPECT_EQ("urn:upnp-org:serviceId:ConnectionManager"s, connMgrSvc.m_id);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/control"s, connMgrSvc.m_controlURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/event"s, connMgrSvc.m_eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0.xml"s, connMgrSvc.m_scpdUrl);
 
     auto& contDirMgrSvc = dev.m_services.at(ServiceType::ContentDirectory);
-    CHECK(contDirMgrSvc.m_type                  == ServiceType::ContentDirectory);
-    CHECK(contDirMgrSvc.m_id                    == "urn:upnp-org:serviceId:ContentDirectory");
-    CHECK(contDirMgrSvc.m_controlURL            == "http://192.168.1.13:9000/dev0/srv1/control");
-    CHECK(contDirMgrSvc.m_eventSubscriptionURL  == "http://192.168.1.13:9000/dev0/srv1/event");
-    CHECK(contDirMgrSvc.m_scpdUrl               == "http://192.168.1.13:9000/dev0/srv1.xml");
+    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.m_type);
+    EXPECT_EQ("urn:upnp-org:serviceId:ContentDirectory"s, contDirMgrSvc.m_id);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/control"s, contDirMgrSvc.m_controlURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/event"s, contDirMgrSvc.m_eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1.xml"s, contDirMgrSvc.m_scpdUrl);
 }
 
-TEST_CASE("XML Parse empty xml", "[XML]")
+TEST(XmlParseTest, EmptyXml)
 {
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    CHECK_THROWS_AS(xml::parseDeviceInfo("", dev), std::runtime_error);
+    EXPECT_THROW(xml::parseDeviceInfo("", dev), std::runtime_error);
 }
 
-TEST_CASE("Missing elements", "[XML]")
+TEST(XmlParseTest, MissingFriendlyName)
 {
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
     pugi::xml_document doc;
-    CHECK(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
+    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
 
-    SECTION("No friendly name")
-    {
-        doc.child("root").child("device").remove_child("friendlyName");
-    }
-
-    SECTION("No UDN")
-    {
-        doc.child("root").child("device").remove_child("UDN");
-    }
-
-    SECTION("No DeviceType")
-    {
-        doc.child("root").child("device").remove_child("deviceType");
-    }
+    doc.child("root").child("device").remove_child("friendlyName");
 
     std::stringstream xmlMod;
     doc.save(xmlMod);
+    EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
+}
 
-    CHECK_THROWS_AS(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
+TEST(XmlParseTest, MissingUdn)
+{
+    Device dev;
+    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+
+    pugi::xml_document doc;
+    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
+
+    doc.child("root").child("device").remove_child("UDN");
+
+    std::stringstream xmlMod;
+    doc.save(xmlMod);
+    EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
+}
+
+TEST(XmlParseTest, MissingDeviceType)
+{
+    Device dev;
+    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+
+    pugi::xml_document doc;
+    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
+
+    doc.child("root").child("device").remove_child("deviceType");
+
+    std::stringstream xmlMod;
+    doc.save(xmlMod);
+    EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
 }
 
 }

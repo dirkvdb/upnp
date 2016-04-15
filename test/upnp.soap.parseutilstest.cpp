@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <gtest/gtest.h>
 #include <pugixml.hpp>
 #include <sstream>
 
@@ -12,10 +12,10 @@ namespace test
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
-TEST_CASE("Parse soap timeout", "[PARSE]")
+TEST(SoapParseUtils, SoapTimeout)
 {
-    CHECK(soap::parseTimeout("Second-infinite").count() == 0);
-    CHECK(soap::parseTimeout("Second-1800").count() == 1800);
+    EXPECT_EQ(0, soap::parseTimeout("Second-infinite").count());
+    EXPECT_EQ(1800, soap::parseTimeout("Second-1800").count());
 }
 
 }
