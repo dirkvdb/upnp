@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "utils/log.h"
 #include "upnp.gena.server.h"
@@ -9,6 +10,7 @@ namespace test
 {
 
 using namespace testing;
+using namespace std::placeholders;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
@@ -28,12 +30,9 @@ static const std::string errorResponse =
     "\r\n"
     "<html><body><h1>400 Bad request</h1></body></html>";
 
-auto checkResponseOk = [] (const std::string& response) {
-    EXPECT_EQ(okResponse, response);
-};
-
-auto checkResponseError = [] (const std::string& response) {
-    EXPECT_EQ(errorResponse, response);
+struct SubscriptionCallbackMock
+{
+    MOCK_METHOD1(onEvent, void(const SubscriptionEvent& ev));
 };
 
 class GenaServerTest : public Test
@@ -41,104 +40,80 @@ class GenaServerTest : public Test
 public:
     GenaServerTest()
     : client(loop)
+    , server(loop, uv::Address::createIp4("127.0.0.1", 0), std::bind(&SubscriptionCallbackMock::onEvent, &cbMock, _1))
     {
     }
+    
+    void sendDataAndExpectResponse(const std::string& data, const std::string& expectedResponse)
+    {
+        client.connect(server.getAddress(), [&] (int32_t status) {
+            EXPECT_EQ(0, status);
+            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
+                EXPECT_EQ(0, status);
+                client.read([&] (ssize_t size, const uv::Buffer& buf) {
+                    EXPECT_TRUE(size > 0);
+                    EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
 
+                    client.close([this] () {
+                        server.stop(nullptr);
+                    });
+                });
+            });
+        });
+    }
+
+    SubscriptionCallbackMock cbMock;
     uv::Loop loop;
     uv::socket::Tcp client;
-    SubscriptionEvent event;
-
-    std::string notification;
-    std::function<void(const std::string&)> checkResponse;
-    std::function<void(const SubscriptionEvent&)> checkEvent;
+    gena::Server server;
 };
 
 TEST_F(GenaServerTest, Event)
 {
-    auto server = std::make_unique<gena::Server>(loop, uv::Address::createIp4("127.0.0.1", 0), [&] (const SubscriptionEvent& ev) {
-        checkEvent(ev);
-    });
+    auto notification =
+        "NOTIFY / HTTP/1.1\r\n"
+        "HOST: delivery host:delivery port\r\n"
+        "CONTENT-TYPE: text/xml\r\n"
+        "CONTENT-LENGTH: 21\r\n"
+        "NT: upnp:event\r\n"
+        "NTS: upnp:propchange\r\n"
+        "SID: uuid:subscription-UUID\r\n"
+        "SEQ: 5\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"s;
 
-    notification =
-    "NOTIFY / HTTP/1.1\r\n"
-    "HOST: delivery host:delivery port\r\n"
-    "CONTENT-TYPE: text/xml\r\n"
-    "CONTENT-LENGTH: 21\r\n"
-    "NT: upnp:event\r\n"
-    "NTS: upnp:propchange\r\n"
-    "SID: uuid:subscription-UUID\r\n"
-    "SEQ: 5\r\n"
-    "\r\n"
-    "<?xml version=\"1.0\"?>";
-
-    checkEvent = [] (const SubscriptionEvent& ev) {
+    EXPECT_CALL(cbMock, onEvent(_)).WillOnce(Invoke([] (const SubscriptionEvent& ev) {
         EXPECT_EQ(5u, ev.sequence);
         EXPECT_EQ("uuid:subscription-UUID"s, ev.sid);
         EXPECT_EQ("<?xml version=\"1.0\"?>"s, ev.data);
-    };
+    }));
 
-    checkResponse = checkResponseOk;
-
-    client.connect(server->getAddress(), [&] (int32_t status) {
-        EXPECT_EQ(0, status);
-        client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
-            client.read([&] (ssize_t size, const uv::Buffer& buf) {
-                EXPECT_TRUE(size > 0);
-                checkResponse(std::string(buf.data(), size));
-
-                client.close([&server] () {
-                    server->stop(nullptr);
-                });
-            });
-        });
-    });
-
+    sendDataAndExpectResponse(notification, okResponse);
     loop.run(uv::RunMode::Default);
 }
 
 TEST_F(GenaServerTest, EventBadRequest)
 {
-    auto server = std::make_unique<gena::Server>(loop, uv::Address::createIp4("127.0.0.1", 0), [&] (const SubscriptionEvent& ev) {
-        checkEvent(ev);
-    });
+    auto notification =
+        "NOTIFY / HTTP/1.1\r\n"
+        "HOST: delivery host:delivery port\r\n"
+        "CONTENT-TYPE: text/xml\r\n"
+        "CONTENT-LENGTH: 21\r\n"
+        "CONNECTION: close\r\n"
+        "NT: upnp:evvent\r\n" // bad event type
+        "NTS: upnp:propchange\r\n"
+        "SID: uuid:subscription-UUID\r\n"
+        "SEQ: 5\r\n"
+        "\r\n"
+        "<?xml version=\"1.0\"?>"s;
 
-    notification =
-    "NOTIFY / HTTP/1.1\r\n"
-    "HOST: delivery host:delivery port\r\n"
-    "CONTENT-TYPE: text/xml\r\n"
-    "CONTENT-LENGTH: 21\r\n"
-    "CONNECTION: close\r\n"
-    "NT: upnp:evvent\r\n" // bad event type
-    "NTS: upnp:propchange\r\n"
-    "SID: uuid:subscription-UUID\r\n"
-    "SEQ: 5\r\n"
-    "\r\n"
-    "<?xml version=\"1.0\"?>";
-
-    checkResponse = checkResponseError;
-
-    client.connect(server->getAddress(), [&] (int32_t status) {
-        EXPECT_EQ(0, status);
-        client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
-            client.read([&] (ssize_t size, const uv::Buffer& buf) {
-                EXPECT_TRUE(size > 0);
-                checkResponse(std::string(buf.data(), size));
-
-                client.close([&server] () {
-                    server->stop(nullptr);
-                });
-            });
-        });
-    });
-
+    sendDataAndExpectResponse(notification, errorResponse);
     loop.run(uv::RunMode::Default);
 }
 
 TEST_F(GenaServerTest, ExptectConnectionClose)
 {
-    std::string notification =
+    auto notification =
         "NOTIFY / HTTP/1.1\r\n"
         "HOST: delivery host:delivery port\r\n"
         "CONTENT-TYPE: text/xml\r\n"
@@ -149,16 +124,16 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
         "SID: uuid:subscription-UUID\r\n"
         "SEQ: 5\r\n"
         "\r\n"
-        "<?xml version=\"1.0\"?>";
+        "<?xml version=\"1.0\"?>"s;
 
-    auto server = std::make_unique<gena::Server>(loop, uv::Address::createIp4("127.0.0.1", 0), [&] (const SubscriptionEvent& ev) {
+    EXPECT_CALL(cbMock, onEvent(_)).WillOnce(Invoke([] (const SubscriptionEvent& ev) {
         EXPECT_EQ(5u, ev.sequence);
         EXPECT_EQ("uuid:subscription-UUID"s, ev.sid);
         EXPECT_EQ("<?xml version=\"1.0\"?>"s, ev.data);
-    });
+    }));
 
     uint32_t readCount = 0;
-    client.connect(server->getAddress(), [&] (int32_t status) {
+    client.connect(server.getAddress(), [&] (int32_t status) {
         EXPECT_EQ(0, status);
         client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t status) {
             EXPECT_EQ(0, status);
@@ -174,8 +149,8 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
                     // Second read should be the connection close
                     EXPECT_EQ(UV_EOF, size);
                     // So also close our connection
-                    client.close([&server] () {
-                        server->stop(nullptr);
+                    client.close([this] () {
+                        server.stop(nullptr);
                     });
                 }
 
