@@ -6,11 +6,10 @@
 
 namespace upnp
 {
-
-namespace http { class Parser; }
-
 namespace ssdp
 {
+
+class Parser;
 
 enum class NotificationType
 {
@@ -55,8 +54,7 @@ private:
 
     uint32_t m_searchTimeout;
     uv::socket::Udp m_socket;
-    std::function<void(const DeviceNotificationInfo&)> m_cb;
-    std::unique_ptr<http::Parser> m_parser;
+    std::unique_ptr<Parser> m_parser;
 };
 
 }

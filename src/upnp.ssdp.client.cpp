@@ -23,9 +23,8 @@ static const uv::Address g_ssdpAddressIpv4 = uv::Address::createIp4(g_ssdpIp, g_
 Client::Client(uv::Loop& loop)
 : m_searchTimeout(3)
 , m_socket(loop)
-, m_parser(std::make_unique<http::Parser>(http::Type::Both))
+, m_parser(std::make_unique<Parser>())
 {
-    m_parser->setHeadersCompletedCallback([this] () { parseData(); });
 }
 
 Client::~Client() noexcept = default;
@@ -45,11 +44,6 @@ void Client::run(const std::string& address)
     m_socket.setTtl(4);
 
     m_socket.recv([=] (const std::string& msg) {
-        if (msg.empty() || !m_cb)
-        {
-            return;
-        }
-        
         try
         {
             //utils::log::debug("Read {}", msg);
@@ -104,50 +98,7 @@ void Client::search(const std::string& serviceType, const std::string& deviceIp)
 
 void Client::setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb)
 {
-    m_cb = std::move(cb);
-}
-
-void Client::parseData()
-{
-    if (!m_cb)
-    {
-        return;
-    }
-    
-    try
-    {
-        DeviceNotificationInfo info;
-        parseUSN(m_parser->headerValue("USN"), info);
-        info.location = m_parser->headerValue("LOCATION");
-        info.expirationTime = parseCacheControl(m_parser->headerValue("CACHE-CONTROL"));
-        
-        if (m_parser->getMethod() == http::Method::Notify)
-        {
-            // spontaneous notify message
-            info.type = notificationTypeFromString(m_parser->headerValue("NTS"));
-            info.deviceType = m_parser->headerValue("NT");
-        }
-        else
-        {
-            // response to a search
-            
-            if (m_parser->getStatus() != 200)
-            {
-                log::warn("Error status in search response: {}", m_parser->getStatus());
-                return;
-            }
-            
-            // direct responses do not fill in the NTS, mark them as alive
-            info.type = NotificationType::Alive;
-            info.deviceType = m_parser->headerValue("ST");
-        }
-        
-        m_cb(info);
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to parse http notification data: {}", e.what());
-    }
+    m_parser->setHeaderParsedCallback(std::move(cb));
 }
 
 }
