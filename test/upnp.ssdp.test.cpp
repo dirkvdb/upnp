@@ -21,8 +21,8 @@ public:
 
 TEST_F(SsdpTest, ParseCacheControl)
 {
-    EXPECT_EQ(60, ssdp::parseCacheControl("max-age=60"));
-    EXPECT_EQ(0, ssdp::parseCacheControl("max-age=0"));
+    EXPECT_EQ(60u, ssdp::parseCacheControl("max-age=60"));
+    EXPECT_EQ(0u, ssdp::parseCacheControl("max-age=0"));
 
     EXPECT_THROW(ssdp::parseCacheControl("Max-age=0"), std::runtime_error);
     EXPECT_THROW(ssdp::parseCacheControl(""), std::runtime_error);

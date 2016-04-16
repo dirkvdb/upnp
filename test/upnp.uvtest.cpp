@@ -73,7 +73,7 @@ TEST_F(UVTest, TcpTest)
         s->read([=, &server] (ssize_t count, const uv::Buffer& buf) {
             if (count > 0)
             {
-                EXPECT_EQ(data.size(), count);
+                EXPECT_EQ(data.size(), static_cast<size_t>(count));
                 EXPECT_EQ(0, memcmp(data.data(), buf.data(), count));
             }
             else
@@ -116,7 +116,7 @@ TEST_F(UVTest, TcpTestModifiedPort)
         s->read([data, &server, s] (ssize_t count, const uv::Buffer& buf) {
             if (count > 0)
             {
-                EXPECT_EQ(data.size(), count);
+                EXPECT_EQ(data.size(), static_cast<size_t>(count));
                 EXPECT_EQ(0, memcmp(data.data(), buf.data(), count));
             }
             else
