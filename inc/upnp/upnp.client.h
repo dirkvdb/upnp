@@ -45,7 +45,7 @@ class Action;
 class Client2
 {
 public:
-    Client2(uv::Loop& loop);
+    Client2();
     virtual ~Client2();
 
     virtual void initialize(const std::string& interfaceName, uint16_t port);
@@ -58,11 +58,13 @@ public:
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb);
 
     virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb);
+    
+    virtual void run();
 
 private:
     void handlEvent(const SubscriptionEvent& event);
 
-    uv::Loop& m_loop;
+    std::unique_ptr<uv::Loop> m_loop;
     http::Client m_http;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;

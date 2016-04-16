@@ -2,7 +2,6 @@
 
 #include "utils/log.h"
 #include "upnp/upnp.client.h"
-#include "upnp/upnp.uv.h"
 
 namespace upnp
 {
@@ -14,10 +13,9 @@ using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
-TEST(UPnPClientTest, DISABLED_CLIENT)
+TEST(UPnPClientTest, DISABLED_Client)
 {
-    uv::Loop loop;
-    Client2 client(loop);
+    Client2 client;
 
     auto url = "http://192.168.1.184:8080/RenderingControl/evt"s;
 
@@ -38,7 +36,7 @@ TEST(UPnPClientTest, DISABLED_CLIENT)
         };
     });
 
-    loop.run(uv::RunMode::Default);
+    client.run();
 }
 
 }

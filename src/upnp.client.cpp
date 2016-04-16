@@ -32,9 +32,9 @@ using namespace utils;
 namespace upnp
 {
 
-Client2::Client2(uv::Loop& loop)
-: m_loop(loop)
-, m_http(loop)
+Client2::Client2()
+: m_loop(std::make_unique<uv::Loop>())
+, m_http(*m_loop)
 {
 }
 
@@ -49,7 +49,7 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
         {
             auto addr = uv::Address::createIp4(intf.address.address4);
             addr.setPort(port);
-            m_eventServer = std::make_unique<gena::Server>(m_loop, addr, [&] (const SubscriptionEvent& ev) {
+            m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
                 auto iter = m_eventCallbacks.find(ev.sid);
                 if (iter != m_eventCallbacks.end())
                 {
@@ -66,7 +66,9 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
 void Client2::uninitialize()
 {
     log::debug("Uninitialized UPnP SDK");
-    m_eventServer.reset();
+    m_eventServer->stop([this] () {
+        m_eventServer.reset();
+    });
 }
 
 std::string Client2::getIpAddress() const
@@ -115,6 +117,11 @@ void Client2::sendAction(const Action& action, std::function<void(int32_t, std::
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
 #endif
+}
+
+void Client2::run()
+{
+    m_loop->run(upnp::uv::RunMode::Default);
 }
 
 void Client2::handlEvent(const SubscriptionEvent& event)

@@ -182,6 +182,8 @@ public:
         return uv_is_closing(reinterpret_cast<uv_handle_t*>(get())) != 0;
     }
 
+    // don't call any other member functions after close, we replace the data this ptr with the closed callback
+    // and m_handle is released
     void close(std::function<void()> cb)
     {
         if (isClosing())
@@ -204,11 +206,13 @@ public:
 
     HandleType* get() noexcept
     {
+        assert(m_handle); // if this fires yout called a member method after closing
         return m_handle.get();
     }
 
     const HandleType* get() const noexcept
     {
+        assert(m_handle); // if this fires yout called a member method after closing
         return m_handle.get();
     }
 
