@@ -97,6 +97,35 @@ TEST_F(SsdpTest, ParseNotify)
     EXPECT_EQ(notification.size(), parser.parse(notification));
 }
 
+TEST_F(SsdpTest, ParseNotifyChunked)
+{
+    auto notification =
+        "NOTIFY * HTTP/1.1\r\n"
+        "HOST:239.255.255.250:1900\r\n"
+        "CACHE-CONTROL:max-age=60\r\n"
+        "LOCATION:http://192.168.1.1:5000/rootDesc.xml\r\n"
+        "SERVER:Compal Broadband Networks, Inc/Linux/2.6.39.3 UPnP/1.1 MiniUPnPd/1.7\r\n"
+        "NT:urn:schemas-upnp-org:device:WANDevice:1\r\n"
+        "USN:uuid:A37351C5-8521-4c24-A43E-5C353B9982A9::urn:schemas-upnp-org:device:WANDevice:1\r\n"
+        "NTS:ssdp:alive\r\n"
+        "OPT:\"http://schemas.upnp.org/upnp/1/0/\"; ns=01\r\n"
+        "01-NLS:1\r\n"
+        "BOOTID.UPNP.ORG:1\r\n"
+        "CONFIGID.UPNP.ORG:1337\r\n\r\n"s;
+    
+    EXPECT_EQ(notification.size() / 2, parser.parse(notification.substr(0, notification.size() / 2)));
+    
+    EXPECT_CALL(devMock, onDevice(_)).WillOnce(Invoke([] (const ssdp::DeviceNotificationInfo& info) {
+        EXPECT_EQ("http://192.168.1.1:5000/rootDesc.xml"s, info.location);
+        EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, info.deviceId);
+        EXPECT_EQ("urn:schemas-upnp-org:device:WANDevice:1"s, info.deviceType);
+        EXPECT_EQ(60u, info.expirationTime);
+        EXPECT_EQ(ssdp::NotificationType::Alive, info.type);
+    }));
+
+    EXPECT_EQ(notification.size() - (notification.size() / 2), parser.parse(notification.substr(notification.size() / 2)));
+}
+
 TEST_F(SsdpTest, ParseNotifyNoSpaces)
 {
     auto notification =
