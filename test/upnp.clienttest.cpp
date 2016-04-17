@@ -3,6 +3,8 @@
 #include "utils/log.h"
 #include "upnp/upnp.client.h"
 
+#include <future>
+
 namespace upnp
 {
 namespace test
@@ -18,25 +20,28 @@ TEST(UPnPClientTest, DISABLED_Client)
     Client2 client;
 
     auto url = "http://192.168.1.184:8080/RenderingControl/evt"s;
+    std::promise<void> prom;
+    auto fut = prom.get_future();
 
-    client.initialize("en0", 0);
-    client.subscribeToService(url, 1000s, [&client, &url] (int32_t status, std::string sid, std::chrono::seconds timeout) -> std::function<void(SubscriptionEvent)> {
+    client.subscribeToService(url, 1000s, [&client, &url, &prom] (int32_t status, std::string sid, std::chrono::seconds timeout) -> std::function<void(SubscriptionEvent)> {
         EXPECT_EQ(200, status);
         EXPECT_EQ(300, timeout.count());
         log::info("SubId: {}", sid);
 
-        return [=, &client] (const SubscriptionEvent& ev) {
+        return [=, &client, &prom] (const SubscriptionEvent& ev) {
             EXPECT_EQ(sid, ev.sid);
             EXPECT_FALSE(ev.data.empty());
 
-            client.unsubscribeFromService(url, sid, [&client] (int32_t status) {
+            client.unsubscribeFromService(url, sid, [&client, &prom] (int32_t status) {
                 EXPECT_EQ(200, status);
-                client.uninitialize();
+                prom.set_value();
             });
         };
     });
 
-    client.run();
+    client.initialize("en0", 0);
+    fut.wait();
+    client.uninitialize();
 }
 
 }

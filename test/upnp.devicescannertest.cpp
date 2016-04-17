@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
+#include <future>
 
 #include "utils/log.h"
 #include "upnp/upnp.devicescanner.h"
-#include "upnp/upnp.uv.h"
+#include "upnp/upnp.client.h"
 
 namespace upnp
 {
@@ -14,18 +15,24 @@ using namespace std::chrono_literals;
 
 TEST(DeviceDiscoverTest, DiscoverClient)
 {
-    uv::Loop loop;
-    DeviceScanner scanner(loop, { DeviceType::MediaServer, DeviceType::MediaRenderer });
+    Client2 client;
+    DeviceScanner scanner(client, { DeviceType::MediaServer, DeviceType::MediaRenderer });
+
+    std::promise<void> prom;
+    auto fut = prom.get_future();
 
     scanner.DeviceDiscoveredEvent.connect([&] (std::shared_ptr<Device> dev) {
         log::info("Discovered: {}", dev->m_udn);
         scanner.stop();
-    }, &loop);
+        prom.set_value();
+    }, &client);
 
     scanner.start();
     scanner.refresh();
 
-    loop.run(uv::RunMode::Default);
+    client.initialize("lo0", 0);
+    fut.wait();
+    client.uninitialize();
 }
 
 }
