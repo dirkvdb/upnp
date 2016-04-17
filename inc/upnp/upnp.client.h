@@ -40,7 +40,7 @@ class Server;
 
 }
 
-class Action;
+class Action2;
 
 class Client2
 {
@@ -57,13 +57,15 @@ public:
     virtual void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb);
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb);
 
-    virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb);
+    virtual void sendAction(const Action2& action, std::function<void(int32_t status, std::string actionResult)> cb);
     
-    virtual void run();
+    virtual uv::Loop& loop();
 
 private:
+    void runLoop();
     void handlEvent(const SubscriptionEvent& event);
 
+    std::unique_ptr<std::thread> m_thread;
     std::unique_ptr<uv::Loop> m_loop;
     http::Client m_http;
     std::unique_ptr<gena::Server> m_eventServer;

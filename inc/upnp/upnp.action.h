@@ -29,10 +29,10 @@ namespace pugi
 namespace upnp
 {
 
-class Action
+class Action2
 {
 public:
-    Action(const std::string& name, const std::string& url, ServiceType serviceType);
+    Action2(const std::string& name, const std::string& url, ServiceType serviceType);
 
     void addArgument(const std::string& name, const std::string& value);
 
@@ -43,7 +43,7 @@ public:
     std::string getServiceTypeUrn() const;
     ServiceType getServiceType() const;
 
-    bool operator==(const Action& other) const;
+    bool operator==(const Action2& other) const;
 
 private:
     std::string                 m_name;
@@ -54,7 +54,7 @@ private:
     pugi::xml_node m_action;
 };
 
-inline std::ostream& operator<< (std::ostream& os, const Action& action)
+inline std::ostream& operator<< (std::ostream& os, const Action2& action)
 {
     return os << action.toString();
 }

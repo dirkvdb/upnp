@@ -56,6 +56,8 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
                     iter->second(ev);
                 }
             });
+            
+            runLoop();
             return;
         }
     }
@@ -69,6 +71,9 @@ void Client2::uninitialize()
     m_eventServer->stop([this] () {
         m_eventServer.reset();
     });
+    
+    m_thread->join();
+    m_thread.reset();
 }
 
 std::string Client2::getIpAddress() const
@@ -81,7 +86,7 @@ uint16_t Client2::getPort() const
     return m_eventServer->getAddress().port();
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
+void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t, std::string, std::chrono::seconds)> cb)
 {
     log::debug("Subscribe to service: {}", publisherUrl);
 
@@ -92,9 +97,9 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 
     auto addr = m_eventServer->getAddress();
     log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
-    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [=] (int32_t status, std::string subId, std::chrono::seconds timeout, std::string response) {
+    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
         log::debug("Subscribe response: {}", response);
-        m_eventCallbacks.emplace(subId, cb(status, subId, timeout));
+        m_eventCallbacks.emplace(subId, cb(status, subId, subTimeout));
     });
 }
 
@@ -106,7 +111,7 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
     });
 }
 
-void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb)
+void Client2::sendAction(const Action2& action, std::function<void(int32_t, std::string)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
@@ -119,9 +124,16 @@ void Client2::sendAction(const Action& action, std::function<void(int32_t, std::
 #endif
 }
 
-void Client2::run()
+void Client2::runLoop()
 {
-    m_loop->run(upnp::uv::RunMode::Default);
+    m_thread = std::make_unique<std::thread>([this] () {
+        m_loop->run(upnp::uv::RunMode::Default);
+    });
+}
+
+uv::Loop& Client2::loop()
+{
+    return *m_loop;
 }
 
 void Client2::handlEvent(const SubscriptionEvent& event)

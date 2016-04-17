@@ -354,7 +354,7 @@ Client::~Client() noexcept
 
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 {
-    m_timeout = timeout.count();
+    m_timeout = static_cast<uint32_t>(timeout.count());
 }
 
 void Client::getContentLength(const std::string& url, std::function<void(int32_t, size_t)> cb)

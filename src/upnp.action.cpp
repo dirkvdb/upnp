@@ -20,7 +20,7 @@
 namespace upnp
 {
 
-Action::Action(const std::string& name, const std::string& url, ServiceType serviceType)
+Action2::Action2(const std::string& name, const std::string& url, ServiceType serviceType)
 : m_name(name)
 , m_url(url)
 , m_serviceType(serviceType)
@@ -33,7 +33,7 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
     m_action.append_attribute("xmlns:u").set_value(getServiceTypeUrn().c_str());
 }
 
-void Action::addArgument(const std::string& name, const std::string& value)
+void Action2::addArgument(const std::string& name, const std::string& value)
 {
     if (!m_action.append_child(name.c_str()).text().set(value.c_str()))
     {
@@ -41,7 +41,7 @@ void Action::addArgument(const std::string& name, const std::string& value)
     }
 }
 
-std::string Action::toString() const
+std::string Action2::toString() const
 {
     class StringWriter : public pugi::xml_writer
     {
@@ -61,27 +61,27 @@ std::string Action::toString() const
     return result;
 }
 
-std::string Action::getName() const
+std::string Action2::getName() const
 {
     return m_name;
 }
 
-std::string Action::getUrl() const
+std::string Action2::getUrl() const
 {
     return m_url;
 }
 
-std::string Action::getServiceTypeUrn() const
+std::string Action2::getServiceTypeUrn() const
 {
     return serviceTypeToUrnTypeString(m_serviceType);
 }
 
-ServiceType Action::getServiceType() const
+ServiceType Action2::getServiceType() const
 {
     return m_serviceType;
 }
 
-bool Action::operator==(const Action& other) const
+bool Action2::operator==(const Action2& other) const
 {
     if (m_doc.empty() && !other.m_doc.empty())
     {

@@ -29,9 +29,9 @@ void checkRc(int rc)
     }
 }
 
-void allocateBuffer(uv_handle_t* /*handle*/, size_t suggested_size, uv_buf_t* buf)
+void allocateBuffer(uv_handle_t* /*handle*/, size_t suggestedSize, uv_buf_t* buf)
 {
-    *buf = uv_buf_init(reinterpret_cast<char*>(std::malloc(suggested_size)), suggested_size);
+    *buf = uv_buf_init(reinterpret_cast<char*>(std::malloc(suggestedSize)), static_cast<unsigned int>(suggestedSize));
 }
 
 }
@@ -49,13 +49,13 @@ public:
     };
 
     Buffer(uint8_t* data, size_t size, Ownership o)
-    : m_handle(uv_buf_init(reinterpret_cast<char*>(data), size))
+    : m_handle(uv_buf_init(reinterpret_cast<char*>(data), static_cast<unsigned int>(size)))
     , m_ownership(o)
     {
     }
 
     Buffer(char* data, size_t size, Ownership o)
-    : m_handle(uv_buf_init(data, size))
+    : m_handle(uv_buf_init(data, static_cast<unsigned int>(size)))
     , m_ownership(o)
     {
     }
@@ -75,7 +75,7 @@ public:
 
     template <typename T>
     Buffer(const T& data, Ownership o)
-    : m_handle(uv_buf_init(const_cast<char*>(reinterpret_cast<const char*>(data.data())), data.size()))
+    : m_handle(uv_buf_init(const_cast<char*>(reinterpret_cast<const char*>(data.data())), static_cast<unsigned int>(data.size())))
     , m_ownership(o)
     {
         // Client have to remain owner of constant object we cannot free them
@@ -196,10 +196,10 @@ public:
         m_handle->data = new std::function<void()>(std::move(cb));
         uv_close(reinterpret_cast<uv_handle_t*>(m_handle.release()), [] (auto* handle) {
             std::unique_ptr<HandleType> handlePtr(reinterpret_cast<HandleType*>(handle));
-            std::unique_ptr<std::function<void()>> cb(reinterpret_cast<std::function<void()>*>(handlePtr->data));
-            if (cb && *cb)
+            std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
+            if (cbPtr && *cbPtr)
             {
-                (*cb)();
+                (*cbPtr)();
             }
         });
     }
@@ -272,8 +272,8 @@ public:
         write->data = new std::function<void(int32_t)>(cb);
         checkRc(uv_write(write.release(), reinterpret_cast<uv_stream_t*>(this->get()), buf.get(), 1, [] (uv_write_t* req, int status) {
             std::unique_ptr<uv_write_t> writePtr(req);
-            std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(writePtr->data));
-            (*cb)(status);
+            std::unique_ptr<std::function<void(int32_t)>> cbPtr(reinterpret_cast<std::function<void(int32_t)>*>(writePtr->data));
+            (*cbPtr)(status);
         }));
     }
 
@@ -380,10 +380,10 @@ public:
         init(loop, uv_poll_init_socket, sock);
     }
 
-    void start(Flags<PollEvent> events, std::function<void(int32_t, Flags<PollEvent>)> cb)
+    void start(Flags<PollEvent> pollEvents, std::function<void(int32_t, Flags<PollEvent>)> cb)
     {
         m_callback = std::move(cb);
-        checkRc(uv_poll_start(get(), events, [] (auto* handle, int status, int events) {
+        checkRc(uv_poll_start(get(), pollEvents, [] (auto* handle, int status, int events) {
             reinterpret_cast<Poll*>(handle->data)->m_callback(status, events);
         }));
     }
@@ -604,7 +604,7 @@ public:
 
             if (nread < 0)
             {
-                utils::log::error("Read error: {}", uv_err_name(nread));
+                utils::log::error("Read error: {}", uv_err_name(static_cast<int>(nread)));
                 free(buf->base);
                 return;
             }
@@ -630,13 +630,13 @@ public:
     {
         auto buf = uv_buf_init(const_cast<char*>(&message[0]), static_cast<int32_t>(message.size()));
 
-        auto req = std::make_unique<uv_udp_send_t>();
-        req->data = new std::function<void(int32_t)>(cb);
-        checkRc(uv_udp_send(req.release(), get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
+        auto reqPtr = std::make_unique<uv_udp_send_t>();
+        reqPtr->data = new std::function<void(int32_t)>(cb);
+        checkRc(uv_udp_send(reqPtr.release(), get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
             std::unique_ptr<uv_udp_send_t> reqInst(reinterpret_cast<uv_udp_send_t*>(req));
-            std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(reqInst->data));
-            assert(cb);
-            (*cb)(status);
+            std::unique_ptr<std::function<void(int32_t)>> cbPtr(reinterpret_cast<std::function<void(int32_t)>*>(reqInst->data));
+            assert(cbPtr);
+            (*cbPtr)(status);
         }));
     }
 
@@ -674,13 +674,13 @@ public:
 
     void connect(const Address& addr, std::function<void(int32_t)> cb)
     {
-        auto conn = std::make_unique<uv_connect_t>();
-        conn->data = new std::function<void(int32_t)>(std::move(cb));
+        auto connPtr = std::make_unique<uv_connect_t>();
+        connPtr->data = new std::function<void(int32_t)>(std::move(cb));
 
-        checkRc(uv_tcp_connect(conn.release(), get(), reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_connect_t* req, int status) {
+        checkRc(uv_tcp_connect(connPtr.release(), get(), reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_connect_t* req, int status) {
             std::unique_ptr<uv_connect_t> conn(req);
-            std::unique_ptr<std::function<void(int32_t)>> cb(reinterpret_cast<std::function<void(int32_t)>*>(req->data));
-            (*cb)(status);
+            std::unique_ptr<std::function<void(int32_t)>> cbPtr(reinterpret_cast<std::function<void(int32_t)>*>(req->data));
+            (*cbPtr)(status);
         }));
     }
 
@@ -720,21 +720,21 @@ struct InterfaceInfo
 {
     std::string ipName() const
     {
-        std::array<char, 512> name;
+        std::array<char, 512> ipName;
         if (isIpv4())
         {
-            checkRc(uv_ip4_name(&address.address4, name.data(), name.size()));
+            checkRc(uv_ip4_name(&address.address4, ipName.data(), ipName.size()));
         }
         else if (isIpv6())
         {
-            checkRc(uv_ip6_name(&address.address6, name.data(), name.size()));
+            checkRc(uv_ip6_name(&address.address6, ipName.data(), ipName.size()));
         }
         else
         {
             throw std::runtime_error("Invalid address family");
         }
 
-        return name.data();
+        return ipName.data();
     }
 
     bool isIpv4() const noexcept

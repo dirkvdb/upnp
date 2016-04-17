@@ -31,19 +31,16 @@
 
 #include "utils/signal.h"
 
-namespace uv
-{
-    class Loop;
-}
-
 namespace upnp
 {
+
+class Client2;
 
 class DeviceScanner
 {
 public:
-    DeviceScanner(uv::Loop& loop, DeviceType type);
-    DeviceScanner(uv::Loop& loop, std::set<DeviceType> types);
+    DeviceScanner(upnp::Client2& client, DeviceType type);
+    DeviceScanner(upnp::Client2& client, std::set<DeviceType> types);
 
     void start();
     void stop();

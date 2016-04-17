@@ -16,6 +16,7 @@
 
 #include "upnp/upnp.devicescanner.h"
 #include "upnp/upnp.xml.parseutils.h"
+#include "upnp/upnp.client.h"
 
 #include "utils/log.h"
 
@@ -31,15 +32,15 @@ using namespace std::chrono_literals;
 
 static const auto g_timeCheckInterval = 60s;
 
-DeviceScanner::DeviceScanner(uv::Loop& loop, DeviceType type)
-: DeviceScanner(loop, std::set<DeviceType>{ type })
+DeviceScanner::DeviceScanner(Client2& client, DeviceType type)
+: DeviceScanner(client, std::set<DeviceType>{ type })
 {
 }
 
-DeviceScanner::DeviceScanner(uv::Loop& loop, std::set<DeviceType> types)
-: m_httpClient(loop)
-, m_ssdpClient(loop)
-, m_timer(loop)
+DeviceScanner::DeviceScanner(Client2& client, std::set<DeviceType> types)
+: m_httpClient(client.loop())
+, m_ssdpClient(client.loop())
+, m_timer(client.loop())
 , m_types(types)
 {
     m_ssdpClient.setDeviceNotificationCallback([=] (const ssdp::DeviceNotificationInfo& info) {
@@ -148,6 +149,8 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
 
 void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
+    log::debug("Device discovered: {}", info.location);
+
     auto deviceType = Device::stringToDeviceType(info.deviceType);
     if (m_types.find(deviceType) == m_types.end())
     {
