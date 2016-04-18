@@ -19,19 +19,29 @@ TEST(DeviceScannerTest, DiscoverClient)
 
 
     DeviceScanner scanner(client, { DeviceType::MediaServer, DeviceType::MediaRenderer });
+    client.initialize();
 
     std::promise<void> prom;
     auto fut = prom.get_future();
+    bool discovered = false;
 
     scanner.DeviceDiscoveredEvent.connect([&] (std::shared_ptr<Device> dev) {
-        log::info("Discovered: {}", dev->m_udn);
-        scanner.stop();
-        prom.set_value();
+        if (!discovered)
+        {
+            discovered = true;
+            log::info("Discovered: {}", dev->m_udn);
+            scanner.stop();
+            prom.set_value();
+        }
     }, &client);
 
-    scanner.start();
-    scanner.refresh();
-    client.initialize("lo0", 0);
+    uv::Async<> run(client.loop(), [&] () {
+        scanner.start();
+        scanner.refresh();
+        run.close(nullptr);
+    });
+
+    run.send();
 
     fut.wait();
     client.uninitialize();

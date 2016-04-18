@@ -26,6 +26,7 @@
 #include <cstring>
 
 using namespace utils;
+using namespace std::placeholders;
 
 //#define DEBUG_UPNP_CLIENT
 
@@ -34,7 +35,9 @@ namespace upnp
 
 Client2::Client2()
 : m_loop(std::make_unique<uv::Loop>())
-, m_http(*m_loop)
+, m_httpClient(*m_loop)
+, m_subAsy(*m_loop, [this] (const std::string& url, const std::string& eventServerUrl, auto t, auto&& cb) { subscribeToServiceImpl(url, eventServerUrl, t, cb); })
+, m_unsubAsy(*m_loop, [this] (const std::string& url, const std::string& subId, auto&& cb) { unsubscribeFromServiceImpl(url, subId, cb); })
 {
 }
 
@@ -71,17 +74,25 @@ void Client2::initialize(const uv::Address& addr)
             iter->second(ev);
         }
     });
-    
+
     runLoop();
 }
 
 void Client2::uninitialize()
 {
-    log::debug("Uninitialized UPnP SDK");
-    m_eventServer->stop([this] () {
-        m_eventServer.reset();
+    log::debug("Uninitializing UPnP SDK");
+    uv::Async<> stopServer(*m_loop, [&] () {
+        m_eventServer->stop([this] () {
+            m_eventServer.reset();
+        });
+
+        m_subAsy.close(nullptr);
+        m_unsubAsy.close(nullptr);
+        stopServer.close(nullptr);
     });
-    
+
+    stopServer.send();
+
     m_thread->join();
     m_thread.reset();
 }
@@ -98,27 +109,18 @@ uint16_t Client2::getPort() const
 
 void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t, std::string, std::chrono::seconds)> cb)
 {
-    log::debug("Subscribe to service: {}", publisherUrl);
-
     if (!m_eventServer)
     {
         throw std::runtime_error("UPnP library is not properly initialized");
     }
 
     auto addr = m_eventServer->getAddress();
-    log::debug("Event server address: http://{}:{}", addr.ip(), addr.port());
-    m_http.subscribe(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
-        log::debug("Subscribe response: {}", response);
-        m_eventCallbacks.emplace(subId, cb(status, subId, subTimeout));
-    });
+    m_subAsy.send(publisherUrl, fmt::format("http://{}:{}/", addr.ip(), addr.port()), timeout, std::move(cb));
 }
 
 void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb)
 {
-    m_http.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
-        log::debug("Unsubscribe response: {}", response);
-        cb(status);
-    });
+    m_unsubAsy.send(publisherUrl, subscriptionId, std::move(cb));
 }
 
 void Client2::sendAction(const Action2& action, std::function<void(int32_t, std::string)> cb)
@@ -127,7 +129,7 @@ void Client2::sendAction(const Action2& action, std::function<void(int32_t, std:
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    m_http.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
+    m_httpClient.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
 
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
@@ -144,6 +146,24 @@ void Client2::runLoop()
 uv::Loop& Client2::loop()
 {
     return *m_loop;
+}
+
+void Client2::subscribeToServiceImpl(const std::string& publisherUrl, const std::string& eventServerUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
+{
+    log::debug("Subscribe to service: {}", publisherUrl);
+
+    m_httpClient.subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        log::debug("Subscribe response: {}", response);
+        m_eventCallbacks.emplace(subId, cb(status, subId, subTimeout));
+    });
+}
+
+void Client2::unsubscribeFromServiceImpl(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb)
+{
+    m_httpClient.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
+        log::debug("Unsubscribe response: {}", response);
+        cb(status);
+    });
 }
 
 void Client2::handlEvent(const SubscriptionEvent& event)
