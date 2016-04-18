@@ -48,6 +48,7 @@ public:
     Client2();
     virtual ~Client2();
 
+    virtual void initialize();
     virtual void initialize(const std::string& interfaceName, uint16_t port);
     virtual void uninitialize();
 
@@ -62,6 +63,8 @@ public:
     virtual uv::Loop& loop();
 
 private:
+    void initialize(const uv::Address& addr);
+
     void runLoop();
     void handlEvent(const SubscriptionEvent& event);
 

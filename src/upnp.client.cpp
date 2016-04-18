@@ -40,6 +40,12 @@ Client2::Client2()
 
 Client2::~Client2() = default;
 
+void Client2::initialize()
+{
+    log::debug("Initializing UPnP SDK");
+    return initialize(uv::Address::createIp4("0.0.0.0", 0));
+}
+
 void Client2::initialize(const std::string& interfaceName, uint16_t port)
 {
     log::debug("Initializing UPnP SDK");
@@ -49,20 +55,24 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
         {
             auto addr = uv::Address::createIp4(intf.address.address4);
             addr.setPort(port);
-            m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
-                auto iter = m_eventCallbacks.find(ev.sid);
-                if (iter != m_eventCallbacks.end())
-                {
-                    iter->second(ev);
-                }
-            });
-            
-            runLoop();
-            return;
+            return initialize(addr);
         }
     }
 
     throw std::runtime_error("Could not find network interface with name: " + interfaceName);
+}
+
+void Client2::initialize(const uv::Address& addr)
+{
+    m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
+        auto iter = m_eventCallbacks.find(ev.sid);
+        if (iter != m_eventCallbacks.end())
+        {
+            iter->second(ev);
+        }
+    });
+    
+    runLoop();
 }
 
 void Client2::uninitialize()
