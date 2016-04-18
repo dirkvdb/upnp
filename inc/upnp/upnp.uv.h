@@ -178,7 +178,7 @@ public:
         {
             return true;
         }
-    
+
         return uv_is_closing(reinterpret_cast<uv_handle_t*>(get())) != 0;
     }
 
@@ -190,7 +190,7 @@ public:
         {
             return;
         }
-        
+
         assert(m_handle);
 
         m_handle->data = new std::function<void()>(std::move(cb));
@@ -221,7 +221,7 @@ protected:
     : m_handle(std::make_unique<HandleType>())
     {
     }
-    
+
     ~Handle()
     {
         if (m_handle && !isClosing())
@@ -299,19 +299,42 @@ private:
 class Idler : public Handle<uv_idle_t>
 {
 public:
-    template <typename Callback>
-    Idler(Loop& loop, Callback&& cb)
-    : m_callback(cb)
+    Idler(Loop& loop, std::function<void()> cb)
+    : m_callback(std::move(cb))
     {
         init(loop, uv_idle_init);
+    }
+
+    void start()
+    {
         checkRc(uv_idle_start(get(), [] (auto* handle) {
             reinterpret_cast<Idler*>(handle->data)->m_callback();
         }));
     }
 
-    ~Idler() noexcept
+    void stop()
     {
-        uv_idle_stop(get());
+        checkRc(uv_idle_stop(get()));
+    }
+
+private:
+    std::function<void()> m_callback;
+};
+
+class Async : public Handle<uv_async_t>
+{
+public:
+    Async(Loop& loop, std::function<void()> cb)
+    : m_callback(std::move(cb))
+    {
+        init(loop, uv_async_init, [] (auto* handle) {
+            reinterpret_cast<Async*>(handle->data)->m_callback();
+        });
+    }
+
+    void send()
+    {
+        checkRc(uv_async_send(get()));
     }
 
 private:

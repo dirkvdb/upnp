@@ -13,9 +13,11 @@ namespace test
 using namespace utils;
 using namespace std::chrono_literals;
 
-TEST(DeviceDiscoverTest, DiscoverClient)
+TEST(DeviceScannerTest, DiscoverClient)
 {
     Client2 client;
+
+
     DeviceScanner scanner(client, { DeviceType::MediaServer, DeviceType::MediaRenderer });
 
     std::promise<void> prom;
@@ -29,8 +31,8 @@ TEST(DeviceDiscoverTest, DiscoverClient)
 
     scanner.start();
     scanner.refresh();
-
     client.initialize("lo0", 0);
+
     fut.wait();
     client.uninitialize();
 }
