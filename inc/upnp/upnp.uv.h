@@ -224,10 +224,6 @@ protected:
 
     ~Handle()
     {
-        if (m_handle && !isClosing())
-        {
-            close(nullptr);
-        }
     }
 
     template <typename InitFunc>
@@ -393,6 +389,25 @@ private:
     std::function<void()> m_callback;
 };
 
+inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
+{
+    auto handle = std::make_unique<uv_async_t>();
+    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* handle) {
+        std::unique_ptr<uv_async_t> handlePtr(handle);
+        std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
+        (*cbPtr)();
+        uv_close(reinterpret_cast<uv_handle_t*>(handlePtr.release()), [] (uv_handle_t* handle) {
+            delete reinterpret_cast<uv_async_t*>(handle);
+        });
+    }));
+
+    auto cbPtr = std::make_unique<std::function<void()>>(std::move(cb));
+    handle->data = cbPtr.get();
+    checkRc(uv_async_send(handle.release()));
+    cbPtr.release();
+    handle.release();
+}
+
 class Signal : public Handle<uv_signal_t>
 {
 public:
@@ -421,9 +436,8 @@ private:
 enum class PollEvent : int32_t
 {
     Readable = UV_READABLE,
-    Writable = UV_WRITABLE
-    // Version 1.9.0
-    //Disconnect = UV_DISCONNECT
+    Writable = UV_WRITABLE,
+    Disconnect = UV_DISCONNECT
 };
 
 struct OsSocket

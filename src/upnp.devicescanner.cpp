@@ -38,7 +38,8 @@ DeviceScanner::DeviceScanner(Client2& client, DeviceType type)
 }
 
 DeviceScanner::DeviceScanner(Client2& client, std::set<DeviceType> types)
-: m_httpClient(client.loop())
+: m_upnpClient(client)
+, m_httpClient(client.loop())
 , m_ssdpClient(client.loop())
 , m_timer(client.loop())
 , m_types(types)
@@ -55,32 +56,57 @@ DeviceScanner::DeviceScanner(Client2& client, std::set<DeviceType> types)
     });
 }
 
-void DeviceScanner::onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info)
-{
-    std::lock_guard<std::mutex> lock(m_dataMutex);
-    auto iter = m_devices.find(info.deviceId);
-    if (iter != m_devices.end())
-    {
-        DeviceDissapearedEvent(iter->second);
-        m_devices.erase(iter);
-    }
-}
-
 void DeviceScanner::start()
 {
     log::debug("Start device scanner, known devices ({})", m_devices.size());
 
-    m_ssdpClient.run();
-    m_timer.start(g_timeCheckInterval, g_timeCheckInterval, [=] () {
-        checkForDeviceTimeouts();
+    uv::asyncSend(m_upnpClient.loop(), [this] () {
+        m_ssdpClient.run();
+        m_timer.start(g_timeCheckInterval, g_timeCheckInterval, [this] () {
+            checkForDeviceTimeouts();
+        });
     });
 }
 
 void DeviceScanner::stop()
 {
-    m_timer.stop();
-    m_ssdpClient.stop();
-    log::debug("Stop device scanner, known devices ({})", m_devices.size());
+    uv::asyncSend(m_upnpClient.loop(), [this] () {
+        m_timer.stop();
+        m_ssdpClient.stop();
+        log::debug("Stop device scanner, known devices ({})", m_devices.size());
+    });
+}
+
+void DeviceScanner::refresh()
+{
+    uv::asyncSend(m_upnpClient.loop(), [this] () {
+        if (m_types.size() == 1)
+        {
+            m_ssdpClient.search(Device::deviceTypeToString(*m_types.begin()));
+        }
+        else
+        {
+            m_ssdpClient.search();
+        }
+    });
+}
+
+uint32_t DeviceScanner::getDeviceCount() const
+{
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return static_cast<uint32_t>(m_devices.size());
+}
+
+std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
+{
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return m_devices.at(udn);
+}
+
+std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
+{
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    return m_devices;
 }
 
 void DeviceScanner::checkForDeviceTimeouts()
@@ -102,36 +128,6 @@ void DeviceScanner::checkForDeviceTimeouts()
             ++iter;
         }
     }
-}
-
-void DeviceScanner::refresh()
-{
-    if (m_types.size() == 1)
-    {
-        m_ssdpClient.search(Device::deviceTypeToString(*m_types.begin()));
-    }
-    else
-    {
-        m_ssdpClient.search();
-    }
-}
-
-uint32_t DeviceScanner::getDeviceCount() const
-{
-    std::lock_guard<std::mutex> lock(m_dataMutex);
-    return static_cast<uint32_t>(m_devices.size());
-}
-
-std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
-{
-    std::lock_guard<std::mutex> lock(m_dataMutex);
-    return m_devices.at(udn);
-}
-
-std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
-{
-    std::lock_guard<std::mutex> lock(m_dataMutex);
-    return m_devices;
 }
 
 void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void(std::string)> cb)
@@ -216,6 +212,17 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
             log::error(e.what());
         }
     });
+}
+
+void DeviceScanner::onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info)
+{
+    std::lock_guard<std::mutex> lock(m_dataMutex);
+    auto iter = m_devices.find(info.deviceId);
+    if (iter != m_devices.end())
+    {
+        DeviceDissapearedEvent(iter->second);
+        m_devices.erase(iter);
+    }
 }
 
 }

@@ -59,6 +59,7 @@ private:
     void downloadDeviceXml(const std::string& url, std::function<void(std::string)>);
     void checkForDeviceTimeouts();
 
+    upnp::Client2&                                  m_upnpClient;
     http::Client                                    m_httpClient;
     ssdp::Client                                    m_ssdpClient;
     uv::Timer                                       m_timer;

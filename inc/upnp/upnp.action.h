@@ -33,6 +33,8 @@ class Action2
 {
 public:
     Action2(const std::string& name, const std::string& url, ServiceType serviceType);
+    Action2(Action2&&) = default;
+    Action2& operator=(Action2&&) = default;
 
     void addArgument(const std::string& name, const std::string& value);
 

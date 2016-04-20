@@ -64,8 +64,6 @@ public:
 
 private:
     void initialize(const uv::Address& addr);
-    void subscribeToServiceImpl(const std::string& publisherUrl, const std::string& eventServerUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb);
-    void unsubscribeFromServiceImpl(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb);
 
     void runLoop();
     void handlEvent(const SubscriptionEvent& event);
@@ -75,8 +73,6 @@ private:
     http::Client m_httpClient;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;
-    uv::Async<std::string, std::string, std::chrono::seconds, std::function<std::function<void(SubscriptionEvent)>(int32_t, std::string, std::chrono::seconds)>> m_subAsy;
-    uv::Async<std::string, std::string, std::function<void(int32_t)>> m_unsubAsy;
 };
 
 }

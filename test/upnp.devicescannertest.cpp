@@ -35,13 +35,10 @@ TEST(DeviceScannerTest, DiscoverClient)
         }
     }, &client);
 
-    uv::Async<> run(client.loop(), [&] () {
+    uv::asyncSend(client.loop(), [&] () {
         scanner.start();
         scanner.refresh();
-        run.close(nullptr);
     });
-
-    run.send();
 
     fut.wait();
     client.uninitialize();
