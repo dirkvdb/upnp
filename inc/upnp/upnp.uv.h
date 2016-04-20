@@ -168,6 +168,25 @@ private:
     uv_loop_t  m_handle;
 };
 
+inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
+{
+    auto handle = std::make_unique<uv_async_t>();
+    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* handle) {
+        std::unique_ptr<uv_async_t> handlePtr(handle);
+        std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
+        (*cbPtr)();
+        uv_close(reinterpret_cast<uv_handle_t*>(handlePtr.release()), [] (uv_handle_t* handle) {
+            delete reinterpret_cast<uv_async_t*>(handle);
+        });
+    }));
+
+    auto cbPtr = std::make_unique<std::function<void()>>(std::move(cb));
+    handle->data = cbPtr.get();
+    checkRc(uv_async_send(handle.release()));
+    cbPtr.release();
+    handle.release();
+}
+
 template <typename HandleType>
 class Handle
 {
@@ -217,30 +236,34 @@ public:
     }
 
 protected:
-    Handle()
-    : m_handle(std::make_unique<HandleType>())
+    template <typename InitFunc>
+    Handle(Loop& loop, InitFunc func)
+    : m_loop(loop)
+    , m_handle(std::make_unique<HandleType>())
     {
+        checkRc(func(m_loop.get(), m_handle.get()));
+        m_handle->data = this;
+    }
+    
+    template <typename InitFunc, typename Arg>
+    Handle(Loop& loop, InitFunc func, Arg&& arg)
+    : m_loop(loop)
+    , m_handle(std::make_unique<HandleType>())
+    {
+        checkRc(func(m_loop.get(), m_handle.get(), arg));
+        m_handle->data = this;
     }
 
     ~Handle()
     {
-    }
-
-    template <typename InitFunc>
-    void init(Loop& loop, InitFunc func)
-    {
-        checkRc(func(loop.get(), m_handle.get()));
-        m_handle->data = this;
-    }
-
-    template <typename InitFunc, typename Arg>
-    void init(Loop& loop, InitFunc func, Arg&& arg)
-    {
-        checkRc(func(loop.get(), m_handle.get(), arg));
-        m_handle->data = this;
+        if (!isClosing())
+        {
+            close(nullptr);
+        }
     }
 
 private:
+    Loop& m_loop;
     std::unique_ptr<HandleType> m_handle;
 };
 
@@ -286,6 +309,19 @@ public:
     {
         checkRc(uv_accept(reinterpret_cast<uv_stream_t*>(this->get()), reinterpret_cast<uv_stream_t*>(client.get())));
     }
+    
+protected:
+    template <typename InitFunc>
+    Stream(Loop& loop, InitFunc func)
+    : Handle<HandleType>(loop, func)
+    {
+    }
+    
+    template <typename InitFunc, typename Arg>
+    Stream(Loop& loop, InitFunc func, Arg&& arg)
+    : Handle<HandleType>(loop, func, std::forward<Arg&&>(arg))
+    {
+    }
 
 private:
     std::function<void(ssize_t, Buffer)> m_readCb;
@@ -296,9 +332,9 @@ class Idler : public Handle<uv_idle_t>
 {
 public:
     Idler(Loop& loop, std::function<void()> cb)
-    : m_callback(std::move(cb))
+    : Handle<uv_idle_t>(loop, uv_idle_init)
+    , m_callback(std::move(cb))
     {
-        init(loop, uv_idle_init);
     }
 
     void start()
@@ -348,12 +384,9 @@ class Async : public Handle<uv_async_t>
 {
 public:
     Async(Loop& loop, std::function<void(Ts...)> cb)
-    : m_callback(std::move(cb))
+    : Handle<uv_async_t>(loop, uv_async_init, &Async::onInit)
+    , m_callback(std::move(cb))
     {
-        init(loop, uv_async_init, [] (auto* handle) {
-            auto thisPtr = reinterpret_cast<Async*>(handle->data);
-            apply(thisPtr->m_callback, (thisPtr->m_args));
-        });
     }
 
     template <typename ...T>
@@ -364,6 +397,12 @@ public:
     }
 
 private:
+    static void onInit(uv_async_t* handle)
+    {
+        auto thisPtr = reinterpret_cast<Async*>(handle->data);
+        apply(thisPtr->m_callback, (thisPtr->m_args));
+    }
+
     std::function<void(Ts...)> m_callback;
     std::tuple<Ts...> m_args;
 };
@@ -373,11 +412,9 @@ class Async<void> : public Handle<uv_async_t>
 {
 public:
     Async(Loop& loop, std::function<void()> cb)
-    : m_callback(std::move(cb))
+    : Handle<uv_async_t>(loop, uv_async_init, &Async::onInit)
+    , m_callback(std::move(cb))
     {
-        init(loop, uv_async_init, [] (auto* handle) {
-            reinterpret_cast<Async*>(handle->data)->m_callback();
-        });
     }
 
     void send()
@@ -386,34 +423,20 @@ public:
     }
 
 private:
+    static void onInit(uv_async_t* handle)
+    {
+        reinterpret_cast<Async*>(handle->data)->m_callback();
+    }
+    
     std::function<void()> m_callback;
 };
-
-inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
-{
-    auto handle = std::make_unique<uv_async_t>();
-    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* handle) {
-        std::unique_ptr<uv_async_t> handlePtr(handle);
-        std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
-        (*cbPtr)();
-        uv_close(reinterpret_cast<uv_handle_t*>(handlePtr.release()), [] (uv_handle_t* handle) {
-            delete reinterpret_cast<uv_async_t*>(handle);
-        });
-    }));
-
-    auto cbPtr = std::make_unique<std::function<void()>>(std::move(cb));
-    handle->data = cbPtr.get();
-    checkRc(uv_async_send(handle.release()));
-    cbPtr.release();
-    handle.release();
-}
 
 class Signal : public Handle<uv_signal_t>
 {
 public:
     Signal(Loop& loop)
+    : Handle<uv_signal_t>(loop, uv_signal_init)
     {
-        init(loop, uv_signal_init);
     }
 
     void start(std::function<void()> cb, int32_t signalNumber)
@@ -460,13 +483,13 @@ class Poll : public Handle<uv_poll_t>
 {
 public:
     Poll(Loop& loop, int32_t fd)
+    : Handle<uv_poll_t>(loop, uv_poll_init, fd)
     {
-        init(loop, uv_poll_init, fd);
     }
 
     Poll(Loop& loop, OsSocket sock)
+    : Handle<uv_poll_t>(loop, uv_poll_init, sock)
     {
-        init(loop, uv_poll_init_socket, sock);
     }
 
     void start(Flags<PollEvent> pollEvents, std::function<void(int32_t, Flags<PollEvent>)> cb)
@@ -490,8 +513,8 @@ class Timer : public Handle<uv_timer_t>
 {
 public:
     Timer(Loop& loop)
+    : Handle<uv_timer_t>(loop, uv_timer_init)
     {
-        init(loop, uv_timer_init);
     }
 
     void start(std::chrono::milliseconds timeout, std::chrono::milliseconds repeat, std::function<void()> cb)
@@ -645,8 +668,8 @@ public:
     };
 
     Udp(Loop& loop)
+    : Handle<uv_udp_t>(loop, uv_udp_init)
     {
-        init(loop, uv_udp_init);
     }
 
     void bind(const Address& addr, Flags<UdpFlag> flags = Flags<UdpFlag>())
@@ -742,8 +765,8 @@ class Tcp : public Stream<uv_tcp_t>
 {
 public:
     Tcp(Loop& loop)
+    : Stream<uv_tcp_t>(loop, uv_tcp_init)
     {
-        init(loop, uv_tcp_init);
     }
 
     void setNoDelay(bool enabled)

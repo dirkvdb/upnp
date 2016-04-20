@@ -17,7 +17,6 @@ TEST(DeviceScannerTest, DiscoverClient)
 {
     Client2 client;
 
-
     DeviceScanner scanner(client, { DeviceType::MediaServer, DeviceType::MediaRenderer });
     client.initialize();
 
@@ -41,6 +40,8 @@ TEST(DeviceScannerTest, DiscoverClient)
     });
 
     fut.wait();
+    
+    scanner.stop();
     client.uninitialize();
 }
 
