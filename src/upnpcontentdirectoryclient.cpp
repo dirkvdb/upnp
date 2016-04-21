@@ -23,11 +23,14 @@
 
 #include <cassert>
 
+#include "rapidxml.hpp"
+
 #include "utils/log.h"
 #include "utils/numericoperations.h"
 #include "utils/stringoperations.h"
 
 using namespace utils;
+using namespace rapidxml_ns;
 
 //#define DEBUG_CONTENT_BROWSING
 
@@ -36,9 +39,98 @@ namespace upnp
 namespace ContentDirectory
 {
 
-static const int32_t g_subscriptionTimeout = 1801;
+namespace
+{
 
-Client::Client(IClient& client)
+const std::chrono::seconds g_subscriptionTimeout(1801);
+
+std::string parseBrowseResult(const std::string& response, ActionResult& result)
+{
+    std::string browseResult;
+
+    assert(!response.empty() && "ParseBrowseResult: Invalid document supplied");
+
+    for (xml::Element elem : doc.getFirstChild().getChildNodes())
+    {
+        if (elem.getName() == "Result")
+        {
+            browseResult = elem.getValue();
+        }
+        else if (elem.getName() == "NumberReturned")
+        {
+            result.numberReturned = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+        else if (elem.getName() == "TotalMatches")
+        {
+            result.totalMatches = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+        else if (elem.getName() == "UpdateID")
+        {
+            result.updateId = stringops::toNumeric<uint32_t>(elem.getValue());
+        }
+    }
+
+    if (browseResult.empty())
+    {
+        throw Exception("Failed to obtain browse result");
+    }
+
+    return browseResult;
+}
+
+Item parseMetaData(const std::string& meta)
+{
+    assert(!meta.empty() && "ParseMetaData: Invalid document supplied");
+
+    try
+    {
+        xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
+        return parseContainer(containerElem);
+    }
+    catch (std::exception&) {}
+
+    try
+    {
+        xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
+        return xml::utils::parseItem(itemElem);
+    }
+    catch (std::exception&) {}
+
+    log::warn("No metadata could be retrieved");
+    return Item();
+}
+
+Item parseContainer(xml::Element& containerElem)
+{
+    auto item = Item();
+    item.setObjectId(containerElem.getAttribute("id"));
+    item.setParentId(containerElem.getAttribute("parentID"));
+    item.setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
+
+    for (xml::Element elem : containerElem.getChildNodes())
+    {
+        Property prop = propertyFromString(elem.getName());
+        if (prop == Property::Unknown)
+        {
+            log::warn("Unknown property {}", elem.getName());
+            continue;
+        }
+
+        item.addMetaData(prop, elem.getValue());
+    }
+
+    // check required properties
+    if (item.getTitle().empty())
+    {
+        throw Exception("No title found in item");
+    }
+
+    return item;
+}
+
+}
+
+Client::Client(Client2& client)
 : ServiceClientBase(client)
 , m_abort(false)
 {
@@ -111,26 +203,30 @@ void Client::querySystemUpdateID()
     m_systemUpdateId = elem.getChildNodeValue("Id");
 }
 
-Item Client::browseMetadata(const std::string& objectId, const std::string& filter)
+void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb)
 {
-    ActionResult res;
+    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [this, cb] (int32_t status, const std::string& response) {
+        if (status != 200)
+        {
+            cb(status, Item());
+        }
+        
+        ActionResult res;
+        auto browseResult = parseBrowseResult(response, res);
+        if (browseResult.empty())
+        {
+            throw Exception("Failed to browse meta data");
+        }
+        
+        #ifdef DEBUG_CONTENT_BROWSING
+            log::debug(browseResult);
+        #endif
 
-    xml::Document result = browseAction(objectId, "BrowseMetadata", filter, 0, 0, "");
-    xml::Document browseResult = parseBrowseResult(result, res);
-    if (!browseResult)
-    {
-        throw Exception("Failed to browse meta data");
-    }
-
-#ifdef DEBUG_CONTENT_BROWSING
-    log::debug(browseResult.toString());
-#endif
-
-    return parseMetaData(browseResult);
+        cb(status, parseMetaData(browseResult));
+    });
 }
 
-
-ActionResult Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+void Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
 {
     ActionResult res;
 
@@ -167,7 +263,7 @@ ActionResult Client::browseDirectChildren(BrowseType type, const std::string& ob
     return res;
 }
 
-ActionResult Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+void Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
 {
     m_abort = false;
 
@@ -201,7 +297,7 @@ ActionResult Client::search(const std::string& objectId, const std::string& crit
     return searchResult;
 }
 
-xml::Document Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+void Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb)
 {
     m_abort = false;
 
@@ -209,99 +305,13 @@ xml::Document Client::browseAction(const std::string& objectId, const std::strin
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
 
-    return executeAction(Action::Browse, { {"ObjectID", objectId},
-                                           {"BrowseFlag", flag},
-                                           {"Filter", filter},
-                                           {"StartingIndex", numericops::toString(startIndex)},
-                                           {"RequestedCount", numericops::toString(limit)},
-                                           {"SortCriteria", sort} });
+    executeAction(Action::Browse, { {"ObjectID", objectId},
+                                    {"BrowseFlag", flag},
+                                    {"Filter", filter},
+                                    {"StartingIndex", numericops::toString(startIndex)},
+                                    {"RequestedCount", numericops::toString(limit)},
+                                    {"SortCriteria", sort} }, cb);
 }
-
-xml::Document Client::parseBrowseResult(xml::Document& doc, ActionResult& result)
-{
-    std::string browseResult;
-
-    assert(doc && "ParseBrowseResult: Invalid document supplied");
-
-    for (xml::Element elem : doc.getFirstChild().getChildNodes())
-    {
-        if (elem.getName() == "Result")
-        {
-            browseResult = elem.getValue();
-        }
-        else if (elem.getName() == "NumberReturned")
-        {
-            result.numberReturned = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
-        else if (elem.getName() == "TotalMatches")
-        {
-            result.totalMatches = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
-        else if (elem.getName() == "UpdateID")
-        {
-            result.updateId = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
-    }
-
-    if (browseResult.empty())
-    {
-        throw Exception("Failed to obtain browse result");
-    }
-
-    return xml::Document(browseResult);
-}
-
-Item Client::parseMetaData(xml::Document& doc)
-{
-    assert(doc && "ParseMetaData: Invalid document supplied");
-
-    try
-    {
-        xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
-        return parseContainer(containerElem);
-    }
-    catch (std::exception&) {}
-
-    try
-    {
-        xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
-        return xml::utils::parseItem(itemElem);
-    }
-    catch (std::exception&) {}
-
-    log::warn("No metadata could be retrieved");
-    return Item();
-}
-
-Item Client::parseContainer(xml::Element& containerElem)
-{
-    auto item = Item();
-    item.setObjectId(containerElem.getAttribute("id"));
-    item.setParentId(containerElem.getAttribute("parentID"));
-    item.setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
-
-    for (xml::Element elem : containerElem.getChildNodes())
-    {
-        Property prop = propertyFromString(elem.getName());
-        if (prop == Property::Unknown)
-        {
-            log::warn("Unknown property {}", elem.getName());
-            continue;
-        }
-
-        item.addMetaData(prop, elem.getValue());
-    }
-
-    // check required properties
-    if (item.getTitle().empty())
-    {
-        throw Exception("No title found in item");
-    }
-
-    return item;
-}
-
-
 
 std::vector<Item> Client::parseContainers(xml::Document& doc)
 {

@@ -117,7 +117,11 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Subscribe response: {}", response);
 //#endif
-            m_eventCallbacks.emplace(subId, cb(status, subId, subTimeout));
+            auto subCb = cb(status, subId, subTimeout);
+            if (subCb)
+            {
+                m_eventCallbacks.emplace(subId, subCb);
+            }
         });
     });
 }

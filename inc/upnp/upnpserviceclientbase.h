@@ -43,6 +43,7 @@ public:
 
     ServiceClientBase(Client2& client)
     : m_client(client)
+    , m_subTimer(client.loop())
     {
     }
 
@@ -74,7 +75,17 @@ public:
 
         std::lock_guard<std::mutex> lock(m_eventMutex);
         m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this] (int32_t status, const std::string& subId, std::chrono::seconds subTimeout) {
+            if (status < 0)
+            {
+                utils::log::error("Error subscribing to service");
+                return nullptr;
+            }
+            
             m_subscriptionId = subId;
+            m_subTimer.start(subTimeout / 2, subTimeout / 2, [] () {
+                utils::log::warn("TODO: renew subscription");
+            });
+            
             return std::bind(&ServiceClientBase<ActionType, VariableType>::eventCb, this, std::placeholders::_1);
         });
     }
@@ -194,11 +205,11 @@ protected:
     }
 
     virtual ServiceType getType() = 0;
-    virtual int32_t getSubscriptionTimeout() = 0;
+    virtual std::chrono::seconds getSubscriptionTimeout() = 0;
     virtual void handleStateVariableEvent(VariableType /*changedVariable*/, const std::map<VariableType, std::string>& /*variables*/) {}
     virtual void handleUPnPResult(int errorCode) = 0;
 
-    std::vector<StateVariable>              m_StateVariables;
+    std::vector<StateVariable> m_StateVariables;
 
 private:
     void eventCb(const SubscriptionEvent& event)
@@ -261,6 +272,7 @@ private:
 
     Client2&                                m_client;
     Service                                 m_service;
+    uv::Timer                               m_subTimer;
     std::set<ActionType>                    m_supportedActions;
     std::string                             m_subscriptionId;
     std::mutex                              m_eventMutex;

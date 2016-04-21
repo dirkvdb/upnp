@@ -18,159 +18,240 @@
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnputils.h"
-#include "upnp/upnpaction.h"
-#include "upnp/upnpxmlutils.h"
 
 #include "utils/log.h"
 #include "utils/numericoperations.h"
 
-using namespace utils;
-using namespace std::placeholders;
+#include "rapidxml.hpp"
 
 namespace upnp
 {
 namespace AVTransport
 {
 
-static const int32_t g_subscriptionTimeout = 1801;
+using namespace utils;
+using namespace rapidxml_ns;
+using namespace std::placeholders;
 
-Client::Client(IClient& client)
+static const std::chrono::seconds g_subscriptionTimeout(1801);
+
+namespace
+{
+
+std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32_t)> cb)
+{
+    return [cb] (int32_t status, const std::string&) {
+        cb(status);
+    };
+}
+
+std::string optionalChildValue(xml_node<>& node, const char* child)
+{
+    std::string result;
+    
+    auto* childNode = node.first_node(child);
+    if (childNode && childNode->value())
+    {
+        
+        result = std::string(childNode->value(), childNode->value_size());
+    }
+    
+    return child;
+}
+
+}
+
+Client::Client(Client2& client)
 : ServiceClientBase(client)
 {
 }
 
-void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
+void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb)
 {
     executeAction(Action::SetAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
                                                {"CurrentURI", uri},
-                                               {"CurrentURIMetaData", uriMetaData} });
+                                               {"CurrentURIMetaData", uriMetaData} }, stripResponse(cb));
 }
 
-void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
+void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb)
 {
     executeAction(Action::SetNextAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
                                                    {"NextURI", uri},
-                                                   {"NextURIMetaData", uriMetaData} });
+                                                   {"NextURIMetaData", uriMetaData} }, stripResponse(cb));
 }
 
-void Client::play(int32_t connectionId, const std::string& speed)
+void Client::play(int32_t connectionId, const std::string& speed, std::function<void(int32_t)> cb)
 {
     executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},
-                                               {"Speed", speed} });
+                                               {"Speed", speed} }, stripResponse(cb));
 }
 
-void Client::pause(int32_t connectionId)
+void Client::pause(int32_t connectionId, std::function<void(int32_t)> cb)
 {
-    executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} });
+    executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::stop(int32_t connectionId)
+void Client::stop(int32_t connectionId, std::function<void(int32_t)> cb)
 {
-    executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} });
+    executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::next(int32_t connectionId)
+void Client::next(int32_t connectionId, std::function<void(int32_t)> cb)
 {
-    executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} });
+    executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::previous(int32_t connectionId)
+void Client::previous(int32_t connectionId, std::function<void(int32_t)> cb)
 {
-    executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} });
+    executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target)
+void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(int32_t)> cb)
 {
     executeAction(AVTransport::Action::Seek, { {"InstanceID", std::to_string(connectionId)},
                                                {"Unit", toString(mode)},
-                                               {"Target", target} });
+                                               {"Target", target} }, stripResponse(cb));
 }
 
-TransportInfo Client::getTransportInfo(int32_t connectionId)
+void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, PositionInfo)> cb)
 {
-    xml::Document doc = executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} });
-    xml::Element response = doc.getFirstChild();
-
-    TransportInfo info;
-    for (xml::Element elem : response.getChildNodes())
-    {
-             if (elem.getName() == "CurrentTransportState")   info.currentTransportState    = stateFromString(elem.getValue());
-        else if (elem.getName() == "CurrentTransportStatus")  info.currentTransportStatus   = statusFromString(elem.getValue());
-        else if (elem.getName() == "CurrentSpeed")            info.currentSpeed             = elem.getValue();
-    }
-
-    return info;
-}
-
-PositionInfo Client::getPositionInfo(int32_t connectionId)
-{
-    xml::Document doc = executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} });
-    xml::Element response = doc.getFirstChild();
-
-    PositionInfo info;
-    for (xml::Element elem : response.getChildNodes())
-    {
-             if (elem.getName() == "Track")          info.track          = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(elem.getValue());
-        else if (elem.getName() == "TrackDuration")  info.trackDuration  = elem.getValue();
-        else if (elem.getName() == "TrackMetaData")  info.trackMetaData  = elem.getValue();
-        else if (elem.getName() == "TrackURI")       info.trackURI       = elem.getValue();
-        else if (elem.getName() == "RelTime")        info.relativeTime   = elem.getValue();
-        else if (elem.getName() == "AbsTime")        info.absoluteTime   = elem.getValue();
-        else if (elem.getName() == "RelCount")       info.relativeCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
-        else if (elem.getName() == "AbsCount")       info.absoluteCount  = xml::utils::optionalStringToNumeric<int32_t>(elem.getValue());
-    }
-
-    return info;
-}
-
-MediaInfo Client::getMediaInfo(int32_t connectionId)
-{
-    xml::Document doc = executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} });
-    xml::Element response = doc.getFirstChild();
-
-    MediaInfo info;
-    for (xml::Element elem : response.getChildNodes())
-    {
-             if (elem.getName() == "NrTracks")              info.numberOfTracks     = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(elem.getValue());
-        else if (elem.getName() == "MediaDuration")         info.mediaDuration      = elem.getValue();
-        else if (elem.getName() == "CurrentUri")            info.currentURI         = elem.getValue();
-        else if (elem.getName() == "CurrentUriMetaData")    info.currentURIMetaData = elem.getValue();
-        else if (elem.getName() == "NextURI")               info.nextURI            = elem.getValue();
-        else if (elem.getName() == "NextURIMetaData")       info.nextURIMetaData    = elem.getValue();
-        else if (elem.getName() == "PlayMedium")            info.playMedium         = elem.getValue();
-        else if (elem.getName() == "RecordMedium")          info.recordMedium       = elem.getValue();
-        else if (elem.getName() == "WriteStatus")           info.writeStatus        = elem.getValue();
-    }
-
-    return info;
-}
-
-std::set<Action> Client::getCurrentTransportActions(int32_t connectionId)
-{
-    xml::Document doc = executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} });
-    xml::Element response = doc.getFirstChild();
-
-    std::set<Action> actions;
-    for (xml::Element elem : response.getChildNodes())
-    {
-        if (elem.getName() == "Actions")
+    executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+        PositionInfo info;
+        if (status == 200)
         {
-            auto actionStrings = stringops::tokenize(elem.getValue(), ",");
-            std::for_each(actionStrings.begin(), actionStrings.end(), [&] (const std::string& action) {
-                try
-                {
-                    actions.insert(actionFromString(action));
-                }
-                catch (std::exception& e)
-                {
-                    log::warn(e.what());
-                }
-            });
-
+            try
+            {
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                
+                info.track = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "Track"));
+                info.trackDuration = optionalChildValue(body, "TrackDuration");
+                info.trackMetaData = optionalChildValue(body, "TrackMetaData");
+                info.trackURI = optionalChildValue(body, "TrackURI");
+                info.relativeTime = optionalChildValue(body, "RelTime");
+                info.absoluteTime = optionalChildValue(body, "AbsTime");
+                info.relativeCount = xml::utils::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "RelCount"));
+                info.absoluteCount = xml::utils::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "AbsCount"));
+            }
+            catch(std::exception& e)
+            {
+                log::error(e.what());
+                status = -1;
+            }
         }
-    }
+        
+        cb(status, info);
+    });
+}
 
-    return actions;
+void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, MediaInfo)> cb)
+{
+    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+        MediaInfo info;
+        if (status == 200)
+        {
+            try
+            {
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                
+                info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "NrTracks"));
+                info.mediaDuration = optionalChildValue(body, "MediaDuration");
+                info.currentURI = optionalChildValue(body, "CurrentUri");
+                info.currentURIMetaData = optionalChildValue(body, "CurrentUriMetaData");
+                info.nextURI = optionalChildValue(body, "NextURI");
+                info.nextURIMetaData = optionalChildValue(body, "NextURIMetaData");
+                info.playMedium = optionalChildValue(body, "PlayMedium");
+                info.recordMedium = optionalChildValue(body, "RecordMedium");
+                info.writeStatus = optionalChildValue(body, "WriteStatus");
+            }
+            catch(std::exception& e)
+            {
+                log::error(e.what());
+                status = -1;
+            }
+        }
+        
+        cb(status, info);
+    });
+}
+
+void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, TransportInfo)> cb)
+{
+    executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+        TransportInfo info;
+        if (status == 200)
+        {
+            try
+            {
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                
+                auto* child = body.first_node("CurrentTransportState");
+                if (child)
+                {
+                    info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
+                }
+                
+                child = body.first_node("CurrentTransportStatus");
+                if (child)
+                {
+                    info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
+                }
+                
+                child = body.first_node("CurrentSpeed");
+                if (child)
+                {
+                    info.currentSpeed = std::string(child->value(), child->value_size());
+                }
+            }
+            catch(std::exception& e)
+            {
+                log::error(e.what());
+                status = -1;
+            }
+        }
+        
+        cb(status, info);
+    });
+}
+
+void Client::getCurrentTransportActions(int32_t connectionId, std::function<void(int32_t, std::set<Action>)> cb)
+{
+    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [this, cb] (int32_t status, std::string response) {
+        std::set<Action> actions;
+        if (status == 200)
+        {
+            try
+            {
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(&response.front());
+                auto& actionsNode = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Actions");
+                
+                for(auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+                {
+                    try
+                    {
+                        actions.insert(actionFromString(action));
+                    }
+                    catch (std::exception& e)
+                    {
+                        log::warn(e.what());
+                    }
+                }
+            }
+            catch(std::exception& e)
+            {
+                log::error(e.what());
+                status = -1;
+            }
+        }
+        
+        cb(status, actions);
+    });
 }
 
 ServiceType Client::getType()
@@ -178,7 +259,7 @@ ServiceType Client::getType()
     return ServiceType::AVTransport;
 }
 
-int32_t Client::getSubscriptionTimeout()
+std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
 }

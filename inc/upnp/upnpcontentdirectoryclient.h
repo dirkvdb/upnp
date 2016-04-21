@@ -26,7 +26,7 @@ namespace upnp
 
 class Action;
 class Device;
-class IClient;
+class Client2;
 
 typedef std::function<void(const Item&)> ItemCb;
 
@@ -43,7 +43,7 @@ public:
         ContainersOnly
     };
 
-    Client(IClient& client);
+    Client(Client2& client);
 
     void setDevice(const std::shared_ptr<Device>& device) override;
 
@@ -52,9 +52,9 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
 
-    Item browseMetadata(const std::string& objectId, const std::string& filter);
-    ActionResult browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
-    ActionResult search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    void browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb);
+    void browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
+    void search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
 
 protected:
     virtual Action actionFromString(const std::string& action) const override;
@@ -63,21 +63,17 @@ protected:
     virtual std::string variableToString(Variable var) const override;
 
     virtual ServiceType getType() override;
-    virtual int32_t getSubscriptionTimeout() override;
+    virtual std::chrono::seconds getSubscriptionTimeout() override;
     virtual void handleUPnPResult(int errorCode) override;
 
 private:
-    xml::Document browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    void browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb);
 
     void querySearchCapabilities();
     void querySortCapabilities();
     void querySystemUpdateID();
 
     static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
-
-    xml::Document parseBrowseResult(xml::Document& doc, ActionResult& result);
-    Item parseMetaData(xml::Document& doc);
-    Item parseContainer(xml::Element& containerElem);
 
     std::vector<Item> parseContainers(xml::Document& doc);
     std::vector<Item> parseItems(xml::Document& doc);
