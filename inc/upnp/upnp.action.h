@@ -17,14 +17,8 @@
 #pragma once
 
 #include <string>
-#include <pugixml.hpp>
 
 #include "upnp/upnptypes.h"
-
-namespace pugi
-{
-    class xml_document;
-}
 
 namespace upnp
 {
@@ -35,6 +29,7 @@ public:
     Action2(const std::string& name, const std::string& url, ServiceType serviceType);
     Action2(Action2&&) = default;
     Action2& operator=(Action2&&) = default;
+    ~Action2();
 
     void addArgument(const std::string& name, const std::string& value);
 
@@ -48,12 +43,8 @@ public:
     bool operator==(const Action2& other) const;
 
 private:
-    std::string                 m_name;
-    std::string                 m_url;
-    ServiceType                 m_serviceType;
-
-    pugi::xml_document m_doc;
-    pugi::xml_node m_action;
+    struct Pimpl;
+    std::unique_ptr<Pimpl> m_pimpl;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Action2& action)

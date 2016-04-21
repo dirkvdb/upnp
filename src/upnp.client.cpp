@@ -140,7 +140,9 @@ void Client2::sendAction(const Action2& action, std::function<void(int32_t, std:
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    m_httpClient.soapAction(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString(), std::move(cb));
+    uv::asyncSend(*m_loop, [this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
+        m_httpClient.soapAction(url, name, urn, env, std::move(cb));
+    });
 
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());

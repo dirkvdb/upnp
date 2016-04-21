@@ -17,25 +17,40 @@
 #include "upnp/upnp.action.h"
 #include "utils/log.h"
 
+#include <pugixml.hpp>
+
 namespace upnp
 {
 
-Action2::Action2(const std::string& name, const std::string& url, ServiceType serviceType)
-: m_name(name)
-, m_url(url)
-, m_serviceType(serviceType)
+struct Action2::Pimpl
 {
-    auto env = m_doc.append_child("s:Envelope");
+    std::string name;
+    std::string url;
+    ServiceType serviceType;
+    pugi::xml_document doc;
+    pugi::xml_node action;
+};
+
+Action2::Action2(const std::string& name, const std::string& url, ServiceType serviceType)
+: m_pimpl(std::make_unique<Pimpl>())
+{
+    m_pimpl->name = name;
+    m_pimpl->url = url;
+    m_pimpl->serviceType = serviceType;
+
+    auto env = m_pimpl->doc.append_child("s:Envelope");
     env.append_attribute("xmlns:s").set_value("http://schemas.xmlsoap.org/soap/envelope/");
     env.append_attribute("s:encodingStyle").set_value("http://schemas.xmlsoap.org/soap/encoding/");
     auto body = env.append_child("s:Body");
-    m_action = body.append_child(("u:" + name).c_str());
-    m_action.append_attribute("xmlns:u").set_value(getServiceTypeUrn().c_str());
+    m_pimpl->action = body.append_child(("u:" + name).c_str());
+    m_pimpl->action.append_attribute("xmlns:u").set_value(getServiceTypeUrn().c_str());
 }
+
+Action2::~Action2() = default;
 
 void Action2::addArgument(const std::string& name, const std::string& value)
 {
-    if (!m_action.append_child(name.c_str()).text().set(value.c_str()))
+    if (!m_pimpl->action.append_child(name.c_str()).text().set(value.c_str()))
     {
         throw std::runtime_error(fmt::format("Failed to add action to UPnP request: {}", name));
     }
@@ -54,36 +69,36 @@ std::string Action2::toString() const
     private:
         std::string& m_str;
     };
-    
+
     std::string result;
     StringWriter writer(result);
-    m_doc.save(writer, "", pugi::format_raw);
+    m_pimpl->doc.save(writer, "", pugi::format_raw);
     return result;
 }
 
 std::string Action2::getName() const
 {
-    return m_name;
+    return m_pimpl->name;
 }
 
 std::string Action2::getUrl() const
 {
-    return m_url;
+    return m_pimpl->url;
 }
 
 std::string Action2::getServiceTypeUrn() const
 {
-    return serviceTypeToUrnTypeString(m_serviceType);
+    return serviceTypeToUrnTypeString(m_pimpl->serviceType);
 }
 
 ServiceType Action2::getServiceType() const
 {
-    return m_serviceType;
+    return m_pimpl->serviceType;
 }
 
 bool Action2::operator==(const Action2& other) const
 {
-    if (m_doc.empty() && !other.m_doc.empty())
+    if (m_pimpl->doc.empty() && !other.m_pimpl->doc.empty())
     {
         return false;
     }
