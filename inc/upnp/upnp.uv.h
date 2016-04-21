@@ -171,12 +171,12 @@ private:
 inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
 {
     auto handle = std::make_unique<uv_async_t>();
-    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* handle) {
-        std::unique_ptr<uv_async_t> handlePtr(handle);
+    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* asyHandle) {
+        std::unique_ptr<uv_async_t> handlePtr(asyHandle);
         std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
         (*cbPtr)();
-        uv_close(reinterpret_cast<uv_handle_t*>(handlePtr.release()), [] (uv_handle_t* handle) {
-            delete reinterpret_cast<uv_async_t*>(handle);
+        uv_close(reinterpret_cast<uv_handle_t*>(handlePtr.release()), [] (uv_handle_t* closeHandle) {
+            delete reinterpret_cast<uv_async_t*>(closeHandle);
         });
     }));
 

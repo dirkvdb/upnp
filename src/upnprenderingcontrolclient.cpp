@@ -33,7 +33,7 @@ static const int32_t g_subscriptionTimeout = 1801;
 
 // TODO: assign min and max volume
 
-Client::Client(IClient& client)
+Client::Client(Client2& client)
 : ServiceClientBase(client)
 , m_minVolume(0)
 , m_maxVolume(100)
@@ -45,7 +45,7 @@ void Client::setVolume(int32_t connectionId, uint32_t value)
     numericops::clip(value, m_minVolume, m_maxVolume);
     executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
-                                       {"DesiredVolume", numericops::toString(value)} });
+                                       {"DesiredVolume", numericops::toString(value)} }, [] (int32_t, std::string) {});
 }
 
 uint32_t Client::getVolume(int32_t connectionId)

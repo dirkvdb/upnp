@@ -31,7 +31,7 @@ namespace upnp
 
 static const std::string g_NotImplemented = "NOT_IMPLEMENTED";
 
-MediaRenderer::MediaRenderer(IClient& client)
+MediaRenderer::MediaRenderer(Client2& client)
 : m_client(client)
 , m_connectionMgr(client)
 , m_renderingControl(client)

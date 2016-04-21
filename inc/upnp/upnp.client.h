@@ -59,7 +59,7 @@ public:
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb);
 
     virtual void sendAction(const Action2& action, std::function<void(int32_t status, std::string actionResult)> cb);
-
+    
     virtual uv::Loop& loop();
 
 private:

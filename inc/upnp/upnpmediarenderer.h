@@ -40,7 +40,7 @@ struct ConnectionInfo;
 
 class Item;
 class Device;
-class Client;
+class Client2;
 class ProtocolInfo;
 class Resource;
 
@@ -67,7 +67,7 @@ public:
         Recording
     };
 
-    MediaRenderer(IClient& cp);
+    MediaRenderer(Client2& client);
     MediaRenderer(const MediaRenderer&) = delete;
 
     std::shared_ptr<Device> getDevice();
@@ -133,7 +133,7 @@ private:
     static PlaybackState transportStateToPlaybackState(AVTransport::State state);
 
     std::shared_ptr<Device>                         m_device;
-    IClient&                                        m_client;
+    Client2&                                        m_client;
     ConnectionManager::Client                       m_connectionMgr;
     RenderingControl::Client                        m_renderingControl;
     std::unique_ptr<AVTransport::Client>            m_avTransport;
@@ -142,10 +142,7 @@ private:
     std::map<AVTransport::Variable, std::string>    m_avTransportInfo;
     ConnectionManager::ConnectionInfo               m_connInfo;
 
-
     bool                                            m_active;
-
-
     mutable std::mutex                              m_mutex;
 };
 

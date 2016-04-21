@@ -32,7 +32,7 @@ namespace upnp
 {
 
 class Action;
-class IClient;
+class Client2;
 
 namespace RenderingControl
 {
@@ -40,7 +40,7 @@ namespace RenderingControl
 class Client : public ServiceClientBase<Action, Variable>
 {
 public:
-    Client(IClient& client);
+    Client(Client2& client);
 
     void setVolume(int32_t connectionId, uint32_t value);
     uint32_t getVolume(int32_t connectionId);

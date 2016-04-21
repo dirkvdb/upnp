@@ -32,7 +32,7 @@ namespace ConnectionManager
 class Client : public ServiceClientBase<Action, Variable>
 {
 public:    
-    Client(IClient& client);
+    Client(Client2& client);
     
     std::vector<ProtocolInfo> getProtocolInfo();
     ConnectionInfo prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction);
