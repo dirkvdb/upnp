@@ -24,12 +24,96 @@
 
 using namespace utils;
 using namespace std::placeholders;
-
+using namespace std::chrono_literals;
 
 namespace upnp
 {
 
-static const std::string g_NotImplemented = "NOT_IMPLEMENTED";
+namespace
+{
+
+const std::string g_NotImplemented = "NOT_IMPLEMENTED";
+
+std::chrono::seconds parseDuration(const std::string& duration)
+{
+    uint32_t secs = 0u;
+
+    auto split = stringops::tokenize(duration, ":");
+    if (split.size() == 3)
+    {
+        secs += std::stoul(split[0]) * 3600;
+        secs += std::stoul(split[1]) * 60;
+
+        auto secondsSplit = stringops::tokenize(split[2], ".");
+        secs += std::stoul(secondsSplit.front());
+    }
+
+    return std::chrono::seconds(secs);
+}
+
+Item parseCurrentTrack(const std::string& track) noexcept
+{
+    try
+    {
+        if (!track.empty())
+        {
+            return xml::utils::parseItemDocument(track);
+        }
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse item doc: {}", e.what());
+    }
+
+    return Item();
+}
+
+MediaRenderer::PlaybackState transportStateToPlaybackState(AVTransport::State state)
+{
+    switch (state)
+    {
+        case AVTransport::State::Playing:           return MediaRenderer::PlaybackState::Playing;
+        case AVTransport::State::Recording:         return MediaRenderer::PlaybackState::Recording;
+        case AVTransport::State::PausedPlayback:
+        case AVTransport::State::PausedRecording:   return MediaRenderer::PlaybackState::Paused;
+        case AVTransport::State::Transitioning:     return MediaRenderer::PlaybackState::Transitioning;
+        case AVTransport::State::Stopped:
+        case AVTransport::State::NoMediaPresent:    return MediaRenderer::PlaybackState::Stopped;
+
+        default: throw Exception("Invalid transport state");
+    }
+}
+
+MediaRenderer::Action transportActionToAction(AVTransport::Action action)
+{
+    switch (action)
+    {
+        case AVTransport::Action::Play:     return MediaRenderer::Action::Play;
+        case AVTransport::Action::Stop:     return MediaRenderer::Action::Stop;
+        case AVTransport::Action::Pause:    return MediaRenderer::Action::Pause;
+        case AVTransport::Action::Seek:     return MediaRenderer::Action::Seek;
+        case AVTransport::Action::Next:     return MediaRenderer::Action::Next;
+        case AVTransport::Action::Previous: return MediaRenderer::Action::Previous;
+        case AVTransport::Action::Record:   return MediaRenderer::Action::Record;
+
+        default: throw Exception("Invalid transport action");
+    }
+}
+
+MediaRenderer::PlaybackState parsePlaybackState(const std::string& state)
+{
+    try
+    {
+        return transportStateToPlaybackState(AVTransport::stateFromString(state));
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse item doc: {}", e.what());
+        return MediaRenderer::PlaybackState::Stopped;
+    }
+}
+
+}
 
 MediaRenderer::MediaRenderer(Client2& client)
 : m_client(client)
@@ -64,12 +148,15 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
         }
 
         // reset state related data
-        m_protocolInfo = m_connectionMgr.getProtocolInfo();
-        resetData();
-
-        activateEvents();
-
-        DeviceChanged(device);
+        m_connectionMgr.getProtocolInfo([this] (int32_t status, std::vector<ProtocolInfo> info) {
+            if (status == 200)
+            {
+                m_protocolInfo = std::move(info);
+                resetData();
+                activateEvents();
+                DeviceChanged(m_device);
+            }
+        });
     }
     catch (std::exception& e)
     {
@@ -122,15 +209,23 @@ bool MediaRenderer::supportsConnectionPreparation() const
 
 void MediaRenderer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t serverConnectionId)
 {
-    m_connInfo = m_connectionMgr.prepareForConnection(res.getProtocolInfo(), peerConnectionManager,
-                                                      serverConnectionId, ConnectionManager::Direction::Input);
+    m_connectionMgr.prepareForConnection(res.getProtocolInfo(),
+                                         peerConnectionManager,
+                                         serverConnectionId,
+                                         ConnectionManager::Direction::Input,
+                                         [this] (int32_t status, ConnectionManager::ConnectionInfo info) {
+        if (status == 200)
+        {
+            m_connInfo = info;
+        }
+    });
 }
 
 void MediaRenderer::setTransportItem(Resource& resource)
 {
     if (m_avTransport)
     {
-        m_avTransport->setAVTransportURI(m_connInfo.connectionId, resource.getUrl());
+        m_avTransport->setAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", nullptr);
     }
 }
 
@@ -139,7 +234,7 @@ void MediaRenderer::setNextTransportItem(Resource& resource)
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->setNextAVTransportURI(m_connInfo.connectionId, resource.getUrl());
+        m_avTransport->setNextAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", nullptr);
     }
 }
 
@@ -148,7 +243,7 @@ void MediaRenderer::play()
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->play(m_connInfo.connectionId);
+        m_avTransport->play(m_connInfo.connectionId, "1", nullptr);
     }
 }
 
@@ -157,7 +252,7 @@ void MediaRenderer::pause()
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->pause(m_connInfo.connectionId);
+        m_avTransport->pause(m_connInfo.connectionId, nullptr);
     }
 }
 
@@ -166,7 +261,7 @@ void MediaRenderer::stop()
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->stop(m_connInfo.connectionId);
+        m_avTransport->stop(m_connInfo.connectionId, nullptr);
     }
 }
 
@@ -175,7 +270,7 @@ void MediaRenderer::next()
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->next(m_connInfo.connectionId);
+        m_avTransport->next(m_connInfo.connectionId, nullptr);
     }
 }
 
@@ -184,7 +279,7 @@ void MediaRenderer::seekInTrack(uint32_t position)
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, positionToString(position));
+        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, positionToString(position), nullptr);
     }
 }
 
@@ -193,77 +288,91 @@ void MediaRenderer::previous()
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->previous(m_connInfo.connectionId);
+        m_avTransport->previous(m_connInfo.connectionId, nullptr);
     }
 }
 
-uint32_t MediaRenderer::getCurrentTrackPosition()
+void MediaRenderer::getCurrentTrackPosition(std::function<void(int32_t, std::chrono::seconds)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        auto info = m_avTransport->getPositionInfo(m_connInfo.connectionId);
-        return parseDuration(info.relativeTime);
+        m_avTransport->getPositionInfo(m_connInfo.connectionId, [this, cb] (int32_t status, AVTransport::PositionInfo info) {
+            if (status == 200)
+            {
+                cb(status, parseDuration(info.relativeTime));
+            }
+        });
     }
-
-    return 0;
 }
 
-MediaRenderer::PlaybackState MediaRenderer::getPlaybackState()
+void MediaRenderer::getPlaybackState(std::function<void(int32_t, PlaybackState)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        return transportStateToPlaybackState(m_avTransport->getTransportInfo(m_connInfo.connectionId).currentTransportState);
+        m_avTransport->getTransportInfo(m_connInfo.connectionId, [cb] (int32_t status, AVTransport::TransportInfo info) {
+            auto state = PlaybackState::Stopped;
+            if (status == 200)
+            {
+                state = transportStateToPlaybackState(info.currentTransportState);
+            }
+            
+            cb(status, state);
+        });
     }
-
-    return PlaybackState::Stopped;
 }
 
 std::string MediaRenderer::getCurrentTrackURI() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-
     auto iter = m_avTransportInfo.find(AVTransport::Variable::CurrentTrackURI);
     return iter == m_avTransportInfo.end() ? "" : iter->second;
 }
 
-uint32_t MediaRenderer::getCurrentTrackDuration() const
+std::chrono::seconds MediaRenderer::getCurrentTrackDuration() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-
     auto iter = m_avTransportInfo.find(AVTransport::Variable::CurrentTrackDuration);
-    return iter == m_avTransportInfo.end() ? 0 : parseDuration(iter->second);
+    return iter == m_avTransportInfo.end() ? 0s : parseDuration(iter->second);
 }
 
-Item MediaRenderer::getCurrentTrackInfo() const
+void MediaRenderer::getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) const
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        auto info = m_avTransport->getMediaInfo(m_connInfo.connectionId);
-        return parseCurrentTrack(info.currentURIMetaData);
+        m_avTransport->getMediaInfo(m_connInfo.connectionId, [cb] (int32_t status, AVTransport::MediaInfo info) {
+            Item track;
+            if (status == 200)
+            {
+                track = parseCurrentTrack(info.currentURIMetaData);
+            }
+            
+            cb(status, track);
+        });
     }
-
-    return Item();
-
 }
 
-std::set<MediaRenderer::Action> MediaRenderer::getAvailableActions()
+void MediaRenderer::getAvailableActions(std::function<void(int32_t, std::set<MediaRenderer::Action>)> cb)
 {
-    std::set<MediaRenderer::Action> actions;
-
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        auto transpActions = m_avTransport->getCurrentTransportActions(m_connInfo.connectionId);
-        for (auto& action : transpActions)
-        {
-            actions.insert(transportActionToAction(action));
-        }
+        m_avTransport->getCurrentTransportActions(m_connInfo.connectionId, [cb] (int32_t status, const std::set<AVTransport::Action>& transpActions) {
+            std::set<MediaRenderer::Action> actions;
+            
+            if (status == 200)
+            {
+                for (auto& action : transpActions)
+                {
+                    actions.insert(transportActionToAction(action));
+                }
+            }
+            
+            cb(status, actions);
+        });
     }
-
-    return actions;
 }
 
 bool MediaRenderer::isActionAvailable(const std::set<Action>& actions, Action action)
@@ -280,13 +389,15 @@ bool MediaRenderer::supportsQueueItem() const
 void MediaRenderer::setVolume(uint32_t value)
 {
     throwOnUnknownConnectionId();
-    m_renderingControl.setVolume(m_connInfo.connectionId, value);
+    m_renderingControl.setVolume(m_connInfo.connectionId, value, nullptr);
 }
 
-uint32_t MediaRenderer::getVolume()
+void MediaRenderer::getVolume(std::function<void(int32_t status, uint32_t volume)> cb)
 {
     throwOnUnknownConnectionId();
-    return m_renderingControl.getVolume(m_connInfo.connectionId);
+    m_renderingControl.getVolume(m_connInfo.connectionId, [cb] (int32_t status, uint32_t volume) {
+        cb(status, volume);
+    });
 }
 
 void MediaRenderer::activateEvents()
@@ -349,7 +460,8 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
     std::set<Action> availableActions;
 
     auto actionsStrings = stringops::tokenize(actions, ",");
-    std::for_each(actionsStrings.begin(), actionsStrings.end(), [&] (const std::string& action) {
+    for (auto& action : actionsStrings)
+    {
         try
         {
             availableActions.insert(transportActionToAction(m_avTransport->actionFromString(action)));
@@ -358,40 +470,9 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
         {
             log::warn(e.what());
         }
-    });
-
+    }
+    
     return availableActions;
-}
-
-Item MediaRenderer::parseCurrentTrack(const std::string& track) const
-{
-    try
-    {
-        if (!track.empty())
-        {
-            xml::Document doc(track);
-            return xml::utils::parseItemDocument(doc);
-        }
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to parse item doc: {}", e.what());
-    }
-
-    return Item();
-}
-
-MediaRenderer::PlaybackState MediaRenderer::parsePlaybackState(const std::string& state) const
-{
-    try
-    {
-        return transportStateToPlaybackState(AVTransport::stateFromString(state));
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to parse item doc: {}", e.what());
-        return PlaybackState::Stopped;
-    }
 }
 
 void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>& vars)
@@ -449,23 +530,6 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
     }
 }
 
-uint32_t MediaRenderer::parseDuration(const std::string& duration) const
-{
-    uint32_t seconds = 0;
-
-    auto split = stringops::tokenize(duration, ":");
-    if (split.size() == 3)
-    {
-        seconds += std::stoul(split[0]) * 3600;
-        seconds += std::stoul(split[1]) * 60;
-
-        auto secondsSplit = stringops::tokenize(split[2], ".");
-        seconds += std::stoul(secondsSplit.front());
-    }
-
-    return seconds;
-}
-
 std::string MediaRenderer::positionToString(uint32_t position) const
 {
     uint32_t hours   = position / 3600;
@@ -484,38 +548,6 @@ std::string MediaRenderer::positionToString(uint32_t position) const
 
     ss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2) << std::setfill('0')  << seconds;
     return ss.str();
-}
-
-MediaRenderer::Action MediaRenderer::transportActionToAction(AVTransport::Action action)
-{
-    switch (action)
-    {
-        case AVTransport::Action::Play:     return Action::Play;
-        case AVTransport::Action::Stop:     return Action::Stop;
-        case AVTransport::Action::Pause:    return Action::Pause;
-        case AVTransport::Action::Seek:     return Action::Seek;
-        case AVTransport::Action::Next:     return Action::Next;
-        case AVTransport::Action::Previous: return Action::Previous;
-        case AVTransport::Action::Record:   return Action::Record;
-
-        default: throw Exception("Invalid transport action");
-    }
-}
-
-MediaRenderer::PlaybackState MediaRenderer::transportStateToPlaybackState(AVTransport::State state)
-{
-    switch (state)
-    {
-        case AVTransport::State::Playing:           return PlaybackState::Playing;
-        case AVTransport::State::Recording:         return PlaybackState::Recording;
-        case AVTransport::State::PausedPlayback:
-        case AVTransport::State::PausedRecording:   return PlaybackState::Paused;
-        case AVTransport::State::Transitioning:     return PlaybackState::Transitioning;
-        case AVTransport::State::Stopped:
-        case AVTransport::State::NoMediaPresent:    return PlaybackState::Stopped;
-
-        default: throw Exception("Invalid transport state");
-    }
 }
 
 void MediaRenderer::throwOnUnknownConnectionId() const

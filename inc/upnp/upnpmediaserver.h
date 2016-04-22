@@ -31,7 +31,7 @@ namespace upnp
 
 class Item;
 class Device;
-class IClient;
+class Client2;
 
 class MediaServer
 {
@@ -47,7 +47,7 @@ public:
         Descending
     };
 
-    MediaServer(IClient& client);
+    MediaServer(Client2& client);
     ~MediaServer();
 
     void setDevice(const std::shared_ptr<Device>& device);
@@ -76,8 +76,8 @@ public:
     std::vector<Item> getItemsInContainer(const std::string& id, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     std::vector<Item> getAllInContainer(const std::string& id, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
     Item getMetaData(const std::string& id);
-    uint32_t search(const std::string& id, const std::string& criteria, const ItemCb& onItem);
-    uint32_t search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemCb& onItem);
+    void search(const std::string& id, const std::string& criteria, const ItemCb& onItem);
+    void search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemCb& onItem);
     std::vector<Item> search(const std::string& id, const std::string& criteria);
     std::vector<Item> search(const std::string& id, const std::map<Property, std::string>& criteria);
 
@@ -101,21 +101,26 @@ public:
 
 private:
     void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void performBrowseRequestThread(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    template <typename T>
-    void searchThread(const std::string& id, const ItemCb& onItem, const T& criteria);
-    void getMetaDataThread(const std::string& objectId, const ItemCb& onItem);
+    void handleSearchResult(const std::string& id, const std::string& criteria, int32_t status, uint32_t offset, const ContentDirectory::ActionResult& res, const ItemCb& cb);
+    void handleBrowseResult(ContentDirectory::Client::BrowseType type,
+                            const std::string& id,
+                            uint32_t offset,
+                            uint32_t limit,
+                            const std::string& sort,
+                            int32_t status,
+                            const ContentDirectory::ActionResult& res,
+                            const ItemCb& onItem,
+                            uint32_t itemsReceived);
 
     std::shared_ptr<Device>                 m_device;
 
-    IClient&                                m_client;
+    Client2&                                m_client;
     ContentDirectory::Client                m_contentDirectory;
     ConnectionManager::Client               m_connectionMgr;
     std::unique_ptr<AVTransport::Client>    m_avTransport;
 
     ConnectionManager::ConnectionInfo       m_connInfo;
 
-    utils::ThreadPool                       m_threadPool;
     bool                                    m_abort;
 
     CompletedCb                             m_completedCb;

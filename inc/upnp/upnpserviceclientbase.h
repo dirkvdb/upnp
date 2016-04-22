@@ -30,6 +30,8 @@
 #include <vector>
 #include <memory>
 
+#include "rapidxml.hpp"
+
 namespace upnp
 {
 
@@ -70,22 +72,22 @@ public:
 
     void subscribe()
     {
-        try { unsubscribe(); }
-        catch (std::exception& e) { utils::log::warn(e.what()); }
+        // try { unsubscribe(); }
+        // catch (std::exception& e) { utils::log::warn(e.what()); }
 
         std::lock_guard<std::mutex> lock(m_eventMutex);
-        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this] (int32_t status, const std::string& subId, std::chrono::seconds subTimeout) {
+        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this] (int32_t status, const std::string& subId, std::chrono::seconds subTimeout) -> std::function<void(SubscriptionEvent)> {
             if (status < 0)
             {
                 utils::log::error("Error subscribing to service");
                 return nullptr;
             }
-            
+
             m_subscriptionId = subId;
             m_subTimer.start(subTimeout / 2, subTimeout / 2, [] () {
                 utils::log::warn("TODO: renew subscription");
             });
-            
+
             return std::bind(&ServiceClientBase<ActionType, VariableType>::eventCb, this, std::placeholders::_1);
         });
     }
@@ -114,28 +116,36 @@ public:
 protected:
     virtual void parseServiceDescription(const std::string& descriptionUrl)
     {
-//        xml::Document doc = m_client.downloadXmlDocument(descriptionUrl);
-//
-//        try
-//        {
-//            for (auto& action : xml::utils::getActionsFromDescription(doc))
-//            {
-//                try
-//                {
-//                    m_supportedActions.insert(actionFromString(action));
-//                }
-//                catch (std::exception& e)
-//                {
-//                    utils::log::error(e.what());
-//                }
-//            }
-//
-//            m_StateVariables = xml::utils::getStateVariablesFromDescription(doc);
-//        }
-//        catch (std::exception& e)
-//        {
-//            utils::log::error(e.what());
-//        }
+        m_client.getFile(descriptionUrl, [this] (int32_t status, const std::string& contents) {
+            if (status == 200)
+            {
+                using namespace rapidxml_ns;
+
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(contents.c_str());
+
+                try
+                {
+                    for (auto& action : xml::utils::getActionsFromDescription(doc))
+                    {
+                        try
+                        {
+                            m_supportedActions.insert(actionFromString(action));
+                        }
+                        catch (std::exception& e)
+                        {
+                            utils::log::error(e.what());
+                        }
+                    }
+
+                    m_StateVariables = xml::utils::getStateVariablesFromDescription(doc);
+                }
+                catch (std::exception& e)
+                {
+                    utils::log::error(e.what());
+                }
+            }
+        });
     }
 
 //    void eventOccurred(Upnp_Event* pEvent)

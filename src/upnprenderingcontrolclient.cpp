@@ -20,16 +20,18 @@
 #include "upnp/upnpcontrolpoint.h"
 
 #include "utils/numericoperations.h"
-
-using namespace utils;
-using namespace std::placeholders;
+#include "rapidxml.hpp"
 
 namespace upnp
 {
 namespace RenderingControl
 {
 
-static const int32_t g_subscriptionTimeout = 1801;
+using namespace utils;
+using namespace rapidxml_ns;
+using namespace std::placeholders;
+
+static const std::chrono::seconds g_subscriptionTimeout(1801);
 
 // TODO: assign min and max volume
 
@@ -40,21 +42,39 @@ Client::Client(Client2& client)
 {
 }
 
-void Client::setVolume(int32_t connectionId, uint32_t value)
+void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(int32_t status)> cb)
 {
     numericops::clip(value, m_minVolume, m_maxVolume);
     executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
-                                       {"DesiredVolume", numericops::toString(value)} }, [] (int32_t, std::string) {});
+                                       {"DesiredVolume", numericops::toString(value)} }, [cb] (int32_t status, std::string) {
+        cb(status);
+   });
 }
 
-uint32_t Client::getVolume(int32_t connectionId)
+void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, uint32_t volume)> cb)
 {
-    xml::Document doc = executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                                           {"Channel", "Master"} });
+    executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
+                                       {"Channel", "Master"} }, [cb] (int32_t status, const std::string& response) {
+        uint32_t volume = 0;
+        if (status == 200)
+        {
+            try
+            {
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(response.c_str());
+                auto& volumeNode = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("CurrentVolume");
+                volume = stringops::toNumeric<uint32_t>(volumeNode.value_string());
+            }
+            catch (std::exception& e)
+            {
+                log::error("Failed to parse volume: {}", e.what());
+                status = -1;
+            }
+        }
 
-    xml::Element response = doc.getFirstChild();
-    return stringops::toNumeric<uint32_t>(response.getChildNodeValue("CurrentVolume"));
+        cb(status, volume);
+    });
 }
 
 ServiceType Client::getType()
@@ -62,7 +82,7 @@ ServiceType Client::getType()
     return ServiceType::RenderingControl;
 }
 
-int32_t Client::getSubscriptionTimeout()
+std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
 }

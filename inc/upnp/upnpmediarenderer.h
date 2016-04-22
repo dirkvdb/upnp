@@ -90,13 +90,14 @@ public:
     void next();
     void seekInTrack(uint32_t position);
     void previous();
-    uint32_t getCurrentTrackPosition();
-    PlaybackState getPlaybackState();
+    void getCurrentTrackPosition(std::function<void(int32_t, std::chrono::seconds)> cb);
+    void getPlaybackState(std::function<void(int32_t, PlaybackState)> cb);
 
     std::string getCurrentTrackURI() const;
-    uint32_t getCurrentTrackDuration() const;
-    Item getCurrentTrackInfo() const;
-    std::set<Action> getAvailableActions();
+    std::chrono::seconds getCurrentTrackDuration() const;
+    
+    void getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) const;
+    void getAvailableActions(std::function<void(int32_t, std::set<Action>)> cb);
     static bool isActionAvailable(const std::set<Action>& actions, Action action);
 
     bool supportsQueueItem() const;
@@ -104,7 +105,7 @@ public:
 
     // Rendering control
     void setVolume(uint32_t value);
-    uint32_t getVolume();
+    void getVolume(std::function<void(int32_t status, uint32_t volume)> cb);
 
     void activateEvents();
     void deactivateEvents();
@@ -112,7 +113,7 @@ public:
     utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
     utils::Signal<uint32_t>                   VolumeChanged;
     utils::Signal<const Item&>                CurrentTrackChanged;
-    utils::Signal<uint32_t>                   CurrentTrackDurationChanged;
+    utils::Signal<std::chrono::seconds>       CurrentTrackDurationChanged;
     utils::Signal<std::set<Action>>           AvailableActionsChanged;
     utils::Signal<PlaybackState>              PlaybackStateChanged;
 
@@ -121,16 +122,10 @@ private:
 
     void resetData();
     std::set<Action> parseAvailableActions(const std::string& actions) const;
-    Item parseCurrentTrack(const std::string& track) const;
-    PlaybackState parsePlaybackState(const std::string& state) const;
 
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
-    uint32_t parseDuration(const std::string& duration) const;
     std::string positionToString(uint32_t position) const;
-
-    static Action transportActionToAction(AVTransport::Action action);
-    static PlaybackState transportStateToPlaybackState(AVTransport::State state);
 
     std::shared_ptr<Device>                         m_device;
     Client2&                                        m_client;

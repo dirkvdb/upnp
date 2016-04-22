@@ -42,8 +42,8 @@ class Client : public ServiceClientBase<Action, Variable>
 public:
     Client(Client2& client);
 
-    void setVolume(int32_t connectionId, uint32_t value);
-    uint32_t getVolume(int32_t connectionId);
+    void setVolume(int32_t connectionId, uint32_t value, std::function<void(int32_t status)> cb);
+    void getVolume(int32_t connectionId, std::function<void(int32_t status, uint32_t volume)> cb);
 
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 
@@ -54,7 +54,7 @@ protected:
     virtual std::string variableToString(Variable var) const override;
 
     virtual ServiceType getType() override;
-    virtual int32_t getSubscriptionTimeout() override;
+    virtual std::chrono::seconds getSubscriptionTimeout() override;
 
     virtual void parseServiceDescription(const std::string& descriptionUrl) override;
 

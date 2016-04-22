@@ -38,10 +38,19 @@ static const std::chrono::seconds g_subscriptionTimeout(1801);
 namespace
 {
 
+template <typename Func, typename... Args>
+void invoke(Func&& func, Args&&... args)
+{
+    if (func)
+    {
+        func(std::forward<Args&&>(args)...);
+    }
+}
+
 std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32_t)> cb)
 {
     return [cb] (int32_t status, const std::string&) {
-        cb(status);
+        invoke(cb, status);
     };
 }
 
@@ -52,7 +61,6 @@ std::string optionalChildValue(xml_node<>& node, const char* child)
     auto* childNode = node.first_node(child);
     if (childNode && childNode->value())
     {
-        
         result = std::string(childNode->value(), childNode->value_size());
     }
     
@@ -141,7 +149,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
             }
         }
         
-        cb(status, info);
+        invoke(cb, status, info);
     });
 }
 
@@ -174,7 +182,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
             }
         }
         
-        cb(status, info);
+        invoke(cb, status, info);
     });
 }
 
@@ -215,7 +223,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
             }
         }
         
-        cb(status, info);
+        invoke(cb, status, info);
     });
 }
 
@@ -250,7 +258,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
             }
         }
         
-        cb(status, actions);
+        invoke(cb, status, actions);
     });
 }
 

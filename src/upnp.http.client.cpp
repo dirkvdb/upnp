@@ -158,32 +158,50 @@ void checkMultiInfo(CURLM* curlHandle)
                 {
                     double contentLength;
                     curl_easy_getinfo(message->easy_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
-                    cbData->callback(contentLength < 0 ? -1 : 0, static_cast<int32_t>(contentLength));
+                    if (cbData->callback)
+                    {
+                        cbData->callback(contentLength < 0 ? -1 : 0, static_cast<int32_t>(contentLength));
+                    }
                 }
                 else
                 {
-                    cbData->callback(statusCode, 0);
+                    if (cbData->callback)
+                    {
+                        cbData->callback(statusCode, 0);
+                    }
                 }
             }
             else if (pCbData->type == RequestType::GetAsString)
             {
                 std::unique_ptr<GetAsStringCallBackData> cbData(reinterpret_cast<GetAsStringCallBackData*>(pCbData));
-                cbData->callback(statusCode, std::move(cbData->data));
+                if (cbData->callback)
+                {
+                    cbData->callback(statusCode, std::move(cbData->data));
+                }
             }
             else if (pCbData->type == RequestType::GetAsVector)
             {
                 std::unique_ptr<GetAsVectorCallBackData> cbData(reinterpret_cast<GetAsVectorCallBackData*>(pCbData));
-                cbData->callback(statusCode, std::move(cbData->data));
+                if (cbData->callback)
+                {
+                    cbData->callback(statusCode, std::move(cbData->data));
+                }
             }
             else if (pCbData->type == RequestType::GetAsRawData)
             {
                 std::unique_ptr<GetAsRawDataCallBackData> cbData(reinterpret_cast<GetAsRawDataCallBackData*>(pCbData));
-                cbData->callback(statusCode, cbData->data);
+                if (cbData->callback)
+                {
+                    cbData->callback(statusCode, cbData->data);
+                }
             }
             else if (pCbData->type == RequestType::Subscribe)
             {
                 std::unique_ptr<SubscribeCallBackData> cbData(reinterpret_cast<SubscribeCallBackData*>(pCbData));
-                cbData->callback(statusCode, std::move(cbData->sid), cbData->timeout, std::move(cbData->data));
+                if (cbData->callback)
+                {
+                    cbData->callback(statusCode, std::move(cbData->sid), cbData->timeout, std::move(cbData->data));
+                }
             }
 
             curl_multi_remove_handle(curlHandle, message->easy_handle);

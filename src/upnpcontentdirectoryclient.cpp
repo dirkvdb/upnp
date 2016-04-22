@@ -44,89 +44,20 @@ namespace
 
 const std::chrono::seconds g_subscriptionTimeout(1801);
 
-std::string parseBrowseResult(const std::string& response, ActionResult& result)
+void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
 {
-    std::string browseResult;
-
-    assert(!response.empty() && "ParseBrowseResult: Invalid document supplied");
-
-    for (xml::Element elem : doc.getFirstChild().getChildNodes())
+    Property prop = propertyFromString(propertyName);
+    if (prop != Property::Unknown)
     {
-        if (elem.getName() == "Result")
-        {
-            browseResult = elem.getValue();
-        }
-        else if (elem.getName() == "NumberReturned")
-        {
-            result.numberReturned = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
-        else if (elem.getName() == "TotalMatches")
-        {
-            result.totalMatches = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
-        else if (elem.getName() == "UpdateID")
-        {
-            result.updateId = stringops::toNumeric<uint32_t>(elem.getValue());
-        }
+        vec.push_back(prop);
     }
-
-    if (browseResult.empty())
+    else
     {
-        throw Exception("Failed to obtain browse result");
+        log::warn("Unknown property: {}", propertyName);
     }
-
-    return browseResult;
 }
 
-Item parseMetaData(const std::string& meta)
-{
-    assert(!meta.empty() && "ParseMetaData: Invalid document supplied");
 
-    try
-    {
-        xml::Element containerElem = doc.getElementsByTagName("container").getNode(0);
-        return parseContainer(containerElem);
-    }
-    catch (std::exception&) {}
-
-    try
-    {
-        xml::Element itemElem = doc.getElementsByTagName("item").getNode(0);
-        return xml::utils::parseItem(itemElem);
-    }
-    catch (std::exception&) {}
-
-    log::warn("No metadata could be retrieved");
-    return Item();
-}
-
-Item parseContainer(xml::Element& containerElem)
-{
-    auto item = Item();
-    item.setObjectId(containerElem.getAttribute("id"));
-    item.setParentId(containerElem.getAttribute("parentID"));
-    item.setChildCount(containerElem.getAttributeAsNumericOptional<uint32_t>("childCount", 0));
-
-    for (xml::Element elem : containerElem.getChildNodes())
-    {
-        Property prop = propertyFromString(elem.getName());
-        if (prop == Property::Unknown)
-        {
-            log::warn("Unknown property {}", elem.getName());
-            continue;
-        }
-
-        item.addMetaData(prop, elem.getValue());
-    }
-
-    // check required properties
-    if (item.getTitle().empty())
-    {
-        throw Exception("No title found in item");
-    }
-
-    return item;
-}
 
 }
 
@@ -172,35 +103,77 @@ const std::vector<Property>& Client::getSortCapabilities() const
 
 void Client::querySearchCapabilities()
 {
-    xml::Document result = executeAction(Action::GetSearchCapabilities);
-    xml::Element elem = result.getFirstChild();
+    executeAction(Action::GetSearchCapabilities, [this] (int32_t status, const std::string& response) {
+        if (status != 200)
+        {
+            return;
+        }
 
-    // TODO: don't fail if the search caps is an empty list
+        try
+        {
+            xml_document<> doc;
+            doc.parse<parse_non_destructive>(response.c_str());
+            auto& caps = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("SearchCaps");
 
-    for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SearchCaps"), ","))
-    {
-        addPropertyToList(cap, m_searchCaps);
-    }
+            // TODO: don't fail if the search caps is an empty list
+            for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+            {
+                addPropertyToList(cap, m_searchCaps);
+            }
+        }
+        catch (std::exception& e)
+        {
+            log::error(e.what());
+        }
+    });
 }
 
 void Client::querySortCapabilities()
 {
-    xml::Document result = executeAction(Action::GetSortCapabilities);
-    xml::Element elem = result.getFirstChild();
+    executeAction(Action::GetSortCapabilities, [this] (int32_t status, const std::string& response) {
+        if (status != 200)
+        {
+            return;
+        }
 
-    // TODO: don't fail if the sort caps is an empty list
+        try
+        {
+            xml_document<> doc;
+            doc.parse<parse_non_destructive>(&response.front());
+            auto& caps = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("SortCaps");
 
-    for (auto& cap : stringops::tokenize(elem.getChildNodeValue("SortCaps"), ","))
-    {
-        addPropertyToList(cap, m_sortCaps);
-    }
+            // TODO: don't fail if the search caps is an empty list
+            for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+            {
+                addPropertyToList(cap, m_sortCaps);
+            }
+        }
+        catch (std::exception& e)
+        {
+            log::error(e.what());
+        }
+    });
 }
 
 void Client::querySystemUpdateID()
 {
-    xml::Document result = executeAction(Action::GetSystemUpdateID);
-    xml::Element elem = result.getFirstChild();
-    m_systemUpdateId = elem.getChildNodeValue("Id");
+    executeAction(Action::GetSystemUpdateID, [this] (int32_t status, const std::string& response) {
+        if (status != 200)
+        {
+            return;
+        }
+
+        try
+        {
+            xml_document<> doc;
+            doc.parse<parse_non_destructive>(&response.front());
+            m_systemUpdateId = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Id").value_string();
+        }
+        catch (std::exception& e)
+        {
+            log::error(e.what());
+        }
+    });
 }
 
 void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb)
@@ -209,92 +182,114 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
         if (status != 200)
         {
             cb(status, Item());
+            return;
         }
-        
+
         ActionResult res;
-        auto browseResult = parseBrowseResult(response, res);
+        auto browseResult = xml::utils::parseBrowseResult(response, res);
         if (browseResult.empty())
         {
             throw Exception("Failed to browse meta data");
         }
-        
+
         #ifdef DEBUG_CONTENT_BROWSING
             log::debug(browseResult);
         #endif
 
-        cb(status, parseMetaData(browseResult));
+        cb(status, xml::utils::parseMetaData(browseResult));
     });
 }
 
 void Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
 {
-    ActionResult res;
+    browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort, [type, cb] (int32_t status, const std::string& response) {
+        if (status != 200)
+        {
+            cb(status, ActionResult());
+            return;
+        }
 
-    xml::Document result = browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
-    xml::Document browseResult = parseBrowseResult(result, res);
-    if (!browseResult)
-    {
-        throw Exception("Failed to browse direct children");
-    }
+        ActionResult res;
 
-#ifdef DEBUG_CONTENT_BROWSING
-    log::debug(browseResult.toString());
-#endif
-
-    if (type == ContainersOnly || type == All)
-    {
-        try { res.result = parseContainers(browseResult); }
-        catch (std::exception&e ) { log::warn(e.what()); }
-    }
-
-    if (type == ItemsOnly || type == All)
-    {
         try
         {
-            auto items = parseItems(browseResult);
-            for (auto& item : items)
+            auto browseResult = xml::utils::parseBrowseResult(response, res);
+        #ifdef DEBUG_CONTENT_BROWSING
+            log::debug(browseResult);
+        #endif
+
+            if (type == ContainersOnly || type == All)
             {
-                res.result.push_back(item);
+                try { res.result = xml::utils::parseContainers(browseResult); }
+                catch (std::exception&e ) { log::warn(e.what()); }
+            }
+
+            if (type == ItemsOnly || type == All)
+            {
+                try
+                {
+                    auto items = xml::utils::parseItems(browseResult);
+                    for (auto& item : items)
+                    {
+                        res.result.emplace_back(std::move(item));
+                    }
+                }
+                catch (std::exception& e) { log::warn(e.what()); }
             }
         }
-        catch (std::exception& e) { log::warn(e.what()); }
-    }
+        catch (std::exception& e)
+        {
+            log::error(e.what());
+            status = -1;
+        }
 
-    return res;
+        cb(status, res);
+    });
 }
 
 void Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
 {
     m_abort = false;
 
-    xml::Document result = executeAction(Action::Search, { {"ObjectID", objectId},
-                                                           {"SearchCriteria", criteria},
-                                                           {"Filter", filter},
-                                                           {"StartingIndex", numericops::toString(startIndex)},
-                                                           {"RequestedCount", numericops::toString(limit)},
-                                                           {"SortCriteria", sort} });
-
-    ActionResult searchResult;
-    xml::Document searchResultDoc = parseBrowseResult(result, searchResult);
-    if (!searchResultDoc)
-    {
-        throw Exception("Failed to perform search");
-    }
-
-    try { searchResult.result = parseContainers(searchResultDoc); }
-    catch (std::exception&e ) { log::warn(e.what()); }
-
-    try
-    {
-        auto items = parseItems(searchResultDoc);
-        for (auto& item : items)
+    executeAction(Action::Search, { {"ObjectID", objectId},
+                                    {"SearchCriteria", criteria},
+                                    {"Filter", filter},
+                                    {"StartingIndex", numericops::toString(startIndex)},
+                                    {"RequestedCount", numericops::toString(limit)},
+                                    {"SortCriteria", sort} }, [cb] (int32_t status, const std::string& response) {
+        if (status != 200)
         {
-            searchResult.result.push_back(item);
+            cb(status, ActionResult());
+            return;
         }
-    }
-    catch (std::exception& e) { log::warn(e.what()); }
 
-    return searchResult;
+        ActionResult searchResult;
+
+        try
+        {
+            auto searchResultDoc = xml::utils::parseBrowseResult(response, searchResult);
+
+            try { searchResult.result = xml::utils::parseContainers(searchResultDoc); }
+            catch (std::exception&e ) { log::warn(e.what()); }
+
+            try
+            {
+                auto items = xml::utils::parseItems(searchResultDoc);
+                for (auto& item : items)
+                {
+                    searchResult.result.emplace_back(std::move(item));
+                }
+            }
+            catch (std::exception& e) { log::warn(e.what()); }
+        }
+        catch (std::exception& e)
+        {
+            log::error(e.what());
+            status = -1;
+        }
+
+        cb(status, searchResult);
+    });
 }
 
 void Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb)
@@ -311,46 +306,6 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
                                     {"StartingIndex", numericops::toString(startIndex)},
                                     {"RequestedCount", numericops::toString(limit)},
                                     {"SortCriteria", sort} }, cb);
-}
-
-std::vector<Item> Client::parseContainers(xml::Document& doc)
-{
-    assert(doc && "ParseContainers: Invalid document supplied");
-
-    std::vector<Item> containers;
-    for (xml::Element elem : doc.getElementsByTagName("container"))
-    {
-        try
-        {
-            containers.push_back(parseContainer(elem));
-        }
-        catch (std::exception& e)
-        {
-            log::warn("Failed to parse container, skipping ({})", e.what());
-        }
-    }
-
-    return containers;
-}
-
-std::vector<Item> Client::parseItems(xml::Document& doc)
-{
-    assert(doc && "ParseItems: Invalid document supplied");
-
-    std::vector<Item> items;
-    for (xml::Element elem : doc.getElementsByTagName("item"))
-    {
-        try
-        {
-            items.push_back(xml::utils::parseItem(elem));
-        }
-        catch (std::exception& e)
-        {
-            log::error("Failed to parse item, skipping ({})", e.what());
-        }
-    }
-
-    return items;
 }
 
 void Client::handleUPnPResult(int errorCode)
@@ -382,19 +337,6 @@ void Client::handleUPnPResult(int errorCode)
     }
 }
 
-void Client::addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
-{
-    Property prop = propertyFromString(propertyName);
-    if (prop != Property::Unknown)
-    {
-        vec.push_back(prop);
-    }
-    else
-    {
-        log::warn("Unknown property: {}", propertyName);
-    }
-}
-
 Action Client::actionFromString(const std::string& action) const
 {
     return ContentDirectory::actionFromString(action);
@@ -420,7 +362,7 @@ ServiceType Client::getType()
     return ServiceType::ContentDirectory;
 }
 
-int32_t Client::getSubscriptionTimeout()
+std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
 }

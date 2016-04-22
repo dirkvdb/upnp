@@ -117,10 +117,13 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Subscribe response: {}", response);
 //#endif
-            auto subCb = cb(status, subId, subTimeout);
-            if (subCb)
+            if (cb)
             {
-                m_eventCallbacks.emplace(subId, subCb);
+                auto subCb = cb(status, subId, subTimeout);
+                if (subCb)
+                {
+                    m_eventCallbacks.emplace(subId, subCb);
+                }
             }
         });
     });
@@ -133,7 +136,10 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
 //#endif
-            cb(status);
+            if (cb)
+            {
+                cb(status);
+            }
         });
     });
 }
@@ -151,6 +157,11 @@ void Client2::sendAction(const Action2& action, std::function<void(int32_t, std:
 #ifdef DEBUG_UPNP_CLIENT
     log::debug(result.toString());
 #endif
+}
+
+void Client2::getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb)
+{
+    m_httpClient.get(url, cb);
 }
 
 void Client2::runLoop()

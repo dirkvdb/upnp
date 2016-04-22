@@ -73,11 +73,6 @@ private:
     void querySortCapabilities();
     void querySystemUpdateID();
 
-    static void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec);
-
-    std::vector<Item> parseContainers(xml::Document& doc);
-    std::vector<Item> parseItems(xml::Document& doc);
-
     std::vector<Property>       m_searchCaps;
     std::vector<Property>       m_sortCaps;
     std::string                 m_systemUpdateId;
