@@ -15,70 +15,80 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.action.h"
-#include "utils/log.h"
 
-#include <pugixml.hpp>
+#include <sstream>
+
+#include "rapidxml.hpp"
+#include "rapidxml_print.hpp"
 
 namespace upnp
 {
+
+using namespace rapidxml_ns;
+
+namespace
+{
+
+const char* g_envelopeTag = "s:Envelope";
+const char* g_bodyTag = "s:Body";
+
+const char* g_xmlnsAtr = "xmlns:s";
+const char* g_xmlnsVal = "http://schemas.xmlsoap.org/soap/envelope/";
+const char* g_encAtr = "s:encodingStyle";
+const char* g_encVal = "http://schemas.xmlsoap.org/soap/encoding/";
+
+const char* g_xmlnsuAtr = "xmlns:u";
+
+}
 
 struct Action2::Pimpl
 {
     std::string name;
     std::string url;
     ServiceType serviceType;
-    pugi::xml_document doc;
-    pugi::xml_node action;
+    xml_document<> doc;
+    xml_node<>* action = nullptr;
 };
 
 Action2::Action2(const std::string& name, const std::string& url, ServiceType serviceType)
 : m_pimpl(std::make_unique<Pimpl>())
 {
-    m_pimpl->name = name;
+    m_pimpl->name = "u:" + name;
     m_pimpl->url = url;
     m_pimpl->serviceType = serviceType;
 
-    auto env = m_pimpl->doc.append_child("s:Envelope");
-    env.append_attribute("xmlns:s").set_value("http://schemas.xmlsoap.org/soap/envelope/");
-    env.append_attribute("s:encodingStyle").set_value("http://schemas.xmlsoap.org/soap/encoding/");
-    auto body = env.append_child("s:Body");
-    m_pimpl->action = body.append_child(("u:" + name).c_str());
-    m_pimpl->action.append_attribute("xmlns:u").set_value(getServiceTypeUrn().c_str());
+    auto* env = m_pimpl->doc.allocate_node(node_element, g_envelopeTag);
+    env->append_attribute(m_pimpl->doc.allocate_attribute(g_xmlnsAtr, g_xmlnsVal));
+    env->append_attribute(m_pimpl->doc.allocate_attribute(g_encAtr, g_encVal));
+
+    auto* body = m_pimpl->doc.allocate_node(node_element, g_bodyTag);
+    m_pimpl->action = m_pimpl->doc.allocate_node(node_element, m_pimpl->name.c_str());
+    m_pimpl->action->append_attribute(m_pimpl->doc.allocate_attribute(g_xmlnsuAtr, getServiceTypeUrn()));
+
+    body->append_node(m_pimpl->action);
+    env->append_node(body);
+    m_pimpl->doc.append_node(env);
 }
 
 Action2::~Action2() = default;
 
 void Action2::addArgument(const std::string& name, const std::string& value)
 {
-    if (!m_pimpl->action.append_child(name.c_str()).text().set(value.c_str()))
-    {
-        throw std::runtime_error(fmt::format("Failed to add action to UPnP request: {}", name));
-    }
+    auto* arg = m_pimpl->doc.allocate_node(node_element, m_pimpl->doc.allocate_string(name.c_str()), m_pimpl->doc.allocate_string(value.c_str()));
+    m_pimpl->action->append_node(arg);
 }
 
 std::string Action2::toString() const
 {
-    class StringWriter : public pugi::xml_writer
-    {
-    public:
-        StringWriter(std::string& str) : m_str(str) {}
-        void write(const void* data, size_t size) override
-        {
-            m_str.append(static_cast<const char*>(data), size);
-        }
-    private:
-        std::string& m_str;
-    };
 
-    std::string result;
-    StringWriter writer(result);
-    m_pimpl->doc.save(writer, "", pugi::format_raw);
+    std::string result("<?xml version=\"1.0\"?>");
+    rapidxml_ns::print(std::back_inserter(result), m_pimpl->doc, print_no_indenting);
     return result;
 }
 
 std::string Action2::getName() const
 {
-    return m_pimpl->name;
+    return m_pimpl->name.substr(2); // strip the stored namespace
 }
 
 std::string Action2::getUrl() const
@@ -86,7 +96,7 @@ std::string Action2::getUrl() const
     return m_pimpl->url;
 }
 
-std::string Action2::getServiceTypeUrn() const
+const char* Action2::getServiceTypeUrn() const
 {
     return serviceTypeToUrnTypeString(m_pimpl->serviceType);
 }
@@ -98,11 +108,6 @@ ServiceType Action2::getServiceType() const
 
 bool Action2::operator==(const Action2& other) const
 {
-    if (m_pimpl->doc.empty() && !other.m_pimpl->doc.empty())
-    {
-        return false;
-    }
-
     return toString() == other.toString();
 }
 

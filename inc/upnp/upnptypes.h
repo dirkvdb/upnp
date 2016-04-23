@@ -33,19 +33,19 @@ namespace upnp
 
 namespace
 {
-    static const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
-    static const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:1";
-    static const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:1";
-    static const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:1";
+    const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
+    const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:1";
+    const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:1";
+    const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:1";
 
-    static const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
-    static const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
-    static const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
-    static const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
+    const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
+    const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
+    const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
+    const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
 
-    static const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
-    static const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
-    static const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
+    const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
+    const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
+    const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 }
 
 enum class ServiceType
@@ -168,7 +168,7 @@ inline std::string serviceTypeToTypeString(ServiceType type)
     throw Exception("Invalid service type received");
 }
 
-inline std::string serviceTypeToUrnTypeString(ServiceType type)
+inline const char* serviceTypeToUrnTypeString(ServiceType type)
 {
     if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;

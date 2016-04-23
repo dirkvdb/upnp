@@ -42,7 +42,7 @@ TEST(UpnpActionTest, CreateActionNoArguments)
     "<?xml version=\"1.0\"?>"
     "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
     "<s:Body>"
-    "<u:SetVolume xmlns:u=\"urn:schemas-upnp-org:service:RenderingControl:1\" />"
+    "<u:SetVolume xmlns:u=\"urn:schemas-upnp-org:service:RenderingControl:1\"/>"
     "</s:Body>"
     "</s:Envelope>"s;
 
