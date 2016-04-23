@@ -28,8 +28,6 @@
 #include "upnp/upnpcontentdirectorytypes.h"
 #include "utils/stringoperations.h"
 
-#include "rapidxml.hpp"
-
 namespace upnp
 {
 
@@ -42,9 +40,6 @@ namespace xml
 namespace utils
 {
 
-std::vector<StateVariable> getStateVariablesFromDescription(rapidxml_ns::xml_document<>& doc);
-std::vector<std::string> getActionsFromDescription(rapidxml_ns::xml_document<>& doc);
-std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<>& doc);
 Document getItemDocument(const Item& item);
 Document getItemsDocument(const std::vector<Item>& item);
 
@@ -54,14 +49,6 @@ Element serviceVariableToElement(Document& doc, const ServiceVariable& var);
 Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
 Item parseItem(xml::Element& itemElem);
 Item parseItemDocument(const std::string& xml);
-
-Resource parseResource(rapidxml_ns::xml_node<>& node, const std::string& url);
-Item parseContainer(rapidxml_ns::xml_node<>& containerElem);
-std::vector<Item> parseContainers(const std::string& xml);
-Item parseItem(rapidxml_ns::xml_node<>& itemElem);
-std::vector<Item> parseItems(const std::string& xml);
-Item parseMetaData(const std::string& meta);
-std::string parseBrowseResult(const std::string& response, ContentDirectory::ActionResult& result);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)

@@ -186,7 +186,7 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
         }
 
         ActionResult res;
-        auto browseResult = xml::utils::parseBrowseResult(response, res);
+        auto browseResult = xml::parseBrowseResult(response, res);
         if (browseResult.empty())
         {
             throw Exception("Failed to browse meta data");
@@ -196,7 +196,7 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
             log::debug(browseResult);
         #endif
 
-        cb(status, xml::utils::parseMetaData(browseResult));
+        cb(status, xml::parseMetaData(browseResult));
     });
 }
 
@@ -213,14 +213,14 @@ void Client::browseDirectChildren(BrowseType type, const std::string& objectId, 
 
         try
         {
-            auto browseResult = xml::utils::parseBrowseResult(response, res);
+            auto browseResult = xml::parseBrowseResult(response, res);
         #ifdef DEBUG_CONTENT_BROWSING
             log::debug(browseResult);
         #endif
 
             if (type == ContainersOnly || type == All)
             {
-                try { res.result = xml::utils::parseContainers(browseResult); }
+                try { res.result = xml::parseContainers(browseResult); }
                 catch (std::exception&e ) { log::warn(e.what()); }
             }
 
@@ -228,7 +228,7 @@ void Client::browseDirectChildren(BrowseType type, const std::string& objectId, 
             {
                 try
                 {
-                    auto items = xml::utils::parseItems(browseResult);
+                    auto items = xml::parseItems(browseResult);
                     for (auto& item : items)
                     {
                         res.result.emplace_back(std::move(item));
@@ -267,14 +267,14 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
 
         try
         {
-            auto searchResultDoc = xml::utils::parseBrowseResult(response, searchResult);
+            auto searchResultDoc = xml::parseBrowseResult(response, searchResult);
 
-            try { searchResult.result = xml::utils::parseContainers(searchResultDoc); }
+            try { searchResult.result = xml::parseContainers(searchResultDoc); }
             catch (std::exception&e ) { log::warn(e.what()); }
 
             try
             {
-                auto items = xml::utils::parseItems(searchResultDoc);
+                auto items = xml::parseItems(searchResultDoc);
                 for (auto& item : items)
                 {
                     searchResult.result.emplace_back(std::move(item));

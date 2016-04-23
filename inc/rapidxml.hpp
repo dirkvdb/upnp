@@ -1275,7 +1275,7 @@ namespace rapidxml_ns
             auto* node = first_node(name, name_size, case_sensitive);
             if (node == nullptr)
             {
-                throw std::runtime_error("child node not found in document: " + std::string(name, name_size));
+                throw std::runtime_error("child node not found in document: " + std::string(name));
             }
 
             return *node;
@@ -1587,6 +1587,18 @@ namespace rapidxml_ns
             else
                 m_first_node = 0;
             child->m_parent = 0;
+        }
+
+        //! Removes the first child node with the given name.
+        //! If the child does not exist, nothing will happen
+        //! \param Name of the node
+        void remove_node(const char* name)
+        {
+            auto* node = first_node(name);
+            if (node)
+            {
+                remove_node(node);
+            }
         }
 
         //! Removes specified child from the node

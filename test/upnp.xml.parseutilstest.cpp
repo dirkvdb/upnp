@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
-#include <pugixml.hpp>
 #include <sstream>
 
 #include "utils/log.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnp.xml.parseutils.h"
+
+#include "rapidxml_print.hpp"
 
 namespace upnp
 {
@@ -14,6 +15,7 @@ namespace test
 using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
+using namespace rapidxml_ns;
 
 static const std::string gatewayRootDesc =
 "<?xml version=\"1.0\"?>"
@@ -123,6 +125,81 @@ static const std::string mediaServerRootDesc =
 "   </device>"
 "</root>";
 
+static const std::string serviceDesc =
+"<?xml version=\"1.0\"?>"
+"<scpd"
+"  xmlns=\"urn:schemas-upnp-org:service-1-0\">"
+"    <specVersion>"
+"        <major>1</major>"
+"        <minor>0</minor>"
+"    </specVersion>"
+"    <actionList>"
+"        <action>"
+"            <name>GetVolume</name>"
+"            <argumentList>"
+"                <argument>"
+"                    <name>InstanceID</name>"
+"                    <direction>in</direction>"
+"                    <relatedStateVariable>A_ARG_TYPE_InstanceID</relatedStateVariable>"
+"                </argument>"
+"                <argument>"
+"                    <name>Channel</name>"
+"                    <direction>in</direction>"
+"                    <relatedStateVariable>A_ARG_TYPE_Channel</relatedStateVariable>"
+"                </argument>"
+"                <argument>"
+"                    <name>CurrentVolume</name>"
+"                    <direction>out</direction>"
+"                    <relatedStateVariable>Volume</relatedStateVariable>"
+"                </argument>"
+"            </argumentList>"
+"        </action>"
+"        <action>"
+"            <name>SetVolume</name>"
+"            <argumentList>"
+"                <argument>"
+"                    <name>InstanceID</name>"
+"                    <direction>in</direction>"
+"                    <relatedStateVariable>A_ARG_TYPE_InstanceID</relatedStateVariable>"
+"                </argument>"
+"                <argument>"
+"                    <name>Channel</name>"
+"                    <direction>in</direction>"
+"                    <relatedStateVariable>A_ARG_TYPE_Channel</relatedStateVariable>"
+"                </argument>"
+"                <argument>"
+"                    <name>DesiredVolume</name>"
+"                    <direction>in</direction>"
+"                    <relatedStateVariable>Volume</relatedStateVariable>"
+"                </argument>"
+"            </argumentList>"
+"        </action>"
+"    </actionList>"
+"    <serviceStateTable>"
+"        <stateVariable sendEvents=\"no\">"
+"            <name>PresetNameList</name>"
+"            <dataType>string</dataType>"
+"        </stateVariable>"
+"        <stateVariable sendEvents=\"yes\">"
+"            <name>LastChange</name>"
+"            <dataType>string</dataType>"
+"        </stateVariable>"
+"        <stateVariable sendEvents=\"no\">"
+"            <name>Mute</name>"
+"            <dataType>boolean</dataType>"
+"        </stateVariable>"
+"        <stateVariable sendEvents=\"no\">"
+"            <name>Volume</name>"
+"            <dataType>ui2</dataType>"
+"            <allowedValueRange>"
+"                <minimum>0</minimum>"
+"                <maximum>100</maximum>"
+"                <step>1</step>"
+"            </allowedValueRange>"
+"        </stateVariable>"
+"    </serviceStateTable>"
+"</scpd>";
+
 TEST(XmlParseTest, GatewayDeviceInfo)
 {
     Device dev;
@@ -180,13 +257,13 @@ TEST(XmlParseTest, MissingFriendlyName)
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    pugi::xml_document doc;
-    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
-
-    doc.child("root").child("device").remove_child("friendlyName");
+    auto xml = gatewayRootDesc;
+    xml_document<> doc;
+    doc.parse<parse_default>(&xml.front());
+    doc.first_node_ref("root").first_node_ref("device").remove_node("friendlyName");
 
     std::stringstream xmlMod;
-    doc.save(xmlMod);
+    xmlMod << *doc.first_node();
     EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
 }
 
@@ -195,13 +272,13 @@ TEST(XmlParseTest, MissingUdn)
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    pugi::xml_document doc;
-    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
-
-    doc.child("root").child("device").remove_child("UDN");
+    auto xml = gatewayRootDesc;
+    xml_document<> doc;
+    doc.parse<parse_non_destructive>(xml.c_str());
+    doc.first_node_ref("root").first_node_ref("device").remove_node("UDN");
 
     std::stringstream xmlMod;
-    doc.save(xmlMod);
+    xmlMod << *doc.first_node();
     EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
 }
 
@@ -210,14 +287,63 @@ TEST(XmlParseTest, MissingDeviceType)
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    pugi::xml_document doc;
-    EXPECT_TRUE(doc.load_buffer(gatewayRootDesc.c_str(), gatewayRootDesc.size()));
-
-    doc.child("root").child("device").remove_child("deviceType");
+    xml_document<> doc;
+    doc.parse<parse_non_destructive>(gatewayRootDesc.c_str());
+    doc.first_node_ref("root").first_node_ref("device").remove_node("deviceType");
 
     std::stringstream xmlMod;
-    doc.save(xmlMod);
+    xmlMod << *doc.first_node();
     EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
+}
+
+TEST(XmlParseTest, GetStateVariablesFromDescription)
+{
+    xml_document<> doc;
+    doc.parse<parse_non_destructive>(serviceDesc.c_str());
+
+    auto vars = xml::getStateVariablesFromDescription(doc);
+
+    auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
+        return var.name == "LastChange";
+    });
+
+    ASSERT_NE(vars.end(), iter);
+    EXPECT_STREQ("LastChange", iter->name.c_str());
+    EXPECT_STREQ("string", iter->dataType.c_str());
+    EXPECT_EQ(nullptr, iter->valueRange);
+
+    iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
+        return var.name == "Volume";
+    });
+
+    ASSERT_NE(vars.end(), iter);
+    EXPECT_STREQ("Volume", iter->name.c_str());
+    EXPECT_STREQ("ui2", iter->dataType.c_str());
+    EXPECT_NE(nullptr, iter->valueRange);
+    EXPECT_EQ(0, iter->valueRange->minimumValue);
+    EXPECT_EQ(100, iter->valueRange->maximumValue);
+    EXPECT_EQ(1U, iter->valueRange->step);
+}
+
+static const std::string eventDesc =
+"<Event xmlns=\"urn:schemas-upnp-org:metadata-1-0/AVT/\">"
+"  <InstanceID val=\"0\">"
+"    <TransportState val=\"PLAYING\"/>"
+"    <CurrentTrackURI val=\"http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2598668.mp3\"/>"
+"    <CurrentTransportActions val=\"Pause,Stop,Next,Previous\"/>"
+"  </InstanceID>"
+"</Event>";
+
+TEST(XmlParseTest, GetEventValues)
+{
+    xml_document<> doc;
+    doc.parse<parse_non_destructive>(eventDesc.c_str());
+
+    auto values = xml::getEventValues(doc);
+    EXPECT_EQ(3u, values.size());
+    EXPECT_EQ("PLAYING"s, values.at("TransportState"));
+    EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2598668.mp3"s, values.at("CurrentTrackURI"));
+    EXPECT_EQ("Pause,Stop,Next,Previous"s, values.at("CurrentTransportActions"));
 }
 
 }

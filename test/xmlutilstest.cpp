@@ -162,32 +162,6 @@ TEST_F(XmlUtilsTest, elementGetChildElementValue)
     EXPECT_EQ(std::string("1"),     node.getChildNodeValue("step"));
 }
 
-TEST_F(XmlUtilsTest, getStateVariablesFromDescription)
-{
-    auto vars = xml::utils::getStateVariablesFromDescription(doc);
-
-    auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
-        return var.name == "LastChange";
-    });
-
-    ASSERT_NE(vars.end(), iter);
-    EXPECT_STREQ("LastChange", iter->name.c_str());
-    EXPECT_STREQ("string", iter->dataType.c_str());
-    EXPECT_EQ(nullptr, iter->valueRange);
-
-    iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
-        return var.name == "Volume";
-    });
-
-    ASSERT_NE(vars.end(), iter);
-    EXPECT_STREQ("Volume", iter->name.c_str());
-    EXPECT_STREQ("ui2", iter->dataType.c_str());
-    EXPECT_NE(nullptr, iter->valueRange);
-    EXPECT_EQ(0, iter->valueRange->minimumValue);
-    EXPECT_EQ(100, iter->valueRange->maximumValue);
-    EXPECT_EQ(1U, iter->valueRange->step);
-}
-
 TEST_F(XmlUtilsTest, itemToDocument)
 {
     Item item("0");

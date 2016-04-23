@@ -57,13 +57,13 @@ std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32
 std::string optionalChildValue(xml_node<>& node, const char* child)
 {
     std::string result;
-    
+
     auto* childNode = node.first_node(child);
     if (childNode && childNode->value())
     {
         result = std::string(childNode->value(), childNode->value_size());
     }
-    
+
     return child;
 }
 
@@ -132,15 +132,15 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-                
-                info.track = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "Track"));
+
+                info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "Track"));
                 info.trackDuration = optionalChildValue(body, "TrackDuration");
                 info.trackMetaData = optionalChildValue(body, "TrackMetaData");
                 info.trackURI = optionalChildValue(body, "TrackURI");
                 info.relativeTime = optionalChildValue(body, "RelTime");
                 info.absoluteTime = optionalChildValue(body, "AbsTime");
-                info.relativeCount = xml::utils::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "RelCount"));
-                info.absoluteCount = xml::utils::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "AbsCount"));
+                info.relativeCount = xml::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "RelCount"));
+                info.absoluteCount = xml::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "AbsCount"));
             }
             catch(std::exception& e)
             {
@@ -148,7 +148,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
                 status = -1;
             }
         }
-        
+
         invoke(cb, status, info);
     });
 }
@@ -164,7 +164,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-                
+
                 info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "NrTracks"));
                 info.mediaDuration = optionalChildValue(body, "MediaDuration");
                 info.currentURI = optionalChildValue(body, "CurrentUri");
@@ -181,7 +181,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
                 status = -1;
             }
         }
-        
+
         invoke(cb, status, info);
     });
 }
@@ -197,19 +197,19 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-                
+
                 auto* child = body.first_node("CurrentTransportState");
                 if (child)
                 {
                     info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
                 }
-                
+
                 child = body.first_node("CurrentTransportStatus");
                 if (child)
                 {
                     info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
                 }
-                
+
                 child = body.first_node("CurrentSpeed");
                 if (child)
                 {
@@ -222,7 +222,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
                 status = -1;
             }
         }
-        
+
         invoke(cb, status, info);
     });
 }
@@ -238,7 +238,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
                 auto& actionsNode = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Actions");
-                
+
                 for(auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
                 {
                     try
@@ -257,7 +257,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                 status = -1;
             }
         }
-        
+
         invoke(cb, status, actions);
     });
 }

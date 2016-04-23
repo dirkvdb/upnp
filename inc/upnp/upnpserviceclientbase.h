@@ -23,7 +23,7 @@
 #include "upnp/upnp.client.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 #include <set>
 #include <map>
@@ -126,7 +126,7 @@ protected:
 
                 try
                 {
-                    for (auto& action : xml::utils::getActionsFromDescription(doc))
+                    for (auto& action : xml::getActionsFromDescription(doc))
                     {
                         try
                         {
@@ -138,7 +138,7 @@ protected:
                         }
                     }
 
-                    m_StateVariables = xml::utils::getStateVariablesFromDescription(doc);
+                    m_StateVariables = xml::getStateVariablesFromDescription(doc);
                 }
                 catch (std::exception& e)
                 {
