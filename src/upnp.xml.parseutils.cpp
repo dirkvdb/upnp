@@ -55,6 +55,17 @@ std::string requiredAttributeValue(xml_node<>& elem, const char* name)
     return std::string(attr->value(), attr->value_size());
 }
 
+std::string optionalAttributeValue(xml_node<>& elem, const char* name)
+{
+    auto* attr = elem.first_attribute(name);
+    if (!attr || !attr->name())
+    {
+        return "";
+    }
+
+    return std::string(attr->value(), attr->value_size()); // TODO span
+}
+
 template <typename T>
 T optionalAttributeValue(xml_node<>& elem, const char* name, T defaultValue)
 {
@@ -64,7 +75,7 @@ T optionalAttributeValue(xml_node<>& elem, const char* name, T defaultValue)
         return defaultValue;
     }
 
-    return stringops::toNumeric<T>(std::string(attr->name(), attr->name_size())); // TODO span
+    return stringops::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
 }
 
 bool findAndParseService(const xml_node<>& node, const ServiceType serviceType, Device& device)
@@ -119,12 +130,12 @@ std::string encode(const char* data, size_t dataSize)
     {
         switch(data[pos])
         {
-            case '&':  buffer.append("&amp;");       break;
-            case '\"': buffer.append("&quot;");      break;
-            case '\'': buffer.append("&apos;");      break;
-            case '<':  buffer.append("&lt;");        break;
-            case '>':  buffer.append("&gt;");        break;
-            default:   buffer.append(&data[pos], 1); break;
+            case '&':  buffer.append("&amp;", 5);       break;
+            case '\"': buffer.append("&quot;", 6);      break;
+            case '\'': buffer.append("&apos;", 6);      break;
+            case '<':  buffer.append("&lt;", 4);        break;
+            case '>':  buffer.append("&gt;", 4);        break;
+            default:   buffer += data[pos]; break;
         }
     }
     
@@ -407,7 +418,7 @@ Resource parseResource(xml_node<>& node, const std::string& url)
             {
                 res.setNrAudioChannels(xml::optionalStringToUnsignedNumeric<uint32_t>(attr->value_string()));
             }
-            else if (strncmp("bitRate", attr->name(), attr->name_size()) == 0)
+            else if (strncmp("bitrate", attr->name(), attr->name_size()) == 0)
             {
                 res.setBitRate(xml::optionalStringToUnsignedNumeric<uint32_t>(attr->value_string()));
             }
@@ -435,6 +446,7 @@ Item parseContainer(xml_node<>& containerElem)
     auto item = Item();
     item.setObjectId(requiredAttributeValue(containerElem, "id"));
     item.setParentId(requiredAttributeValue(containerElem, "parentID"));
+    item.setRefId(optionalAttributeValue(containerElem, "refID"));
     item.setChildCount(optionalAttributeValue<uint32_t>(containerElem, "childCount", 0));
 
     for (auto* elem = containerElem.first_node(); elem != nullptr; elem = elem->next_sibling())
@@ -487,6 +499,8 @@ Item parseItem(xml_node<>& itemElem)
     auto item = Item();
     item.setObjectId(requiredAttributeValue(itemElem, "id"));
     item.setParentId(requiredAttributeValue(itemElem, "parentID"));
+    item.setRefId(optionalAttributeValue(itemElem, "refID"));
+    item.setRestricted(optionalAttributeValue(itemElem, "restricted") != "0");
 
     try
     {
@@ -566,7 +580,6 @@ Item parseMetaData(const std::string& meta)
         {
             if (strncmp("container", node->name(), node->name_size()) == 0)
             {
-
                 return parseContainer(*node);
             }
             else if (strncmp("item", node->name(), node->name_size()) == 0)

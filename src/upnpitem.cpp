@@ -328,6 +328,11 @@ void Item::setChildCount(uint32_t count)
     m_childCount = count;
 }
 
+void Item::setRestricted(bool value)
+{
+    m_restricted = value;
+}
+
 void Item::setAlbumArt(dlna::ProfileId profile, const std::string& uri)
 {
     m_albumArtUris[profile] = uri;

@@ -93,7 +93,6 @@ public:
     const std::string& getRefId() const;
     const std::string& getTitle() const;
     bool restricted() const;
-
     bool isContainer() const;
 
     // get the albumarturi with the specific profile id, returns an empty string if the profile is not present
@@ -113,6 +112,7 @@ public:
     void setRefId(const std::string& id);
     void setTitle(const std::string& title);
     void setChildCount(uint32_t count);
+    void setRestricted(bool value);
 
     void setAlbumArt(dlna::ProfileId profile, const std::string& uri);
 

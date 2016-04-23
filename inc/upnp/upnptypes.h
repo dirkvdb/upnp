@@ -82,6 +82,7 @@ enum class Property
     SearchClass,
     Searchable,
     Artist,
+    AlbumArtist,
     Album,
     AlbumArt,
     Icon,
@@ -235,6 +236,7 @@ inline Property propertyFromString(const std::string& name)
     if (name == "searchable")               return Property::Searchable;
     if (name == "upnp:artist")              return Property::Artist;
     if (name == "upnp:album")               return Property::Album;
+    if (name == "upnp:albumArtist")         return Property::AlbumArtist;
     if (name == "upnp:albumArtURI")         return Property::AlbumArt;
     if (name == "upnp:icon")                return Property::Icon;
     if (name == "upnp:genre")               return Property::Genre;
@@ -267,6 +269,7 @@ inline std::string toString(Property prop)
     case Property::Searchable:        return "searchable";
     case Property::Artist:            return "upnp:artist";
     case Property::Album:             return "upnp:album";
+    case Property::AlbumArtist:       return "upnp:albumArtist";
     case Property::AlbumArt:          return "upnp:albumArtURI";
     case Property::Icon:              return "upnp:icon";
     case Property::Genre:             return "upnp:genre";
