@@ -17,6 +17,11 @@ class Device;
 namespace xml
 {
 
+std::string encode(const std::string& data);
+std::string encode(const char* data, size_t dataSize);
+std::string decode(const std::string& data);
+std::string decode(const char* data, size_t dataSize);
+
 void parseDeviceInfo(const std::string& xml, Device& device);
 std::vector<StateVariable> getStateVariablesFromDescription(rapidxml_ns::xml_document<>& doc);
 std::vector<std::string> getActionsFromDescription(rapidxml_ns::xml_document<>& doc);

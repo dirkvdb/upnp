@@ -1297,6 +1297,12 @@ namespace rapidxml_ns
                                     const Ch *local_name,     std::size_t local_name_size,
                                     bool local_name_case_sensitive = true) const
         {
+            if (namespace_uri_size == 0)
+                namespace_uri_size = internal::measure(namespace_uri);
+            
+            if (local_name_size == 0)
+                local_name_size = internal::measure(local_name);
+        
             for (xml_node<Ch> *child = m_first_node; child; child = child->next_sibling())
                 if (internal::compare(child->local_name(), child->local_name_size(),
                         local_name, local_name_size, local_name_case_sensitive)
@@ -1314,6 +1320,19 @@ namespace rapidxml_ns
                 if (internal::compare(child->namespace_uri(), child->namespace_uri_size(), namespace_uri, namespace_uri_size))
                     return child;
             return 0;
+        }
+        
+        xml_node<Ch>& first_node_ref_ns(const Ch *namespace_uri,  std::size_t namespace_uri_size,
+                                        const Ch *local_name,     std::size_t local_name_size = 0,
+                                        bool local_name_case_sensitive = true) const
+        {
+            auto* node = first_node_ns(namespace_uri, namespace_uri_size, local_name, local_name_size, local_name_case_sensitive);
+            if (node == nullptr)
+            {
+                throw std::runtime_error("child node not found in document: " + std::string(local_name));
+            }
+
+            return *node;
         }
 
         //! Gets last child node, optionally matching node name.

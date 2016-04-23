@@ -5,6 +5,7 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnp.xml.parseutils.h"
 
+#include "testxmls.h"
 #include "rapidxml_print.hpp"
 
 namespace upnp
@@ -16,36 +17,6 @@ using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 using namespace rapidxml_ns;
-
-static const std::string gatewayRootDesc =
-"<?xml version=\"1.0\"?>"
-"<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
-"    <specVersion>"
-"        <major>1</major>"
-"        <minor>0</minor>"
-"    </specVersion>"
-"    <device>"
-"        <deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>"
-"        <friendlyName>Compal Broadband Networks, Inc CH6643</friendlyName>"
-"        <manufacturer>Compal Broadband Networks, Inc</manufacturer>"
-"        <manufacturerURL>http://www.icbn.com.tw</manufacturerURL>"
-"        <modelDescription> CH6643</modelDescription>"
-"        <modelName> CH6643</modelName>"
-"        <modelNumber>CH6643</modelNumber>"
-"        <modelURL>http://www.icbn.com.tw</modelURL>"
-"        <serialNumber>601581307023619400000660</serialNumber>"
-"        <UDN>uuid:A37351C5-8521-4c24-A43E-5C353B9982A9</UDN>"
-"        <serviceList>"
-"            <service>"
-"                <serviceType>urn:schemas-upnp-org:service:Layer3Forwarding:1</serviceType>"
-"                <serviceId>urn:upnp-org:serviceId:Layer3Forwarding1</serviceId>"
-"                <controlURL>/ctl/L3F</controlURL>"
-"                <eventSubURL>/evt/L3F</eventSubURL>"
-"                <SCPDURL>/L3F.xml</SCPDURL>"
-"            </service>"
-"        </serviceList>"
-"    </device>"
-"</root>";
 
 static const std::string mediaServerRootDesc =
 "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
@@ -200,12 +171,60 @@ static const std::string serviceDesc =
 "    </serviceStateTable>"
 "</scpd>";
 
+TEST(XmlParseTest, Decode)
+{
+    EXPECT_EQ("\"<'&'>\"", xml::decode("&quot;&lt;&apos;&amp;&apos;&gt;&quot;"));
+    EXPECT_EQ("&", xml::decode("&"));
+    EXPECT_EQ("&&", xml::decode("&&"));
+    EXPECT_EQ("&&&", xml::decode("&&&"));
+    EXPECT_EQ("&&&&", xml::decode("&&&&"));
+    EXPECT_EQ("&&&&&", xml::decode("&&&&&"));
+    EXPECT_EQ("&&&&&&", xml::decode("&&&&&&"));
+
+    EXPECT_EQ("...&quot", xml::decode("...&quot"));
+    EXPECT_EQ("...&quo", xml::decode("...&quo"));
+    EXPECT_EQ("...&qu", xml::decode("...&qu"));
+    EXPECT_EQ("...&q", xml::decode("...&q"));
+
+    EXPECT_EQ("...&lt", xml::decode("...&lt"));
+    EXPECT_EQ("...&l", xml::decode("...&l"));
+
+    EXPECT_EQ("...&gt", xml::decode("...&gt"));
+    EXPECT_EQ("...&g", xml::decode("...&g"));
+
+    EXPECT_EQ("...&apos", xml::decode("...&apos"));
+    EXPECT_EQ("...&apo", xml::decode("...&apo"));
+    EXPECT_EQ("...&ap", xml::decode("...&ap"));
+    EXPECT_EQ("...&a", xml::decode("...&a"));
+
+    EXPECT_EQ("...&amp", xml::decode("...&amp"));
+    EXPECT_EQ("...&am", xml::decode("...&am"));
+    EXPECT_EQ("...&a", xml::decode("...&a"));
+
+    EXPECT_EQ("...&amp&&amp", xml::decode("...&amp&amp;&amp"));
+    EXPECT_EQ("", xml::decode(""));
+    EXPECT_EQ("<hello attr=\"value\">", xml::decode("&lt;hello attr=&quot;value&quot;&gt;"));
+    EXPECT_EQ("Hello&", xml::decode("Hello&"));
+}
+
+TEST(XmlParseTest, Encode)
+{
+    EXPECT_EQ("&quot;&lt;&apos;&amp;&apos;&gt;&quot;", xml::encode("\"<'&'>\""));
+    EXPECT_EQ("&amp;", xml::encode("&"));
+    EXPECT_EQ("&amp;&amp;", xml::encode("&&"));
+
+    EXPECT_EQ("&amp;amp;", xml::encode("&amp;"));
+    EXPECT_EQ("", xml::encode(""));
+    EXPECT_EQ("&lt;hello attr=&quot;value&quot;&gt;", xml::encode("<hello attr=\"value\">"));
+    EXPECT_EQ("Hello&amp;", xml::encode("Hello&"));
+}
+
 TEST(XmlParseTest, GatewayDeviceInfo)
 {
     Device dev;
     dev.m_location = "http://192.168.1.1:5000/rootDesc.xml";
 
-    xml::parseDeviceInfo(gatewayRootDesc, dev);
+    xml::parseDeviceInfo(testxmls::gatewayRootDesc, dev);
 
     EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, dev.m_udn);
     EXPECT_EQ("Compal Broadband Networks, Inc CH6643"s, dev.m_friendlyName);
@@ -257,13 +276,13 @@ TEST(XmlParseTest, MissingFriendlyName)
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    auto xml = gatewayRootDesc;
+    auto xml = testxmls::gatewayRootDesc;
     xml_document<> doc;
     doc.parse<parse_default>(&xml.front());
     doc.first_node_ref("root").first_node_ref("device").remove_node("friendlyName");
 
     std::stringstream xmlMod;
-    xmlMod << *doc.first_node();
+    xmlMod << doc;
     EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
 }
 
@@ -272,7 +291,7 @@ TEST(XmlParseTest, MissingUdn)
     Device dev;
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
-    auto xml = gatewayRootDesc;
+    auto xml = testxmls::gatewayRootDesc;
     xml_document<> doc;
     doc.parse<parse_non_destructive>(xml.c_str());
     doc.first_node_ref("root").first_node_ref("device").remove_node("UDN");
@@ -288,7 +307,7 @@ TEST(XmlParseTest, MissingDeviceType)
     dev.m_location = "http://192.168.1.13:9000/desc.xml";
 
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(gatewayRootDesc.c_str());
+    doc.parse<parse_non_destructive>(testxmls::gatewayRootDesc.c_str());
     doc.first_node_ref("root").first_node_ref("device").remove_node("deviceType");
 
     std::stringstream xmlMod;
@@ -344,6 +363,17 @@ TEST(XmlParseTest, GetEventValues)
     EXPECT_EQ("PLAYING"s, values.at("TransportState"));
     EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2598668.mp3"s, values.at("CurrentTrackURI"));
     EXPECT_EQ("Pause,Stop,Next,Previous"s, values.at("CurrentTransportActions"));
+}
+
+TEST(XmlParseTest, ParseBrowseResponse)
+{
+    ContentDirectory::ActionResult result;
+    auto didlLite = xml::parseBrowseResult(testxmls::browseResponse, result);
+
+    EXPECT_EQ(10u, result.numberReturned);
+    EXPECT_EQ(12u, result.totalMatches);
+    EXPECT_EQ(2u, result.updateId);
+    EXPECT_EQ(xml::decode("&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:arib=\"urn:schemas-arib-or-jp:elements-1-0/\" xmlns:dtcp=\"urn:schemas-dtcp-com:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"&gt;&lt;item id=&quot;0$1$12$38502R2290700&quot; refID=&quot;0$1$8I2290700&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Momove&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;1&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2290700.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:playcount&gt;1&lt;/pv:playcount&gt;&lt;pv:modificationTime&gt;1133382780&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:lastPlayedTime&gt;2015-12-31T22:54:22&lt;/pv:lastPlayedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDEgLSBVbmRlcndvcmxkIC0gTW9tb3ZlLm1wMw==&lt;/pv:bookmark&gt;&lt;res duration=\"0:06:54\" size=\"10053760\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2290700.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2290700.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2291724&quot; refID=&quot;0$1$8I2291724&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Two Months Off&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;2&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2291724.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382778&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDIgLSBVbmRlcndvcmxkIC0gVHdvIE1vbnRocyBPZmYubXAz&lt;/pv:bookmark&gt;&lt;res duration=\"0:09:09\" size=\"13275264\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2291724.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291724.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2291212&quot; refID=&quot;0$1$8I2291212&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Twist&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;3&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2291212.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382776&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDMgLSBVbmRlcndvcmxkIC0gVHdpc3QubXAz&lt;/pv:bookmark&gt;&lt;res duration=\"0:06:24\" size=\"9330816\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2291212.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291212.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2291980&quot; refID=&quot;0$1$8I2291980&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Sola Sistim&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;4&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2291980.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382776&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDQgLSBVbmRlcndvcmxkIC0gU29sYSBTaXN0aW0ubXAz&lt;/pv:bookmark&gt;&lt;res duration=\"0:06:27\" size=\"9396352\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2291980.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291980.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2290956&quot; refID=&quot;0$1$8I2290956&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Little Speaker&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;5&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2290956.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382778&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDUgLSBVbmRlcndvcmxkIC0gTGl0dGxlIFNwZWFrZXIubXAz&lt;/pv:bookmark&gt;&lt;res duration=\"0:08:39\" size=\"12556416\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2290956.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2290956.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2292748&quot; refID=&quot;0$1$8I2292748&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Trim&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;6&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2292748.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382778&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDYgLSBVbmRlcndvcmxkIC0gVHJpbS5tcDM=&lt;/pv:bookmark&gt;&lt;res duration=\"0:03:24\" size=\"4999296\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2292748.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2292748.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2292492&quot; refID=&quot;0$1$8I2292492&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Ess Gee&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;7&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2292492.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382778&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDcgLSBVbmRlcndvcmxkIC0gRXNzIEdlZS5tcDM=&lt;/pv:bookmark&gt;&lt;res duration=\"0:02:22\" size=\"3516544\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2292492.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2292492.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2292236&quot; refID=&quot;0$1$8I2292236&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Dinosaur Adventure 3D&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;8&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2292236.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382774&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDggLSBVbmRlcndvcmxkIC0gRGlub3NhdXIgQWR2ZW50dXJlIDNELm1wMw==&lt;/pv:bookmark&gt;&lt;res duration=\"0:07:56\" size=\"11536512\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2292236.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2292236.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2293004&quot; refID=&quot;0$1$8I2293004&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Ballet Lane&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;9&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2293004.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:modificationTime&gt;1133382776&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMDkgLSBVbmRlcndvcmxkIC0gQmFsbGV0IExhbmUubXAz&lt;/pv:bookmark&gt;&lt;res duration=\"0:03:40\" size=\"5384320\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2293004.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2293004.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;item id=&quot;0$1$12$38502R2291468&quot; refID=&quot;0$1$8I2291468&quot; parentID=&quot;0$1$12$38502&quot; restricted=&quot;1&quot;&gt;&lt;dc:title&gt;Leutin&lt;/dc:title&gt;&lt;dc:date&gt;2002-01-01&lt;/dc:date&gt;&lt;upnp:genre&gt;Club&lt;/upnp:genre&gt;&lt;upnp:album&gt;A Hundred Days Off&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;10&lt;/upnp:originalTrackNumber&gt;&lt;dc:creator&gt;Underworld&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2291468.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Underworld&lt;/upnp:artist&gt;&lt;upnp:albumArtist&gt;Underworld&lt;/upnp:albumArtist&gt;&lt;pv:playcount&gt;1&lt;/pv:playcount&gt;&lt;pv:modificationTime&gt;1133382780&lt;/pv:modificationTime&gt;&lt;pv:addedTime&gt;1438685937&lt;/pv:addedTime&gt;&lt;pv:lastPlayedTime&gt;2016-03-28T15:38:02&lt;/pv:lastPlayedTime&gt;&lt;pv:numberOfThisDisc&gt;1&lt;/pv:numberOfThisDisc&gt;&lt;pv:extension&gt;mp3&lt;/pv:extension&gt;&lt;pv:bookmark&gt;uuid:55076f6e-6b79-1d65-a4eb-00089be34071,-L3NoYXJlL011bHRpbWVkaWEvbXVzaWMvVW5kZXJ3b3JsZCAtIEEgSHVuZHJlZCBEYXlzIE9mZiAoMjAwMikvMTAgLSBVbmRlcndvcmxkIC0gTGV1dGluLm1wMw==&lt;/pv:bookmark&gt;&lt;res duration=\"0:07:01\" size=\"10207360\" bitrate=\"24000\" protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=11;DLNA.ORG_FLAGS=01700000000000000000000000000000\" pv:timeseekinfo=\"http://192.168.1.13:9000/disk/O0$1$12$38502R2291468.seek\" &gt;http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291468.mp3&lt;/res&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;/item&gt;&lt;/DIDL-Lite&gt;"), didlLite);
 }
 
 }

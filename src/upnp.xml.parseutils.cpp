@@ -1,5 +1,4 @@
 #include "upnp/upnp.xml.parseutils.h"
-#include "upnp/upnpdevice.h"
 
 #include <cassert>
 
@@ -9,6 +8,7 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnputils.h"
+#include "upnp/upnpdevice.h"
 
 namespace upnp
 {
@@ -103,6 +103,170 @@ void addPropertyToItem(const std::string& propertyName, const std::string& prope
     }
 }
 
+}
+
+std::string encode(const std::string& data)
+{
+    return encode(data.c_str(), data.size());
+}
+
+std::string encode(const char* data, size_t dataSize)
+{
+    std::string buffer;
+    buffer.reserve(dataSize * 1.1f);
+    
+    for (size_t pos = 0; pos != dataSize; ++pos)
+    {
+        switch(data[pos])
+        {
+            case '&':  buffer.append("&amp;");       break;
+            case '\"': buffer.append("&quot;");      break;
+            case '\'': buffer.append("&apos;");      break;
+            case '<':  buffer.append("&lt;");        break;
+            case '>':  buffer.append("&gt;");        break;
+            default:   buffer.append(&data[pos], 1); break;
+        }
+    }
+    
+    return buffer;
+}
+
+std::string decode(const std::string& data)
+{
+    return decode(data.c_str(), data.size());
+}
+
+std::string decode(const char* data, size_t dataSize)
+{
+    std::string buffer;
+    buffer.reserve(dataSize);
+    
+    for (size_t pos = 0; pos != dataSize; ++pos)
+    {
+        if (data[pos] == '&')
+        {
+            if (pos + 3 > dataSize) // minumum escape sequence has 3 more characters
+            {
+                buffer.append(&data[pos], 1);
+                continue;
+            }
+        
+            switch (data[pos+1])
+            {
+            case 'a':
+            {
+                switch (data[pos+2])
+                {
+                case 'm':
+                {
+                    if (pos + 4 > dataSize) // amp escape sequence has 4 more characters
+                    {
+                        buffer.append(&data[pos], 3);
+                        pos += 2;
+                        continue;
+                    }
+                    
+                    if (data[pos+3] == 'p' && data[pos+4] == ';')
+                    {
+                        buffer += '&';
+                        pos += 4;
+                    }
+                    else
+                    {
+                        buffer.append(&data[pos], 3);
+                        pos += 2;
+                    }
+                    break;
+                }
+                case 'p':
+                {
+                    if (pos + 5 > dataSize) // apos escape sequence has 5 more characters
+                    {
+                        buffer.append(&data[pos], 2);
+                        pos += 1;
+                        continue;
+                    }
+                    
+                    if (data[pos+3] == 'o' && data[pos+4] == 's' && data[pos+5] == ';')
+                    {
+                        buffer += '\'';
+                        pos += 5;
+                    }
+                    else
+                    {
+                        buffer.append(&data[pos], 3);
+                        pos += 2;
+                    }
+                    break;
+                }
+                }
+                break;
+            }
+            case 'q':
+            {
+                if (pos + 5 > dataSize) // quot escape sequence has 5 more characters
+                {
+                    buffer.append(&data[pos], 2);
+                    pos += 1;
+                    continue;
+                }
+                
+                if (data[pos+2] == 'u' && data[pos+3] == 'o' && data[pos+4] == 't' && data[pos+5] == ';')
+                {
+                    buffer += '\"';
+                    pos += 5;
+                }
+                else
+                {
+                    buffer.append(&data[pos], 2);
+                    pos += 1;
+                }
+                
+                break;
+            }
+            case 'l':
+            {
+                if (data[pos+2] == 't' && data[pos+3] == ';')
+                {
+                    buffer += '<';
+                    pos += 3;
+                }
+                else
+                {
+                    buffer.append(&data[pos], 2);
+                    pos += 1;
+                }
+                
+                break;
+            }
+            case 'g':
+            {
+                if (data[pos+2] == 't' && data[pos+3] == ';')
+                {
+                    buffer += '>';
+                    pos += 3;
+                }
+                else
+                {
+                    buffer.append(&data[pos], 2);
+                    pos += 1;
+                }
+                
+                break;
+            }
+            default:
+                buffer.append(&data[pos], 2);
+                pos += 1;
+                break;
+            }
+        }
+        else
+        {
+            buffer.append(&data[pos], 1);
+        }
+    }
+    
+    return buffer;
 }
 
 void parseDeviceInfo(const std::string& xml, Device& device)
@@ -422,15 +586,20 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
     assert(!response.empty() && "ParseBrowseResult: Invalid document supplied");
 
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(response.c_str());
-    auto& browseResultNode = doc.first_node_ref();
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(response.c_str());
+    
+    auto& browseResultNode = doc.first_node_ref().first_node_ref().first_node_ref();
+    if (strncmp("BrowseResponse", browseResultNode.local_name(), browseResultNode.local_name_size()) != 0)
+    {
+        throw std::runtime_error("Failed to find BrowseResponse node in browse result");
+    }
 
     std::string browseResult;
     for (auto* child = browseResultNode.first_node(); child != nullptr; child = child->next_sibling())
     {
         if (strncmp("Result", child->name(), child->name_size()) == 0)
         {
-            browseResult.assign(child->value(), child->value_size());
+            browseResult = decode(child->value(), child->value_size());
         }
         else if (strncmp("NumberReturned", child->name(), child->name_size()) == 0)
         {

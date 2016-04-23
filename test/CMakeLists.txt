@@ -36,6 +36,7 @@ LINK_DIRECTORIES(
 ADD_EXECUTABLE(upnpframeworktest
     testframework/gmock-gtest-all.cpp
     main.cpp
+    testxmls.h
     upnp.uvtest.cpp
     upnp.clienttest.cpp
     upnp.ssdp.clienttest.cpp
