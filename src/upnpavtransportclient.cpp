@@ -69,7 +69,7 @@ std::string optionalChildValue(xml_node<>& node, const char* child)
 
 }
 
-Client::Client(Client2& client)
+Client::Client(IClient2& client)
 : ServiceClientBase(client)
 {
 }

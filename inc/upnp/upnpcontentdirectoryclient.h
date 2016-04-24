@@ -26,7 +26,7 @@ namespace upnp
 
 class Action;
 class Device;
-class Client2;
+class IClient2;
 
 typedef std::function<void(const Item&)> ItemCb;
 
@@ -43,7 +43,7 @@ public:
         ContainersOnly
     };
 
-    Client(Client2& client);
+    Client(upnp::IClient2& client);
 
     void setDevice(const std::shared_ptr<Device>& device) override;
 

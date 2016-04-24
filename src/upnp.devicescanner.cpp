@@ -16,7 +16,7 @@
 
 #include "upnp/upnp.devicescanner.h"
 #include "upnp/upnp.xml.parseutils.h"
-#include "upnp/upnp.client.h"
+#include "upnp/upnp.clientinterface.h"
 
 #include "utils/log.h"
 
@@ -32,12 +32,12 @@ using namespace std::chrono_literals;
 
 static const auto g_timeCheckInterval = 60s;
 
-DeviceScanner::DeviceScanner(Client2& client, DeviceType type)
+DeviceScanner::DeviceScanner(IClient2& client, DeviceType type)
 : DeviceScanner(client, std::set<DeviceType>{ type })
 {
 }
 
-DeviceScanner::DeviceScanner(Client2& client, std::set<DeviceType> types)
+DeviceScanner::DeviceScanner(IClient2& client, std::set<DeviceType> types)
 : m_upnpClient(client)
 , m_httpClient(client.loop())
 , m_ssdpClient(client.loop())

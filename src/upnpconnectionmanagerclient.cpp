@@ -37,7 +37,7 @@ using namespace std::string_literals;
 
 static const std::chrono::seconds g_subscriptionTimeout(1801);
 
-Client::Client(Client2& client)
+Client::Client(IClient2& client)
 : ServiceClientBase(client)
 {
 }
@@ -53,7 +53,7 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
                 auto& sink = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Sink");
-                
+
                 auto infos = stringops::tokenize(sink.value(), ',');
                 for (auto& info : infos)
                 {
@@ -68,7 +68,7 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
                     {
                         log::warn(e.what());
                     }
-                    
+
                     protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
                 }
             }
@@ -78,7 +78,7 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
                 status = -1;
             }
         }
-        
+
         cb(status, protocolInfo);
     });
 }
@@ -101,7 +101,7 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-            
+
                 connInfo.peerConnectionManager      = peerConnectionManager;
                 connInfo.peerConnectionId           = peerConnectionId;
                 connInfo.protocolInfo               = protocolInfo;
@@ -116,7 +116,7 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
                 status = -1;
             }
         }
-        
+
         cb(status, connInfo);
     });
 }
@@ -147,7 +147,7 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
                 status = -1;
             }
         }
-        
+
         cb(status, ids);
     });
 }
@@ -173,7 +173,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-    
+
                 connInfo.connectionId               = connectionId;
                 connInfo.avTransportId              = std::stoi(body.first_node_ref("AVTransportID").value());
                 connInfo.renderingControlServiceId  = std::stoi(body.first_node_ref("RcsID").value());
@@ -189,7 +189,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
                 status = -1;
             }
         }
-        
+
         cb(status, connInfo);
     });
 }
@@ -197,7 +197,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
 void Client::handleUPnPResult(int errorCode)
 {
     if (errorCode == UPNP_E_SUCCESS) return;
-    
+
     switch (errorCode)
     {
         case 701: throw Exception(errorCode, "Incompatible protocol info");
@@ -207,7 +207,7 @@ void Client::handleUPnPResult(int errorCode)
         case 705: throw Exception(errorCode, "Access denied");
         case 706: throw Exception(errorCode, "Invalid connection reference");
         case 707: throw Exception(errorCode, "Managers are not part of the same network");
-        
+
         default: upnp::handleUPnPResult(errorCode);
     }
 }
@@ -227,7 +227,7 @@ Variable Client::variableFromString(const std::string& var) const
     return ConnectionManager::variableFromString(var);
 }
 
-std::string Client::variableToString(Variable var) const 
+std::string Client::variableToString(Variable var) const
 {
     return ConnectionManager::toString(var);
 }

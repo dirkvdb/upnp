@@ -40,7 +40,7 @@ struct ConnectionInfo;
 
 class Item;
 class Device;
-class Client2;
+class IClient2;
 class ProtocolInfo;
 class Resource;
 
@@ -67,7 +67,7 @@ public:
         Recording
     };
 
-    MediaRenderer(Client2& client);
+    MediaRenderer(IClient2& client);
     MediaRenderer(const MediaRenderer&) = delete;
 
     std::shared_ptr<Device> getDevice();
@@ -95,7 +95,7 @@ public:
 
     std::string getCurrentTrackURI() const;
     std::chrono::seconds getCurrentTrackDuration() const;
-    
+
     void getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) const;
     void getAvailableActions(std::function<void(int32_t, std::set<Action>)> cb);
     static bool isActionAvailable(const std::set<Action>& actions, Action action);
@@ -128,7 +128,7 @@ private:
     std::string positionToString(uint32_t position) const;
 
     std::shared_ptr<Device>                         m_device;
-    Client2&                                        m_client;
+    IClient2&                                       m_client;
     ConnectionManager::Client                       m_connectionMgr;
     RenderingControl::Client                        m_renderingControl;
     std::unique_ptr<AVTransport::Client>            m_avTransport;

@@ -32,7 +32,7 @@ using namespace utils;
 namespace upnp
 {
 
-ControlPoint::ControlPoint(Client2& client)
+ControlPoint::ControlPoint(IClient2& client)
 : m_renderer(client)
 , m_pWebServer(nullptr)
 {

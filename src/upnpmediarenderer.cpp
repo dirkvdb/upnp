@@ -115,7 +115,7 @@ MediaRenderer::PlaybackState parsePlaybackState(const std::string& state)
 
 }
 
-MediaRenderer::MediaRenderer(Client2& client)
+MediaRenderer::MediaRenderer(IClient2& client)
 : m_client(client)
 , m_connectionMgr(client)
 , m_renderingControl(client)
@@ -317,7 +317,7 @@ void MediaRenderer::getPlaybackState(std::function<void(int32_t, PlaybackState)>
             {
                 state = transportStateToPlaybackState(info.currentTransportState);
             }
-            
+
             cb(status, state);
         });
     }
@@ -348,7 +348,7 @@ void MediaRenderer::getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) c
             {
                 track = parseCurrentTrack(info.currentURIMetaData);
             }
-            
+
             cb(status, track);
         });
     }
@@ -361,7 +361,7 @@ void MediaRenderer::getAvailableActions(std::function<void(int32_t, std::set<Med
         throwOnUnknownConnectionId();
         m_avTransport->getCurrentTransportActions(m_connInfo.connectionId, [cb] (int32_t status, const std::set<AVTransport::Action>& transpActions) {
             std::set<MediaRenderer::Action> actions;
-            
+
             if (status == 200)
             {
                 for (auto& action : transpActions)
@@ -369,7 +369,7 @@ void MediaRenderer::getAvailableActions(std::function<void(int32_t, std::set<Med
                     actions.insert(transportActionToAction(action));
                 }
             }
-            
+
             cb(status, actions);
         });
     }
@@ -471,7 +471,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
             log::warn(e.what());
         }
     }
-    
+
     return availableActions;
 }
 

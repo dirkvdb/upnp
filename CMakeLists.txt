@@ -101,6 +101,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
     inc/upnp/upnpavtransporttypes.h
     inc/upnp/upnpclientinterface.h
+    inc/upnp/upnp.clientinterface.h
     inc/upnp/upnpconnectionmanagerclient.h      src/upnpconnectionmanagerclient.cpp
     inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
     inc/upnp/upnpconnectionmanagertypes.h
@@ -114,6 +115,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.devicescanner.h               src/upnp.devicescanner.cpp
     inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
     inc/upnp/upnpfactory.h                      src/upnpfactory.cpp
+    inc/upnp/upnp.factory.h                     src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
     inc/upnp/upnphttpclient.h                   src/upnphttpclient.cpp
     inc/upnp/upnphttpreader.h                   src/upnphttpreader.cpp
@@ -143,7 +145,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.http.server.h                 src/upnp.http.server.cpp
     inc/upnp/upnp.xml.parseutils.h              src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.uv.h
-    inc/upnp/upnp.client.h                      src/upnp.client.cpp
+    src/upnp.client.h                           src/upnp.client.cpp
     src/upnp.gena.server.h                      src/upnp.gena.server.cpp
     src/upnpclient.h                            src/upnpclient.cpp
     src/upnp.http.parser.h

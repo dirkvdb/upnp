@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONTROL_POINT_H
-#define UPNP_CONTROL_POINT_H
+#pragma once
 
 #include <string>
 #include <mutex>
@@ -29,7 +28,7 @@
 namespace upnp
 {
 
-class Client2;
+class IClient2;
 class Item;
 class WebServer;
 class MediaServer;
@@ -38,7 +37,7 @@ class ProtocolInfo;
 class ControlPoint
 {
 public:
-    ControlPoint(Client2& client);
+    ControlPoint(IClient2& client);
     ControlPoint(const ControlPoint&) = delete;
 
     ControlPoint& operator=(const ControlPoint&) = delete;
@@ -76,5 +75,3 @@ private:
 };
 
 }
-
-#endif

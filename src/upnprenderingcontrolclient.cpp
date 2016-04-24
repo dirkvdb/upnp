@@ -35,7 +35,7 @@ static const std::chrono::seconds g_subscriptionTimeout(1801);
 
 // TODO: assign min and max volume
 
-Client::Client(Client2& client)
+Client::Client(upnp::IClient2& client)
 : ServiceClientBase(client)
 , m_minVolume(0)
 , m_maxVolume(100)

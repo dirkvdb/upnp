@@ -22,6 +22,8 @@
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.http.client.h"
 
+namespace uv { class Loop; }
+
 namespace upnp
 {
 

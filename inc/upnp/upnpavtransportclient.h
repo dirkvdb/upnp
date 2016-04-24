@@ -33,7 +33,7 @@ namespace AVTransport
 class Client : public ServiceClientBase<Action, Variable>
 {
 public:
-    Client(Client2& client);
+    Client(IClient2& client);
 
     void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb);
     void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb);

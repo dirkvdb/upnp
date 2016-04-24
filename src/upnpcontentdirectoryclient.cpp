@@ -61,7 +61,7 @@ void addPropertyToList(const std::string& propertyName, std::vector<Property>& v
 
 }
 
-Client::Client(Client2& client)
+Client::Client(upnp::IClient2& client)
 : ServiceClientBase(client)
 , m_abort(false)
 {

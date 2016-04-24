@@ -34,13 +34,13 @@
 namespace upnp
 {
 
-class Client2;
+class IClient2;
 
 class DeviceScanner
 {
 public:
-    DeviceScanner(upnp::Client2& client, DeviceType type);
-    DeviceScanner(upnp::Client2& client, std::set<DeviceType> types);
+    DeviceScanner(IClient2& client, DeviceType type);
+    DeviceScanner(IClient2& client, std::set<DeviceType> types);
 
     void start();
     void stop();
@@ -59,7 +59,7 @@ private:
     void downloadDeviceXml(const std::string& url, std::function<void(std::string)>);
     void checkForDeviceTimeouts();
 
-    upnp::Client2&                                  m_upnpClient;
+    IClient2&                                       m_upnpClient;
     http::Client                                    m_httpClient;
     ssdp::Client                                    m_ssdpClient;
     uv::Timer                                       m_timer;

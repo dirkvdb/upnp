@@ -33,7 +33,7 @@ namespace upnp
 const std::string MediaServer::rootId = "0";
 static const uint32_t g_requestSize =32;
 
-MediaServer::MediaServer(Client2& client)
+MediaServer::MediaServer(IClient2& client)
 : m_client(client)
 , m_contentDirectory(client)
 , m_connectionMgr(client)
@@ -236,9 +236,9 @@ void MediaServer::handleSearchResult(const std::string& id, const std::string& c
             handleSearchResult(id, criteria, status, offset, res, onItem);
         });
     }
-    
+
     //res.totalMatches
-    
+
     //    if (m_completedCb)
     //    {
     //        m_completedCb();
@@ -331,7 +331,7 @@ void MediaServer::handleBrowseResult(ContentDirectory::Client::BrowseType type,
     {
         itemsLeft = res.numberReturned == g_requestSize;
     }
-    
+
     if (itemsLeft)
     {
         uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
@@ -354,13 +354,13 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
     {
         throw Exception("The server does not support sort on: {}", toString(sort));
     }
-    
+
     std::stringstream ss;
     if (sort != Property::Unknown)
     {
         ss << (sortMode == SortMode::Ascending ? "+" : "-") << toString(sort);
     }
-    
+
     auto sortStr = ss.str();
 
     uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit);

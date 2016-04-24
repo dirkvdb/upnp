@@ -20,10 +20,11 @@
 #include "utils/log.h"
 #include "utils/signal.h"
 
-#include "upnp/upnp.client.h"
+#include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnp.xml.parseutils.h"
+#include "upnp/upnp.uv.h"
 
 #include <set>
 #include <map>
@@ -35,15 +36,13 @@
 namespace upnp
 {
 
-class IClient;
-
 template <typename ActionType, typename VariableType>
 class ServiceClientBase
 {
 public:
     utils::Signal<VariableType, const std::map<VariableType, std::string>&> StateVariableEvent;
 
-    ServiceClientBase(Client2& client)
+    ServiceClientBase(IClient2& client)
     : m_client(client)
     , m_subTimer(client.loop())
     {
@@ -280,7 +279,7 @@ private:
 //        }
 //    }
 
-    Client2&                                m_client;
+    IClient2&                               m_client;
     Service                                 m_service;
     uv::Timer                               m_subTimer;
     std::set<ActionType>                    m_supportedActions;

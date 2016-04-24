@@ -31,15 +31,15 @@ namespace ConnectionManager
 
 class Client : public ServiceClientBase<Action, Variable>
 {
-public:    
-    Client(Client2& client);
-    
+public:
+    Client(IClient2& client);
+
     void getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInfo>)> cb);
     void prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction, std::function<void(int32_t, ConnectionInfo)> cb);
     void connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(int32_t)> cb);
     void getCurrentConnectionIds(std::function<void(int32_t, std::vector<std::string>)> cb);
     void getCurrentConnectionInfo(int32_t connectionId, std::function<void(int32_t, ConnectionInfo)> cb);
-    
+
 protected:
     virtual Action actionFromString(const std::string& action) const override;
     virtual std::string actionToString(Action action) const override;
@@ -48,10 +48,10 @@ protected:
 
     ServiceType getType() override;
     std::chrono::seconds getSubscriptionTimeout() override;
-    
+
     void handleUPnPResult(int errorCode) override;
 };
-    
+
 }
 }
 
