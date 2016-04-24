@@ -651,6 +651,31 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
     return browseResult;
 }
 
+void parseEvent(const std::string& data, const std::function<void(const std::string& varable, const std::map<std::string, std::string>&)>& cb)
+{
+    xml_document<> doc;
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(data.c_str());
+    auto& propertySet = doc.first_node_ref();
+    for (auto* property = propertySet.first_node(); property != nullptr; property = property->next_sibling())
+    {
+        for (auto* var = property->first_node(); var != nullptr; var = var->next_sibling())
+        {
+            auto changedVar = var->name_string();
+
+            xml_document<> changeDoc;
+            doc.parse<parse_non_destructive | parse_trim_whitespace>(var->value_string().c_str());
+            auto& instanceIDNode = changeDoc.first_node_ref().first_node_ref("InstanceID");
+
+            std::map<std::string, std::string> vars;
+            for (auto* elem = instanceIDNode.first_node(); elem != nullptr; elem = elem->next_sibling())
+            {
+                vars.emplace(elem->name_string(), requiredAttributeValue(*elem, "val"));
+            }
+            
+            cb(changedVar, vars);
+        }
+    }
+}
 
 Item parseItemDocument(const std::string& xml)
 {

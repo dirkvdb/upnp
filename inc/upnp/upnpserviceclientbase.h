@@ -147,56 +147,6 @@ protected:
         });
     }
 
-//    void eventOccurred(Upnp_Event* pEvent)
-//    {
-//        std::string sid = pEvent->Sid;
-//        if (sid == m_subscriber->getSubscriptionId())
-//        {
-//            try
-//            {
-//                xml::Document doc(pEvent->ChangedVariables, xml::Document::NoOwnership);
-//                xml::Element propertySet = doc.getFirstChild();
-//                for (xml::Element property : propertySet.getChildNodes())
-//                {
-//                    for (xml::Element var : property.getChildNodes())
-//                    {
-//                        try
-//                        {
-//                            VariableType changedVar = variableFromString(var.getName());
-//
-//                            xml::Document changeDoc(var.getValue());
-//                            xml::Element eventNode = changeDoc.getFirstChild();
-//                            xml::Element instanceIDNode = eventNode.getChildElement("InstanceID");
-//
-//                            std::map<VariableType, std::string> vars;
-//                            for (xml::Element elem : instanceIDNode.getChildNodes())
-//                            {
-//                                auto str = elem.getAttribute("val");
-//                                utils::log::debug("{} {}", elem.getName(), elem.getAttribute("val"));
-//                                vars.insert(std::make_pair(variableFromString(elem.getName()), elem.getAttribute("val")));
-//                            }
-//
-//                            // let the service implementation process the event if necessary
-//                            handleStateVariableEvent(changedVar, vars);
-//
-//                            // notify clients
-//                            StateVariableEvent(changedVar, vars);
-//                        }
-//                        catch (std::exception& e)
-//                        {
-//                            utils::log::warn("Unknown event variable ignored: {}", e.what());
-//                            utils::log::debug(var.toString());
-//                        }
-//                    }
-//                }
-//            }
-//            catch (std::exception& e)
-//            {
-//                utils::log::error("Failed to parse event: {}", e.what());
-//            }
-//        }
-//    }
-
     void executeAction(ActionType actionType, std::function<void(int32_t, std::string)> cb)
     {
         executeAction(actionType, std::map<std::string, std::string> {}, std::move(cb));
@@ -224,6 +174,29 @@ private:
     void eventCb(const SubscriptionEvent& event)
     {
         utils::log::info(event.data);
+
+        try
+        {
+            xml::parseEvent(event.data, [this] (const std::string& varType, const std::map<std::string, std::string>& values) {
+                VariableType changedVar = variableFromString(varType);
+                
+                std::map<VariableType, std::string> vars;
+                for (auto& val : values)
+                {
+                    vars.emplace(variableFromString(val.first), val.second);
+                }
+                
+                // let the service implementation process the event if necessary
+                handleStateVariableEvent(changedVar, vars);
+
+                // notify clients
+                StateVariableEvent(changedVar, vars);
+            });
+        }
+        catch (std::exception& e)
+        {
+            utils::log::error("Failed to parse event: {}", e.what());
+        }
     }
 
 //    void eventCb(Upnp_EventType eventType, void* pEvent)

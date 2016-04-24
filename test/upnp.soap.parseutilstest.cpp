@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <pugixml.hpp>
 #include <sstream>
 
 #include "upnp.soap.parseutils.h"

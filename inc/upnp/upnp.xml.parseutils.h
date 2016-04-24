@@ -34,6 +34,7 @@ Item parseItem(rapidxml_ns::xml_node<>& itemElem);
 std::vector<Item> parseItems(const std::string& xml);
 Item parseMetaData(const std::string& meta);
 std::string parseBrowseResult(const std::string& response, ContentDirectory::ActionResult& result);
+void parseEvent(const std::string& data, std::function<void(const std::string& varable, const std::map<std::string, std::string>&)> cb);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)
