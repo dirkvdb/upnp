@@ -653,7 +653,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
     return browseResult;
 }
 
-void parseEvent(const std::string& data, const std::function<void(const std::string& varable, const std::map<std::string, std::string>&)>& cb)
+void parseEvent(const std::string& data, std::function<void(const std::string& varable, const std::map<std::string, std::string>&)> cb)
 {
     xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(data.c_str());
@@ -673,7 +673,7 @@ void parseEvent(const std::string& data, const std::function<void(const std::str
             {
                 vars.emplace(elem->name_string(), requiredAttributeValue(*elem, "val"));
             }
-            
+
             cb(changedVar, vars);
         }
     }

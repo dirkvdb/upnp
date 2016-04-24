@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnp.client.h"
+#include "upnp.client.h"
 
 #include "utils/log.h"
 #include "upnp/upnp.uv.h"
@@ -140,6 +140,8 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
             {
                 cb(status);
             }
+
+            m_eventCallbacks.erase(subscriptionId);
         });
     });
 }
@@ -171,7 +173,7 @@ void Client2::runLoop()
     });
 }
 
-uv::Loop& Client2::loop()
+uv::Loop& Client2::loop() const
 {
     return *m_loop;
 }

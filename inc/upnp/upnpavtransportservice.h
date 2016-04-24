@@ -18,7 +18,7 @@
 #define UPNP_AVTRANSPORT_SERVICE_H
 
 #include "upnp/upnpdeviceservice.h"
-#include "upnp/upnpavtransporttypes.h"
+#include "upnp/upnp.avtransport.types.h"
 #include "upnp/upnplastchangevariable.h"
 
 #include <string>

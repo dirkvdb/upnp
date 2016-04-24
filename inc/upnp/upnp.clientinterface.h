@@ -48,7 +48,7 @@ public:
     virtual void sendAction(const Action2& action, std::function<void(int32_t status, std::string actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb) = 0;
 
-    virtual uv::Loop& loop() = 0;
+    virtual uv::Loop& loop() const = 0;
 };
 
 }

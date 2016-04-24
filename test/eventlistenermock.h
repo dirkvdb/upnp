@@ -19,7 +19,7 @@
 
 #include "gtest/gtest.h"
 
-#include "upnp/upnpavtransportclient.h"
+#include "upnp/upnp.avtransport.client.h"
 #include "upnp/upnprenderingcontrolclient.h"
 #include "upnp/upnpcontentdirectoryclient.h"
 

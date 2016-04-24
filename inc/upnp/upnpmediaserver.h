@@ -22,7 +22,7 @@
 
 #include "upnp/upnpconnectionmanagerclient.h"
 #include "upnp/upnpcontentdirectoryclient.h"
-#include "upnp/upnpavtransportclient.h"
+#include "upnp/upnp.avtransport.client.h"
 
 #include "utils/threadpool.h"
 

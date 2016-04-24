@@ -19,7 +19,7 @@
 
 #include "utils/signal.h"
 #include "upnp/upnpserviceclientbase.h"
-#include "upnp/upnpavtransporttypes.h"
+#include "upnp/upnp.avtransport.types.h"
 
 namespace upnp
 {
