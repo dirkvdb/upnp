@@ -7,7 +7,15 @@
 #include "upnp/upnpstatevariable.h"
 #include "upnp/upnpcontentdirectorytypes.h"
 
-#include "rapidxml.hpp"
+
+
+namespace rapidxml_ns
+{
+
+template<class Ch> class xml_node;
+template<class Ch> class xml_document;
+
+}
 
 namespace upnp
 {
@@ -23,18 +31,17 @@ std::string decode(const std::string& data);
 std::string decode(const char* data, size_t dataSize);
 
 void parseDeviceInfo(const std::string& xml, Device& device);
-std::vector<StateVariable> getStateVariablesFromDescription(rapidxml_ns::xml_document<>& doc);
-std::vector<std::string> getActionsFromDescription(rapidxml_ns::xml_document<>& doc);
-std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<>& doc);
+std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<char>& doc);
 
-Resource parseResource(rapidxml_ns::xml_node<>& node, const std::string& url);
-Item parseContainer(rapidxml_ns::xml_node<>& containerElem);
+Resource parseResource(rapidxml_ns::xml_node<char>& node, const std::string& url);
+Item parseContainer(rapidxml_ns::xml_node<char>& containerElem);
 std::vector<Item> parseContainers(const std::string& xml);
-Item parseItem(rapidxml_ns::xml_node<>& itemElem);
+Item parseItem(rapidxml_ns::xml_node<char>& itemElem);
 std::vector<Item> parseItems(const std::string& xml);
 Item parseMetaData(const std::string& meta);
 std::string parseBrowseResult(const std::string& response, ContentDirectory::ActionResult& result);
 void parseEvent(const std::string& data, std::function<void(const std::string& varable, const std::map<std::string, std::string>&)> cb);
+std::vector<StateVariable> parseServiceDescription(const std::string& contents, std::function<void(const std::string& action)> actionCb);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)

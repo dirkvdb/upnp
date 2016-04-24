@@ -10,6 +10,8 @@
 #include "upnp/upnputils.h"
 #include "upnp/upnpdevice.h"
 
+#include "rapidxml.hpp"
+
 namespace upnp
 {
 namespace xml
@@ -21,7 +23,7 @@ using namespace rapidxml_ns;
 namespace
 {
 
-std::string requiredChildValue(const xml_node<>& node, const char* childName)
+std::string requiredChildValue(const xml_node<char>& node, const char* childName)
 {
     std::string value = node.first_node_ref(childName).value_string();
     if (value.empty())
@@ -32,7 +34,7 @@ std::string requiredChildValue(const xml_node<>& node, const char* childName)
     return value;
 }
 
-std::string optionalChildValue(const xml_node<>& node, const char* childName)
+std::string optionalChildValue(const xml_node<char>& node, const char* childName)
 {
     auto* child = node.first_node(childName);
     if (child)
@@ -43,7 +45,7 @@ std::string optionalChildValue(const xml_node<>& node, const char* childName)
     return std::string();
 }
 
-std::string requiredAttributeValue(xml_node<>& elem, const char* name)
+std::string requiredAttributeValue(xml_node<char>& elem, const char* name)
 {
     auto* attr = elem.first_attribute(name);
     if (!attr)
@@ -55,7 +57,7 @@ std::string requiredAttributeValue(xml_node<>& elem, const char* name)
     return std::string(attr->value(), attr->value_size());
 }
 
-std::string optionalAttributeValue(xml_node<>& elem, const char* name)
+std::string optionalAttributeValue(xml_node<char>& elem, const char* name)
 {
     auto* attr = elem.first_attribute(name);
     if (!attr || !attr->name())
@@ -67,7 +69,7 @@ std::string optionalAttributeValue(xml_node<>& elem, const char* name)
 }
 
 template <typename T>
-T optionalAttributeValue(xml_node<>& elem, const char* name, T defaultValue)
+T optionalAttributeValue(xml_node<char>& elem, const char* name, T defaultValue)
 {
     auto* attr = elem.first_attribute(name);
     if (!attr || !attr->name())
@@ -78,7 +80,7 @@ T optionalAttributeValue(xml_node<>& elem, const char* name, T defaultValue)
     return stringops::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
 }
 
-bool findAndParseService(const xml_node<>& node, const ServiceType serviceType, Device& device)
+bool findAndParseService(const xml_node<char>& node, const ServiceType serviceType, Device& device)
 {
     auto base = URI(device.m_baseURL.empty() ? device.m_location : device.m_baseURL);
 
@@ -112,6 +114,61 @@ void addPropertyToItem(const std::string& propertyName, const std::string& prope
     {
         log::warn("Unknown property: {}", propertyName);
     }
+}
+
+std::vector<std::string> getActionsFromDescription(xml_document<char>& doc)
+{
+    std::vector<std::string> actions;
+
+    auto& actionList = doc.first_node_ref().first_node_ref("actionList");
+    for (auto* child = actionList.first_node(); child != nullptr; child = child->next_sibling())
+    {
+        actions.push_back(child->first_node_ref("name").value_string());
+    }
+
+    return actions;
+}
+
+std::vector<StateVariable> getStateVariablesFromDescription(xml_document<char>& doc)
+{
+    std::vector<StateVariable> variables;
+
+    auto& stateVariableList = doc.first_node_ref().first_node_ref("serviceStateTable");
+    for (auto* elem = stateVariableList.first_node("stateVariable"); elem != nullptr; elem = elem->next_sibling("stateVariable"))
+    {
+        try
+        {
+            StateVariable var;
+            var.sendsEvents = requiredAttributeValue(*elem, "sendEvents") == "yes";
+            var.name        = elem->first_node_ref("name").value_string();
+            var.dataType    = elem->first_node_ref("dataType").value_string();
+
+            auto* rangeElem = elem->first_node("allowedValueRange");
+            if (rangeElem)
+            {
+                try
+                {
+                    auto range             = std::make_unique<StateVariable::ValueRange>();
+                    range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("minimum").value_string());
+                    range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("maximum").value_string());
+                    range->step            = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("step").value_string());
+                    var.valueRange = std::move(range);
+                }
+                catch(std::exception& e)
+                {
+                    log::warn("Failed to parse value range: {}", e.what());
+                }
+            }
+
+            variables.emplace_back(std::move(var));
+        }
+        catch(std::exception& e)
+        {
+            log::warn("Failed to parse state variable, skipping: {}", e.what());
+        }
+    }
+
+    return variables;
 }
 
 }
@@ -282,7 +339,7 @@ std::string decode(const char* data, size_t dataSize)
 
 void parseDeviceInfo(const std::string& xml, Device& device)
 {
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
@@ -326,62 +383,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
     }
 }
 
-std::vector<std::string> getActionsFromDescription(xml_document<>& doc)
-{
-    std::vector<std::string> actions;
-
-    auto& actionList = doc.first_node_ref().first_node_ref("actionList");
-    for (auto* child = actionList.first_node(); child != nullptr; child = child->next_sibling())
-    {
-        actions.push_back(child->first_node_ref("name").value_string());
-    }
-
-    return actions;
-}
-
-std::vector<StateVariable> getStateVariablesFromDescription(xml_document<>& doc)
-{
-    std::vector<StateVariable> variables;
-
-    auto& stateVariableList = doc.first_node_ref().first_node_ref("serviceStateTable");
-    for (auto* elem = stateVariableList.first_node("stateVariable"); elem != nullptr; elem = elem->next_sibling("stateVariable"))
-    {
-        try
-        {
-            StateVariable var;
-            var.sendsEvents = requiredAttributeValue(*elem, "sendEvents") == "yes";
-            var.name        = elem->first_node_ref("name").value_string();
-            var.dataType    = elem->first_node_ref("dataType").value_string();
-
-            auto* rangeElem = elem->first_node("allowedValueRange");
-            if (rangeElem)
-            {
-                try
-                {
-                    auto range             = std::make_unique<StateVariable::ValueRange>();
-                    range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("minimum").value_string());
-                    range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("maximum").value_string());
-                    range->step            = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("step").value_string());
-                    var.valueRange = std::move(range);
-                }
-                catch(std::exception& e)
-                {
-                    log::warn("Failed to parse value range: {}", e.what());
-                }
-            }
-
-            variables.emplace_back(std::move(var));
-        }
-        catch(std::exception& e)
-        {
-            log::warn("Failed to parse state variable, skipping: {}", e.what());
-        }
-    }
-
-    return variables;
-}
-
-std::map<std::string, std::string> getEventValues(xml_document<>& doc)
+std::map<std::string, std::string> getEventValues(xml_document<char>& doc)
 {
     std::map<std::string, std::string> values;
     auto& instanceNode = doc.first_node_ref().first_node_ref("InstanceID");
@@ -393,7 +395,7 @@ std::map<std::string, std::string> getEventValues(xml_document<>& doc)
     return values;
 }
 
-Resource parseResource(xml_node<>& node, const std::string& url)
+Resource parseResource(xml_node<char>& node, const std::string& url)
 {
     Resource res;
     res.setUrl(url);
@@ -441,7 +443,7 @@ Resource parseResource(xml_node<>& node, const std::string& url)
     return res;
 }
 
-Item parseContainer(xml_node<>& containerElem)
+Item parseContainer(xml_node<char>& containerElem)
 {
     auto item = Item();
     item.setObjectId(requiredAttributeValue(containerElem, "id"));
@@ -489,7 +491,7 @@ std::vector<Item> parseContainers(const std::string& xml)
 {
     assert(!xml.empty() && "ParseContainers: Invalid document supplied");
 
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
     auto& node = doc.first_node_ref();
 
@@ -509,7 +511,7 @@ std::vector<Item> parseContainers(const std::string& xml)
     return containers;
 }
 
-Item parseItem(xml_node<>& itemElem)
+Item parseItem(xml_node<char>& itemElem)
 {
     auto item = Item();
     item.setObjectId(requiredAttributeValue(itemElem, "id"));
@@ -560,7 +562,7 @@ std::vector<Item> parseItems(const std::string& xml)
 {
     assert(!xml.empty() && "ParseItems: Invalid document supplied");
 
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
     auto& node = doc.first_node_ref();
 
@@ -584,7 +586,7 @@ Item parseMetaData(const std::string& meta)
 {
     assert(!meta.empty() && "ParseMetaData: Invalid document supplied");
 
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(meta.c_str());
     auto& rootNode = doc.first_node_ref();
 
@@ -613,7 +615,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 {
     assert(!response.empty() && "ParseBrowseResult: Invalid document supplied");
 
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(response.c_str());
 
     auto& browseResultNode = doc.first_node_ref().first_node_ref().first_node_ref();
@@ -653,7 +655,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 
 void parseEvent(const std::string& data, const std::function<void(const std::string& varable, const std::map<std::string, std::string>&)>& cb)
 {
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(data.c_str());
     auto& propertySet = doc.first_node_ref();
     for (auto* property = propertySet.first_node(); property != nullptr; property = property->next_sibling())
@@ -662,7 +664,7 @@ void parseEvent(const std::string& data, const std::function<void(const std::str
         {
             auto changedVar = var->name_string();
 
-            xml_document<> changeDoc;
+            xml_document<char> changeDoc;
             doc.parse<parse_non_destructive | parse_trim_whitespace>(var->value_string().c_str());
             auto& instanceIDNode = changeDoc.first_node_ref().first_node_ref("InstanceID");
 
@@ -677,9 +679,22 @@ void parseEvent(const std::string& data, const std::function<void(const std::str
     }
 }
 
+std::vector<StateVariable> parseServiceDescription(const std::string& contents, std::function<void(const std::string& action)> actionCb)
+{
+    xml_document<char> doc;
+    doc.parse<parse_non_destructive>(contents.c_str());
+
+    for (auto& action : xml::getActionsFromDescription(doc))
+    {
+        actionCb(action);
+    }
+
+    return xml::getStateVariablesFromDescription(doc);
+}
+
 Item parseItemDocument(const std::string& xml)
 {
-    xml_document<> doc;
+    xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
     auto& elem = doc.first_node_ref();

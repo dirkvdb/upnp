@@ -31,8 +31,6 @@
 #include <vector>
 #include <memory>
 
-#include "rapidxml.hpp"
-
 namespace upnp
 {
 
@@ -65,7 +63,7 @@ public:
         if (device->implementsService(getType()))
         {
             m_service = device->m_services[getType()];
-            parseServiceDescription(m_service.m_scpdUrl);
+            processServiceDescription(m_service.m_scpdUrl);
         }
     }
 
@@ -113,20 +111,14 @@ public:
     virtual std::string variableToString(VariableType var) const  = 0;
 
 protected:
-    virtual void parseServiceDescription(const std::string& descriptionUrl)
+    virtual void processServiceDescription(const std::string& descriptionUrl)
     {
         m_client.getFile(descriptionUrl, [this] (int32_t status, const std::string& contents) {
             if (status == 200)
             {
-                using namespace rapidxml_ns;
-
-                xml_document<> doc;
-                doc.parse<parse_non_destructive>(contents.c_str());
-
                 try
                 {
-                    for (auto& action : xml::getActionsFromDescription(doc))
-                    {
+                    m_StateVariables = xml::parseServiceDescription(contents, [this] (const std::string& action) {
                         try
                         {
                             m_supportedActions.insert(actionFromString(action));
@@ -135,9 +127,7 @@ protected:
                         {
                             utils::log::error(e.what());
                         }
-                    }
-
-                    m_StateVariables = xml::getStateVariablesFromDescription(doc);
+                    });
                 }
                 catch (std::exception& e)
                 {

@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <sstream>
 
 #include "utils/log.h"
@@ -315,12 +315,23 @@ TEST(XmlParseTest, MissingDeviceType)
     EXPECT_THROW(xml::parseDeviceInfo(xmlMod.str(), dev), std::runtime_error);
 }
 
-TEST(XmlParseTest, GetStateVariablesFromDescription)
+TEST(XmlParseTest, ParseServiceDescription)
 {
     xml_document<> doc;
     doc.parse<parse_non_destructive>(serviceDesc.c_str());
+    
+    struct ActionMock
+    {
+        MOCK_METHOD1(onAction, void(const std::string&));
+    };
+    
+    ActionMock mock;
+    EXPECT_CALL(mock, onAction("GetVolume"s));
+    EXPECT_CALL(mock, onAction("SetVolume"s));
 
-    auto vars = xml::getStateVariablesFromDescription(doc);
+    auto vars = xml::parseServiceDescription(serviceDesc, [&] (const std::string& action) {
+        mock.onAction(action);
+    });
 
     auto iter = std::find_if(vars.begin(), vars.end(), [] (const StateVariable& var) {
         return var.name == "LastChange";

@@ -87,9 +87,9 @@ std::chrono::seconds Client::getSubscriptionTimeout()
     return g_subscriptionTimeout;
 }
 
-void Client::parseServiceDescription(const std::string& descriptionUrl)
+void Client::processServiceDescription(const std::string& descriptionUrl)
 {
-    ServiceClientBase::parseServiceDescription(descriptionUrl);
+    ServiceClientBase::processServiceDescription(descriptionUrl);
 
     for (auto& variable : m_StateVariables)
     {

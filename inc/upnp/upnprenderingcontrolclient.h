@@ -56,7 +56,7 @@ protected:
     virtual ServiceType getType() override;
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
-    virtual void parseServiceDescription(const std::string& descriptionUrl) override;
+    virtual void processServiceDescription(const std::string& descriptionUrl) override;
 
     virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
     virtual void handleUPnPResult(int errorCode) override;
