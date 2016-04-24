@@ -125,7 +125,7 @@ std::string encode(const char* data, size_t dataSize)
 {
     std::string buffer;
     buffer.reserve(dataSize * 1.1f);
-    
+
     for (size_t pos = 0; pos != dataSize; ++pos)
     {
         switch(data[pos])
@@ -138,7 +138,7 @@ std::string encode(const char* data, size_t dataSize)
             default:   buffer += data[pos]; break;
         }
     }
-    
+
     return buffer;
 }
 
@@ -151,7 +151,7 @@ std::string decode(const char* data, size_t dataSize)
 {
     std::string buffer;
     buffer.reserve(dataSize);
-    
+
     for (size_t pos = 0; pos != dataSize; ++pos)
     {
         if (data[pos] == '&')
@@ -161,7 +161,7 @@ std::string decode(const char* data, size_t dataSize)
                 buffer.append(&data[pos], 1);
                 continue;
             }
-        
+
             switch (data[pos+1])
             {
             case 'a':
@@ -176,7 +176,7 @@ std::string decode(const char* data, size_t dataSize)
                         pos += 2;
                         continue;
                     }
-                    
+
                     if (data[pos+3] == 'p' && data[pos+4] == ';')
                     {
                         buffer += '&';
@@ -197,7 +197,7 @@ std::string decode(const char* data, size_t dataSize)
                         pos += 1;
                         continue;
                     }
-                    
+
                     if (data[pos+3] == 'o' && data[pos+4] == 's' && data[pos+5] == ';')
                     {
                         buffer += '\'';
@@ -221,7 +221,7 @@ std::string decode(const char* data, size_t dataSize)
                     pos += 1;
                     continue;
                 }
-                
+
                 if (data[pos+2] == 'u' && data[pos+3] == 'o' && data[pos+4] == 't' && data[pos+5] == ';')
                 {
                     buffer += '\"';
@@ -232,7 +232,7 @@ std::string decode(const char* data, size_t dataSize)
                     buffer.append(&data[pos], 2);
                     pos += 1;
                 }
-                
+
                 break;
             }
             case 'l':
@@ -247,7 +247,7 @@ std::string decode(const char* data, size_t dataSize)
                     buffer.append(&data[pos], 2);
                     pos += 1;
                 }
-                
+
                 break;
             }
             case 'g':
@@ -262,7 +262,7 @@ std::string decode(const char* data, size_t dataSize)
                     buffer.append(&data[pos], 2);
                     pos += 1;
                 }
-                
+
                 break;
             }
             default:
@@ -276,14 +276,14 @@ std::string decode(const char* data, size_t dataSize)
             buffer.append(&data[pos], 1);
         }
     }
-    
+
     return buffer;
 }
 
 void parseDeviceInfo(const std::string& xml, Device& device)
 {
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(xml.c_str());
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
     device.m_udn            = requiredChildValue(deviceNode, "UDN");
@@ -389,7 +389,7 @@ std::map<std::string, std::string> getEventValues(xml_document<>& doc)
     {
         values.emplace(elem->name_string(), requiredAttributeValue(*elem, "val"));
     }
-    
+
     return values;
 }
 
@@ -448,6 +448,7 @@ Item parseContainer(xml_node<>& containerElem)
     item.setParentId(requiredAttributeValue(containerElem, "parentID"));
     item.setRefId(optionalAttributeValue(containerElem, "refID"));
     item.setChildCount(optionalAttributeValue<uint32_t>(containerElem, "childCount", 0));
+    item.setRestricted(optionalAttributeValue(containerElem, "restricted") != "0");
 
     for (auto* elem = containerElem.first_node(); elem != nullptr; elem = elem->next_sibling())
     {
@@ -456,6 +457,20 @@ Item parseContainer(xml_node<>& containerElem)
         {
             log::warn("Unknown property {}", elem->name_string());
             continue;
+        }
+
+        if (prop == Property::AlbumArt)
+        {
+            // multiple art uris can be present with different dlna profiles (size)
+            try
+            {
+                item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), elem->value_string());
+            }
+            catch (std::exception&)
+            {
+                // no profile id present, add it as regular metadata
+                item.addMetaData(prop, elem->value_string());
+            }
         }
 
         item.addMetaData(prop, elem->value_string());
@@ -475,7 +490,7 @@ std::vector<Item> parseContainers(const std::string& xml)
     assert(!xml.empty() && "ParseContainers: Invalid document supplied");
 
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(xml.c_str());
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
     auto& node = doc.first_node_ref();
 
     std::vector<Item> containers;
@@ -546,7 +561,7 @@ std::vector<Item> parseItems(const std::string& xml)
     assert(!xml.empty() && "ParseItems: Invalid document supplied");
 
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(xml.c_str());
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
     auto& node = doc.first_node_ref();
 
     std::vector<Item> items;
@@ -570,7 +585,7 @@ Item parseMetaData(const std::string& meta)
     assert(!meta.empty() && "ParseMetaData: Invalid document supplied");
 
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(meta.c_str());
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(meta.c_str());
     auto& rootNode = doc.first_node_ref();
 
     auto* node = rootNode.first_node();
@@ -600,7 +615,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 
     xml_document<> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(response.c_str());
-    
+
     auto& browseResultNode = doc.first_node_ref().first_node_ref().first_node_ref();
     if (strncmp("BrowseResponse", browseResultNode.local_name(), browseResultNode.local_name_size()) != 0)
     {
@@ -640,7 +655,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 Item parseItemDocument(const std::string& xml)
 {
     xml_document<> doc;
-    doc.parse<parse_non_destructive>(xml.c_str());
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
     auto& elem = doc.first_node_ref();
     auto& itemElem = elem.first_node_ref();

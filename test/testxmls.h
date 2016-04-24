@@ -957,7 +957,7 @@ static const std::string browseRequest =
 "</s:Body>"
 "</s:Envelope>";
 
-static const std::string browseResponse =
+static const std::string browseResponseItems =
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
 "    <s:Body>"
@@ -969,6 +969,22 @@ static const std::string browseResponse =
 "            <NumberReturned>2</NumberReturned>"
 "            <TotalMatches>12</TotalMatches>"
 "            <UpdateID>2</UpdateID>"
+"        </u:BrowseResponse>"
+"    </s:Body>"
+"</s:Envelope>";
+
+static const std::string browseResponseContainers =
+"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+"    <s:Body>"
+"        <u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">"
+"            <Result>&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:arib=\"urn:schemas-arib-or-jp:elements-1-0/\" xmlns:dtcp=\"urn:schemas-dtcp-com:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"&gt;"
+"&lt;container id=\"0$1$17$994$23308\" parentID=\"0$1$17$994\" restricted=\"1\" childCount=\"12\" searchable=\"1\"&gt;&lt;dc:title&gt;+DOME&lt;/dc:title&gt;&lt;upnp:genre&gt;Dubstep, Indie, Experimental, Ambient&lt;/upnp:genre&gt;&lt;upnp:album&gt;+DOME&lt;/upnp:album&gt;&lt;dc:creator&gt;Seekae&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/C/O0$1$17$994$23308.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;pv:childCountContainer&gt;0&lt;/pv:childCountContainer&gt;&lt;upnp:artist&gt;Seekae&lt;/upnp:artist&gt;&lt;pv:modificationTime&gt;59813&lt;/pv:modificationTime&gt;&lt;pv:containerContent&gt;object.item.audioItem.musicTrack&lt;/pv:containerContent&gt;&lt;upnp:class&gt;object.container.album.musicAlbum&lt;/upnp:class&gt;&lt;/container&gt;"
+"&lt;container id=\"0$1$17$994$20156\" parentID=\"0$1$17$994\" restricted=\"0\" childCount=\"11\" searchable=\"1\"&gt;&lt;dc:title&gt;My Favorite Things&lt;/dc:title&gt;&lt;upnp:genre&gt;Broken Beat, Deep House, Experimental, Ambient&lt;/upnp:genre&gt;&lt;upnp:album&gt;My Favorite Things&lt;/upnp:album&gt;&lt;dc:creator&gt;Toshiya Kawasaki&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/C/O0$1$17$994$20156.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;pv:childCountContainer&gt;0&lt;/pv:childCountContainer&gt;&lt;upnp:artist&gt;Toshiya Kawasaki&lt;/upnp:artist&gt;&lt;pv:modificationTime&gt;51920&lt;/pv:modificationTime&gt;&lt;pv:containerContent&gt;object.item.audioItem.musicTrack&lt;/pv:containerContent&gt;&lt;upnp:class&gt;object.container.album.musicAlbum&lt;/upnp:class&gt;&lt;/container&gt;"
+"&lt;/DIDL-Lite&gt;</Result>"
+"            <NumberReturned>2</NumberReturned>"
+"            <TotalMatches>3</TotalMatches>"
+"            <UpdateID>4</UpdateID>"
 "        </u:BrowseResponse>"
 "    </s:Body>"
 "</s:Envelope>";

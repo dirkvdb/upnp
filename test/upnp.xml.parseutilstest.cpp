@@ -365,10 +365,10 @@ TEST(XmlParseTest, GetEventValues)
     EXPECT_EQ("Pause,Stop,Next,Previous"s, values.at("CurrentTransportActions"));
 }
 
-TEST(XmlParseTest, ParseBrowseResponse)
+TEST(XmlParseTest, ParseBrowseResponseItems)
 {
     ContentDirectory::ActionResult result;
-    auto didlLite = xml::parseBrowseResult(testxmls::browseResponse, result);
+    auto didlLite = xml::parseBrowseResult(testxmls::browseResponseItems, result);
 
     EXPECT_EQ(2u, result.numberReturned);
     EXPECT_EQ(12u, result.totalMatches);
@@ -376,22 +376,22 @@ TEST(XmlParseTest, ParseBrowseResponse)
 
     auto items = xml::parseItems(xml::decode(didlLite));
     EXPECT_EQ(2u, items.size());
-    
+
     for (auto& item : items)
     {
         EXPECT_EQ(1u, item.getAlbumArtUris().size());
         EXPECT_EQ(1u, item.getResources().size());
-        
+
         auto& artUri = item.getAlbumArtUris().at(dlna::ProfileId::JpegThumbnail);
         auto& res = item.getResources().at(0);
-        
+
         if (item.getObjectId() == "0$1$12$38502R2290700")
         {
             EXPECT_EQ("0$1$8I2290700"s, item.getRefId());
             EXPECT_TRUE(item.restricted());
             EXPECT_EQ("Momove"s, item.getTitle());
             EXPECT_EQ("1", item.getMetaData(Property::TrackNumber));
-            
+
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2290700.jpg?scale=org"s, artUri);
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2290700.mp3"s, res.getUrl());
             EXPECT_EQ(10053760u, res.getSize());
@@ -404,7 +404,7 @@ TEST(XmlParseTest, ParseBrowseResponse)
             EXPECT_FALSE(item.restricted());
             EXPECT_EQ("Two Months Off"s, item.getTitle());
             EXPECT_EQ("2", item.getMetaData(Property::TrackNumber));
-            
+
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/A/O0$1$8I2291724.jpg?scale=org"s, artUri);
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291724.mp3"s, res.getUrl());
             EXPECT_EQ(13275264u, res.getSize());
@@ -415,8 +415,9 @@ TEST(XmlParseTest, ParseBrowseResponse)
         {
             FAIL() << "Unexpected item in results: " << item.getObjectId();
         }
-        
+
         // Common values
+        EXPECT_EQ(0u, item.getChildCount());
         EXPECT_EQ("0$1$12$38502"s, item.getParentId());
         EXPECT_EQ("2002-01-01"s, item.getMetaData(Property::Date));
         EXPECT_EQ("Club"s, item.getMetaData(Property::Genre));
@@ -425,6 +426,58 @@ TEST(XmlParseTest, ParseBrowseResponse)
         EXPECT_EQ("Underworld"s, item.getMetaData(Property::Artist));
         EXPECT_EQ("Underworld"s, item.getMetaData(Property::AlbumArtist));
         EXPECT_EQ(Class::Audio, item.getClass());
+    }
+}
+
+TEST(XmlParseTest, ParseBrowseResponseContainers)
+{
+    ContentDirectory::ActionResult result;
+    auto didlLite = xml::parseBrowseResult(testxmls::browseResponseContainers, result);
+
+    EXPECT_EQ(2u, result.numberReturned);
+    EXPECT_EQ(3u, result.totalMatches);
+    EXPECT_EQ(4u, result.updateId);
+
+    auto items = xml::parseContainers(xml::decode(didlLite));
+    EXPECT_EQ(2u, items.size());
+
+    for (auto& item : items)
+    {
+        EXPECT_TRUE(item.getResources().empty());
+        EXPECT_EQ(1u, item.getAlbumArtUris().size());
+        auto& artUri = item.getAlbumArtUris().at(dlna::ProfileId::JpegThumbnail);
+
+        if (item.getObjectId() == "0$1$17$994$23308")
+        {
+            EXPECT_EQ(12u, item.getChildCount());
+            EXPECT_TRUE(item.restricted());
+            EXPECT_EQ("+DOME"s, item.getTitle());
+            EXPECT_EQ("Dubstep, Indie, Experimental, Ambient"s, item.getMetaData(Property::Genre));
+            EXPECT_EQ("+DOME"s, item.getMetaData(Property::Album));
+            EXPECT_EQ("Seekae"s, item.getMetaData(Property::Creator));
+            EXPECT_EQ("Seekae"s, item.getMetaData(Property::Artist));
+            EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/C/O0$1$17$994$23308.jpg?scale=org"s, artUri);
+        }
+        else if (item.getObjectId() == "0$1$17$994$20156")
+        {
+            EXPECT_EQ(11u, item.getChildCount());
+            EXPECT_FALSE(item.restricted());
+            EXPECT_EQ("My Favorite Things"s, item.getTitle());
+            EXPECT_EQ("Broken Beat, Deep House, Experimental, Ambient"s, item.getMetaData(Property::Genre));
+            EXPECT_EQ("My Favorite Things"s, item.getMetaData(Property::Album));
+            EXPECT_EQ("Toshiya Kawasaki"s, item.getMetaData(Property::Creator));
+            EXPECT_EQ("Toshiya Kawasaki"s, item.getMetaData(Property::Artist));
+            EXPECT_EQ(Class::AudioContainer, item.getClass());
+            EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/C/O0$1$17$994$20156.jpg?scale=org"s, artUri);
+        }
+        else
+        {
+            FAIL() << "Unexpected item in results: " << item.getObjectId();
+        }
+
+        EXPECT_EQ("0$1$17$994"s, item.getParentId());
+        EXPECT_EQ(""s, item.getRefId());
+        EXPECT_EQ(Class::AudioContainer, item.getClass());
     }
 }
 
