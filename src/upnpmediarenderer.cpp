@@ -152,6 +152,8 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
             if (status == 200)
             {
                 m_protocolInfo = std::move(info);
+                // make sure m3u is supported
+                m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
                 resetData();
                 activateEvents();
                 DeviceChanged(m_device);
@@ -464,7 +466,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
     {
         try
         {
-            availableActions.insert(transportActionToAction(m_avTransport->actionFromString(action)));
+            availableActions.insert(transportActionToAction(AVTransport::actionFromString(action)));
         }
         catch (std::exception& e)
         {

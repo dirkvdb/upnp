@@ -29,7 +29,34 @@ class Action;
 namespace ConnectionManager
 {
 
-class Client : public ServiceClientBase<Action, Variable>
+struct ServiceTraits
+{
+    using ActionType = ConnectionManager::Action;
+    using VariableType = ConnectionManager::Variable;
+    static const ServiceType SvcType = ServiceType::ConnectionManager;
+
+    static ActionType actionFromString(const std::string& action)
+    {
+        return ConnectionManager::actionFromString(action);
+    }
+
+    static std::string actionToString(ActionType action)
+    {
+        return ConnectionManager::toString(action);
+    }
+
+    static VariableType variableFromString(const std::string& var)
+    {
+        return ConnectionManager::variableFromString(var);
+    }
+
+    static std::string variableToString(VariableType var)
+    {
+        return ConnectionManager::toString(var);
+    }
+};
+
+class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
     Client(IClient2& client);
@@ -41,12 +68,6 @@ public:
     void getCurrentConnectionInfo(int32_t connectionId, std::function<void(int32_t, ConnectionInfo)> cb);
 
 protected:
-    virtual Action actionFromString(const std::string& action) const override;
-    virtual std::string actionToString(Action action) const override;
-    virtual Variable variableFromString(const std::string& var) const override;
-    virtual std::string variableToString(Variable var) const override;
-
-    ServiceType getType() override;
     std::chrono::seconds getSubscriptionTimeout() override;
 
     void handleUPnPResult(int errorCode) override;

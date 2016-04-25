@@ -270,13 +270,13 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
     }
 
 
-    log::debug("Add change: {} {}", toString(var), value);
-    m_LastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
+    log::debug("Add change: {} {}", variableToString(var), value);
+    m_LastChange.addChangedVariable(id, ServiceVariable(variableToString(var), value));
 }
 
 std::string Service::variableToString(Variable type) const
 {
-    return AVTransport::toString(type);
+    return AVTransport::variableToString(type);
 }
 
 xml::Document Service::getStateVariables(uint32_t id, const std::string& variableList) const

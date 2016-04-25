@@ -34,11 +34,11 @@
 namespace upnp
 {
 
-template <typename ActionType, typename VariableType>
+template <typename Traits>
 class ServiceClientBase
 {
 public:
-    utils::Signal<VariableType, const std::map<VariableType, std::string>&> StateVariableEvent;
+    utils::Signal<typename Traits::VariableType, const std::map<typename Traits::VariableType, std::string>&> StateVariableEvent;
 
     ServiceClientBase(IClient2& client)
     : m_client(client)
@@ -75,7 +75,7 @@ public:
                 utils::log::warn("TODO: renew subscription");
             });
 
-            return std::bind(&ServiceClientBase<ActionType, VariableType>::eventCb, this, std::placeholders::_1);
+            return std::bind(&ServiceClientBase<Traits>::eventCb, this, std::placeholders::_1);
         });
     }
 
@@ -90,15 +90,10 @@ public:
         });
     }
 
-    bool supportsAction(ActionType action) const
+    bool supportsAction(typename Traits::ActionType action) const
     {
         return m_supportedActions.find(action) != m_supportedActions.end();
     }
-
-    virtual ActionType actionFromString(const std::string& action) const = 0;
-    virtual std::string actionToString(ActionType action) const  = 0;
-    virtual VariableType variableFromString(const std::string& var) const  = 0;
-    virtual std::string variableToString(VariableType var) const  = 0;
 
 protected:
     virtual void processServiceDescription(const std::string& descriptionUrl)
@@ -127,12 +122,12 @@ protected:
         });
     }
 
-    void executeAction(ActionType actionType, std::function<void(int32_t, std::string)> cb)
+    void executeAction(typename Traits::ActionType actionType, std::function<void(int32_t, std::string)> cb)
     {
         executeAction(actionType, std::map<std::string, std::string> {}, std::move(cb));
     }
 
-    void executeAction(ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(int32_t, std::string)> cb)
+    void executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(int32_t, std::string)> cb)
     {
         Action action(actionToString(actionType), m_service.m_controlURL, getType());
         for (auto& arg : args)
@@ -143,14 +138,38 @@ protected:
         m_client.sendAction(action, std::move(cb));
     }
 
-    virtual ServiceType getType() = 0;
     virtual std::chrono::seconds getSubscriptionTimeout() = 0;
-    virtual void handleStateVariableEvent(VariableType /*changedVariable*/, const std::map<VariableType, std::string>& /*variables*/) {}
+    virtual void handleStateVariableEvent(typename Traits::VariableType /*changedVariable*/, const std::map<typename Traits::VariableType, std::string>& /*variables*/) {}
     virtual void handleUPnPResult(int errorCode) = 0;
 
     std::vector<StateVariable> m_StateVariables;
 
 private:
+    static ServiceType getType()
+    {
+        return Traits::SvcType;
+    }
+
+    typename Traits::ActionType actionFromString(const std::string& action)
+    {
+        return Traits::actionFromString(action);
+    }
+
+    std::string actionToString(typename Traits::ActionType action)
+    {
+        return Traits::actionToString(action);
+    }
+
+    typename Traits::VariableType variableFromString(const std::string& var)
+    {
+        return Traits::variableFromString(var);
+    }
+
+    std::string variableToString(typename Traits::VariableType var)
+    {
+        return Traits::variableToString(var);
+    }
+
     void eventCb(const SubscriptionEvent& event)
     {
         utils::log::info(event.data);
@@ -158,9 +177,9 @@ private:
         try
         {
             xml::parseEvent(event.data, [this] (const std::string& varType, const std::map<std::string, std::string>& values) {
-                VariableType changedVar = variableFromString(varType);
+                auto changedVar = variableFromString(varType);
 
-                std::map<VariableType, std::string> vars;
+                std::map<typename Traits::VariableType, std::string> vars;
                 for (auto& val : values)
                 {
                     vars.emplace(variableFromString(val.first), val.second);
@@ -235,7 +254,7 @@ private:
     IClient2&                               m_client;
     Service                                 m_service;
     uv::Timer                               m_subTimer;
-    std::set<ActionType>                    m_supportedActions;
+    std::set<typename Traits::ActionType>   m_supportedActions;
     std::string                             m_subscriptionId;
     std::mutex                              m_eventMutex;
 };

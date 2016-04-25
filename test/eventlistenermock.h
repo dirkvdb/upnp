@@ -20,7 +20,7 @@
 
 #include "upnp/upnp.avtransport.client.h"
 #include "upnp/upnp.renderingcontrol.client.h"
-#include "upnp/upnpcontentdirectoryclient.h"
+#include "upnp/upnp.contentdirectory.client.h"
 
 namespace upnp
 {

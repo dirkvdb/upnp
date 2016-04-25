@@ -36,7 +36,34 @@ class IClient2;
 namespace RenderingControl
 {
 
-class Client : public ServiceClientBase<Action, Variable>
+struct ServiceTraits
+{
+    using ActionType = RenderingControl::Action;
+    using VariableType = RenderingControl::Variable;
+    static const ServiceType SvcType = ServiceType::RenderingControl;
+
+    static ActionType actionFromString(const std::string& action)
+    {
+        return RenderingControl::actionFromString(action);
+    }
+
+    static std::string actionToString(ActionType action)
+    {
+        return RenderingControl::toString(action);
+    }
+
+    static VariableType variableFromString(const std::string& var)
+    {
+        return RenderingControl::variableFromString(var);
+    }
+
+    static std::string variableToString(VariableType var)
+    {
+        return RenderingControl::toString(var);
+    }
+};
+
+class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
     Client(upnp::IClient2& client);
@@ -47,12 +74,6 @@ public:
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 
 protected:
-    virtual Action actionFromString(const std::string& action) const override;
-    virtual std::string actionToString(Action action) const override;
-    virtual Variable variableFromString(const std::string& var) const override;
-    virtual std::string variableToString(Variable var) const override;
-
-    virtual ServiceType getType() override;
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
     virtual void processServiceDescription(const std::string& descriptionUrl) override;

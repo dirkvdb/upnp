@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_AV_TRANSPORT_CLIENT_H
-#define UPNP_AV_TRANSPORT_CLIENT_H
+#pragma once
 
 #include "utils/signal.h"
 #include "upnp/upnpserviceclientbase.h"
@@ -30,7 +29,34 @@ class Action;
 namespace AVTransport
 {
 
-class Client : public ServiceClientBase<Action, Variable>
+struct ServiceTraits
+{
+    using ActionType = AVTransport::Action;
+    using VariableType = AVTransport::Variable;
+    static const ServiceType SvcType = ServiceType::AVTransport;
+
+    static Action actionFromString(const std::string& action)
+    {
+        return AVTransport::actionFromString(action);
+    }
+
+    static std::string actionToString(Action action)
+    {
+        return AVTransport::actionToString(action);
+    }
+
+    static Variable variableFromString(const std::string& var)
+    {
+        return AVTransport::variableFromString(var);
+    }
+
+    static std::string variableToString(Variable var)
+    {
+        return AVTransport::variableToString(var);
+    }
+};
+
+class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
     Client(IClient2& client);
@@ -52,15 +78,9 @@ public:
 
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 
-    virtual Action actionFromString(const std::string& action) const  override;
-    virtual std::string actionToString(Action action) const  override;
-    virtual Variable variableFromString(const std::string& var) const  override;
-    virtual std::string variableToString(Variable var) const  override;
-
 protected:
     void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
 
-    ServiceType getType() override;
     std::chrono::seconds getSubscriptionTimeout() override;
 
     void handleUPnPResult(int errorCode) override;
@@ -68,5 +88,3 @@ protected:
 
 }
 }
-
-#endif

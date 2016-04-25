@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpconnectionmanagerclient.h"
+#include "upnp/upnp.connectionmanager.client.h"
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
@@ -50,10 +50,10 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
             try
             {
                 xml_document<> doc;
-                doc.parse<parse_non_destructive>(&response.front());
-                auto& sink = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Sink");
+                doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
+                auto& sink = doc.first_node_ref().first_node_ref("Sink");
 
-                auto infos = stringops::tokenize(sink.value(), ',');
+                auto infos = stringops::tokenize(sink.value_string(), ',');
                 for (auto& info : infos)
                 {
                     try
@@ -67,8 +67,6 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
                     {
                         log::warn(e.what());
                     }
-
-                    protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
                 }
             }
             catch(std::exception& e)
@@ -99,15 +97,15 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                auto& rootNode = doc.first_node_ref();
 
                 connInfo.peerConnectionManager      = peerConnectionManager;
                 connInfo.peerConnectionId           = peerConnectionId;
                 connInfo.protocolInfo               = protocolInfo;
                 connInfo.direction                  = direction;
-                connInfo.connectionId               = std::stoi(body.first_node_ref("ConnectionId").value());
-                connInfo.avTransportId              = std::stoi(body.first_node_ref("AVTransportID").value());
-                connInfo.renderingControlServiceId  = std::stoi(body.first_node_ref("RcsID").value());
+                connInfo.connectionId               = std::stoi(rootNode.first_node_ref("ConnectionId").value());
+                connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value());
+                connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value());
             }
             catch(std::exception& e)
             {
@@ -137,8 +135,7 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-                ids = stringops::tokenize(body.first_node_ref("ConnectionIDs").value(), ',');
+                ids = stringops::tokenize(doc.first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
             }
             catch(std::exception& e)
             {
@@ -151,16 +148,6 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
     });
 }
 
-ServiceType Client::getType()
-{
-    return ServiceType::ConnectionManager;
-}
-
-std::chrono::seconds Client::getSubscriptionTimeout()
-{
-    return g_subscriptionTimeout;
-}
-
 void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(int32_t, ConnectionInfo)> cb)
 {
     executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} }, [=] (int32_t status, const std::string& response) {
@@ -171,16 +158,16 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                auto& rootNode = doc.first_node_ref();
 
                 connInfo.connectionId               = connectionId;
-                connInfo.avTransportId              = std::stoi(body.first_node_ref("AVTransportID").value());
-                connInfo.renderingControlServiceId  = std::stoi(body.first_node_ref("RcsID").value());
-                connInfo.protocolInfo               = ProtocolInfo(body.first_node_ref("ProtocolInfo").value());
-                connInfo.peerConnectionManager      = body.first_node_ref("PeerConnectionManager").value();
-                connInfo.peerConnectionId           = std::stoi(body.first_node_ref("PeerConnectionID").value());
-                connInfo.direction                  = directionFromString(body.first_node_ref("Direction").value());
-                connInfo.connectionStatus           = connectionStatusFromString(body.first_node_ref("Status").value());
+                connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
+                connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value_string());
+                connInfo.protocolInfo               = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
+                connInfo.peerConnectionManager      = rootNode.first_node_ref("PeerConnectionManager").value_string();
+                connInfo.peerConnectionId           = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
+                connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_string());
+                connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_string());
             }
             catch(std::exception& e)
             {
@@ -191,6 +178,11 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
 
         cb(status, connInfo);
     });
+}
+
+std::chrono::seconds Client::getSubscriptionTimeout()
+{
+    return g_subscriptionTimeout;
 }
 
 void Client::handleUPnPResult(int errorCode)
@@ -209,26 +201,6 @@ void Client::handleUPnPResult(int errorCode)
 
         default: upnp::handleUPnPResult(errorCode);
     }
-}
-
-Action Client::actionFromString(const std::string& action) const
-{
-    return ConnectionManager::actionFromString(action);
-}
-
-std::string Client::actionToString(Action action) const
-{
-    return ConnectionManager::toString(action);
-}
-
-Variable Client::variableFromString(const std::string& var) const
-{
-    return ConnectionManager::variableFromString(var);
-}
-
-std::string Client::variableToString(Variable var) const
-{
-    return ConnectionManager::toString(var);
 }
 
 }

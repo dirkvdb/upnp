@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp.servicetestbase.h"
+#include "upnp.serviceclienttestbase.h"
 #include "upnp/upnp.renderingcontrol.client.h"
 
 using namespace utils;
@@ -36,10 +36,10 @@ struct StatusCallbackMock
     MOCK_METHOD2(onStatus, void(int32_t, uint32_t volume));
 };
 
-class RenderingControlTest : public ServiceTestBase<RenderingControl::Client, StatusCallbackMock, RenderingControl::Variable>
+class RenderingControlTest : public ServiceClientTestBase<RenderingControl::Client, StatusCallbackMock, RenderingControl::Variable>
 {
 public:
-    RenderingControlTest() : ServiceTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)
+    RenderingControlTest() : ServiceClientTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)
     {
     }
 
@@ -110,7 +110,6 @@ TEST_F(RenderingControlTest, getVolume)
 
     expectAction(expectedAction, { { "CurrentVolume", "36" } } );
 
-    std::set<AVTransport::Action> expected = { AVTransport::Action::Play, AVTransport::Action::Pause, AVTransport::Action::Stop };
     EXPECT_CALL(statusMock, onStatus(200, 36u));
     serviceInstance->getVolume(g_connectionId, checkStatusCallback<uint32_t>());
 }

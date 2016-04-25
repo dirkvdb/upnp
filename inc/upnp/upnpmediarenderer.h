@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "upnp/upnpconnectionmanagerclient.h"
+#include "upnp/upnp.connectionmanager.client.h"
 #include "upnp/upnp.renderingcontrol.client.h"
 #include "upnp/upnp.avtransport.client.h"
 

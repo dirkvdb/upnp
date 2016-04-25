@@ -227,7 +227,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                 {
                     try
                     {
-                        actions.insert(actionFromString(action));
+                        actions.insert(AVTransport::actionFromString(action));
                     }
                     catch (std::exception& e)
                     {
@@ -246,11 +246,6 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
     });
 }
 
-ServiceType Client::getType()
-{
-    return ServiceType::AVTransport;
-}
-
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
@@ -262,26 +257,6 @@ void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std
     {
         LastChangeEvent(variables);
     }
-}
-
-Action Client::actionFromString(const std::string& action) const
-{
-    return AVTransport::actionFromString(action);
-}
-
-std::string Client::actionToString(Action action) const
-{
-    return AVTransport::toString(action);
-}
-
-Variable Client::variableFromString(const std::string& var) const
-{
-    return AVTransport::variableFromString(var);
-}
-
-std::string Client::variableToString(Variable var) const
-{
-    return AVTransport::toString(var);
 }
 
 void Client::handleUPnPResult(int errorCode)

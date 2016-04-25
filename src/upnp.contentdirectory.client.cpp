@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpcontentdirectoryclient.h"
+#include "upnp/upnp.contentdirectory.client.h"
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
@@ -334,31 +334,6 @@ void Client::handleUPnPResult(int errorCode)
     case 720: throw Exception(errorCode, "Cannot process the request");
     default: upnp::handleUPnPResult(errorCode);
     }
-}
-
-Action Client::actionFromString(const std::string& action) const
-{
-    return ContentDirectory::actionFromString(action);
-}
-
-std::string Client::actionToString(Action action) const
-{
-    return ContentDirectory::actionToString(action);
-}
-
-Variable Client::variableFromString(const std::string& var) const
-{
-    return ContentDirectory::variableFromString(var);
-}
-
-std::string Client::variableToString(Variable var) const
-{
-    return ContentDirectory::toString(var);
-}
-
-ServiceType Client::getType()
-{
-    return ServiceType::ContentDirectory;
 }
 
 std::chrono::seconds Client::getSubscriptionTimeout()

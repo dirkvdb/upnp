@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp.servicetestbase.h"
+#include "upnp.serviceclienttestbase.h"
 #include "upnp/upnp.avtransport.client.h"
 
 namespace upnp
@@ -76,10 +76,10 @@ struct StatusCallbackMock
 
 }
 
-class AVTransportTest : public ServiceTestBase<AVTransport::Client, StatusCallbackMock, AVTransport::Variable>
+class AVTransportTest : public ServiceClientTestBase<AVTransport::Client, StatusCallbackMock, AVTransport::Variable>
 {
 public:
-    AVTransportTest() : ServiceTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
+    AVTransportTest() : ServiceClientTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
     {
     }
 

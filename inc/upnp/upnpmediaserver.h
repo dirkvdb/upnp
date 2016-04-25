@@ -14,14 +14,13 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_MEDIA_SERVER_H
-#define UPNP_MEDIA_SERVER_H
+#pragma once
 
 #include <memory>
 #include <vector>
 
-#include "upnp/upnpconnectionmanagerclient.h"
-#include "upnp/upnpcontentdirectoryclient.h"
+#include "upnp/upnp.connectionmanager.client.h"
+#include "upnp/upnp.contentdirectory.client.h"
 #include "upnp/upnp.avtransport.client.h"
 
 #include "utils/threadpool.h"
@@ -129,4 +128,3 @@ private:
 
 }
 
-#endif

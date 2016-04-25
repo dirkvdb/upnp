@@ -60,7 +60,7 @@ DEFINE_UPNP_SERVICE_EXCEPTION(SyncPositionOrOffsetTooEarlyOrSmall,  "Sync, posit
 DEFINE_UPNP_SERVICE_EXCEPTION(IllegalPlaylistOffsett,               "Illegal playlist offset",                      734)
 DEFINE_UPNP_SERVICE_EXCEPTION(IncorrectPLaylistLength,              "Incorrect playlist length",                    735)
 DEFINE_UPNP_SERVICE_EXCEPTION(IllegalPlaylist,                      "Illegal playlist",                             736)
-    
+
 enum class Action
 {
 // AVTransport:1
@@ -142,7 +142,7 @@ enum class Variable
     ArgumentTypeServiceId, // Optional
     ArgumentTypeStateVariableValuePairs, // Optional
     ArgumentTypeStateVariableList, // Optional
-    
+
 // AVTransport:3
     SyncOffset, // Optional
     ArgumentTypePlaylistData,
@@ -245,7 +245,7 @@ enum class PlaylistState
     Active,
     Incomplete
 };
-    
+
 struct TransportInfo
 {
     State       currentTransportState;
@@ -310,12 +310,12 @@ inline Action actionFromString(const std::string& action)
     if (action == "SetPlayMode")                    return Action::SetPlayMode;
     if (action == "SetRecordQualityMode")           return Action::SetRecordQualityMode;
     if (action == "GetCurrentTransportActions")     return Action::GetCurrentTransportActions;
-    
+
     if (action == "GetMediaInfoExt")                return Action::GetMediaInfoExt;
     if (action == "GetDRMState")                    return Action::GetDRMState;
     if (action == "GetStateVariables")              return Action::GetStateVariables;
     if (action == "SetStateVariables")              return Action::SetStateVariables;
-    
+
     if (action == "GetSyncOffset")                  return Action::GetSyncOffset;
     if (action == "AdjustSyncOffset")               return Action::AdjustSyncOffset;
     if (action == "SetSyncOffset")                  return Action::SetSyncOffset;
@@ -329,7 +329,7 @@ inline Action actionFromString(const std::string& action)
     throw Exception("Unknown AVTransport action: {}", action);
 }
 
-inline std::string toString(Action action)
+inline std::string actionToString(Action action)
 {
     switch (action)
     {
@@ -350,12 +350,12 @@ inline std::string toString(Action action)
         case Action::SetPlayMode:                   return "SetPlayMode";
         case Action::SetRecordQualityMode:          return "SetRecordQualityMode";
         case Action::GetCurrentTransportActions:    return "GetCurrentTransportActions";
-        
+
         case Action::GetMediaInfoExt:               return "GetMediaInfo_Ext";
         case Action::GetDRMState:                   return "GetDRMState";
         case Action::GetStateVariables:             return "GetStateVariables";
         case Action::SetStateVariables:             return "SetStateVariables";
-        
+
         case Action::GetSyncOffset:                 return "GetSyncOffset";
         case Action::AdjustSyncOffset:              return "AdjustSyncOffset";
         case Action::SetSyncOffset:                 return "SetSyncOffset";
@@ -403,7 +403,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_SeekTarget")                 return Variable::ArgumentTypeSeekTarget;
     if (var == "A_ARG_TYPE_InstanceID")                 return Variable::ArgumentTypeInstanceId;
     if (var == "LastChange")                            return Variable::LastChange;
-    
+
     if (var == "CurrentMediaCategory")                  return Variable::CurrentMediaCategory;
     if (var == "DRMState")                              return Variable::DRMState;
     if (var == "A_ARG_TYPE_DeviceUDN")                  return Variable::ArgumentTypeDeviceUDN;
@@ -411,7 +411,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_ServiceId")                  return Variable::ArgumentTypeServiceId;
     if (var == "A_ARG_TYPE_StateVariableValuePairs")    return Variable::ArgumentTypeStateVariableValuePairs;
     if (var == "A_ARG_TYPE_StateVariableList")          return Variable::ArgumentTypeStateVariableList;
-    
+
     if (var == "SyncOffset")                            return Variable::SyncOffset;
     if (var == "A_ARG_TYPE_PlaylistData")               return Variable::ArgumentTypePlaylistData;
     if (var == "A_ARG_TYPE_PlaylistDataLength")         return Variable::ArgumentTypePlaylistDataLength;
@@ -423,11 +423,11 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_PlaylistType")               return Variable::ArgumentTypePlaylistType;
     if (var == "A_ARG_TYPE_PlaylistInfo")               return Variable::ArgumentTypePlaylistInfo;
     if (var == "A_ARG_TYPE_PlaylistStartObjID")         return Variable::ArgumentTypePlaylistStartObjID;
-    
+
     throw Exception("Unknown AVTransport variable: {}", var);
 }
 
-inline std::string toString(Variable var)
+inline std::string variableToString(Variable var)
 {
     switch (var)
     {
@@ -461,7 +461,7 @@ inline std::string toString(Variable var)
     case Variable::ArgumentTypeSeekTarget:              return "A_ARG_TYPE_SeekTarget";
     case Variable::ArgumentTypeInstanceId:              return "A_ARG_TYPE_InstanceID";
     case Variable::LastChange:                          return "LastChange";
-    
+
     case Variable::CurrentMediaCategory:                return "CurrentMediaCategory";
     case Variable::DRMState:                            return "DRMState";
     case Variable::ArgumentTypeDeviceUDN:               return "A_ARG_TYPE_DeviceUDN";
@@ -469,7 +469,7 @@ inline std::string toString(Variable var)
     case Variable::ArgumentTypeServiceId:               return "A_ARG_TYPE_ServiceId";
     case Variable::ArgumentTypeStateVariableValuePairs: return "A_ARG_TYPE_StateVariableValuePairs";
     case Variable::ArgumentTypeStateVariableList:       return "A_ARG_TYPE_StateVariableList";
-    
+
     case Variable::SyncOffset:                          return "SyncOffset";
     case Variable::ArgumentTypePlaylistData:            return "A_ARG_TYPE_PlaylistData";
     case Variable::ArgumentTypePlaylistDataLength:      return "A_ARG_TYPE_PlaylistDataLength";
@@ -483,7 +483,7 @@ inline std::string toString(Variable var)
     case Variable::ArgumentTypePlaylistStartObjID:      return "A_ARG_TYPE_PlaylistStartObjID";
     default:
         throw Exception("Unknown AVTransport variable: {}", static_cast<int32_t>(var));
-    }    
+    }
 }
 
 inline State stateFromString(const std::string& state)
@@ -515,7 +515,7 @@ inline PlaylistStep playlistStepFromString(const std::string& step)
     if (step == "Stop")                 return PlaylistStep::Stop;
     if (step == "Reset")                return PlaylistStep::Reset;
     if (step == "Replace")              return PlaylistStep::Replace;
-    
+
     throw Exception("Unknown playlist step: {}", step);
 }
 

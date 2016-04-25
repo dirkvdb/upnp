@@ -75,11 +75,6 @@ void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, 
     });
 }
 
-ServiceType Client::getType()
-{
-    return ServiceType::RenderingControl;
-}
-
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return g_subscriptionTimeout;
@@ -91,7 +86,7 @@ void Client::processServiceDescription(const std::string& descriptionUrl)
 
     for (auto& variable : m_StateVariables)
     {
-        if (variable.name == variableToString(Variable::Volume))
+        if (variable.name == toString(Variable::Volume))
         {
             if (variable.valueRange)
             {
@@ -119,26 +114,6 @@ void Client::handleUPnPResult(int errorCode)
         case 702: throw Exception(errorCode, "Invalid instance id");
         default: upnp::handleUPnPResult(errorCode);
     }
-}
-
-Action Client::actionFromString(const std::string& action) const
-{
-    return RenderingControl::actionFromString(action);
-}
-
-std::string Client::actionToString(Action action) const
-{
-    return RenderingControl::toString(action);
-}
-
-Variable Client::variableFromString(const std::string& var) const
-{
-    return RenderingControl::variableFromString(var);
-}
-
-std::string Client::variableToString(Variable var) const
-{
-    return RenderingControl::toString(var);
 }
 
 }

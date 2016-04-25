@@ -101,10 +101,10 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
     inc/upnp/upnpclientinterface.h
     inc/upnp/upnp.clientinterface.h
-    inc/upnp/upnpconnectionmanagerclient.h      src/upnpconnectionmanagerclient.cpp
+    inc/upnp/upnp.connectionmanager.client.h    src/upnp.connectionmanager.client.cpp
     inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
     inc/upnp/upnpconnectionmanagertypes.h
-    inc/upnp/upnpcontentdirectoryclient.h       src/upnpcontentdirectoryclient.cpp
+    inc/upnp/upnp.contentdirectory.client.h     src/upnp.contentdirectory.client.cpp
     inc/upnp/upnpcontentdirectoryservice.h      src/upnpcontentdirectoryservice.cpp
     inc/upnp/upnpcontentdirectorytypes.h
     inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp

@@ -47,8 +47,10 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.xml.parseutilstest.cpp
     upnp.soap.parseutilstest.cpp
 
-    upnp.avtransporttest.cpp
-    upnp.renderingcontroltest.cpp
+    upnp.serviceclienttestbase.h
+    upnp.avtransportclienttest.cpp
+    upnp.renderingcontrolclienttest.cpp
+    upnp.connectionmanagerclienttest.cpp
 )
 
 # TARGET_LINK_LIBRARIES(upnptest

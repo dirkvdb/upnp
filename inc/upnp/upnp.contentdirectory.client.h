@@ -32,7 +32,34 @@ typedef std::function<void(const Item&)> ItemCb;
 namespace ContentDirectory
 {
 
-class Client : public ServiceClientBase<Action, Variable>
+struct ServiceTraits
+{
+    using ActionType = ContentDirectory::Action;
+    using VariableType = ContentDirectory::Variable;
+    static const ServiceType SvcType = ServiceType::ContentDirectory;
+
+    static ActionType actionFromString(const std::string& action)
+    {
+        return ContentDirectory::actionFromString(action);
+    }
+
+    static std::string actionToString(ActionType action)
+    {
+        return ContentDirectory::actionToString(action);
+    }
+
+    static VariableType variableFromString(const std::string& var)
+    {
+        return ContentDirectory::variableFromString(var);
+    }
+
+    static std::string variableToString(VariableType var)
+    {
+        return ContentDirectory::variableToString(var);
+    }
+};
+
+class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
     enum BrowseType
@@ -56,12 +83,6 @@ public:
     void search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
 
 protected:
-    virtual Action actionFromString(const std::string& action) const override;
-    virtual std::string actionToString(Action action) const override;
-    virtual Variable variableFromString(const std::string& var) const override;
-    virtual std::string variableToString(Variable var) const override;
-
-    virtual ServiceType getType() override;
     virtual std::chrono::seconds getSubscriptionTimeout() override;
     virtual void handleUPnPResult(int errorCode) override;
 

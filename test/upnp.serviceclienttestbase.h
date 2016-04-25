@@ -49,10 +49,10 @@ static const uint32_t g_connectionId                = 0;
 static const std::chrono::seconds g_defaultTimeout  = 1801s;
 
 template <typename SvcType, typename StatusCbMock, typename VarType>
-class ServiceTestBase : public Test
+class ServiceClientTestBase : public Test
 {
 protected:
-    ServiceTestBase(ServiceType type, const std::string& serviceXml)
+    ServiceClientTestBase(ServiceType type, const std::string& serviceXml)
     {
         Service service;
         service.m_type                  = type;
@@ -79,7 +79,7 @@ protected:
         Mock::VerifyAndClearExpectations(&client);
     }
 
-    virtual ~ServiceTestBase()
+    virtual ~ServiceClientTestBase()
     {
         Mock::VerifyAndClearExpectations(&client);
 

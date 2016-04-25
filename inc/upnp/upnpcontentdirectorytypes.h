@@ -14,8 +14,9 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONTENT_DIRECTORY_TYPES_H
-#define UPNP_CONTENT_DIRECTORY_TYPES_H
+#pragma once
+
+#include <cinttypes>
 
 namespace upnp
 {
@@ -124,7 +125,7 @@ inline Variable variableFromString(const std::string& var)
     throw Exception("Unknown ContentDirectory variable: {}", var);
 }
 
-inline std::string toString(Variable var)
+inline std::string variableToString(Variable var)
 {
     switch (var)
     {
@@ -178,5 +179,3 @@ inline SortType sortTypeFromString(char c)
 
 }
 }
-
-#endif

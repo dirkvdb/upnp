@@ -22,7 +22,7 @@
 #include "upnp/upnpmediaserver.h"
 #include "upnp/upnpmediarenderer.h"
 #include "upnp/upnpprotocolinfo.h"
-#include "upnp/upnpconnectionmanagerclient.h"
+#include "upnp/upnp.connectionmanager.client.h"
 #include "upnp/upnpwebserver.h"
 
 #include "utils/log.h"
