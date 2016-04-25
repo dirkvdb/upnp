@@ -76,10 +76,10 @@ struct AVTransportStatusCallbackMock
 
 }
 
-class AVTransportTest : public ServiceClientTestBase<AVTransport::Client, AVTransportStatusCallbackMock, AVTransport::Variable>
+class AVTransportClientTest : public ServiceClientTestBase<AVTransport::Client, AVTransportStatusCallbackMock, AVTransport::Variable>
 {
 public:
-    AVTransportTest() : ServiceClientTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
+    AVTransportClientTest() : ServiceClientTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
     {
     }
 
@@ -121,7 +121,7 @@ public:
     }
 };
 
-TEST_F(AVTransportTest, supportedActions)
+TEST_F(AVTransportClientTest, supportedActions)
 {
     EXPECT_TRUE(serviceInstance->supportsAction(AVTransport::Action::GetCurrentTransportActions));
     EXPECT_TRUE(serviceInstance->supportsAction(AVTransport::Action::GetDeviceCapabilities));
@@ -143,7 +143,7 @@ TEST_F(AVTransportTest, supportedActions)
     EXPECT_FALSE(serviceInstance->supportsAction(AVTransport::Action::SetNextAVTransportURI));
 }
 
-TEST_F(AVTransportTest, lastChangeEvent)
+TEST_F(AVTransportClientTest, lastChangeEvent)
 {
     std::map<AVTransport::Variable, std::string> lastChange;
     EXPECT_CALL(eventListener, LastChangedEvent(AVTransport::Variable::LastChange, _))
@@ -181,7 +181,7 @@ TEST_F(AVTransportTest, lastChangeEvent)
     EXPECT_EQ("InstanceId",         lastChange[AVTransport::Variable::ArgumentTypeInstanceId]);
 }
 
-TEST_F(AVTransportTest, play)
+TEST_F(AVTransportClientTest, play)
 {
     Action expectedAction("Play", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -192,7 +192,7 @@ TEST_F(AVTransportTest, play)
     serviceInstance->play(g_connectionId, "2", checkStatusCallback());
 }
 
-TEST_F(AVTransportTest, stop)
+TEST_F(AVTransportClientTest, stop)
 {
     Action expectedAction("Stop", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -202,7 +202,7 @@ TEST_F(AVTransportTest, stop)
     serviceInstance->stop(g_connectionId, checkStatusCallback());
 }
 
-TEST_F(AVTransportTest, pause)
+TEST_F(AVTransportClientTest, pause)
 {
     Action expectedAction("Pause", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -212,7 +212,7 @@ TEST_F(AVTransportTest, pause)
     serviceInstance->pause(g_connectionId, checkStatusCallback());
 }
 
-TEST_F(AVTransportTest, previous)
+TEST_F(AVTransportClientTest, previous)
 {
     Action expectedAction("Previous", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -222,7 +222,7 @@ TEST_F(AVTransportTest, previous)
     serviceInstance->previous(g_connectionId, checkStatusCallback());
 }
 
-TEST_F(AVTransportTest, next)
+TEST_F(AVTransportClientTest, next)
 {
     Action expectedAction("Next", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -232,7 +232,7 @@ TEST_F(AVTransportTest, next)
     serviceInstance->next(g_connectionId, checkStatusCallback());
 }
 
-TEST_F(AVTransportTest, getTransportInfo)
+TEST_F(AVTransportClientTest, getTransportInfo)
 {
     Action expectedAction("GetTransportInfo", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -250,7 +250,7 @@ TEST_F(AVTransportTest, getTransportInfo)
     serviceInstance->getTransportInfo(g_connectionId, checkStatusCallback<AVTransport::TransportInfo>());
 }
 
-TEST_F(AVTransportTest, getPositionInfo)
+TEST_F(AVTransportClientTest, getPositionInfo)
 {
     Action expectedAction("GetPositionInfo", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -278,7 +278,7 @@ TEST_F(AVTransportTest, getPositionInfo)
     serviceInstance->getPositionInfo(g_connectionId, checkStatusCallback<AVTransport::PositionInfo>());
 }
 
-TEST_F(AVTransportTest, getMediaInfo)
+TEST_F(AVTransportClientTest, getMediaInfo)
 {
     Action expectedAction("GetMediaInfo", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
@@ -308,7 +308,7 @@ TEST_F(AVTransportTest, getMediaInfo)
     serviceInstance->getMediaInfo(g_connectionId, checkStatusCallback<AVTransport::MediaInfo>());
 }
 
-TEST_F(AVTransportTest, getCurrentTransportActions)
+TEST_F(AVTransportClientTest, getCurrentTransportActions)
 {
     Action expectedAction("GetCurrentTransportActions", g_controlUrl, ServiceType::AVTransport);
     expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));

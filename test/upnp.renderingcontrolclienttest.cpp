@@ -36,10 +36,10 @@ struct RenderingControlStatusCallbackMock
     MOCK_METHOD2(onStatus, void(int32_t, uint32_t volume));
 };
 
-class RenderingControlTest : public ServiceClientTestBase<RenderingControl::Client, RenderingControlStatusCallbackMock, RenderingControl::Variable>
+class RenderingControlClientTest : public ServiceClientTestBase<RenderingControl::Client, RenderingControlStatusCallbackMock, RenderingControl::Variable>
 {
 public:
-    RenderingControlTest() : ServiceClientTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)
+    RenderingControlClientTest() : ServiceClientTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)
     {
     }
 
@@ -56,7 +56,7 @@ public:
     }
 };
 
-TEST_F(RenderingControlTest, supportedActions)
+TEST_F(RenderingControlClientTest, supportedActions)
 {
     EXPECT_TRUE(serviceInstance->supportsAction(RenderingControl::Action::GetVolume));
     EXPECT_TRUE(serviceInstance->supportsAction(RenderingControl::Action::SetVolume));
@@ -69,7 +69,7 @@ TEST_F(RenderingControlTest, supportedActions)
     EXPECT_FALSE(serviceInstance->supportsAction(RenderingControl::Action::SetVolumeDB));
 }
 
-TEST_F(RenderingControlTest, lastChangeEvent)
+TEST_F(RenderingControlClientTest, lastChangeEvent)
 {
     std::map<RenderingControl::Variable, std::string> lastChange;
     EXPECT_CALL(eventListener, LastChangedEvent(RenderingControl::Variable::LastChange, _)).WillOnce(SaveArg<1>(&lastChange));
@@ -80,7 +80,7 @@ TEST_F(RenderingControlTest, lastChangeEvent)
     EXPECT_EQ("35", lastChange[RenderingControl::Variable::Volume]);
 }
 
-TEST_F(RenderingControlTest, setVolume)
+TEST_F(RenderingControlClientTest, setVolume)
 {
     EXPECT_CALL(eventListener, LastChangedEvent(RenderingControl::Variable::LastChange, _));
     triggerLastChangeUpdate("0", "35");
@@ -102,7 +102,7 @@ TEST_F(RenderingControlTest, setVolume)
     }
 }
 
-TEST_F(RenderingControlTest, getVolume)
+TEST_F(RenderingControlClientTest, getVolume)
 {
     Action expectedAction("GetVolume", g_controlUrl, ServiceType::RenderingControl);
     expectedAction.addArgument("Channel", "Master");
