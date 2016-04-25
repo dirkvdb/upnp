@@ -95,7 +95,6 @@ INCLUDE_DIRECTORIES(SYSTEM
 )
 
 ADD_LIBRARY(upnpframework STATIC
-    inc/upnp/upnpaction.h                       src/upnpaction.cpp
     inc/upnp/upnpactionresponse.h               src/upnpactionresponse.cpp
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h          src/upnp.avtransport.client.cpp
@@ -124,9 +123,9 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp
     inc/upnp/upnpmediaserver.h                  src/upnpmediaserver.cpp
     inc/upnp/upnpprotocolinfo.h                 src/upnpprotocolinfo.cpp
-    inc/upnp/upnprenderingcontrolclient.h       src/upnprenderingcontrolclient.cpp
+    inc/upnp/upnp.renderingcontrol.types.h
+    inc/upnp/upnp.renderingcontrol.client.h     src/upnp.renderingcontrol.client.cpp
     inc/upnp/upnprenderingcontrolservice.h      src/upnprenderingcontrolservice.cpp
-    inc/upnp/upnprenderingcontroltypes.h
     inc/upnp/upnprootdevice.h                   src/upnprootdevice.cpp
     inc/upnp/upnprootdeviceinterface.h
     inc/upnp/upnpserviceclientbase.h

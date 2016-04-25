@@ -28,7 +28,7 @@ namespace upnp
 
 namespace uv { class Loop; }
 
-class Action2;
+class Action;
 
 class IClient2
 {
@@ -45,7 +45,7 @@ public:
     virtual void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) = 0;
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb) = 0;
 
-    virtual void sendAction(const Action2& action, std::function<void(int32_t status, std::string actionResult)> cb) = 0;
+    virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb) = 0;
 
     virtual uv::Loop& loop() const = 0;

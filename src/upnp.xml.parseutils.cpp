@@ -34,15 +34,28 @@ std::string requiredChildValue(const xml_node<char>& node, const char* childName
     return value;
 }
 
-std::string optionalChildValue(const xml_node<char>& node, const char* childName)
+template <typename T>
+T requiredChildValue(const xml_node<char>& node, const char* childName)
 {
-    auto* child = node.first_node(childName);
-    if (child)
+    std::string value = node.first_node_ref(childName).value_string();
+    if (value.empty())
     {
-        return child->value_string();
+        throw std::runtime_error(fmt::format("xml node ({}) child value not present: {}", node.name_string(), childName));
     }
 
-    return std::string();
+    return stringops::toNumeric<T>(value);
+}
+
+template <typename T>
+T optionalChildValue(const xml_node<char>& node, const char* childName, T defaultValue)
+{
+    auto* child = node.first_node(childName);
+    if (!child)
+    {
+        return defaultValue;
+    }
+
+    return stringops::toNumeric<T>(child->value_string()); // TODO span
 }
 
 std::string requiredAttributeValue(xml_node<char>& elem, const char* name)
@@ -149,9 +162,10 @@ std::vector<StateVariable> getStateVariablesFromDescription(xml_document<char>& 
                 try
                 {
                     auto range             = std::make_unique<StateVariable::ValueRange>();
-                    range->minimumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("minimum").value_string());
-                    range->maximumValue    = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("maximum").value_string());
-                    range->step            = stringops::toNumeric<uint32_t>(rangeElem->first_node_ref("step").value_string());
+                    range->minimumValue    = requiredChildValue<uint32_t>(*rangeElem, "minimum");
+                    range->maximumValue    = requiredChildValue<uint32_t>(*rangeElem, "maximum");
+                    range->step            = optionalChildValue<uint32_t>(*rangeElem, "step", 0);
+
                     var.valueRange = std::move(range);
                 }
                 catch(std::exception& e)
@@ -664,8 +678,9 @@ void parseEvent(const std::string& data, std::function<void(const std::string& v
         {
             auto changedVar = var->name_string();
 
+            auto decoded = decode(var->value_string()); // TODO avoid copy
             xml_document<char> changeDoc;
-            doc.parse<parse_non_destructive | parse_trim_whitespace>(var->value_string().c_str());
+            changeDoc.parse<parse_non_destructive | parse_trim_whitespace>(decoded.c_str());
             auto& instanceIDNode = changeDoc.first_node_ref().first_node_ref("InstanceID");
 
             std::map<std::string, std::string> vars;
@@ -700,6 +715,19 @@ Item parseItemDocument(const std::string& xml)
     auto& elem = doc.first_node_ref();
     auto& itemElem = elem.first_node_ref();
     return parseItem(itemElem);
+}
+
+std::string optionalChildValue(xml_node<char>& node, const char* child)
+{
+    std::string result;
+
+    auto* childNode = node.first_node(child);
+    if (childNode && childNode->value())
+    {
+        result.assign(std::string(childNode->value(), childNode->value_size()));
+    }
+
+    return result;
 }
 
 }

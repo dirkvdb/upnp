@@ -146,7 +146,7 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
     });
 }
 
-void Client2::sendAction(const Action2& action, std::function<void(int32_t, std::string)> cb)
+void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());

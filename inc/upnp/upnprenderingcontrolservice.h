@@ -19,7 +19,7 @@
 
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnplastchangevariable.h"
-#include "upnp/upnprenderingcontroltypes.h"
+#include "upnp/upnp.renderingcontrol.types.h"
 
 #include <string>
 #include <vector>

@@ -25,7 +25,6 @@
 #include <thread>
 
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpclientinterface.h"
 #include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.http.client.h"
 

@@ -1275,7 +1275,14 @@ namespace rapidxml_ns
             auto* node = first_node(name, name_size, case_sensitive);
             if (node == nullptr)
             {
-                throw std::runtime_error("child node not found in document: " + std::string(name));
+                if (name == 0)
+                {
+                    throw std::runtime_error("no child node found in element: " + std::string(this->name(), this->name_size()));
+                }
+                else
+                {
+                    throw std::runtime_error("child node not found in document: " + (name_size == 0 ? std::string(name) : std::string(name, name_size)));
+                }
             }
 
             return *node;
@@ -1299,10 +1306,10 @@ namespace rapidxml_ns
         {
             if (namespace_uri_size == 0)
                 namespace_uri_size = internal::measure(namespace_uri);
-            
+
             if (local_name_size == 0)
                 local_name_size = internal::measure(local_name);
-        
+
             for (xml_node<Ch> *child = m_first_node; child; child = child->next_sibling())
                 if (internal::compare(child->local_name(), child->local_name_size(),
                         local_name, local_name_size, local_name_case_sensitive)
@@ -1321,7 +1328,7 @@ namespace rapidxml_ns
                     return child;
             return 0;
         }
-        
+
         xml_node<Ch>& first_node_ref_ns(const Ch *namespace_uri,  std::size_t namespace_uri_size,
                                         const Ch *local_name,     std::size_t local_name_size = 0,
                                         bool local_name_case_sensitive = true) const
@@ -1329,7 +1336,7 @@ namespace rapidxml_ns
             auto* node = first_node_ns(namespace_uri, namespace_uri_size, local_name, local_name_size, local_name_case_sensitive);
             if (node == nullptr)
             {
-                throw std::runtime_error("child node not found in document: " + std::string(local_name));
+                throw std::runtime_error("child node not found in document: " + (local_name_size == 0 ? std::string(local_name) : std::string(local_name, local_name_size)));
             }
 
             return *node;

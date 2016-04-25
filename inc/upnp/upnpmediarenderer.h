@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "upnp/upnpconnectionmanagerclient.h"
-#include "upnp/upnprenderingcontrolclient.h"
+#include "upnp/upnp.renderingcontrol.client.h"
 #include "upnp/upnp.avtransport.client.h"
 
 #include "utils/workerthread.h"

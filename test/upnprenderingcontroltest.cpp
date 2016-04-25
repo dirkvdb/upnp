@@ -14,23 +14,8 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "utils/signal.h"
-#include "utils/log.h"
-
-#include "gtest/gtest.h"
-
-#include <iostream>
-#include <algorithm>
-#include <memory>
-
-#include "upnpclientmock.h"
-#include "eventlistenermock.h"
-#include "testxmls.h"
-#include "testutils.h"
-
-#include "upnp/upnpaction.h"
-#include "upnp/upnprenderingcontrolclient.h"
-
+#include "upnp.servicetestbase.h"
+#include "upnp/upnp.avtransport.client.h"
 
 using namespace utils;
 using namespace testing;

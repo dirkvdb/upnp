@@ -41,57 +41,56 @@ inline void addResponseFooter(std::ostream& ss, const std::string& action)
     ss << "</u:" << action << "Response>";
 }
 
-
 }
 
-inline xml::Document generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
+inline std::string generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
 {
     std::stringstream ss;
     addResponseHeader(ss, action, type);
-    
+
     for (auto& var : vars)
     {
         ss << "    <" << var.first << ">" << var.second << "</" << var.first << ">" << std::endl;
     }
-    
+
     addResponseFooter(ss, action);
-   
-    return xml::Document(ss.str());
+
+    return ss.str();
 }
 
 inline xml::Document generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)
 {
     std::stringstream ss;
     ss << "&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot; xmlns:dlna=&quot;urn:schemas-dlna-org:metadata-1-0/&quot;&gt;" << std::endl;
-    
+
     for (auto& item : containers)
     {
         ss << "&lt;container id=&quot;" << item.getObjectId() << "&quot; parentID=&quot;" << item.getParentId() << "&quot; restricted=&quot;1&quot; childCount=&quot;" << item.getChildCount() << "&quot;&gt;"
            << "&lt;dc:title&gt;" << item.getTitle() << "&lt;/dc:title&gt;";
-        
+
         for (auto& meta : item.getMetaData())
         {
             ss << "&lt;" << toString(meta.first) << "&gt;" << meta.second << "&lt;/" << toString(meta.first) << "&gt;";
         }
-        
+
         ss << "&lt;/container&gt;";
     }
-    
+
     for (auto& item : items)
     {
         ss << "&lt;item id=&quot;" << item.getObjectId() << "&quot; parentID=&quot;" << item.getParentId() << "&quot; restricted=&quot;1&quot;&gt;"
         << "&lt;dc:title&gt;" << item.getTitle() << "&lt;/dc:title&gt;";
-        
+
         for (auto& meta : item.getMetaData())
         {
             ss << "&lt;" << toString(meta.first) << "&gt;" << meta.second << "&lt;/" << toString(meta.first) << "&gt;";
         }
-        
+
         ss << "&lt;/item&gt;";
     }
-    
+
     ss << "&lt;/DIDL-Lite&gt;";
-    
+
     return generateActionResponse("Browse", ServiceType::ContentDirectory, { std::make_pair("Result", ss.str()),
                                                                              std::make_pair("NumberReturned", numericops::toString(items.size())),
                                                                              std::make_pair("TotalMatches", numericops::toString(items.size())),

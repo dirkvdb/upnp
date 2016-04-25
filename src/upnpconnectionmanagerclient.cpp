@@ -18,7 +18,6 @@
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpaction.h"
 #include "upnp/upnputils.h"
 
 #include "utils/log.h"

@@ -47,7 +47,6 @@ public:
     virtual void subscribeToService(const std::string& publisherUrl, int32_t timeout, const std::shared_ptr<IServiceSubscriber>& sub) const override;
     virtual void unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const override;
 
-    virtual xml::Document sendAction(const Action& action) const override;
     virtual xml::Document downloadXmlDocument(const std::string& url) const override;
 
  private:

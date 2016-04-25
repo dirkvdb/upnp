@@ -46,17 +46,7 @@ public:
     {
     }
 
-    virtual ~ServiceClientBase()
-    {
-        try
-        {
-            unsubscribe();
-        }
-        catch (std::exception& e)
-        {
-            utils::log::error(e.what());
-        }
-    }
+    virtual ~ServiceClientBase() = default;
 
     virtual void setDevice(const std::shared_ptr<Device>& device)
     {
@@ -144,7 +134,7 @@ protected:
 
     void executeAction(ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(int32_t, std::string)> cb)
     {
-        Action2 action(actionToString(actionType), m_service.m_controlURL, getType());
+        Action action(actionToString(actionType), m_service.m_controlURL, getType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
@@ -169,13 +159,13 @@ private:
         {
             xml::parseEvent(event.data, [this] (const std::string& varType, const std::map<std::string, std::string>& values) {
                 VariableType changedVar = variableFromString(varType);
-                
+
                 std::map<VariableType, std::string> vars;
                 for (auto& val : values)
                 {
                     vars.emplace(variableFromString(val.first), val.second);
                 }
-                
+
                 // let the service implementation process the event if necessary
                 handleStateVariableEvent(changedVar, vars);
 

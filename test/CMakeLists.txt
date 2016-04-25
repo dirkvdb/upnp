@@ -28,7 +28,6 @@ LINK_DIRECTORIES(
 #     httpreadertest.cpp
 #     webservertest.cpp
 #     upnpcontentdirectorytest.cpp
-#     upnprenderingcontroltest.cpp
 #     upnpservicebasetest.cpp
 # )
 
@@ -49,6 +48,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.soap.parseutilstest.cpp
 
     upnp.avtransporttest.cpp
+    upnp.renderingcontroltest.cpp
 )
 
 # TARGET_LINK_LIBRARIES(upnptest

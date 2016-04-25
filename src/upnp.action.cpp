@@ -41,7 +41,7 @@ const char* g_xmlnsuAtr = "xmlns:u";
 
 }
 
-struct Action2::Pimpl
+struct Action::Pimpl
 {
     std::string name;
     std::string url;
@@ -50,7 +50,7 @@ struct Action2::Pimpl
     xml_node<>* action = nullptr;
 };
 
-Action2::Action2(const std::string& name, const std::string& url, ServiceType serviceType)
+Action::Action(const std::string& name, const std::string& url, ServiceType serviceType)
 : m_pimpl(std::make_unique<Pimpl>())
 {
     m_pimpl->name = "u:" + name;
@@ -70,15 +70,15 @@ Action2::Action2(const std::string& name, const std::string& url, ServiceType se
     m_pimpl->doc.append_node(env);
 }
 
-Action2::~Action2() = default;
+Action::~Action() = default;
 
-void Action2::addArgument(const std::string& name, const std::string& value)
+void Action::addArgument(const std::string& name, const std::string& value)
 {
     auto* arg = m_pimpl->doc.allocate_node(node_element, m_pimpl->doc.allocate_string(name.c_str()), m_pimpl->doc.allocate_string(value.c_str()));
     m_pimpl->action->append_node(arg);
 }
 
-std::string Action2::toString() const
+std::string Action::toString() const
 {
 
     std::string result("<?xml version=\"1.0\"?>");
@@ -86,27 +86,27 @@ std::string Action2::toString() const
     return result;
 }
 
-std::string Action2::getName() const
+std::string Action::getName() const
 {
     return m_pimpl->name.substr(2); // strip the stored namespace
 }
 
-std::string Action2::getUrl() const
+std::string Action::getUrl() const
 {
     return m_pimpl->url;
 }
 
-const char* Action2::getServiceTypeUrn() const
+const char* Action::getServiceTypeUrn() const
 {
     return serviceTypeToUrnTypeString(m_pimpl->serviceType);
 }
 
-ServiceType Action2::getServiceType() const
+ServiceType Action::getServiceType() const
 {
     return m_pimpl->serviceType;
 }
 
-bool Action2::operator==(const Action2& other) const
+bool Action::operator==(const Action& other) const
 {
     return toString() == other.toString();
 }

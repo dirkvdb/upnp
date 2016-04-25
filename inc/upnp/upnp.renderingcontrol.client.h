@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_RENDERING_CONTROL_CLIENT_H
-#define UPNP_RENDERING_CONTROL_CLIENT_H
+#pragma once
 
 #include "utils/signal.h"
 
@@ -23,7 +22,7 @@
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
-#include "upnprenderingcontroltypes.h"
+#include "upnp/upnp.renderingcontrol.types.h"
 
 #include <set>
 #include <memory>
@@ -68,5 +67,3 @@ private:
 
 }
 }
-
-#endif

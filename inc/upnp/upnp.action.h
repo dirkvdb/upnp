@@ -23,13 +23,13 @@
 namespace upnp
 {
 
-class Action2
+class Action
 {
 public:
-    Action2(const std::string& name, const std::string& url, ServiceType serviceType);
-    Action2(Action2&&) = default;
-    Action2& operator=(Action2&&) = default;
-    ~Action2();
+    Action(const std::string& name, const std::string& url, ServiceType serviceType);
+    Action(Action&&) = default;
+    Action& operator=(Action&&) = default;
+    ~Action();
 
     void addArgument(const std::string& name, const std::string& value);
 
@@ -40,14 +40,14 @@ public:
     const char* getServiceTypeUrn() const;
     ServiceType getServiceType() const;
 
-    bool operator==(const Action2& other) const;
+    bool operator==(const Action& other) const;
 
 private:
     struct Pimpl;
     std::unique_ptr<Pimpl> m_pimpl;
 };
 
-inline std::ostream& operator<< (std::ostream& os, const Action2& action)
+inline std::ostream& operator<< (std::ostream& os, const Action& action)
 {
     return os << action.toString();
 }

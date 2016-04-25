@@ -24,7 +24,6 @@
 namespace upnp
 {
 
-class Action;
 class Device;
 class IClient2;
 

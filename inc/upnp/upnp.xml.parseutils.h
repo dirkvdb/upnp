@@ -43,16 +43,32 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 void parseEvent(const std::string& data, std::function<void(const std::string& varable, const std::map<std::string, std::string>&)> cb);
 std::vector<StateVariable> parseServiceDescription(const std::string& contents, std::function<void(const std::string& action)> actionCb);
 
+std::string optionalChildValue(rapidxml_ns::xml_node<char>& node, const char* child);
+
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)
 {
-    return str.empty() ? 0 : static_cast<T>(std::stoul(str));
+    try
+    {
+        return str.empty() ? 0 : static_cast<T>(std::stoul(str));
+    }
+    catch (const std::invalid_argument&)
+    {
+        throw std::invalid_argument("Failed to convert string to integral: " + str);
+    }
 }
 
 template <typename T>
 inline T optionalStringToNumeric(const std::string& str)
 {
-    return str.empty() ? 0 : static_cast<T>(std::stol(str));
+    try
+    {
+        return str.empty() ? 0 : static_cast<T>(std::stol(str));
+    }
+    catch (const std::invalid_argument&)
+    {
+        throw std::invalid_argument("Failed to convert string to integral: " + str);
+    }
 }
 
 }

@@ -54,19 +54,6 @@ std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32
     };
 }
 
-std::string optionalChildValue(xml_node<>& node, const char* child)
-{
-    std::string result;
-
-    auto* childNode = node.first_node(child);
-    if (childNode && childNode->value())
-    {
-        result = std::string(childNode->value(), childNode->value_size());
-    }
-
-    return child;
-}
-
 }
 
 Client::Client(IClient2& client)
@@ -131,16 +118,15 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-
-                info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "Track"));
-                info.trackDuration = optionalChildValue(body, "TrackDuration");
-                info.trackMetaData = optionalChildValue(body, "TrackMetaData");
-                info.trackURI = optionalChildValue(body, "TrackURI");
-                info.relativeTime = optionalChildValue(body, "RelTime");
-                info.absoluteTime = optionalChildValue(body, "AbsTime");
-                info.relativeCount = xml::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "RelCount"));
-                info.absoluteCount = xml::optionalStringToUnsignedNumeric<int32_t>(optionalChildValue(body, "AbsCount"));
+                auto& responseNode = doc.first_node_ref();
+                info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
+                info.trackDuration = xml::optionalChildValue(responseNode, "TrackDuration");
+                info.trackMetaData = xml::optionalChildValue(responseNode, "TrackMetaData");
+                info.trackURI = xml::optionalChildValue(responseNode, "TrackURI");
+                info.relativeTime = xml::optionalChildValue(responseNode, "RelTime");
+                info.absoluteTime = xml::optionalChildValue(responseNode, "AbsTime");
+                info.relativeCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "RelCount"));
+                info.absoluteCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "AbsCount"));
             }
             catch(std::exception& e)
             {
@@ -155,7 +141,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
 
 void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, MediaInfo)> cb)
 {
-    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetMediaInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
         MediaInfo info;
         if (status == 200)
         {
@@ -163,17 +149,17 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
+                auto& responseNode = doc.first_node_ref();
 
-                info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(optionalChildValue(body, "NrTracks"));
-                info.mediaDuration = optionalChildValue(body, "MediaDuration");
-                info.currentURI = optionalChildValue(body, "CurrentUri");
-                info.currentURIMetaData = optionalChildValue(body, "CurrentUriMetaData");
-                info.nextURI = optionalChildValue(body, "NextURI");
-                info.nextURIMetaData = optionalChildValue(body, "NextURIMetaData");
-                info.playMedium = optionalChildValue(body, "PlayMedium");
-                info.recordMedium = optionalChildValue(body, "RecordMedium");
-                info.writeStatus = optionalChildValue(body, "WriteStatus");
+                info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
+                info.mediaDuration = xml::optionalChildValue(responseNode, "MediaDuration");
+                info.currentURI = xml::optionalChildValue(responseNode, "CurrentUri");
+                info.currentURIMetaData = xml::optionalChildValue(responseNode, "CurrentUriMetaData");
+                info.nextURI = xml::optionalChildValue(responseNode, "NextURI");
+                info.nextURIMetaData = xml::optionalChildValue(responseNode, "NextURIMetaData");
+                info.playMedium = xml::optionalChildValue(responseNode, "PlayMedium");
+                info.recordMedium = xml::optionalChildValue(responseNode, "RecordMedium");
+                info.writeStatus = xml::optionalChildValue(responseNode, "WriteStatus");
             }
             catch(std::exception& e)
             {
@@ -196,21 +182,20 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& body = doc.first_node_ref("Envelope").first_node_ref("Body");
-
-                auto* child = body.first_node("CurrentTransportState");
+                auto& responseNode = doc.first_node_ref();
+                auto* child = responseNode.first_node("CurrentTransportState");
                 if (child)
                 {
                     info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
                 }
 
-                child = body.first_node("CurrentTransportStatus");
+                child = responseNode.first_node("CurrentTransportStatus");
                 if (child)
                 {
-                    info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
+                    info.currentTransportStatus = statusFromString(std::string(child->value(), child->value_size()));
                 }
 
-                child = body.first_node("CurrentSpeed");
+                child = responseNode.first_node("CurrentSpeed");
                 if (child)
                 {
                     info.currentSpeed = std::string(child->value(), child->value_size());
@@ -237,9 +222,8 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
-                auto& actionsNode = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Actions");
-
-                for(auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+                auto& actionsNode = doc.first_node_ref().first_node_ref("Actions");
+                for (auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
                 {
                     try
                     {

@@ -24,7 +24,7 @@ TEST(UpnpActionTest, CreateAction)
     "</s:Body>"
     "</s:Envelope>"s;
 
-    Action2 action("SetVolume", "url", ServiceType::RenderingControl);
+    Action action("SetVolume", "url", ServiceType::RenderingControl);
     action.addArgument("Channel", "Master");
     action.addArgument("DesiredVolume", "49");
     action.addArgument("InstanceID", "0");
@@ -46,7 +46,7 @@ TEST(UpnpActionTest, CreateActionNoArguments)
     "</s:Body>"
     "</s:Envelope>"s;
 
-    Action2 action("SetVolume", "url", ServiceType::RenderingControl);
+    Action action("SetVolume", "url", ServiceType::RenderingControl);
 
     EXPECT_EQ("SetVolume", action.getName());
     EXPECT_EQ("url", action.getUrl());

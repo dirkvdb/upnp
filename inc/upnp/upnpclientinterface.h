@@ -23,7 +23,6 @@
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpaction.h"
 #include "upnp/upnpxmlutils.h"
 
 struct Upnp_Event;
@@ -73,7 +72,6 @@ public:
     // synchronously unsubscribe from the service
     virtual void unsubscribeFromService(const std::shared_ptr<IServiceSubscriber>& sub) const = 0;
 
-    virtual xml::Document sendAction(const Action& action) const = 0;
     virtual xml::Document downloadXmlDocument(const std::string& url) const = 0;
 
     utils::Signal<const DeviceDiscoverInfo&> UPnPDeviceDiscoveredEvent;

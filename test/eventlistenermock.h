@@ -14,13 +14,12 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef EVENT_LISTENER_MOCK_H
-#define EVENT_LISTENER_MOCK_H
+#pragma once
 
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
 
 #include "upnp/upnp.avtransport.client.h"
-#include "upnp/upnprenderingcontrolclient.h"
+#include "upnp/upnp.renderingcontrol.client.h"
 #include "upnp/upnpcontentdirectoryclient.h"
 
 namespace upnp
@@ -28,16 +27,12 @@ namespace upnp
 namespace test
 {
 
+template <typename VarType>
 class EventListenerMock
 {
 public:
-    MOCK_METHOD2(RenderingControlLastChangedEvent, void(RenderingControl::Variable, const std::map<RenderingControl::Variable, std::string>&));
-    MOCK_METHOD2(AVTransportLastChangedEvent, void(AVTransport::Variable, const std::map<AVTransport::Variable, std::string>&));
-    MOCK_METHOD2(ContentDirectoryLastChangedEvent, void(ContentDirectory::Variable, const std::map<ContentDirectory::Variable, std::string>&));
+    MOCK_METHOD2_T(LastChangedEvent, void(VarType, const std::map<VarType, std::string>&));
 };
 
 }
 }
-
-
-#endif
