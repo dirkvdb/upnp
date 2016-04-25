@@ -30,13 +30,13 @@ namespace test
 
 static const std::string g_eventNameSpaceId = "RCS";
 
-struct StatusCallbackMock
+struct RenderingControlStatusCallbackMock
 {
     MOCK_METHOD1(onStatus, void(int32_t));
     MOCK_METHOD2(onStatus, void(int32_t, uint32_t volume));
 };
 
-class RenderingControlTest : public ServiceClientTestBase<RenderingControl::Client, StatusCallbackMock, RenderingControl::Variable>
+class RenderingControlTest : public ServiceClientTestBase<RenderingControl::Client, RenderingControlStatusCallbackMock, RenderingControl::Variable>
 {
 public:
     RenderingControlTest() : ServiceClientTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)

@@ -127,13 +127,13 @@ protected:
         return [this] (int32_t status, const T& arg) { statusMock.onStatus(status, arg); };
     }
 
-    StrictMock<Client2Mock>                client;
     std::unique_ptr<SvcType>               serviceInstance;
+    uv::Loop                               loop;
+    std::function<void(SubscriptionEvent)> eventCb;
+    
+    StrictMock<Client2Mock>                client;
     StrictMock<EventListenerMock<VarType>> eventListener;
     StrictMock<StatusCbMock>               statusMock;
-    uv::Loop                               loop;
-
-    std::function<void(SubscriptionEvent)> eventCb;
 };
 
 }

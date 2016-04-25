@@ -58,7 +58,7 @@ namespace test
 
 static const std::string g_eventNameSpaceId = "CMS";
 
-struct StatusCallbackMock
+struct ConnectionManagerStatusCallbackMock
 {
     MOCK_METHOD1(onStatus, void(int32_t));
     MOCK_METHOD2(onStatus, void(int32_t, std::vector<std::string>));
@@ -66,7 +66,7 @@ struct StatusCallbackMock
     MOCK_METHOD2(onStatus, void(int32_t, ConnectionManager::ConnectionInfo));
 };
 
-class ConnectionManagerClientTest : public ServiceClientTestBase<ConnectionManager::Client, StatusCallbackMock, ConnectionManager::Variable>
+class ConnectionManagerClientTest : public ServiceClientTestBase<ConnectionManager::Client, ConnectionManagerStatusCallbackMock, ConnectionManager::Variable>
 {
 public:
     ConnectionManagerClientTest() : ServiceClientTestBase(ServiceType::ConnectionManager, testxmls::connectionManagerServiceDescription)

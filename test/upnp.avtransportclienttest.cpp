@@ -65,7 +65,7 @@ namespace
 
 const std::string g_eventNameSpaceId = "AVS";
 
-struct StatusCallbackMock
+struct AVTransportStatusCallbackMock
 {
     MOCK_METHOD1(onStatus, void(int32_t));
     MOCK_METHOD2(onStatus, void(int32_t, AVTransport::TransportInfo info));
@@ -76,7 +76,7 @@ struct StatusCallbackMock
 
 }
 
-class AVTransportTest : public ServiceClientTestBase<AVTransport::Client, StatusCallbackMock, AVTransport::Variable>
+class AVTransportTest : public ServiceClientTestBase<AVTransport::Client, AVTransportStatusCallbackMock, AVTransport::Variable>
 {
 public:
     AVTransportTest() : ServiceClientTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
