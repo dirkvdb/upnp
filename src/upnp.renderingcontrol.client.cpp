@@ -61,7 +61,7 @@ void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, 
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(response.c_str());
-                auto& volumeNode = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("CurrentVolume");
+                auto& volumeNode = doc.first_node_ref().first_node_ref("CurrentVolume");
                 volume = stringops::toNumeric<uint32_t>(volumeNode.value_string());
             }
             catch (std::exception& e)

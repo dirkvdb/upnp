@@ -33,6 +33,7 @@ static const std::string g_eventNameSpaceId = "RCS";
 struct StatusCallbackMock
 {
     MOCK_METHOD1(onStatus, void(int32_t));
+    MOCK_METHOD2(onStatus, void(int32_t, uint32_t volume));
 };
 
 class RenderingControlTest : public ServiceTestBase<RenderingControl::Client, StatusCallbackMock, RenderingControl::Variable>
@@ -103,7 +104,15 @@ TEST_F(RenderingControlTest, setVolume)
 
 TEST_F(RenderingControlTest, getVolume)
 {
-    //FAIL() << "implement me";
+    Action expectedAction("GetVolume", g_controlUrl, ServiceType::RenderingControl);
+    expectedAction.addArgument("Channel", "Master");
+    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
+
+    expectAction(expectedAction, { { "CurrentVolume", "36" } } );
+
+    std::set<AVTransport::Action> expected = { AVTransport::Action::Play, AVTransport::Action::Pause, AVTransport::Action::Stop };
+    EXPECT_CALL(statusMock, onStatus(200, 36u));
+    serviceInstance->getVolume(g_connectionId, checkStatusCallback<uint32_t>());
 }
 
 }
