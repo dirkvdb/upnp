@@ -53,6 +53,25 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.contentdirectoryclienttest.cpp
 )
 
+FIND_PATH(BENCHMARK_INCLUDE_DIR
+    NAMES benchmark/benchmark.h
+)
+
+FIND_LIBRARY(BENCHMARK_LIBRARY
+    NAMES benchmark
+)
+
+IF (BENCHMARK_INCLUDE_DIR AND BENCHMARK_LIBRARY)
+    ADD_EXECUTABLE(upnpbenchmark
+        upnp.xml.parseutilsbenchmark.cpp
+        benchmark.cpp
+    )
+
+    TARGET_LINK_LIBRARIES(upnpbenchmark
+        ${BENCHMARK_LIBRARY} upnpframework
+    )
+ENDIF ()
+
 # TARGET_LINK_LIBRARIES(upnptest
 #     upnpframework
 # )
