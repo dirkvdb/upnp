@@ -125,7 +125,9 @@ void addPropertyToItem(const std::string& propertyName, const std::string& prope
     }
     else
     {
+#ifndef NDEBUG
         log::warn("Unknown property: {}", propertyName);
+#endif
     }
 }
 
