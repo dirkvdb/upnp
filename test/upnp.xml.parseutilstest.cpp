@@ -319,12 +319,12 @@ TEST(XmlParseTest, ParseServiceDescription)
 {
     xml_document<> doc;
     doc.parse<parse_non_destructive>(serviceDesc.c_str());
-    
+
     struct ActionMock
     {
         MOCK_METHOD1(onAction, void(const std::string&));
     };
-    
+
     ActionMock mock;
     EXPECT_CALL(mock, onAction("GetVolume"s));
     EXPECT_CALL(mock, onAction("SetVolume"s));

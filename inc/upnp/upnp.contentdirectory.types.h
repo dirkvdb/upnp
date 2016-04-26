@@ -17,6 +17,8 @@
 #pragma once
 
 #include <cinttypes>
+#include <vector>
+#include "upnp/upnpitem.h"
 
 namespace upnp
 {
@@ -38,7 +40,8 @@ enum class Action
     GetSortCapabilities,
     GetSystemUpdateID,
     Browse,
-    Search
+    Search,
+    EnumCount
 };
 
 enum class Variable
@@ -56,7 +59,8 @@ enum class Variable
     ArgumentTypeCount,
     ArgumentTypeUpdateID,
     SearchCapabilities,
-    SortCapabilities
+    SortCapabilities,
+    EnumCount
 };
 
 enum class BrowseFlag
@@ -79,75 +83,13 @@ struct SortProperty
     SortType type;
 };
 
-inline Action actionFromString(const std::string& action)
-{
-    if (action == "GetSearchCapabilities")  return Action::GetSearchCapabilities;
-    if (action == "GetSortCapabilities")    return Action::GetSortCapabilities;
-    if (action == "GetSystemUpdateID")      return Action::GetSystemUpdateID;
-    if (action == "Browse")                 return Action::Browse;
-    if (action == "Search")                 return Action::Search;
+Action actionFromString(const std::string& action);
+Action actionFromString(const char* data, size_t dataSize);
+const char* actionToString(Action action) noexcept;
 
-    throw Exception("Unknown ContentDirectory action: {}", action);
-}
-
-inline std::string actionToString(Action action)
-{
-    switch (action)
-    {
-        case Action::GetSearchCapabilities:     return "GetSearchCapabilities";
-        case Action::GetSortCapabilities:       return "GetSortCapabilities";
-        case Action::GetSystemUpdateID:         return "GetSystemUpdateID";
-        case Action::Browse:                    return "Browse";
-        case Action::Search:                    return "Search";
-
-        default:
-            throw Exception("Unknown ContentDirectory action: {}", static_cast<int32_t>(action));
-    }
-}
-
-inline Variable variableFromString(const std::string& var)
-{
-    if (var == "ContainerUpdateIDs")                return Variable::ContainerUpdateIDs;
-    if (var == "TransferIDs")                       return Variable::TransferIDs;
-    if (var == "SystemUpdateID")                    return Variable::SystemUpdateID;
-    if (var == "A_ARG_TYPE_ObjectID")               return Variable::ArgumentTypeObjectID;
-    if (var == "A_ARG_TYPE_Result")                 return Variable::ArgumentTypeResult;
-    if (var == "A_ARG_TYPE_SearchCriteria")         return Variable::ArgumentTypeSearchCriteria;
-    if (var == "A_ARG_TYPE_Flag")                   return Variable::ArgumentTypeBrowseFlag;
-    if (var == "A_ARG_TYPE_Filter")                 return Variable::ArgumentTypeFilter;
-    if (var == "A_ARG_TYPE_SortCriteria")           return Variable::ArgumentTypeSortCriteria;
-    if (var == "A_ARG_TYPE_Index")                  return Variable::ArgumentTypeIndex;
-    if (var == "A_ARG_TYPE_Count")                  return Variable::ArgumentTypeCount;
-    if (var == "A_ARG_TYPE_UpdateID")               return Variable::ArgumentTypeUpdateID;
-    if (var == "SearchCapabilities")                return Variable::SearchCapabilities;
-    if (var == "SortCapabilities")                  return Variable::SortCapabilities;
-
-    throw Exception("Unknown ContentDirectory variable: {}", var);
-}
-
-inline std::string variableToString(Variable var)
-{
-    switch (var)
-    {
-        case Variable::ContainerUpdateIDs:                  return "ContainerUpdateIDs";
-        case Variable::TransferIDs:                         return "TransferIDs";
-        case Variable::SystemUpdateID:                      return "SystemUpdateID";
-        case Variable::ArgumentTypeObjectID:                return "A_ARG_TYPE_ObjectID";
-        case Variable::ArgumentTypeResult:                  return "A_ARG_TYPE_Result";
-        case Variable::ArgumentTypeSearchCriteria:          return "A_ARG_TYPE_SearchCriteria";
-        case Variable::ArgumentTypeBrowseFlag:              return "A_ARG_TYPE_Flag";
-        case Variable::ArgumentTypeFilter:                  return "A_ARG_TYPE_Filter";
-        case Variable::ArgumentTypeSortCriteria:            return "A_ARG_TYPE_SortCriteria";
-        case Variable::ArgumentTypeIndex:                   return "A_ARG_TYPE_Index";
-        case Variable::ArgumentTypeCount:                   return "A_ARG_TYPE_Count";
-        case Variable::ArgumentTypeUpdateID:                return "A_ARG_TYPE_UpdateID";
-        case Variable::SearchCapabilities:                  return "SearchCapabilities";
-        case Variable::SortCapabilities:                    return "SortCapabilities";
-
-        default:
-            throw Exception("Unknown ContentDirectory variable: {}", static_cast<int32_t>(var));
-    }
-}
+Variable variableFromString(const std::string& var);
+Variable variableFromString(const char* data, size_t dataSize);
+const char* variableToString(Variable var) noexcept;
 
 inline BrowseFlag browseFlagFromString(const std::string& browseFlag)
 {

@@ -33,7 +33,6 @@ std::string decode(const char* data, size_t dataSize);
 void parseDeviceInfo(const std::string& xml, Device& device);
 std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<char>& doc);
 
-Resource parseResource(rapidxml_ns::xml_node<char>& node, const std::string& url);
 Item parseContainer(rapidxml_ns::xml_node<char>& containerElem);
 std::vector<Item> parseContainers(const std::string& xml);
 Item parseItem(rapidxml_ns::xml_node<char>& itemElem);

@@ -16,8 +16,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_TYPES_H
-#define UPNP_TYPES_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -31,22 +30,19 @@
 namespace upnp
 {
 
-namespace
-{
-    const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
-    const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:1";
-    const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:1";
-    const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:1";
+extern const char* ContentDirectoryServiceTypeUrn;
+extern const char* RenderingControlServiceTypeUrn;
+extern const char* ConnectionManagerServiceTypeUrn;
+extern const char* AVTransportServiceTypeUrn;
 
-    const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
-    const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
-    const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
-    const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
+extern const char* RenderingControlServiceIdUrn;
+extern const char* ConnectionManagerServiceIdUrn;
+extern const char* AVTransportServiceIdUrn;
+extern const char* ContentDirectoryServiceIdUrn;
 
-    const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
-    const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
-    const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
-}
+extern const char* RenderingControlServiceMetadataUrn;
+extern const char* ConnectionManagerServiceMetadataUrn;
+extern const char* AVTransportServiceMetadataUrn;
 
 enum class ServiceType
 {
@@ -72,6 +68,7 @@ enum class Property
     Title,
     Creator,
     Date,
+    Description,
     Res,
     Class,
     Restricted,
@@ -82,16 +79,15 @@ enum class Property
     SearchClass,
     Searchable,
     Artist,
-    AlbumArtist,
     Album,
+    AlbumArtist,
     AlbumArt,
     Icon,
     Genre,
     TrackNumber,
     Actor,
-    All,
-    Description,
     StorageUsed,
+    All,
     Unknown
 };
 
@@ -217,70 +213,9 @@ inline ServiceType serviceIdUrnStringToService(const std::string& type)
     return ServiceType::Unknown;
 }
 
-inline Property propertyFromString(const std::string& name)
-{
-    if (name == "id")                       return Property::Id;
-    if (name == "parentID")                 return Property::ParentId;
-    if (name == "dc:title")                 return Property::Title;
-    if (name == "dc:creator")               return Property::Creator;
-    if (name == "dc:date")                  return Property::Date;
-    if (name == "dc:description")           return Property::Description;
-    if (name == "res")                      return Property::Res;
-    if (name == "upnp:class")               return Property::Class;
-    if (name == "restricted")               return Property::Restricted;
-    if (name == "writeStatus")              return Property::WriteStatus;
-    if (name == "@refID")                   return Property::RefId;
-    if (name == "childCount")               return Property::ChildCount;
-    if (name == "upnp:createClass")         return Property::CreateClass;
-    if (name == "upnp:searchClass")         return Property::SearchClass;
-    if (name == "searchable")               return Property::Searchable;
-    if (name == "upnp:artist")              return Property::Artist;
-    if (name == "upnp:album")               return Property::Album;
-    if (name == "upnp:albumArtist")         return Property::AlbumArtist;
-    if (name == "upnp:albumArtURI")         return Property::AlbumArt;
-    if (name == "upnp:icon")                return Property::Icon;
-    if (name == "upnp:genre")               return Property::Genre;
-    if (name == "upnp:originalTrackNumber") return Property::TrackNumber;
-    if (name == "upnp:actor")               return Property::Actor;
-    if (name == "upnp:storageUsed")         return Property::StorageUsed;
-    if (name == "*")                        return Property::All;
-
-    return Property::Unknown;
-}
-
-inline std::string toString(Property prop)
-{
-    switch (prop)
-    {
-    case Property::Id:                return "id";
-    case Property::ParentId:          return "parentID";
-    case Property::Title:             return "dc:title";
-    case Property::Creator:           return "dc:creator";
-    case Property::Date:              return "dc:date";
-    case Property::Description:       return "dc:description";
-    case Property::Res:               return "res";
-    case Property::Class:             return "upnp:class";
-    case Property::Restricted:        return "restricted";
-    case Property::WriteStatus:       return "writeStatus";
-    case Property::RefId:             return "@refID";
-    case Property::ChildCount:        return "childCount";
-    case Property::CreateClass:       return "upnp:createClass";
-    case Property::SearchClass:       return "upnp:searchClass";
-    case Property::Searchable:        return "searchable";
-    case Property::Artist:            return "upnp:artist";
-    case Property::Album:             return "upnp:album";
-    case Property::AlbumArtist:       return "upnp:albumArtist";
-    case Property::AlbumArt:          return "upnp:albumArtURI";
-    case Property::Icon:              return "upnp:icon";
-    case Property::Genre:             return "upnp:genre";
-    case Property::TrackNumber:       return "upnp:originalTrackNumber";
-    case Property::Actor:             return "upnp:actor";
-    case Property::StorageUsed:       return "upnp:storageUsed";
-    case Property::All:               return "*";
-    case Property::Unknown:
-    default:                          return "";
-    }
-}
+Property propertyFromString(const char* data, size_t size);
+Property propertyFromString(const std::string& name);
+const char* toString(Property prop) noexcept;
 
 inline std::string toString(Class c)
 {
@@ -301,6 +236,3 @@ inline std::string toString(Class c)
 }
 
 }
-
-#endif
-

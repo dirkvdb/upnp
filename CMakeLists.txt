@@ -106,7 +106,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.connectionmanager.types.h
     inc/upnp/upnp.contentdirectory.client.h     src/upnp.contentdirectory.client.cpp
     inc/upnp/upnpcontentdirectoryservice.h      src/upnpcontentdirectoryservice.cpp
-    inc/upnp/upnp.contentdirectory.types.h
+    inc/upnp/upnp.contentdirectory.types.h      src/upnp.contentdirectory.types.cpp
     inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp
     inc/upnp/upnpdevice.h
     inc/upnp/upnpdeviceservice.h
@@ -131,7 +131,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpserviceclientbase.h
     inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
-    inc/upnp/upnptypes.h
+    inc/upnp/upnptypes.h                        src/upnptypes.cpp
     inc/upnp/upnp.types.h
     inc/upnp/upnp.flags.h
     inc/upnp/upnputils.h
