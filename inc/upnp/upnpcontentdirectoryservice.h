@@ -18,7 +18,7 @@
 #define UPNP_CONTENT_DIRECTORY_SERVICE_H
 
 #include "upnp/upnpdeviceservice.h"
-#include "upnp/upnpcontentdirectorytypes.h"
+#include "upnp/upnp.contentdirectory.types.h"
 
 namespace upnp
 {

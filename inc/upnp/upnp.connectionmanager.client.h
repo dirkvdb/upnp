@@ -14,12 +14,11 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONNECTION_MANAGER_CLIENT_H
-#define UPNP_CONNECTION_MANAGER_CLIENT_H
+#pragma once
 
 #include "upnp/upnpserviceclientbase.h"
 #include "upnp/upnpprotocolinfo.h"
-#include "upnp/upnpconnectionmanagertypes.h"
+#include "upnp/upnp.connectionmanager.types.h"
 
 namespace upnp
 {
@@ -75,5 +74,3 @@ protected:
 
 }
 }
-
-#endif

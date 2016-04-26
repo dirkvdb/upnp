@@ -19,7 +19,7 @@
 
 #include "upnp/upnpxml.h"
 #include "upnp/upnpdeviceservice.h"
-#include "upnp/upnpconnectionmanagertypes.h"
+#include "upnp/upnp.connectionmanager.types.h"
 
 #include <vector>
 #include <string>

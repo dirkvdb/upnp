@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONNECTION_MANAGER_TYPES_H
-#define UPNP_CONNECTION_MANAGER_TYPES_H
+#pragma once
 
 #include "upnp/upnpdeviceserviceexceptions.h"
 
@@ -47,7 +46,7 @@ enum class Action
     ConnectionComplete, // Optional
     GetCurrentConnectionIDs,
     GetCurrentConnectionInfo,
-    
+
 // ConnectionManager:3
     GetRendererItemInfo, // Optional
     GetFeatureList
@@ -107,10 +106,10 @@ inline Action actionFromString(const std::string& action)
     if (action == "ConnectionComplete")         return Action::ConnectionComplete;
     if (action == "GetCurrentConnectionIDs")    return Action::GetCurrentConnectionIDs;
     if (action == "GetCurrentConnectionInfo")   return Action::GetCurrentConnectionInfo;
-    
+
     if (action == "GetRendererItemInfo")        return Action::GetRendererItemInfo;
     if (action == "GetFeatureList")             return Action::GetFeatureList;
-    
+
     throw Exception("Unknown ConnectionManager action: {}", action);
 }
 
@@ -123,7 +122,7 @@ inline std::string toString(Action action)
         case Action::ConnectionComplete:            return "ConnectionComplete";
         case Action::GetCurrentConnectionIDs:       return "GetCurrentConnectionIDs";
         case Action::GetCurrentConnectionInfo:      return "GetCurrentConnectionInfo";
-        
+
         case Action::GetRendererItemInfo:           return "GetRendererItemInfo";
         case Action::GetFeatureList:                return "GetFeatureList";
 
@@ -143,7 +142,7 @@ inline Variable variableFromString(const std::string& var)
     if (var == "A_ARG_TYPE_ConnectionID")       return Variable::ArgumentTypeConnectionId;
     if (var == "A_ARG_TYPE_AVTransportID")      return Variable::ArgumentTypeAVTransportId;
     if (var == "A_ARG_TYPE_RcsID")              return Variable::ArgumentTypeRecourceId;
-    
+
     if (var == "A_ARG_TYPE_ItemInfoFilter")     return Variable::ArgumentTypeItemInfoFilter;
     if (var == "A_ARG_TYPE_Result")             return Variable::ArgumentTypeResult;
     if (var == "A_ARG_TYPE_RenderingInfoList")  return Variable::ArgumentTypeRenderingInfoList;
@@ -165,7 +164,7 @@ inline std::string toString(Variable var)
         case Variable::ArgumentTypeConnectionId:        return "A_ARG_TYPE_ConnectionID";
         case Variable::ArgumentTypeAVTransportId:       return "A_ARG_TYPE_AVTransportID";
         case Variable::ArgumentTypeRecourceId:          return "A_ARG_TYPE_RcsID";
-        
+
         case Variable::ArgumentTypeItemInfoFilter:      return "A_ARG_TYPE_ItemInfoFilter";
         case Variable::ArgumentTypeResult:              return "A_ARG_TYPE_Result";
         case Variable::ArgumentTypeRenderingInfoList:   return "A_ARG_TYPE_￼RenderingInfoList";
@@ -180,7 +179,7 @@ inline ConnectionStatus connectionStatusFromString(const std::string& status)
     if (status == "ContentFormatMismatch")  return ConnectionStatus::ContentFormatMismatch;
     if (status == "InsufficientBandwith")   return ConnectionStatus::InsufficientBandwith;
     if (status == "UnreliableChannel")      return ConnectionStatus::UnreliableChannel;
-    
+
     return ConnectionStatus::Unknown;
 }
 
@@ -193,7 +192,7 @@ inline std::string toString(ConnectionStatus status)
         case ConnectionStatus::InsufficientBandwith:    return "InsufficientBandwith";
         case ConnectionStatus::UnreliableChannel:       return "UnreliableChannel";
         case ConnectionStatus::Unknown:                 return "Unknown";
-           
+
         default: throw Exception("Unknown ConnectionManager status: {}", static_cast<int32_t>(status));
     }
 }
@@ -202,7 +201,7 @@ inline Direction directionFromString(const std::string& direction)
 {
     if (direction == "Input")            return Direction::Input;
     if (direction == "Output")           return Direction::Output;
-    
+
     throw Exception("Unknown ConnectionManager direction: {}", direction);
 }
 
@@ -212,12 +211,10 @@ inline std::string toString(Direction direction)
     {
         case Direction::Input:             return "Input";
         case Direction::Output:            return "Output";
-            
+
         default: throw Exception("Unknown ConnectionManager direction: {}", static_cast<int32_t>(direction));
     }
 }
-    
-}
-}
 
-#endif
+}
+}

@@ -5,7 +5,7 @@
 #include "upnp/upnpitem.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
-#include "upnp/upnpcontentdirectorytypes.h"
+#include "upnp/upnp.contentdirectory.types.h"
 
 
 

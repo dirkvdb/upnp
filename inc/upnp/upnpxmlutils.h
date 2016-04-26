@@ -25,7 +25,7 @@
 #include "upnp/upnpxml.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
-#include "upnp/upnpcontentdirectorytypes.h"
+#include "upnp/upnp.contentdirectory.types.h"
 #include "utils/stringoperations.h"
 
 namespace upnp

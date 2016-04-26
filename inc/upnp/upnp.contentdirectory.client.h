@@ -14,12 +14,11 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CONTENT_DIRECTORY_CLIENT_H
-#define UPNP_CONTENT_DIRECTORY_CLIENT_H
+#pragma once
 
 #include "upnp/upnpitem.h"
 #include "upnp/upnpserviceclientbase.h"
-#include "upnp/upnpcontentdirectorytypes.h"
+#include "upnp/upnp.contentdirectory.types.h"
 
 namespace upnp
 {
@@ -102,5 +101,3 @@ private:
 
 }
 }
-
-#endif
