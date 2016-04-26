@@ -1,0 +1,273 @@
+//    Copyright (C) 2012 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#include "upnp.serviceclienttestbase.h"
+#include "upnp/upnp.contentdirectory.client.h"
+
+using namespace utils;
+using namespace testing;
+using namespace std::placeholders;
+
+#include "upnp/upnpxmlutils.h"
+
+namespace upnp
+{
+namespace test
+{
+
+static const std::string g_eventNameSpaceId = "CDS";
+using ActionResult = ContentDirectory::ActionResult;
+
+class ItemSubscriber
+{
+public:
+    MOCK_METHOD1(onItem, void(const std::shared_ptr<Item>&));
+};
+
+struct ContentDirectoryStatusCallbackMock
+{
+    MOCK_METHOD1(onStatus, void(int32_t));
+    MOCK_METHOD2(onStatus, void(int32_t, Item));
+    MOCK_METHOD2(onStatus, void(int32_t, ActionResult));
+};
+
+class ContentDirectoryClientTest : public ServiceClientTestBase<ContentDirectory::Client, ContentDirectoryStatusCallbackMock, ContentDirectory::Variable>
+{
+public:
+    ContentDirectoryClientTest() : ServiceClientTestBase(ServiceType::ContentDirectory, testxmls::contentDirectoryServiceDescription)
+    {
+    }
+
+    virtual void setDevice(std::shared_ptr<Device> device) override
+    {
+        // set a valid device
+        Action searchCaps("GetSearchCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+        Action sortCaps("GetSortCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+        Action sysUpdateId("GetSystemUpdateID", g_controlUrl, ServiceType::ContentDirectory);
+
+        InSequence seq;
+        EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
+        expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
+        expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
+        expectAction(sysUpdateId, { { "Id", "UpdateId" } });
+        serviceInstance->setDevice(device);
+    }
+
+    std::string getIndexString(uint32_t index)
+    {
+        std::stringstream ss;
+        ss << std::setw(6) << std::setfill('0') << index;
+        return ss.str();
+    }
+
+    std::vector<Item> generateContainers(uint32_t count, const std::string& upnpClass)
+    {
+        std::vector<Item> containers;
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            std::string index = getIndexString(i);
+            Item container("Id" + index, "Title" + index);
+            container.setParentId("ParentId");
+            container.setChildCount(i);
+
+            container.addMetaData(Property::Creator,        "Creator" + index);
+            container.addMetaData(Property::AlbumArt,       "AlbumArt" + index);
+            container.addMetaData(Property::Class,          upnpClass);
+            container.addMetaData(Property::Genre,          "Genre" + index);
+            container.addMetaData(Property::Artist,         "Artist" + index);
+
+            containers.push_back(container);
+        }
+
+        return containers;
+    }
+
+    std::vector<Item> generateItems(uint32_t count, const std::string& upnpClass)
+    {
+        std::vector<Item> items;
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            std::string index = getIndexString(i);
+            Item item("Id" + index, "Title" + index);
+            item.setParentId("ParentId");
+
+            item.addMetaData(Property::Actor,           "Actor" + index);
+            item.addMetaData(Property::Album,           "Album" + index);
+            item.addMetaData(Property::AlbumArt,        "AlbumArt" + index);
+            item.addMetaData(Property::Class,           upnpClass);
+            item.addMetaData(Property::Genre,           "Genre" + index);
+            item.addMetaData(Property::Description,     "Description" + index);
+            item.addMetaData(Property::Date,            "01/01/196" + index);
+            item.addMetaData(Property::TrackNumber,     index);
+
+            items.push_back(item);
+        }
+
+        return items;
+    }
+};
+
+TEST_F(ContentDirectoryClientTest, getSearchCapabilities)
+{
+    EXPECT_THAT(std::vector<Property>({Property::Artist, Property::Title}), ContainerEq(serviceInstance->getSearchCapabilities()));
+}
+
+TEST_F(ContentDirectoryClientTest, getSortCapabilities)
+{
+    EXPECT_THAT(std::vector<Property>({Property::Artist, Property::Title, Property::Genre}), serviceInstance->getSortCapabilities());
+}
+
+TEST_F(ContentDirectoryClientTest, supportedActions)
+{
+    EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::GetSearchCapabilities));
+    EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::GetSortCapabilities));
+    EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::GetSystemUpdateID));
+    EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::Browse));
+    EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::Search));
+}
+
+TEST_F(ContentDirectoryClientTest, browseAction)
+{
+    const uint32_t size = 10;
+
+    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "100");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                       generateItems(size, "object.item.audioItem")));
+    }));
+
+    ActionResult result;
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
+    serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort", checkStatusCallback<ActionResult>());
+
+    EXPECT_EQ(size, result.totalMatches);
+    EXPECT_EQ(size, result.numberReturned);
+
+    uint32_t containerCount = 0;
+    uint32_t itemCount = 0;
+    for (auto& item : result.result)
+    {
+        if (item.getClass() == Class::Container)
+        {
+            std::string index = getIndexString(containerCount);
+            EXPECT_EQ("Id" + index,             item.getObjectId());
+            EXPECT_EQ("ParentId",               item.getParentId());
+            EXPECT_EQ("Title" + index,          item.getTitle());
+            EXPECT_EQ(containerCount,           item.getChildCount());
+
+            EXPECT_EQ("Artist" + index,         item.getMetaData(Property::Artist));
+            EXPECT_EQ("Creator" + index,        item.getMetaData(Property::Creator));
+            EXPECT_EQ("AlbumArt" + index,       item.getMetaData(Property::AlbumArt));
+            EXPECT_EQ("Genre" + index,          item.getMetaData(Property::Genre));
+
+            EXPECT_TRUE(item.getMetaData(Property::Actor).empty());
+            EXPECT_TRUE(item.getMetaData(Property::Album).empty());
+            EXPECT_TRUE(item.getMetaData(Property::Description).empty());
+            EXPECT_TRUE(item.getMetaData(Property::Date).empty());
+            EXPECT_TRUE(item.getMetaData(Property::TrackNumber).empty());
+
+            ++containerCount;
+        }
+        else if (item.getClass() == Class::Audio)
+        {
+            std::string index = getIndexString(itemCount);
+            EXPECT_EQ("Id" + index,             item.getObjectId());
+            EXPECT_EQ("ParentId",               item.getParentId());
+            EXPECT_EQ("Title" + index,          item.getTitle());
+            EXPECT_EQ(0U,                       item.getChildCount());
+
+            EXPECT_EQ("Actor" + index,          item.getMetaData(Property::Actor));
+            EXPECT_EQ("Album" + index,          item.getMetaData(Property::Album));
+            EXPECT_EQ("AlbumArt" + index,       item.getMetaData(Property::AlbumArt));
+            EXPECT_EQ("Genre" + index,          item.getMetaData(Property::Genre));
+            EXPECT_EQ("Description" + index,    item.getMetaData(Property::Description));
+            EXPECT_EQ("01/01/196" + index,      item.getMetaData(Property::Date));
+            EXPECT_EQ(index,                    item.getMetaData(Property::TrackNumber));
+
+            ++itemCount;
+        }
+        else
+        {
+            FAIL() << "Unexpected class type encountered";
+        }
+    }
+}
+
+TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
+{
+    const uint32_t size = 10000;
+
+    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "20000");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                       generateItems(size, "object.item.audioItem")));
+    }));
+
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
+
+    uint64_t startTime = timeops::getTimeInMilliSeconds();
+    log::info("Start browse performance test");
+    serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, size*2, "sort", checkStatusCallback<ActionResult>());
+    log::info("Performance test finished: took {}ms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
+}
+
+TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
+{
+    const uint32_t size = 10000;
+
+    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "10000");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+            EXPECT_EQ(expectedAction.toString(), action.toString());
+            cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                           generateItems(size, "object.item.audioItem")));
+        }));
+
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
+
+    uint64_t startTime = timeops::getTimeInMilliSeconds();
+    log::info("Start browse performance test containers only");
+    serviceInstance->browseDirectChildren(ContentDirectory::Client::ContainersOnly, "ObjectId", "filter", 0, size, "sort", checkStatusCallback<ActionResult>());
+    log::info("Performance test finished: took {}ms", (timeops::getTimeInMilliSeconds() - startTime) / 1000.f);
+}
+
+}
+}

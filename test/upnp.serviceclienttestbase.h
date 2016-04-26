@@ -53,9 +53,15 @@ class ServiceClientTestBase : public Test
 {
 protected:
     ServiceClientTestBase(ServiceType type, const std::string& serviceXml)
+    : serviceType(type)
+    , serviceXml(serviceXml)
+    {
+    }
+
+    virtual void SetUp() override
     {
         Service service;
-        service.m_type                  = type;
+        service.m_type                  = serviceType;
         service.m_controlURL            = g_controlUrl;
         service.m_eventSubscriptionURL  = g_subscriptionUrl;
         service.m_scpdUrl               = g_serviceDescriptionUrl;
@@ -70,16 +76,13 @@ protected:
         device->m_type = DeviceType::MediaRenderer;
         device->m_services[service.m_type] = service;
 
-        // set a valid device
-        EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
-        serviceInstance->setDevice(device);
-
+        setDevice(device);
         subscribe();
 
         Mock::VerifyAndClearExpectations(&client);
     }
 
-    virtual ~ServiceClientTestBase()
+    virtual void TearDown() override
     {
         Mock::VerifyAndClearExpectations(&client);
 
@@ -87,6 +90,13 @@ protected:
         Mock::VerifyAndClearExpectations(&client);
 
         serviceInstance.reset();
+    }
+
+    virtual void setDevice(std::shared_ptr<Device> device)
+    {
+        // set a valid device
+        EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
+        serviceInstance->setDevice(device);
     }
 
     void subscribe()
@@ -127,10 +137,12 @@ protected:
         return [this] (int32_t status, const T& arg) { statusMock.onStatus(status, arg); };
     }
 
+    ServiceType                            serviceType;
+    std::string                            serviceXml;
     std::unique_ptr<SvcType>               serviceInstance;
     uv::Loop                               loop;
     std::function<void(SubscriptionEvent)> eventCb;
-    
+
     StrictMock<Client2Mock>                client;
     StrictMock<EventListenerMock<VarType>> eventListener;
     StrictMock<StatusCbMock>               statusMock;

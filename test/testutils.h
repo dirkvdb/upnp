@@ -58,7 +58,7 @@ inline std::string generateActionResponse(const std::string& action, ServiceType
     return ss.str();
 }
 
-inline xml::Document generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)
+inline std::string generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)
 {
     std::stringstream ss;
     ss << "&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot; xmlns:dlna=&quot;urn:schemas-dlna-org:metadata-1-0/&quot;&gt;" << std::endl;

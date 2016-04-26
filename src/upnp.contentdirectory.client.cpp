@@ -112,7 +112,7 @@ void Client::querySearchCapabilities()
         {
             xml_document<> doc;
             doc.parse<parse_non_destructive>(response.c_str());
-            auto& caps = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("SearchCaps");
+            auto& caps = doc.first_node_ref().first_node_ref("SearchCaps");
 
             // TODO: don't fail if the search caps is an empty list
             for (auto& cap : stringops::tokenize(caps.value_string(), ','))
@@ -139,7 +139,7 @@ void Client::querySortCapabilities()
         {
             xml_document<> doc;
             doc.parse<parse_non_destructive>(&response.front());
-            auto& caps = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("SortCaps");
+            auto& caps = doc.first_node_ref().first_node_ref("SortCaps");
 
             // TODO: don't fail if the search caps is an empty list
             for (auto& cap : stringops::tokenize(caps.value_string(), ','))
@@ -166,7 +166,7 @@ void Client::querySystemUpdateID()
         {
             xml_document<> doc;
             doc.parse<parse_non_destructive>(&response.front());
-            m_systemUpdateId = doc.first_node_ref("Envelope").first_node_ref("Body").first_node_ref("Id").value_string();
+            m_systemUpdateId = doc.first_node_ref().first_node_ref("Id").value_string();
         }
         catch (std::exception& e)
         {
