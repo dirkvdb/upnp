@@ -22,7 +22,9 @@ BENCHMARK_F(XmlParseUtils, ParseContainer)(State& st)
     while (st.KeepRunning())
     {
         ContentDirectory::ActionResult result;
-        xml::parseBrowseResult(test::testxmls::innerBrowseResponseItems, result);
+        auto xml = xml::parseBrowseResult(test::testxmls::innerBrowseResponseItems, result);
+        DoNotOptimize(xml::parseContainers(xml));
+        DoNotOptimize(xml::parseItems(xml));
     }
 }
 
