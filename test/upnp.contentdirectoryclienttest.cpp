@@ -120,6 +120,45 @@ public:
 
         return items;
     }
+    
+    void expectItem(uint32_t index, const Item& item)
+    {
+        std::string indexStr = getIndexString(index);
+        
+        EXPECT_EQ("Id" + indexStr,          item.getObjectId());
+        EXPECT_EQ("ParentId",               item.getParentId());
+        EXPECT_EQ("Title" + indexStr,       item.getTitle());
+        EXPECT_EQ(0U,                       item.getChildCount());
+
+        EXPECT_EQ("Actor" + indexStr,       item.getMetaData(Property::Actor));
+        EXPECT_EQ("Album" + indexStr,       item.getMetaData(Property::Album));
+        EXPECT_EQ("AlbumArt" + indexStr,    item.getMetaData(Property::AlbumArt));
+        EXPECT_EQ("Genre" + indexStr,       item.getMetaData(Property::Genre));
+        EXPECT_EQ("Description" + indexStr, item.getMetaData(Property::Description));
+        EXPECT_EQ("01/01/196" + indexStr,   item.getMetaData(Property::Date));
+        EXPECT_EQ(indexStr,                 item.getMetaData(Property::TrackNumber));
+    }
+    
+    void expectContainer(uint32_t index, const Item& item)
+    {
+        std::string indexStr = getIndexString(index);
+        
+        EXPECT_EQ("Id" + indexStr,          item.getObjectId());
+        EXPECT_EQ("ParentId",               item.getParentId());
+        EXPECT_EQ("Title" + indexStr,       item.getTitle());
+        EXPECT_EQ(index,                    item.getChildCount());
+
+        EXPECT_EQ("Artist" + indexStr,      item.getMetaData(Property::Artist));
+        EXPECT_EQ("Creator" + indexStr,     item.getMetaData(Property::Creator));
+        EXPECT_EQ("AlbumArt" + indexStr,    item.getMetaData(Property::AlbumArt));
+        EXPECT_EQ("Genre" + indexStr,       item.getMetaData(Property::Genre));
+
+        EXPECT_TRUE(item.getMetaData(Property::Actor).empty());
+        EXPECT_TRUE(item.getMetaData(Property::Album).empty());
+        EXPECT_TRUE(item.getMetaData(Property::Description).empty());
+        EXPECT_TRUE(item.getMetaData(Property::Date).empty());
+        EXPECT_TRUE(item.getMetaData(Property::TrackNumber).empty());
+    }
 };
 
 TEST_F(ContentDirectoryClientTest, getSearchCapabilities)
@@ -141,7 +180,51 @@ TEST_F(ContentDirectoryClientTest, supportedActions)
     EXPECT_TRUE(serviceInstance->supportsAction(ContentDirectory::Action::Search));
 }
 
-TEST_F(ContentDirectoryClientTest, browseAction)
+TEST_F(ContentDirectoryClientTest, browseMetadataItem)
+{
+    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "0");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+    
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse({}, generateItems(1, "object.item.audioItem")));
+    }));
+    
+    Item item;
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
+    serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
+    expectItem(0, item);
+}
+
+TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
+{
+    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "0");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+    
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse(generateContainers(1, "object.container"), {}));
+    }));
+    
+    Item item;
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
+    serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
+    expectContainer(0, item);
+}
+
+TEST_F(ContentDirectoryClientTest, browseDirectChildren)
 {
     const uint32_t size = 10;
 
@@ -173,42 +256,56 @@ TEST_F(ContentDirectoryClientTest, browseAction)
     {
         if (item.getClass() == Class::Container)
         {
-            std::string index = getIndexString(containerCount);
-            EXPECT_EQ("Id" + index,             item.getObjectId());
-            EXPECT_EQ("ParentId",               item.getParentId());
-            EXPECT_EQ("Title" + index,          item.getTitle());
-            EXPECT_EQ(containerCount,           item.getChildCount());
-
-            EXPECT_EQ("Artist" + index,         item.getMetaData(Property::Artist));
-            EXPECT_EQ("Creator" + index,        item.getMetaData(Property::Creator));
-            EXPECT_EQ("AlbumArt" + index,       item.getMetaData(Property::AlbumArt));
-            EXPECT_EQ("Genre" + index,          item.getMetaData(Property::Genre));
-
-            EXPECT_TRUE(item.getMetaData(Property::Actor).empty());
-            EXPECT_TRUE(item.getMetaData(Property::Album).empty());
-            EXPECT_TRUE(item.getMetaData(Property::Description).empty());
-            EXPECT_TRUE(item.getMetaData(Property::Date).empty());
-            EXPECT_TRUE(item.getMetaData(Property::TrackNumber).empty());
-
-            ++containerCount;
+            expectContainer(containerCount++, item);
         }
         else if (item.getClass() == Class::Audio)
         {
-            std::string index = getIndexString(itemCount);
-            EXPECT_EQ("Id" + index,             item.getObjectId());
-            EXPECT_EQ("ParentId",               item.getParentId());
-            EXPECT_EQ("Title" + index,          item.getTitle());
-            EXPECT_EQ(0U,                       item.getChildCount());
+            expectItem(itemCount++, item);
+        }
+        else
+        {
+            FAIL() << "Unexpected class type encountered";
+        }
+    }
+}
 
-            EXPECT_EQ("Actor" + index,          item.getMetaData(Property::Actor));
-            EXPECT_EQ("Album" + index,          item.getMetaData(Property::Album));
-            EXPECT_EQ("AlbumArt" + index,       item.getMetaData(Property::AlbumArt));
-            EXPECT_EQ("Genre" + index,          item.getMetaData(Property::Genre));
-            EXPECT_EQ("Description" + index,    item.getMetaData(Property::Description));
-            EXPECT_EQ("01/01/196" + index,      item.getMetaData(Property::Date));
-            EXPECT_EQ(index,                    item.getMetaData(Property::TrackNumber));
+TEST_F(ContentDirectoryClientTest, search)
+{
+    const uint32_t size = 10;
 
-            ++itemCount;
+    Action expectedAction("Search", g_controlUrl, ServiceType::ContentDirectory);
+    expectedAction.addArgument("Filter", "filt");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "100");
+    expectedAction.addArgument("SearchCriteria", "crit");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+    
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                       generateItems(size, "object.item.audioItem")));
+    }));
+
+    ActionResult result;
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
+    serviceInstance->search("ObjectId", "crit", "filt", 0, 100, "sort", checkStatusCallback<ActionResult>());
+
+    EXPECT_EQ(size, result.totalMatches);
+    EXPECT_EQ(size, result.numberReturned);
+
+    uint32_t containerCount = 0;
+    uint32_t itemCount = 0;
+    for (auto& item : result.result)
+    {
+        if (item.getClass() == Class::Container)
+        {
+            expectContainer(containerCount++, item);
+        }
+        else if (item.getClass() == Class::Audio)
+        {
+            expectItem(itemCount++, item);
         }
         else
         {
