@@ -34,25 +34,10 @@ struct ServiceTraits
     using VariableType = ConnectionManager::Variable;
     static const ServiceType SvcType = ServiceType::ConnectionManager;
 
-    static ActionType actionFromString(const std::string& action)
-    {
-        return ConnectionManager::actionFromString(action);
-    }
-
-    static std::string actionToString(ActionType action)
-    {
-        return ConnectionManager::toString(action);
-    }
-
-    static VariableType variableFromString(const std::string& var)
-    {
-        return ConnectionManager::variableFromString(var);
-    }
-
-    static std::string variableToString(VariableType var)
-    {
-        return ConnectionManager::toString(var);
-    }
+    static ActionType actionFromString(const std::string& action);
+    static const char* actionToString(ActionType action);
+    static VariableType variableFromString(const std::string& var);
+    static const char* variableToString(VariableType var);
 };
 
 class Client : public ServiceClientBase<ServiceTraits>

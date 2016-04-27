@@ -16,6 +16,7 @@
 
 #include "upnp/upnp.contentdirectory.client.h"
 
+#include "upnp.contentdirectory.typeconversions.h"
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnputils.h"
@@ -56,8 +57,26 @@ void addPropertyToList(const std::string& propertyName, std::vector<Property>& v
     }
 }
 
+}
 
+Action ServiceTraits::actionFromString(const std::string& action)
+{
+    return ContentDirectory::actionFromString(action);
+}
 
+const char* ServiceTraits::actionToString(Action action)
+{
+    return ContentDirectory::actionToString(action);
+}
+
+Variable ServiceTraits::variableFromString(const std::string& var)
+{
+    return ContentDirectory::variableFromString(var);
+}
+
+const char* ServiceTraits::variableToString(Variable var)
+{
+    return ContentDirectory::variableToString(var);
 }
 
 Client::Client(upnp::IClient2& client)

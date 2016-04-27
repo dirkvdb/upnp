@@ -15,6 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.connectionmanager.client.h"
+#include "upnp.connectionmanager.typeconversions.h"
 
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
@@ -35,6 +36,26 @@ using namespace rapidxml_ns;
 using namespace std::string_literals;
 
 static const std::chrono::seconds g_subscriptionTimeout(1801);
+
+Action ServiceTraits::actionFromString(const std::string& action)
+{
+    return ConnectionManager::actionFromString(action);
+}
+
+const char* ServiceTraits::actionToString(Action action)
+{
+    return ConnectionManager::toString(action);
+}
+
+Variable ServiceTraits::variableFromString(const std::string& var)
+{
+    return ConnectionManager::variableFromString(var);
+}
+
+const char* ServiceTraits::variableToString(Variable var)
+{
+    return ConnectionManager::toString(var);
+}
 
 Client::Client(IClient2& client)
 : ServiceClientBase(client)

@@ -37,25 +37,10 @@ struct ServiceTraits
     using VariableType = ContentDirectory::Variable;
     static const ServiceType SvcType = ServiceType::ContentDirectory;
 
-    static ActionType actionFromString(const std::string& action)
-    {
-        return ContentDirectory::actionFromString(action);
-    }
-
-    static const char* actionToString(ActionType action)
-    {
-        return ContentDirectory::actionToString(action);
-    }
-
-    static VariableType variableFromString(const std::string& var)
-    {
-        return ContentDirectory::variableFromString(var);
-    }
-
-    static const char* variableToString(VariableType var)
-    {
-        return ContentDirectory::variableToString(var);
-    }
+    static ActionType actionFromString(const std::string& action);
+    static const char* actionToString(ActionType action);
+    static VariableType variableFromString(const std::string& var);
+    static const char* variableToString(VariableType var);
 };
 
 class Client : public ServiceClientBase<ServiceTraits>

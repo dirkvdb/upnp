@@ -15,6 +15,8 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpconnectionmanagerservice.h"
+#include "upnp.connectionmanager.typeconversions.h"
+
 #include "utils/log.h"
 
 using namespace utils;
@@ -42,13 +44,13 @@ xml::Document Service::getSubscriptionResponse()
     addPropertyToElement(0, Variable::SourceProtocolInfo, propertySet);
     addPropertyToElement(0, Variable::SinkProtocolInfo, propertySet);
     addPropertyToElement(0, Variable::CurrentConnectionIds, propertySet);
-    
+
     doc.appendChild(propertySet);
-    
+
 #ifdef DEBUG_CONNECTION_MANAGER
     log::debug(doc.toString());
 #endif
-    
+
     return doc;
 }
 
@@ -58,7 +60,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     {
         ActionResponse response(action, ServiceType::ConnectionManager);
         auto request = doc.getFirstChild();
-    
+
         switch (actionFromString(action))
         {
         case Action::GetProtocolInfo:
@@ -71,10 +73,10 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             connInfo.peerConnectionManager  = request.getChildNodeValue("PeerConnectionManager");
             connInfo.peerConnectionId       = std::stoi(request.getChildNodeValue("PeerConnectionID"));
             connInfo.direction              = directionFromString(request.getChildNodeValue("Direction"));
-            
+
             ProtocolInfo protoInfo(request.getChildNodeValue("RemoteProtocolInfo"));;
             m_connectionManager.prepareForConnection(protoInfo, connInfo);
-        
+
             response.addArgument("ConnectionID",         std::to_string(connInfo.connectionId));
             response.addArgument("AVTransportID",        std::to_string(connInfo.avTransportId));
             response.addArgument("RcsID",                std::to_string(connInfo.renderingControlServiceId));
@@ -98,7 +100,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("Status",                  toString(connInfo.connectionStatus));
             break;
         }
-        
+
         case Action::GetRendererItemInfo:
             throwIfNoConnectionManager3Support();
             response.addArgument("ItemRenderingInfoList", m_connectionManager3->getRendererItemInfo(
@@ -109,11 +111,11 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             throwIfNoConnectionManager3Support();
             response.addArgument("FeatureList", m_connectionManager3->getFeatureList().toString());
             break;
-        
+
         default:
             throw InvalidActionException();
         }
-        
+
         return response;
     }
     catch (std::exception& e)

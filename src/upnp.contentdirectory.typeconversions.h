@@ -20,69 +20,25 @@
 #include <vector>
 #include "upnp/upnpitem.h"
 
+#include "upnp/upnp.contentdirectory.types.h"
+
 namespace upnp
 {
 namespace ContentDirectory
 {
 
-struct ActionResult
-{
-    uint32_t totalMatches = 0;
-    uint32_t numberReturned = 0;
-    uint32_t updateId = 0;
-    std::vector<Item> result;
-};
+Action actionFromString(const char* data, size_t size);
+Action actionFromString(const std::string& value);
+const char* actionToString(Action value) noexcept;
 
-enum class Action
-{
-    GetSearchCapabilities,
-    GetSortCapabilities,
-    GetSystemUpdateID,
-    Browse,
-    Search,
-    EnumCount
-};
+Variable variableFromString(const char* data, size_t size);
+Variable variableFromString(const std::string& value);
+const char* variableToString(Variable value) noexcept;
 
-enum class Variable
-{
-    ContainerUpdateIDs,
-    TransferIDs,
-    SystemUpdateID,
-    ArgumentTypeObjectID,
-    ArgumentTypeResult,
-    ArgumentTypeSearchCriteria,
-    ArgumentTypeBrowseFlag,
-    ArgumentTypeFilter,
-    ArgumentTypeSortCriteria,
-    ArgumentTypeIndex,
-    ArgumentTypeCount,
-    ArgumentTypeUpdateID,
-    SearchCapabilities,
-    SortCapabilities,
-    EnumCount
-};
+BrowseFlag browseFlagFromString(const std::string& browseFlag);
+std::string browseFlagToString(BrowseFlag browseFlag) noexcept;
 
-enum class BrowseFlag
-{
-    Metadata,
-    DirectChildren,
-    EnumCount
-};
-
-enum class SortType
-{
-    Ascending,
-    Descending,
-    EnumCount
-};
-
-struct SortProperty
-{
-    SortProperty(Property p, SortType t) : prop(p), type(t) {}
-
-    Property prop;
-    SortType type;
-};
+SortType sortTypeFromString(char c);
 
 }
 }

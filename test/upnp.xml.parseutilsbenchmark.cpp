@@ -2,6 +2,7 @@
 #include <unordered_map>
 
 #include "upnp/upnp.xml.parseutils.h"
+#include "upnp.contentdirectory.typeconversions.h"
 
 #include "testxmls.h"
 #include "rapidxml_print.hpp"

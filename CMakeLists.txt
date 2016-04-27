@@ -95,62 +95,65 @@ INCLUDE_DIRECTORIES(SYSTEM
 )
 
 ADD_LIBRARY(upnpframework STATIC
-    inc/upnp/upnpactionresponse.h               src/upnpactionresponse.cpp
+    inc/upnp/upnpactionresponse.h                       src/upnpactionresponse.cpp
     inc/upnp/upnp.avtransport.types.h
-    inc/upnp/upnp.avtransport.client.h          src/upnp.avtransport.client.cpp
-    inc/upnp/upnpavtransportservice.h           src/upnpavtransportservice.cpp
+    inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp
+    inc/upnp/upnpavtransportservice.h                   src/upnpavtransportservice.cpp
     inc/upnp/upnpclientinterface.h
     inc/upnp/upnp.clientinterface.h
-    inc/upnp/upnp.connectionmanager.client.h    src/upnp.connectionmanager.client.cpp
-    inc/upnp/upnpconnectionmanagerservice.h     src/upnpconnectionmanagerservice.cpp
+    inc/upnp/upnp.connectionmanager.client.h            src/upnp.connectionmanager.client.cpp
+    inc/upnp/upnpconnectionmanagerservice.h             src/upnpconnectionmanagerservice.cpp
     inc/upnp/upnp.connectionmanager.types.h
-    inc/upnp/upnp.contentdirectory.client.h     src/upnp.contentdirectory.client.cpp
-    inc/upnp/upnpcontentdirectoryservice.h      src/upnpcontentdirectoryservice.cpp
-    inc/upnp/upnp.contentdirectory.types.h      src/upnp.contentdirectory.types.cpp
-    inc/upnp/upnpcontrolpoint.h                 src/upnpcontrolpoint.cpp
+    inc/upnp/upnp.contentdirectory.client.h             src/upnp.contentdirectory.client.cpp
+    inc/upnp/upnpcontentdirectoryservice.h              src/upnpcontentdirectoryservice.cpp
+    inc/upnp/upnp.contentdirectory.types.h
+    inc/upnp/upnpcontrolpoint.h                         src/upnpcontrolpoint.cpp
     inc/upnp/upnpdevice.h
     inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
-    inc/upnp/upnp.devicescanner.h               src/upnp.devicescanner.cpp
-    inc/upnp/upnp.dlna.info.h                   src/upnp.dlna.info.cpp
-    inc/upnp/upnpfactory.h                      src/upnpfactory.cpp
-    inc/upnp/upnp.factory.h                     src/upnp.factory.cpp
+    inc/upnp/upnp.devicescanner.h                       src/upnp.devicescanner.cpp
+    inc/upnp/upnp.dlna.info.h                           src/upnp.dlna.info.cpp
+    inc/upnp/upnpfactory.h                              src/upnpfactory.cpp
+    inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
-    inc/upnp/upnphttpclient.h                   src/upnphttpclient.cpp
-    inc/upnp/upnphttpreader.h                   src/upnphttpreader.cpp
-    inc/upnp/upnpitem.h                         src/upnpitem.cpp
-    inc/upnp/upnplastchangevariable.h           src/upnplastchangevariable.cpp
-    inc/upnp/upnpmediarenderer.h                src/upnpmediarenderer.cpp
-    inc/upnp/upnpmediaserver.h                  src/upnpmediaserver.cpp
-    inc/upnp/upnpprotocolinfo.h                 src/upnpprotocolinfo.cpp
+    inc/upnp/upnphttpclient.h                           src/upnphttpclient.cpp
+    inc/upnp/upnphttpreader.h                           src/upnphttpreader.cpp
+    inc/upnp/upnpitem.h                                 src/upnpitem.cpp
+    inc/upnp/upnplastchangevariable.h                   src/upnplastchangevariable.cpp
+    inc/upnp/upnpmediarenderer.h                        src/upnpmediarenderer.cpp
+    inc/upnp/upnpmediaserver.h                          src/upnpmediaserver.cpp
+    inc/upnp/upnpprotocolinfo.h                         src/upnpprotocolinfo.cpp
     inc/upnp/upnp.renderingcontrol.types.h
-    inc/upnp/upnp.renderingcontrol.client.h     src/upnp.renderingcontrol.client.cpp
-    inc/upnp/upnprenderingcontrolservice.h      src/upnprenderingcontrolservice.cpp
-    inc/upnp/upnprootdevice.h                   src/upnprootdevice.cpp
+    inc/upnp/upnp.renderingcontrol.client.h             src/upnp.renderingcontrol.client.cpp
+    inc/upnp/upnprenderingcontrolservice.h              src/upnprenderingcontrolservice.cpp
+    inc/upnp/upnprootdevice.h                           src/upnprootdevice.cpp
     inc/upnp/upnprootdeviceinterface.h
     inc/upnp/upnpserviceclientbase.h
     inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
-    inc/upnp/upnptypes.h                        src/upnptypes.cpp
+    inc/upnp/upnptypes.h                                src/upnptypes.cpp
     inc/upnp/upnp.types.h
     inc/upnp/upnp.flags.h
     inc/upnp/upnputils.h
-    inc/upnp/upnpwebserver.h                    src/upnpwebserver.cpp
-    inc/upnp/upnpxml.h                          src/upnpxml.cpp
-    inc/upnp/upnpxmlutils.h                     src/upnpxmlutils.cpp
-    inc/upnp/upnp.action.h                      src/upnp.action.cpp
-    inc/upnp/upnp.ssdp.client.h                 src/upnp.ssdp.client.cpp
-    inc/upnp/upnp.http.client.h                 src/upnp.http.client.cpp
-    inc/upnp/upnp.http.server.h                 src/upnp.http.server.cpp
-    inc/upnp/upnp.xml.parseutils.h              src/upnp.xml.parseutils.cpp
+    inc/upnp/upnpwebserver.h                            src/upnpwebserver.cpp
+    inc/upnp/upnpxml.h                                  src/upnpxml.cpp
+    inc/upnp/upnpxmlutils.h                             src/upnpxmlutils.cpp
+    inc/upnp/upnp.action.h                              src/upnp.action.cpp
+    inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
+    inc/upnp/upnp.http.client.h                         src/upnp.http.client.cpp
+    inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
+    inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.uv.h
-    src/upnp.client.h                           src/upnp.client.cpp
-    src/upnp.gena.server.h                      src/upnp.gena.server.cpp
-    src/upnpclient.h                            src/upnpclient.cpp
+
+    src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
+    src/upnp.contentdirectory.typeconversions.h         src/upnp.contentdirectory.typeconversions.cpp
+    src/upnp.client.h                                   src/upnp.client.cpp
+    src/upnp.gena.server.h                              src/upnp.gena.server.cpp
+    src/upnpclient.h                                    src/upnpclient.cpp
     src/upnp.http.parser.h
     src/upnp.ssdp.parseutils.h
-    src/http_parser.h                           src/http_parser.cpp
-    src/URI.h                                   src/URI.cpp
+    src/http_parser.h                                   src/http_parser.cpp
+    src/URI.h                                           src/URI.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${MONGOOSE_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
