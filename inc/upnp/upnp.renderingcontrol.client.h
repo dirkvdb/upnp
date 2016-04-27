@@ -42,25 +42,10 @@ struct ServiceTraits
     using VariableType = RenderingControl::Variable;
     static const ServiceType SvcType = ServiceType::RenderingControl;
 
-    static ActionType actionFromString(const std::string& action)
-    {
-        return RenderingControl::actionFromString(action);
-    }
-
-    static std::string actionToString(ActionType action)
-    {
-        return RenderingControl::toString(action);
-    }
-
-    static VariableType variableFromString(const std::string& var)
-    {
-        return RenderingControl::variableFromString(var);
-    }
-
-    static std::string variableToString(VariableType var)
-    {
-        return RenderingControl::toString(var);
-    }
+    static ActionType actionFromString(const std::string& action);
+    static const char* actionToString(ActionType action);
+    static VariableType variableFromString(const std::string& var);
+    static const char* variableToString(VariableType var);
 };
 
 class Client : public ServiceClientBase<ServiceTraits>

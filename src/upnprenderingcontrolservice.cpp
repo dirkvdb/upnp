@@ -15,7 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnprenderingcontrolservice.h"
-
+#include "upnp.renderingcontrol.typeconversions.h"
 #include "utils/log.h"
 
 using namespace utils;
@@ -231,37 +231,61 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_renderingControl.setVerticalKeystone(id, std::stoi(req.getChildNodeValue("DesiredVerticalKeystone")));
             break;
         case Action::GetMute:
-            response.addArgument("CurrentMute", m_mute.at(id)[channelFromString(req.getChildNodeValue("Channel"))].getValue());
+        {
+            auto val = req.getChildNodeValue("Channel");
+            response.addArgument("CurrentMute", m_mute.at(id)[channelFromString(val)].getValue());
             break;
+        }
         case Action::SetMute:
-            m_renderingControl.setMute(id, channelFromString(req.getChildNodeValue("Channel")), req.getChildNodeValue("DesiredMute") == "1");
+        {
+            auto val = req.getChildNodeValue("Channel");
+            m_renderingControl.setMute(id, channelFromString(val), req.getChildNodeValue("DesiredMute") == "1");
             break;
+        }
         case Action::GetVolume:
-            response.addArgument("CurrentVolume", m_volumes.at(id)[channelFromString(req.getChildNodeValue("Channel"))].getValue());
+        {
+            auto val = req.getChildNodeValue("Channel");
+            response.addArgument("CurrentVolume", m_volumes.at(id)[channelFromString(val)].getValue());
             break;
+        }
         case Action::SetVolume:
-            m_renderingControl.setVolume(id, channelFromString(req.getChildNodeValue("Channel")), std::stoi(req.getChildNodeValue("DesiredVolume")));
+        {
+            auto val = req.getChildNodeValue("Channel");
+            m_renderingControl.setVolume(id, channelFromString(val), std::stoi(req.getChildNodeValue("DesiredVolume")));
             break;
+        }
         case Action::GetVolumeDB:
-            response.addArgument("CurrentVolumeDB", m_dbVolumes.at(id)[channelFromString(req.getChildNodeValue("Channel"))].getValue());
+        {
+            auto val = req.getChildNodeValue("Channel");
+            response.addArgument("CurrentVolumeDB", m_dbVolumes.at(id)[channelFromString(val)].getValue());
             break;
+        }
         case Action::SetVolumeDB:
-            m_renderingControl.setVolumeDB(id, channelFromString(req.getChildNodeValue("Channel")), std::stoi(req.getChildNodeValue("DesiredVolumeDB")));
+        {
+            auto val = req.getChildNodeValue("Channel");
+            m_renderingControl.setVolumeDB(id, channelFromString(val), std::stoi(req.getChildNodeValue("DesiredVolumeDB")));
             break;
+        }
         case Action::GetVolumeDBRange:
         {
-            auto range = m_renderingControl.getVolumeDBRange(id, channelFromString(req.getChildNodeValue("Channel")));
+            auto val = req.getChildNodeValue("Channel");
+            auto range = m_renderingControl.getVolumeDBRange(id, channelFromString(val));
             response.addArgument("MinValue", std::to_string(range.first));
             response.addArgument("MaxValue", std::to_string(range.second));
             break;
         }
         case Action::GetLoudness:
-            response.addArgument("CurrentLoudness", m_loudness.at(id)[channelFromString(req.getChildNodeValue("Channel"))].getValue());
+        {
+            auto val = req.getChildNodeValue("Channel");
+            response.addArgument("CurrentLoudness", m_loudness.at(id)[channelFromString(val)].getValue());
             break;
+        }
         case Action::SetLoudness:
-            m_renderingControl.setLoudness(id, channelFromString(req.getChildNodeValue("Channel")), req.getChildNodeValue("DesiredLoudness") == "1");
+        {
+            auto val = req.getChildNodeValue("Channel");
+            m_renderingControl.setLoudness(id, channelFromString(val), req.getChildNodeValue("DesiredLoudness") == "1");
             break;
-
+        }
 
         // RenderingControl:2
         //case Action::GetStateVariables:

@@ -148,6 +148,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
     src/upnp.contentdirectory.typeconversions.h         src/upnp.contentdirectory.typeconversions.cpp
+    src/upnp.renderingcontrol.typeconversions.h         src/upnp.renderingcontrol.typeconversions.cpp
     src/upnp.client.h                                   src/upnp.client.cpp
     src/upnp.gena.server.h                              src/upnp.gena.server.cpp
     src/upnpclient.h                                    src/upnpclient.cpp

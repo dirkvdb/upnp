@@ -18,6 +18,7 @@
 
 #include "upnp/upnputils.h"
 #include "upnp/upnpcontrolpoint.h"
+#include "upnp.renderingcontrol.typeconversions.h"
 
 #include "utils/numericoperations.h"
 #include "rapidxml.hpp"
@@ -32,6 +33,26 @@ using namespace rapidxml_ns;
 using namespace std::placeholders;
 
 static const std::chrono::seconds g_subscriptionTimeout(1801);
+
+Action ServiceTraits::actionFromString(const std::string& action)
+{
+    return RenderingControl::actionFromString(action);
+}
+
+const char* ServiceTraits::actionToString(Action action)
+{
+    return RenderingControl::toString(action);
+}
+
+Variable ServiceTraits::variableFromString(const std::string& var)
+{
+    return RenderingControl::variableFromString(var);
+}
+
+const char* ServiceTraits::variableToString(Variable var)
+{
+    return RenderingControl::toString(var);
+}
 
 Client::Client(upnp::IClient2& client)
 : ServiceClientBase(client)
