@@ -19,6 +19,10 @@
 
 using namespace testing;
 
+#include "testenvironment.h"
+
+upnp::test::TestEnvironment* g_Env = nullptr;
+
 int main(int argc, char **argv)
 {
     if (!setlocale(LC_CTYPE, ""))
@@ -26,9 +30,10 @@ int main(int argc, char **argv)
         std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
         return 1;
     }
-    
+
     FLAGS_gmock_verbose = "error";
-    
+    //g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
+
     InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 }

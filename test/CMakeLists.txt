@@ -20,7 +20,6 @@ LINK_DIRECTORIES(
 #     devicediscover.h
 
 #     xmlutilstest.cpp
-#     #mediarenderertest.cpp
 #     #mediaservertest.cpp
 #     #controlpointtest.cpp
 #     testenvironment.h
@@ -32,6 +31,9 @@ LINK_DIRECTORIES(
 ADD_EXECUTABLE(upnpframeworktest
     testframework/gmock-gtest-all.cpp
     main.cpp
+
+    testenvironment.h
+
     testxmls.h
     upnp.uvtest.cpp
     upnp.utilstest.cpp
@@ -51,6 +53,8 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.renderingcontrolclienttest.cpp
     upnp.connectionmanagerclienttest.cpp
     upnp.contentdirectoryclienttest.cpp
+
+    #upnp.mediarenderertest.cpp
 )
 
 FIND_PATH(BENCHMARK_INCLUDE_DIR

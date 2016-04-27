@@ -48,7 +48,7 @@ Element serviceVariableToElement(Document& doc, const ServiceVariable& var);
 
 Resource parseResource(xml::NamedNodeMap& nodeMap, const std::string& url);
 Item parseItem(xml::Element& itemElem);
-Item parseItemDocument(const std::string& xml);
+//Item parseItemDocument(const std::string& xml);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)

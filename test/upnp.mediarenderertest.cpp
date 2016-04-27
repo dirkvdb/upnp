@@ -41,32 +41,28 @@ class MediaRendererTest : public Test
 {
 public:
     MediaRendererTest()
-    : m_Renderer(g_Env->getClient())
+    : m_renderer(g_Env->getClient())
     {
     }
 
 protected:
-    virtual void SetUp()
+    void SetUp() override
     {
-        m_Device = g_Env->getRenderer();
-        ASSERT_TRUE(m_Device.get() != nullptr);
+        m_device = g_Env->getRenderer();
+        ASSERT_TRUE(m_device);
 
-        m_Renderer.setDevice(m_Device);
+        m_renderer.setDevice(m_device);
     }
 
-    virtual void TearDown()
-    {
-    }
-
-    MediaRenderer               m_Renderer;    
-    std::shared_ptr<Device>     m_Device;
+    MediaRenderer               m_renderer;
+    std::shared_ptr<Device>     m_device;
 };
 
 TEST_F(MediaRendererTest, DiscoveredServices)
 {
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::RenderingControl));
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::ConnectionManager));
-    EXPECT_FALSE(m_Device->m_Services.end() == m_Device->m_Services.find(ServiceType::AVTransport));
+    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::RenderingControl));
+    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::ConnectionManager));
+    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::AVTransport));
 }
 
 TEST_F(MediaRendererTest, SupportedProtocols)
@@ -95,11 +91,11 @@ TEST_F(MediaRendererTest, SupportedProtocols)
         Resource res;
         res.setProtocolInfo(upnp::ProtocolInfo(protocol));
 
-        auto item = std::make_shared<Item>();
-        item->addResource(res);
+        Item item;
+        item.addResource(res);
 
         Resource suggestedResource;
-        EXPECT_TRUE(m_Renderer.supportsPlayback(item, suggestedResource)) << "Protocol not supported: " << item->getResources()[0].getProtocolInfo().toString();
+        EXPECT_TRUE(m_renderer.supportsPlayback(item, suggestedResource)) << "Protocol not supported: " << item.getResources()[0].getProtocolInfo().toString();
     }
 }
 

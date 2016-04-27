@@ -575,6 +575,16 @@ Item parseItem(xml_node<char>& itemElem)
     return item;
 }
 
+Item parseItemDocument(const std::string& xml)
+{
+    xml_document<char> doc;
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
+
+    auto& elem = doc.first_node_ref();
+    auto& itemElem = elem.first_node_ref();
+    return parseItem(itemElem);
+}
+
 std::vector<Item> parseItems(const std::string& xml)
 {
     assert(!xml.empty() && "ParseItems: Invalid document supplied");
@@ -708,16 +718,6 @@ std::vector<StateVariable> parseServiceDescription(const std::string& contents, 
     }
 
     return xml::getStateVariablesFromDescription(doc);
-}
-
-Item parseItemDocument(const std::string& xml)
-{
-    xml_document<char> doc;
-    doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
-
-    auto& elem = doc.first_node_ref();
-    auto& itemElem = elem.first_node_ref();
-    return parseItem(itemElem);
 }
 
 std::string optionalChildValue(xml_node<char>& node, const char* child)

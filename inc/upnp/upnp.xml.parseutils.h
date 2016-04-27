@@ -36,6 +36,7 @@ std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<char
 Item parseContainer(rapidxml_ns::xml_node<char>& containerElem);
 std::vector<Item> parseContainers(const std::string& xml);
 Item parseItem(rapidxml_ns::xml_node<char>& itemElem);
+Item parseItemDocument(const std::string& xml);
 std::vector<Item> parseItems(const std::string& xml);
 Item parseMetaData(const std::string& meta);
 std::string parseBrowseResult(const std::string& response, ContentDirectory::ActionResult& result);

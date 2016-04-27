@@ -57,7 +57,7 @@ Item parseCurrentTrack(const std::string& track) noexcept
     {
         if (!track.empty())
         {
-            return xml::utils::parseItemDocument(track);
+            return xml::parseItemDocument(track);
         }
     }
     catch (std::exception& e)

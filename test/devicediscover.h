@@ -14,14 +14,11 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef TEST_DEVICE_DISCOVER_H
-#define TEST_DEVICE_DISCOVER_H
+#pragma once
 
 #include <condition_variable>
-
-#include "upnp/upnpdevicescanner.h"
-
-using std::placeholders::_1;
+#include "upnp/upnpdevice.h"
+#include "upnp/upnp.devicescanner.h"
 
 namespace upnp
 {
@@ -31,57 +28,47 @@ namespace test
 class DeviceDiscover
 {
 public:
-    DeviceDiscover(Client& client, Device::Type type, const std::string& name)
-    : m_Scanner(client, type)
-    , m_DeviceName(name)
+    DeviceDiscover(IClient2& client, DeviceType type, const std::string& name)
+    : m_scanner(client, type)
+    , m_deviceName(name)
     {
-        m_Scanner.DeviceDiscoveredEvent.connect(std::bind(&DeviceDiscover::deviceDiscovered, this, _1), this);
-        m_Scanner.start();
+        m_scanner.DeviceDiscoveredEvent.connect(std::bind(&DeviceDiscover::deviceDiscovered, this, std::placeholders::_1), this);
+        m_scanner.start();
     }
 
     void refresh()
     {
-        m_Scanner.refresh();
+        m_scanner.refresh();
     }
 
-    void waitForDevice(uint32_t timeout)
+    void waitForDevice(std::chrono::milliseconds timeout)
     {
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        if (m_Device)
-        {
-            return;
-        }
-        
-        m_Condition.wait_for(lock, std::chrono::milliseconds(timeout));
-        m_Scanner.stop();
+        auto fut = m_promise.get_future();
+        fut.wait_for(timeout);
+        fut.get();
+        m_scanner.stop();
     }
 
     void deviceDiscovered(std::shared_ptr<upnp::Device> dev)
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        if (dev->m_FriendlyName == m_DeviceName)
+        if (dev->m_friendlyName == m_deviceName)
         {
-            m_Device = dev;
-            m_Condition.notify_all();
+            m_device = dev;
+            m_promise.set_value();
         }
     }
 
     std::shared_ptr<Device> getDevice()
     {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_Device;
+        return m_device;
     }
 
 private:
-    upnp::DeviceScanner             m_Scanner;
-    std::string                     m_DeviceName;
-    std::shared_ptr<Device>         m_Device;
-
-    std::condition_variable         m_Condition;
-    std::mutex                      m_Mutex;
+    upnp::DeviceScanner             m_scanner;
+    std::string                     m_deviceName;
+    std::shared_ptr<Device>         m_device;
+    std::promise<void>              m_promise;
 };
 
 }
 }
-
-#endif

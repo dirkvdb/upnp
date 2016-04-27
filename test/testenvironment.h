@@ -14,12 +14,12 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef TEST_ENVIRONMENT_H
-#define TEST_ENVIRONMENT_H
+#pragma once
 
 #include <gtest/gtest.h>
 
-#include "upnp/upnpclient.h"
+#include "upnp/upnp.clientinterface.h"
+#include "upnp/upnp.factory.h"
 #include "devicediscover.h"
 
 #define SERVER_DEVICE "Plug"
@@ -30,60 +30,59 @@ namespace upnp
 namespace test
 {
 
+using namespace std::chrono_literals;
+
 class TestEnvironment : public Environment
 {
 public:
     TestEnvironment()
-    : m_ServerDiscoverer(m_Client, Device::MediaServer, SERVER_DEVICE)
-    , m_RendererDiscoverer(m_Client, Device::MediaRenderer, RENDERER_DEVICE)
+    : m_client(factory::createClient())
+    , m_serverDiscoverer(*m_client, DeviceType::MediaServer, SERVER_DEVICE)
+    , m_rendererDiscoverer(*m_client, DeviceType::MediaRenderer, RENDERER_DEVICE)
     {
 
     }
 
-    virtual ~TestEnvironment() {}
-  
     virtual void SetUp()
     {
-        m_Client.initialize();
-        m_ServerDiscoverer.refresh();
-        m_RendererDiscoverer.refresh();
-        m_ServerDiscoverer.waitForDevice(10000);
-        m_RendererDiscoverer.waitForDevice(10000);
-        m_ServerDevice = m_ServerDiscoverer.getDevice();
-        m_RendererDevice = m_RendererDiscoverer.getDevice();
-        ASSERT_TRUE(m_ServerDevice.get() != nullptr) << "Failed to obtain UPnP server " << SERVER_DEVICE;
-        ASSERT_TRUE(m_RendererDevice.get() != nullptr) << "Failed to obtain UPnP renderer " << RENDERER_DEVICE;
+        m_client->initialize();
+        m_serverDiscoverer.refresh();
+        m_rendererDiscoverer.refresh();
+        m_serverDiscoverer.waitForDevice(10000ms);
+        m_rendererDiscoverer.waitForDevice(10000ms);
+        m_serverDevice = m_serverDiscoverer.getDevice();
+        m_rendererDevice = m_rendererDiscoverer.getDevice();
+        ASSERT_TRUE(m_serverDevice) << "Failed to obtain UPnP server " << SERVER_DEVICE;
+        ASSERT_TRUE(m_rendererDevice) << "Failed to obtain UPnP renderer " << RENDERER_DEVICE;
     }
 
     virtual void TearDown()
     {
-        m_Client.destroy();
+        m_client->uninitialize();
     }
 
-    Client& getClient()
+    IClient2& getClient()
     {
-        return m_Client;
+        return *m_client;
     }
 
     std::shared_ptr<Device> getServer()
     {
-        return m_ServerDevice;
+        return m_serverDevice;
     }
 
     std::shared_ptr<Device> getRenderer()
     {
-        return m_RendererDevice;
+        return m_rendererDevice;
     }
 
 private:
-    Client                      m_Client;
-    DeviceDiscover              m_ServerDiscoverer;
-    DeviceDiscover              m_RendererDiscoverer;
-    std::shared_ptr<Device>     m_ServerDevice;
-    std::shared_ptr<Device>     m_RendererDevice;
+    std::unique_ptr<IClient2>   m_client;
+    DeviceDiscover              m_serverDiscoverer;
+    DeviceDiscover              m_rendererDiscoverer;
+    std::shared_ptr<Device>     m_serverDevice;
+    std::shared_ptr<Device>     m_rendererDevice;
 };
 
 }
 }
-
-#endif
