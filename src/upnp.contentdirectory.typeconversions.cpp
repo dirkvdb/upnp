@@ -60,14 +60,9 @@ static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly or
 static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
 static_assert(enumCorrectNess<BrowseFlag>(), "BrowseFlag enum converion not correctly ordered or missing entries");
 
-Action ContentDirectory::actionFromString(const char* data, size_t size)
+Action ContentDirectory::actionFromString(gsl::span<const char> data)
 {
-    return fromString<Action>(data, size);
-}
-
-Action ContentDirectory::actionFromString(const std::string& value)
-{
-    return actionFromString(value.c_str(), value.size());
+    return fromString<Action>(data.data(), data.size());
 }
 
 const char* ContentDirectory::actionToString(Action value) noexcept
@@ -75,14 +70,9 @@ const char* ContentDirectory::actionToString(Action value) noexcept
     return toString(value);
 }
 
-Variable ContentDirectory::variableFromString(const char* data, size_t size)
+Variable ContentDirectory::variableFromString(gsl::span<const char> data)
 {
-    return fromString<Variable>(data, size);
-}
-
-Variable ContentDirectory::variableFromString(const std::string& value)
-{
-    return variableFromString(value.c_str(), value.size());
+    return fromString<Variable>(data.data(), data.size());
 }
 
 const char* ContentDirectory::variableToString(Variable value) noexcept
@@ -90,9 +80,9 @@ const char* ContentDirectory::variableToString(Variable value) noexcept
     return toString(value);
 }
 
-BrowseFlag browseFlagFromString(const std::string& value)
+BrowseFlag browseFlagFromString(gsl::span<const char> data)
 {
-    return fromString<BrowseFlag>(value.c_str(), value.size());
+    return fromString<BrowseFlag>(data.data(), data.size());
 }
 
 std::string browseFlagToString(BrowseFlag value) noexcept

@@ -80,7 +80,8 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         case Action::Browse:
         {
             auto id = request.getChildNodeValue("ObjectID");
-            auto flag = browseFlagFromString(request.getChildNodeValue("BrowseFlag"));
+            auto browseFlag = request.getChildNodeValue("BrowseFlag");
+            auto flag = browseFlagFromString(browseFlag);
             auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
             auto startIndex = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("StartingIndex").c_str()));
             auto count = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("RequestedCount").c_str()));

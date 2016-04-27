@@ -107,20 +107,5 @@ BENCHMARK_F(XmlParseUtils, EnumConversionStringCompare)(State& st)
     }
 }
 
-BENCHMARK_F(XmlParseUtils, EnumConversionStringCompareRawString)(State& st)
-{
-    using namespace ContentDirectory;
-    while (st.KeepRunning())
-    {
-        DoNotOptimize(variableFromString("A_ARG_TYPE_ObjectID", 19));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_Result", 17));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_SearchCriteria", 25));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_Flag", 15));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_Filter", 17));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_SortCriteria", 23));
-        DoNotOptimize(variableFromString("A_ARG_TYPE_Index", 16));
-    }
-}
-
 }
 }

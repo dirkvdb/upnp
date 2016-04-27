@@ -80,9 +80,9 @@ const char* ConnectionManager::toString(Action value) noexcept
     return upnp::toString(value);
 }
 
-Variable ConnectionManager::variableFromString(const std::string& value)
+Variable ConnectionManager::variableFromString(gsl::span<const char> value)
 {
-    return fromString<Variable>(value);
+    return fromString<Variable>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Variable var) noexcept
@@ -90,9 +90,9 @@ const char* ConnectionManager::toString(Variable var) noexcept
     return upnp::toString(var);
 }
 
-ConnectionStatus ConnectionManager::connectionStatusFromString(const std::string& value)
+ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::span<const char> value)
 {
-    return fromString<ConnectionStatus>(value);
+    return fromString<ConnectionStatus>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(ConnectionStatus value) noexcept
@@ -100,9 +100,9 @@ const char* ConnectionManager::toString(ConnectionStatus value) noexcept
     return upnp::toString(value);
 }
 
-Direction ConnectionManager::directionFromString(const std::string& value)
+Direction ConnectionManager::directionFromString(gsl::span<const char> value)
 {
-    return fromString<Direction>(value);
+    return fromString<Direction>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Direction value) noexcept

@@ -72,7 +72,9 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             ConnectionInfo connInfo;
             connInfo.peerConnectionManager  = request.getChildNodeValue("PeerConnectionManager");
             connInfo.peerConnectionId       = std::stoi(request.getChildNodeValue("PeerConnectionID"));
-            connInfo.direction              = directionFromString(request.getChildNodeValue("Direction"));
+
+            auto dir = request.getChildNodeValue("Direction");
+            connInfo.direction              = directionFromString(dir);
 
             ProtocolInfo protoInfo(request.getChildNodeValue("RemoteProtocolInfo"));;
             m_connectionManager.prepareForConnection(protoInfo, connInfo);

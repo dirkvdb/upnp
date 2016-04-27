@@ -18,8 +18,9 @@
 
 #include <cinttypes>
 #include <vector>
-#include "upnp/upnpitem.h"
 
+#include "gsl/span.h"
+#include "upnp/upnpitem.h"
 #include "upnp/upnp.contentdirectory.types.h"
 
 namespace upnp
@@ -27,15 +28,13 @@ namespace upnp
 namespace ContentDirectory
 {
 
-Action actionFromString(const char* data, size_t size);
-Action actionFromString(const std::string& value);
+Action actionFromString(gsl::span<const char> data);
 const char* actionToString(Action value) noexcept;
 
-Variable variableFromString(const char* data, size_t size);
-Variable variableFromString(const std::string& value);
+Variable variableFromString(gsl::span<const char> data);
 const char* variableToString(Variable value) noexcept;
 
-BrowseFlag browseFlagFromString(const std::string& browseFlag);
+BrowseFlag browseFlagFromString(gsl::span<const char> data);
 std::string browseFlagToString(BrowseFlag browseFlag) noexcept;
 
 SortType sortTypeFromString(char c);

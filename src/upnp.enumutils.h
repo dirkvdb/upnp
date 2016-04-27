@@ -19,7 +19,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "gsl/span.h"
 #include "upnp/upnptypes.h"
 
 namespace upnp
@@ -107,10 +106,18 @@ constexpr EnumType fromString(const char* data, size_t dataSize)
     return EnumType::Unknown;
 }
 
-template <typename EnumType>
-constexpr EnumType fromString(const std::string& value)
+template <typename EnumType, int count = enum_value(EnumType::Unknown)>
+constexpr EnumType fromString(const char* data)
 {
-    return fromString<EnumType>(value.c_str(), value.size());
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        if (strcmp(std::get<0>(lut<EnumType>()[i]), data) == 0)
+        {
+            return static_cast<EnumType>(i);
+        }
+    }
+
+    return EnumType::Unknown;
 }
 
 template <typename EnumType, EnumType count = EnumType::EnumCount>
