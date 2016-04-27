@@ -18,6 +18,8 @@
 
 #include <tuple>
 #include <type_traits>
+
+#include "gsl/span.h"
 #include "upnp/upnptypes.h"
 
 namespace upnp
@@ -74,7 +76,7 @@ constexpr EnumType fromString(const char* data, size_t dataSize)
         }
     }
 
-    throw Exception("Unknown ContentDirectory enum: {}", std::string(data, dataSize));
+    throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(data, dataSize));
 }
 
 template <typename EnumType, EnumType count = EnumType::EnumCount>

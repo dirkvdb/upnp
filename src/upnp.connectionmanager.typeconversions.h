@@ -18,12 +18,14 @@
 
 #include "upnp/upnp.connectionmanager.types.h"
 
+#include "gsl/span.h"
+
 namespace upnp
 {
 namespace ConnectionManager
 {
 
-Action actionFromString(const std::string& action);
+Action actionFromString(gsl::span<const char> value);
 const char* toString(Action action) noexcept;
 
 Variable variableFromString(const std::string& var);

@@ -70,9 +70,9 @@ static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly 
 static_assert(enumCorrectNess<ConnectionStatus>(), "ConnectionStatus enum converion not correctly ordered or missing entries");
 static_assert(enumCorrectNess<Direction>(), "Direction enum converion not correctly ordered or missing entries");
 
-Action ConnectionManager::actionFromString(const std::string& value)
+Action ConnectionManager::actionFromString(gsl::span<const char> value)
 {
-    return fromString<Action>(value);
+    return fromString<Action>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Action value) noexcept

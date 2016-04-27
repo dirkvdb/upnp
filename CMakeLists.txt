@@ -145,6 +145,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.uv.h
 
+    src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
     src/upnp.contentdirectory.typeconversions.h         src/upnp.contentdirectory.typeconversions.cpp
     src/upnp.client.h                                   src/upnp.client.cpp
