@@ -20,7 +20,6 @@ LINK_DIRECTORIES(
 #     devicediscover.h
 
 #     xmlutilstest.cpp
-#     upnputilstest.cpp
 #     #mediarenderertest.cpp
 #     #mediaservertest.cpp
 #     #controlpointtest.cpp
@@ -35,6 +34,7 @@ ADD_EXECUTABLE(upnpframeworktest
     main.cpp
     testxmls.h
     upnp.uvtest.cpp
+    upnp.utilstest.cpp
     upnp.clienttest.cpp
     upnp.ssdp.clienttest.cpp
     upnp.ssdp.test.cpp

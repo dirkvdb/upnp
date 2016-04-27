@@ -14,13 +14,13 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_UTILS_H
-#define UPNP_UTILS_H
+#pragma once
 
 #include <string>
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
 
 #include <upnp.h>
 #include <upnptools.h>
@@ -84,26 +84,22 @@ inline void handleUPnPResult(int errorCode)
     }
 }
 
-inline std::string durationToString(uint32_t durationInSecs)
+inline std::string durationToString(std::chrono::seconds duration)
 {
-    uint32_t hours = durationInSecs / 3600;
-    durationInSecs -= hours * 3600;
-
-    uint32_t minutes = durationInSecs / 60;
-    uint32_t seconds = durationInSecs % 60;
-
+    auto hours = std::chrono::duration_cast<std::chrono::hours>(duration);
+    duration -= hours;
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration - minutes);
 
     std::stringstream ss;
-
-    ss << std::setw(2) << std::setfill('0') << hours << ':'
-       << std::setw(2) << std::setfill('0') << minutes << ':'
-       << std::setw(2) << std::setfill('0') << seconds;
+    ss << std::setw(2) << std::setfill('0') << hours.count() << ':'
+       << std::setw(2) << std::setfill('0') << minutes.count() << ':'
+       << std::setw(2) << std::setfill('0') << seconds.count();
     return ss.str();
 }
 
-inline uint32_t durationFromString(const std::string& durationString)
+inline std::chrono::seconds durationFromString(const std::string& durationString)
 {
-    uint32_t duration = 0;
     auto times = utils::stringops::tokenize(durationString, ":");
 
     if (times.size() != 3)
@@ -111,27 +107,23 @@ inline uint32_t durationFromString(const std::string& durationString)
         throw std::runtime_error("Invalid duration format: " + durationString);
     }
 
-    uint32_t hours = 0;
+    std::chrono::hours hours(0);
     if (times[0].size() > 0)
     {
-        hours = utils::stringops::toNumeric<uint32_t>(times[0]);
+        hours = std::chrono::hours(utils::stringops::toNumeric<uint32_t>(times[0]));
     }
 
-    uint32_t minutes = utils::stringops::toNumeric<uint32_t>(times[1]);
+    std::chrono::minutes minutes(utils::stringops::toNumeric<uint32_t>(times[1]));
 
     auto secondsAndFractals = utils::stringops::tokenize(times[2], ".");
-    uint32_t seconds = utils::stringops::toNumeric<uint32_t>(secondsAndFractals.front());
+    std::chrono::seconds seconds(utils::stringops::toNumeric<uint32_t>(secondsAndFractals.front()));
 
     if (secondsAndFractals.size() > 1)
     {
         // process fractal part here
     }
 
-    duration += hours * 3600;
-    duration += minutes * 60;
-    duration += seconds;
-    return duration;}
+    return hours + minutes + seconds;
 }
 
-
-#endif
+}

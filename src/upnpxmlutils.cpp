@@ -102,7 +102,7 @@ void addItemToDidl(Document& doc, Element& didl, const Item& item)
             if (item.getClass() == upnp::Class::Audio)
             {
                 auto duration = res.getDuration();
-                if (duration > 0) { elem.addAttribute("duration", durationToString(duration)); }
+                if (duration.count() > 0) { elem.addAttribute("duration", durationToString(duration)); }
 
                 auto bitrate = res.getBitRate();
                 if (bitrate > 0) { elem.addAttribute("bitrate", std::to_string(bitrate)); }

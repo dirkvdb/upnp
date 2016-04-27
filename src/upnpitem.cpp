@@ -63,7 +63,7 @@ uint64_t Resource::getSize() const
     return m_size;
 }
 
-uint32_t Resource::getDuration() const
+std::chrono::seconds Resource::getDuration() const
 {
     return m_duration;
 }
@@ -113,9 +113,9 @@ void Resource::setSize(uint64_t size)
     m_size = size;
 }
 
-void Resource::setDuration(uint32_t durationInSeconds)
+void Resource::setDuration(std::chrono::seconds duration)
 {
-    m_duration = durationInSeconds;
+    m_duration = duration;
 }
 
 void Resource::setNrAudioChannels(uint32_t channels)

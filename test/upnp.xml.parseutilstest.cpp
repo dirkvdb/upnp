@@ -407,7 +407,7 @@ TEST(XmlParseTest, ParseBrowseResponseItems)
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2290700.mp3"s, res.getUrl());
             EXPECT_EQ(10053760u, res.getSize());
             EXPECT_EQ(24000u, res.getBitRate());
-            EXPECT_EQ(uint32_t(6*60 + 54), res.getDuration());
+            EXPECT_EQ(std::chrono::seconds(6*60 + 54), res.getDuration());
         }
         else if (item.getObjectId() == "0$1$12$38502R2291724")
         {
@@ -420,7 +420,7 @@ TEST(XmlParseTest, ParseBrowseResponseItems)
             EXPECT_EQ("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291724.mp3"s, res.getUrl());
             EXPECT_EQ(13275264u, res.getSize());
             EXPECT_EQ(24000u, res.getBitRate());
-            EXPECT_EQ(uint32_t(9*60 + 9), res.getDuration());
+            EXPECT_EQ(std::chrono::seconds(9*60 + 9), res.getDuration());
         }
         else
         {

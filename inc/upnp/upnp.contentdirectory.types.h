@@ -33,7 +33,6 @@ struct ActionResult
     std::vector<Item> result;
 };
 
-
 enum class Action
 {
     GetSearchCapabilities,

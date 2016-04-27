@@ -16,36 +16,35 @@
 
 #include "utils/signal.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <algorithm>
 
+#include "upnp/upnputils.h"
 
 using namespace utils;
 using namespace testing;
-
-#include "upnp/upnputils.h"
+using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 namespace upnp
 {
 namespace test
 {
 
-class UtilsTest : public Test
+TEST(UtilsTest, DurationFromString)
 {
-public:
-    virtual ~UtilsTest() {}
+    EXPECT_EQ(145s, durationFromString(":02:25"));
+    EXPECT_EQ(145s, durationFromString("0:02:25"));
+    EXPECT_EQ(145s, durationFromString("00:02:25"));
+    EXPECT_EQ(145s, durationFromString("00:02:25.00"));
+    EXPECT_EQ(3745s, durationFromString("01:02:25.00"));
+}
 
-protected:
-};
-
-TEST_F(UtilsTest, DurationFromString)
+TEST(UtilsTest, DurationToString)
 {
-    EXPECT_EQ(145u, durationFromString(":02:25"));
-    EXPECT_EQ(145u, durationFromString("0:02:25"));
-    EXPECT_EQ(145u, durationFromString("00:02:25"));
-    EXPECT_EQ(145u, durationFromString("00:02:25.00"));
-    EXPECT_EQ(3745u, durationFromString("01:02:25.00"));
+    EXPECT_EQ("00:02:25"s, durationToString(145s));
+    EXPECT_EQ("01:02:25"s, durationToString(3745s));
 }
 
 }
