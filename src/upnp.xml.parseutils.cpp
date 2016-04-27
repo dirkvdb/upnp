@@ -482,7 +482,8 @@ Item parseContainer(xml_node<char>& containerElem)
             // multiple art uris can be present with different dlna profiles (size)
             try
             {
-                item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), elem->value_string());
+                auto& attrRef = elem->first_attribute_ref("dlna:profileID");
+                item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), elem->value_string());
             }
             catch (std::exception&)
             {

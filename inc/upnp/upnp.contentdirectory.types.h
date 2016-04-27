@@ -66,13 +66,15 @@ enum class Variable
 enum class BrowseFlag
 {
     Metadata,
-    DirectChildren
+    DirectChildren,
+    EnumCount
 };
 
 enum class SortType
 {
     Ascending,
-    Descending
+    Descending,
+    EnumCount
 };
 
 struct SortProperty
@@ -83,41 +85,18 @@ struct SortProperty
     SortType type;
 };
 
-Action actionFromString(const std::string& action);
-Action actionFromString(const char* data, size_t dataSize);
-const char* actionToString(Action action) noexcept;
+Action actionFromString(const char* data, size_t size);
+Action actionFromString(const std::string& value);
+const char* actionToString(Action value) noexcept;
 
-Variable variableFromString(const std::string& var);
-Variable variableFromString(const char* data, size_t dataSize);
-const char* variableToString(Variable var) noexcept;
+Variable variableFromString(const char* data, size_t size);
+Variable variableFromString(const std::string& value);
+const char* variableToString(Variable value) noexcept;
 
-inline BrowseFlag browseFlagFromString(const std::string& browseFlag)
-{
-    if (browseFlag == "BrowseMetadata")         return BrowseFlag::Metadata;
-    if (browseFlag == "BrowseDirectChildren")   return BrowseFlag::DirectChildren;
+BrowseFlag browseFlagFromString(const std::string& browseFlag);
+std::string browseFlagToString(BrowseFlag browseFlag) noexcept;
 
-    throw Exception("Unknown ContentDirectory browse flag: {}", browseFlag);
-}
-
-inline std::string browseFlagToString(BrowseFlag browseFlag)
-{
-    switch (browseFlag)
-    {
-        case BrowseFlag::DirectChildren:    return "BrowseDirectChildren";
-        case BrowseFlag::Metadata:          return "BrowseMetadata";
-
-        default:
-            throw Exception("Unknown ContentDirectory BrowseFlag: {}", static_cast<int32_t>(browseFlag));
-    }
-}
-
-inline SortType sortTypeFromString(char c)
-{
-    if (c == '-')   return SortType::Descending;
-    if (c == '+')   return SortType::Ascending;
-
-    throw Exception("Invalid sort character: {}", c);
-}
+SortType sortTypeFromString(char c);
 
 }
 }

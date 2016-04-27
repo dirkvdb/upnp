@@ -112,7 +112,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnp.devicescanner.h               src/upnp.devicescanner.cpp
-    inc/upnp/upnpdlnainfo.h                     src/upnpdlnainfo.cpp
+    inc/upnp/upnp.dlna.info.h                   src/upnp.dlna.info.cpp
     inc/upnp/upnpfactory.h                      src/upnpfactory.cpp
     inc/upnp/upnp.factory.h                     src/upnp.factory.cpp
     inc/upnp/upnpfwd.h

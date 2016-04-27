@@ -42,7 +42,7 @@ struct ServiceTraits
         return ContentDirectory::actionFromString(action);
     }
 
-    static std::string actionToString(ActionType action)
+    static const char* actionToString(ActionType action)
     {
         return ContentDirectory::actionToString(action);
     }
@@ -52,7 +52,7 @@ struct ServiceTraits
         return ContentDirectory::variableFromString(var);
     }
 
-    static std::string variableToString(VariableType var)
+    static const char* variableToString(VariableType var)
     {
         return ContentDirectory::variableToString(var);
     }

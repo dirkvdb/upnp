@@ -1461,6 +1461,17 @@ namespace rapidxml_ns
                 return m_first_attribute;
         }
 
+        xml_attribute<Ch>& first_attribute_ref(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
+        {
+            auto* attr = first_attribute(name, name_size, case_sensitive);
+            if (!attr)
+            {
+                throw std::runtime_error("Attribute not found in node '" + std::string(this->name(), this->name_size()) + "' : " + name);
+            }
+
+            return *attr;
+        }
+
         //! Gets first attribute of node, matching attribute namespace URI and local name.
         //! \param namespace_uri Namespace URI of attribute to find; this string have to be zero-terminated
         //! \param local_name Local name of attribute to find; this string have to be zero-terminated

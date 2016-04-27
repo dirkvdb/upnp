@@ -15,117 +15,97 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.contentdirectory.types.h"
-
-#include <array>
+#include "upnp.enumutils.h"
 
 namespace upnp
 {
-namespace ContentDirectory
+
+using namespace ContentDirectory;
+
+constexpr std::tuple<const char*, Action> s_actionNames[] {
+    { "GetSearchCapabilities",  Action::GetSearchCapabilities },
+    { "GetSortCapabilities",    Action::GetSortCapabilities },
+    { "GetSystemUpdateID",      Action::GetSystemUpdateID },
+    { "Browse",                 Action::Browse },
+    { "Search",                 Action::Search }
+};
+
+constexpr std::tuple<const char*, Variable> s_variableNames[] {
+    { "ContainerUpdateIDs",         Variable::ContainerUpdateIDs },
+    { "TransferIDs",                Variable::TransferIDs },
+    { "SystemUpdateID",             Variable::SystemUpdateID },
+    { "A_ARG_TYPE_ObjectID",        Variable::ArgumentTypeObjectID },
+    { "A_ARG_TYPE_Result",          Variable::ArgumentTypeResult },
+    { "A_ARG_TYPE_SearchCriteria",  Variable::ArgumentTypeSearchCriteria },
+    { "A_ARG_TYPE_Flag",            Variable::ArgumentTypeBrowseFlag },
+    { "A_ARG_TYPE_Filter",          Variable::ArgumentTypeFilter },
+    { "A_ARG_TYPE_SortCriteria",    Variable::ArgumentTypeSortCriteria },
+    { "A_ARG_TYPE_Index",           Variable::ArgumentTypeIndex },
+    { "A_ARG_TYPE_Count",           Variable::ArgumentTypeCount },
+    { "A_ARG_TYPE_UpdateID",        Variable::ArgumentTypeUpdateID },
+    { "SearchCapabilities",         Variable::SearchCapabilities },
+    { "SortCapabilities",           Variable::SortCapabilities }
+};
+
+constexpr std::tuple<const char*, BrowseFlag> s_browseFlagNames[] {
+    { "BrowseMetadata", BrowseFlag::Metadata },
+    { "BrowseDirectChildren", BrowseFlag::DirectChildren }
+};
+
+template<> constexpr const std::tuple<const char*, Action>* lut<Action>() { return s_actionNames; }
+template<> constexpr const std::tuple<const char*, Variable>* lut<Variable>() { return s_variableNames; }
+template<> constexpr const std::tuple<const char*, BrowseFlag>* lut<BrowseFlag>() { return s_browseFlagNames; }
+
+static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly ordered or missing entries");
+static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
+static_assert(enumCorrectNess<BrowseFlag>(), "BrowseFlag enum converion not correctly ordered or missing entries");
+
+Action ContentDirectory::actionFromString(const char* data, size_t size)
 {
+    return fromString<Action>(data, size);
+}
 
-template <typename EnumType>
-using EnumLookup = std::array<const char*, static_cast<uint32_t>(EnumType::EnumCount)>;
-
-static constexpr EnumLookup<Action> s_actionNames {{
-    "GetSearchCapabilities",
-    "GetSortCapabilities",
-    "GetSystemUpdateID",
-    "Browse",
-    "Search"
-}};
-
-static constexpr EnumLookup<Variable> s_variableNames {{
-    "ContainerUpdateIDs",
-    "TransferIDs",
-    "SystemUpdateID",
-    "A_ARG_TYPE_ObjectID",
-    "A_ARG_TYPE_Result",
-    "A_ARG_TYPE_SearchCriteria",
-    "A_ARG_TYPE_Flag",
-    "A_ARG_TYPE_Filter",
-    "A_ARG_TYPE_SortCriteria",
-    "A_ARG_TYPE_Index",
-    "A_ARG_TYPE_Count",
-    "A_ARG_TYPE_UpdateID",
-    "SearchCapabilities",
-    "SortCapabilities"
-}};
-
-Action actionFromString(const std::string& value)
+Action ContentDirectory::actionFromString(const std::string& value)
 {
     return actionFromString(value.c_str(), value.size());
 }
 
-Action actionFromString(const char* data, size_t dataSize)
+const char* ContentDirectory::actionToString(Action value) noexcept
 {
-    for (uint32_t i = 0; i < s_actionNames.size(); ++i)
-    {
-        if (strncmp(s_actionNames[i], data, dataSize) == 0)
-        {
-            return static_cast<Action>(i);
-        }
-    }
-
-    throw Exception("Unknown ContentDirectory action: {}", std::string(data, dataSize));
+    return toString(value);
 }
 
-const char* actionToString(Action value) noexcept
+Variable ContentDirectory::variableFromString(const char* data, size_t size)
 {
-    assert(static_cast<uint32_t>(value) < s_actionNames.size());
-    return s_actionNames[static_cast<int>(value)];
+    return fromString<Variable>(data, size);
 }
 
-Variable variableFromString(const std::string& value)
+Variable ContentDirectory::variableFromString(const std::string& value)
 {
     return variableFromString(value.c_str(), value.size());
 }
 
-Variable variableFromString(const char* data, size_t dataSize)
+const char* ContentDirectory::variableToString(Variable value) noexcept
 {
-    for (uint32_t i = 0; i < s_variableNames.size(); ++i)
-    {
-        if (strncmp(s_variableNames[i], data, dataSize) == 0)
-        {
-            return static_cast<Variable>(i);
-        }
-    }
-
-    throw Exception("Unknown ContentDirectory variable: {}", std::string(data, dataSize));
+    return toString(value);
 }
 
-const char* variableToString(Variable value) noexcept
+BrowseFlag browseFlagFromString(const std::string& value)
 {
-    assert(static_cast<uint32_t>(value) < s_variableNames.size());
-    return s_variableNames[static_cast<int>(value)];
+    return fromString<BrowseFlag>(value.c_str(), value.size());
 }
 
-// BrowseFlag browseFlagFromString(const std::string& browseFlag)
-// {
-//     if (browseFlag == "BrowseMetadata")         return BrowseFlag::Metadata;
-//     if (browseFlag == "BrowseDirectChildren")   return BrowseFlag::DirectChildren;
-
-//     throw Exception("Unknown ContentDirectory browse flag: {}", browseFlag);
-// }
-
-// std::string browseFlagToString(BrowseFlag browseFlag)
-// {
-//     switch (browseFlag)
-//     {
-//         case BrowseFlag::DirectChildren:    return "BrowseDirectChildren";
-//         case BrowseFlag::Metadata:          return "BrowseMetadata";
-
-//         default:
-//             throw Exception("Unknown ContentDirectory BrowseFlag: {}", static_cast<int32_t>(browseFlag));
-//     }
-// }
-
-// SortType sortTypeFromString(char c)
-// {
-//     if (c == '-')   return SortType::Descending;
-//     if (c == '+')   return SortType::Ascending;
-
-//     throw Exception("Invalid sort character: {}", c);
-// }
-
+std::string browseFlagToString(BrowseFlag value) noexcept
+{
+    return toString(value);
 }
+
+SortType sortTypeFromString(char c)
+{
+    if (c == '-')   return SortType::Descending;
+    if (c == '+')   return SortType::Ascending;
+
+    throw Exception("Invalid sort character: {}", c);
+}
+
 }
