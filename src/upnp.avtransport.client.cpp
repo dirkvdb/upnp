@@ -15,9 +15,9 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.avtransport.client.h"
-
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnputils.h"
+#include "upnp.avtransport.typeconversions.h"
 
 #include "utils/log.h"
 #include "utils/numericoperations.h"
@@ -54,6 +54,26 @@ std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32
     };
 }
 
+}
+
+Action ServiceTraits::actionFromString(const std::string& action)
+{
+    return AVTransport::actionFromString(action);
+}
+
+const char* ServiceTraits::actionToString(Action action)
+{
+    return AVTransport::actionToString(action);
+}
+
+Variable ServiceTraits::variableFromString(const std::string& var)
+{
+    return AVTransport::variableFromString(var);
+}
+
+const char* ServiceTraits::variableToString(Variable var)
+{
+    return AVTransport::variableToString(var);
 }
 
 Client::Client(IClient2& client)
@@ -186,13 +206,13 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
                 auto* child = responseNode.first_node("CurrentTransportState");
                 if (child)
                 {
-                    info.currentTransportState = stateFromString(std::string(child->value(), child->value_size()));
+                    info.currentTransportState = stateFromString(child->value_span());
                 }
 
                 child = responseNode.first_node("CurrentTransportStatus");
                 if (child)
                 {
-                    info.currentTransportStatus = statusFromString(std::string(child->value(), child->value_size()));
+                    info.currentTransportStatus = statusFromString(child->value_span());
                 }
 
                 child = responseNode.first_node("CurrentSpeed");

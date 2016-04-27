@@ -81,6 +81,10 @@ public:
 
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
 
+    static const char* toString(State);
+    static const char* toString(PlayMode);
+    static State stateFromString(const std::string& value);
+
 protected:
     virtual std::string variableToString(Variable type) const;
     xml::Document getStateVariables(uint32_t id, const std::string& variableList) const;

@@ -19,6 +19,7 @@
 #include "upnp/upnpitem.h"
 #include "utils/log.h"
 #include "utils/stringoperations.h"
+#include "upnp/upnpavtransportservice.h"
 
 #include <sstream>
 
@@ -104,7 +105,7 @@ MediaRenderer::PlaybackState parsePlaybackState(const std::string& state)
 {
     try
     {
-        return transportStateToPlaybackState(AVTransport::stateFromString(state));
+        return transportStateToPlaybackState(AVTransport::Service::stateFromString(state));
     }
     catch (std::exception& e)
     {
@@ -466,7 +467,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
     {
         try
         {
-            availableActions.insert(transportActionToAction(AVTransport::actionFromString(action)));
+            availableActions.insert(transportActionToAction(AVTransport::ServiceTraits::actionFromString(action)));
         }
         catch (std::exception& e)
         {

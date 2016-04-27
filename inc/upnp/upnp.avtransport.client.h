@@ -35,25 +35,10 @@ struct ServiceTraits
     using VariableType = AVTransport::Variable;
     static const ServiceType SvcType = ServiceType::AVTransport;
 
-    static Action actionFromString(const std::string& action)
-    {
-        return AVTransport::actionFromString(action);
-    }
-
-    static std::string actionToString(Action action)
-    {
-        return AVTransport::actionToString(action);
-    }
-
-    static Variable variableFromString(const std::string& var)
-    {
-        return AVTransport::variableFromString(var);
-    }
-
-    static std::string variableToString(Variable var)
-    {
-        return AVTransport::variableToString(var);
-    }
+    static Action actionFromString(const std::string& action);
+    static const char* actionToString(Action action);
+    static Variable variableFromString(const std::string& var);
+    static const char* variableToString(Variable var);
 };
 
 class Client : public ServiceClientBase<ServiceTraits>

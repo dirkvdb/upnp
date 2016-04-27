@@ -15,6 +15,8 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpavtransportservice.h"
+#include "upnp.avtransport.typeconversions.h"
+
 #include "utils/log.h"
 
 using namespace utils;
@@ -150,8 +152,11 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.record(id);
             break;
         case Action::Seek:
-            m_avTransport.seek(id, seekModeFromString(req.getChildNodeValue("Unit")), req.getChildNodeValue("Target"));
+        {
+            auto val = req.getChildNodeValue("Unit");
+            m_avTransport.seek(id, seekModeFromString(val), req.getChildNodeValue("Target"));
             break;
+        }
         case Action::Next:
             m_avTransport.next(id);
             break;
@@ -159,8 +164,11 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.previous(id);
             break;
         case Action::SetPlayMode:
-            m_avTransport.setPlayMode(id, playModeFromString(req.getChildNodeValue("NewPlayMode")));
+        {
+            auto val = req.getChildNodeValue("NewPlayMode");
+            m_avTransport.setPlayMode(id, playModeFromString(val));
             break;
+        }
         case Action::SetRecordQualityMode:
             m_avTransport.setRecordQualityMode(id, req.getChildNodeValue("￼NewRecordQualityMode"));
             break;
@@ -200,13 +208,16 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport3->setSyncOffset(id, req.getChildNodeValue("NewSyncOffset"));
             break;
         case Action::SyncPlay:
+        {
             throwIfNoAVTransport3Support();
+            auto val = req.getChildNodeValue("ReferencePositionUnits");
             m_avTransport3->syncPlay(id, req.getChildNodeValue("Speed"),
-                                         seekModeFromString(req.getChildNodeValue("ReferencePositionUnits")),
+                                         seekModeFromString(val),
                                          req.getChildNodeValue("ReferencePosition"),
                                          req.getChildNodeValue("ReferencePresentationTime"),
                                          req.getChildNodeValue("ReferenceClockId"));
             break;
+        }
         case Action::SyncStop:
             throwIfNoAVTransport3Support();
             m_avTransport3->syncStop(id, req.getChildNodeValue("StopTime"), req.getChildNodeValue("ReferenceClockId"));
@@ -226,17 +237,22 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
                                                   req.getChildNodeValue("PlaylistStartGroup"));
             break;
         case Action::SetStreamingPlaylist:
+        {
             throwIfNoAVTransport3Support();
+            auto val = req.getChildNodeValue("PlaylistStep");
             m_avTransport3->setStreamingPlaylist(id, req.getChildNodeValue("PlaylistData"),
                                                      req.getChildNodeValue("PlaylistMIMEType"),
                                                      req.getChildNodeValue("PlaylistExtendedType"),
-                                                     playlistStepFromString(req.getChildNodeValue("PlaylistStep")));
+                                                     playlistStepFromString(val));
             break;
+        }
         case Action::GetPlaylistInfo:
+        {
+            auto val = req.getChildNodeValue("PlaylistType");
             throwIfNoAVTransport3Support();
-            response.addArgument("PlaylistInfo", m_avTransport3->getPlaylistInfo(id, playlistTypeFromString(req.getChildNodeValue("PlaylistType"))));
+            response.addArgument("PlaylistInfo", m_avTransport3->getPlaylistInfo(id, playlistTypeFromString(val)));
             break;
-
+        }
         default:
             throw InvalidActionException();
         }
@@ -328,6 +344,21 @@ void Service::throwIfNoAVTransport3Support()
     {
         throw InvalidActionException();
     }
+}
+
+const char* Service::toString(State value)
+{
+    return AVTransport::toString(value);
+}
+
+const char* Service::toString(PlayMode value)
+{
+    return AVTransport::toString(value);
+}
+
+State Service::stateFromString(const std::string& value)
+{
+    return AVTransport::stateFromString(value);
 }
 
 }
