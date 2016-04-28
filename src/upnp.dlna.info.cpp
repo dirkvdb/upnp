@@ -16,7 +16,7 @@ namespace upnp
 
 using namespace dlna;
 
-constexpr std::tuple<const char*, ProfileId> s_profileIdNames[] {
+constexpr EnumMap<ProfileId> s_profileIdNames[] {
     { "JPEG_TN", ProfileId::JpegThumbnail },
     { "JPEG_SM", ProfileId::JpegSmall },
     { "JPEG_MED", ProfileId::JpegMedium },
@@ -29,17 +29,17 @@ static_assert(std::is_integral<decltype(enum_value(ProfileId::Unknown))>::value,
 
 ProfileId dlna::profileIdFromString(const char* data, size_t size)
 {
-    return fromString<ProfileId>(data, size);
+    return enum_cast<ProfileId>(data, size);
 }
 
 ProfileId dlna::profileIdFromString(const std::string& profile)
 {
-    return fromString<ProfileId>(profile.data(), profile.size());
+    return enum_cast<ProfileId>(profile.data(), profile.size());
 }
 
 const char* dlna::toString(ProfileId profile) noexcept
 {
-    return upnp::toString(profile);
+    return string_cast(profile);
 }
 
 }

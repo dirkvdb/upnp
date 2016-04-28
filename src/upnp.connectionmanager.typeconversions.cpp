@@ -67,42 +67,42 @@ ADD_ENUM_MAP(Direction, s_directionNames)
 
 Action ConnectionManager::actionFromString(gsl::span<const char> value)
 {
-    return fromString<Action>(value.data(), value.size());
+    return enum_cast<Action>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Action value) noexcept
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Variable ConnectionManager::variableFromString(gsl::span<const char> value)
 {
-    return fromString<Variable>(value.data(), value.size());
+    return enum_cast<Variable>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Variable var) noexcept
 {
-    return upnp::toString(var);
+    return string_cast(var);
 }
 
 ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::span<const char> value)
 {
-    return fromString<ConnectionStatus>(value.data(), value.size());
+    return enum_cast<ConnectionStatus>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(ConnectionStatus value) noexcept
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Direction ConnectionManager::directionFromString(gsl::span<const char> value)
 {
-    return fromString<Direction>(value.data(), value.size());
+    return enum_cast<Direction>(value.data(), value.size());
 }
 
 const char* ConnectionManager::toString(Direction value) noexcept
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 }

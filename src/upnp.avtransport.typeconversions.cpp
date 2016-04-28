@@ -205,97 +205,97 @@ ADD_ENUM_MAP(SeekMode, s_seekModeNames)
 
 Action AVTransport::actionFromString(gsl::span<const char> value)
 {
-    return fromString<Action>(value.data(), value.size());
+    return enum_cast<Action>(value.data(), value.size());
 }
 
 const char* AVTransport::actionToString(Action value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Variable AVTransport::variableFromString(gsl::span<const char> value)
 {
-    return fromString<Variable>(value.data(), value.size());
+    return enum_cast<Variable>(value.data(), value.size());
 }
 
 const char* AVTransport::variableToString(Variable value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 State AVTransport::stateFromString(gsl::span<const char> value)
 {
-    return fromString<State>(value.data(), value.size());
+    return enum_cast<State>(value.data(), value.size());
 }
 
 PlaylistType AVTransport::playlistTypeFromString(gsl::span<const char> value)
 {
-    return fromString<PlaylistType>(value.data(), value.size());
+    return enum_cast<PlaylistType>(value.data(), value.size());
 }
 
 PlaylistStep AVTransport::playlistStepFromString(gsl::span<const char> value)
 {
-    return fromString<PlaylistStep>(value.data(), value.size());
+    return enum_cast<PlaylistStep>(value.data(), value.size());
 }
 
 const char* AVTransport::toString(State value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 const char* AVTransport::toString(CurrentMediaCategory value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 const char* AVTransport::toString(DRMState value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 const char* AVTransport::toString(PlaylistStep value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 const char* AVTransport::toString(PlaylistType value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 const char* AVTransport::toString(PlaylistState value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Status AVTransport::statusFromString(gsl::span<const char> value)
 {
-    return fromString<Status>(value.data(), value.size());
+    return enum_cast<Status>(value.data(), value.size());
 }
 
 const char* AVTransport::toString(Status value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 SeekMode AVTransport::seekModeFromString(gsl::span<const char> value)
 {
-    return fromString<SeekMode>(value.data(), value.size());
+    return enum_cast<SeekMode>(value.data(), value.size());
 }
 
 const char* AVTransport::toString(SeekMode value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 PlayMode AVTransport::playModeFromString(gsl::span<const char> value)
 {
-    return fromString<PlayMode>(value.data(), value.size());
+    return enum_cast<PlayMode>(value.data(), value.size());
 }
 
 const char* AVTransport::toString(PlayMode value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 }

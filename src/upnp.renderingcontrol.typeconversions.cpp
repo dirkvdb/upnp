@@ -113,32 +113,32 @@ ADD_ENUM_MAP(Channel, s_channelNames)
 
 Action RenderingControl::actionFromString(gsl::span<const char> value)
 {
-    return fromString<Action>(value.data(), value.size());
+    return enum_cast<Action>(value.data(), value.size());
 }
 
 const char* RenderingControl::toString(Action value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Variable RenderingControl::variableFromString(gsl::span<const char> value)
 {
-    return fromString<Variable>(value.data(), value.size());
+    return enum_cast<Variable>(value.data(), value.size());
 }
 
 const char* RenderingControl::toString(Variable value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 Channel RenderingControl::channelFromString(gsl::span<const char> value)
 {
-    return fromString<Channel>(value.data(), value.size());
+    return enum_cast<Channel>(value.data(), value.size());
 }
 
 const char* RenderingControl::toString(Channel value)
 {
-    return upnp::toString(value);
+    return string_cast(value);
 }
 
 }

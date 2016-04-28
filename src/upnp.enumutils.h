@@ -25,7 +25,10 @@ namespace upnp
 {
 
 template <typename EnumType>
-constexpr typename std::underlying_type_t<EnumType> enum_value(EnumType e)
+using EnumMap = std::tuple<const char*, EnumType>;
+
+template <typename EnumType>
+constexpr auto enum_value(EnumType e)
 {
     return static_cast<typename std::underlying_type_t<EnumType>>(e);
 }
@@ -62,7 +65,7 @@ constexpr bool enumCorrectNess()
 }
 
 template <typename EnumType, std::underlying_type_t<EnumType> Count>
-constexpr std::underlying_type_t<EnumType> fromString(const char* data)
+constexpr auto fromString(const char* data)
 {
     for (decltype(Count) i = 0; i < Count; ++i)
     {
@@ -76,7 +79,7 @@ constexpr std::underlying_type_t<EnumType> fromString(const char* data)
 }
 
 template <typename EnumType, std::underlying_type_t<EnumType> Count>
-constexpr std::underlying_type_t<EnumType> fromString(const char* data, size_t dataSize)
+constexpr auto fromString(const char* data, size_t dataSize)
 {
     for (decltype(Count) i = 0; i < Count; ++i)
     {
@@ -110,7 +113,7 @@ constexpr EnumType handleFromStringUnknown(std::underlying_type_t<EnumType> inde
 }
 
 template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr EnumType fromString(const char* data, size_t dataSize)
+constexpr EnumType enum_cast(const char* data, size_t dataSize)
 {
     auto index = details::fromString<EnumType, enum_value(EnumType::EnumCount)>(data, dataSize);
     if (index == enum_value(EnumType::EnumCount))
@@ -122,7 +125,7 @@ constexpr EnumType fromString(const char* data, size_t dataSize)
 }
 
 template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr EnumType fromString(const char* data)
+constexpr EnumType enum_cast(const char* data)
 {
     auto index = details::fromString<EnumType, enum_value(EnumType::EnumCount)>(data);
     if (index == enum_value(EnumType::EnumCount))
@@ -134,25 +137,25 @@ constexpr EnumType fromString(const char* data)
 }
 
 template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr EnumType fromString(const char* data, size_t dataSize)
+constexpr EnumType enum_cast(const char* data, size_t dataSize)
 {
     return details::handleFromStringUnknown<EnumType>(details::fromString<EnumType, enum_value(EnumType::Unknown)>(data, dataSize));
 }
 
 template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr EnumType fromString(const char* data)
+constexpr EnumType enum_cast(const char* data)
 {
     return details::handleFromStringUnknown<EnumType>(details::fromString<EnumType, enum_value(EnumType::Unknown)>(data));
 }
 
 template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr const char* toString(EnumType value) noexcept
+constexpr const char* string_cast(EnumType value) noexcept
 {
     return details::toString<EnumType, enum_value(EnumType::EnumCount)>(value);
 }
 
 template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr const char* toString(EnumType value) noexcept
+constexpr const char* string_cast(EnumType value) noexcept
 {
     return details::toString<EnumType, enum_value(EnumType::Unknown)>(value);
 }

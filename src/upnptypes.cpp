@@ -89,32 +89,32 @@ ADD_ENUM_MAP(Class, s_classNames)
 
 Property propertyFromString(const char* data, size_t dataSize)
 {
-    return upnp::fromString<Property>(data, dataSize);
+    return enum_cast<Property>(data, dataSize);
 }
 
 Property propertyFromString(const std::string& value)
 {
-    return upnp::fromString<Property>(value.data(), value.size());
+    return enum_cast<Property>(value.data(), value.size());
 }
 
 const char* toString(Property value) noexcept
 {
-    return upnp::toString<Property>(value);
+    return string_cast(value);
 }
 
 ServiceType serviceTypeFromString(const std::string& value)
 {
-    return upnp::fromString<ServiceType>(value.data(), value.size());
+    return enum_cast<ServiceType>(value.data(), value.size());
 }
 
 const char* serviceTypeToTypeString(ServiceType type)
 {
-    return upnp::toString(type);
+    return string_cast(type);
 }
 
 const char* toString(Class value) noexcept
 {
-    return upnp::toString<Class>(value);
+    return string_cast(value);
 }
 
 }

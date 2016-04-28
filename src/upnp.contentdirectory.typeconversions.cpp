@@ -58,32 +58,32 @@ ADD_ENUM_MAP(BrowseFlag, s_browseFlagNames)
 
 Action ContentDirectory::actionFromString(gsl::span<const char> data)
 {
-    return fromString<Action>(data.data(), data.size());
+    return enum_cast<Action>(data.data(), data.size());
 }
 
 const char* ContentDirectory::actionToString(Action value) noexcept
 {
-    return toString(value);
+    return string_cast(value);
 }
 
 Variable ContentDirectory::variableFromString(gsl::span<const char> data)
 {
-    return fromString<Variable>(data.data(), data.size());
+    return enum_cast<Variable>(data.data(), data.size());
 }
 
 const char* ContentDirectory::variableToString(Variable value) noexcept
 {
-    return toString(value);
+    return string_cast(value);
 }
 
 BrowseFlag browseFlagFromString(gsl::span<const char> data)
 {
-    return fromString<BrowseFlag>(data.data(), data.size());
+    return enum_cast<BrowseFlag>(data.data(), data.size());
 }
 
 std::string browseFlagToString(BrowseFlag value) noexcept
 {
-    return toString(value);
+    return string_cast(value);
 }
 
 SortType sortTypeFromString(char c)
