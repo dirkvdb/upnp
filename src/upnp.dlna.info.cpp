@@ -16,20 +16,16 @@ namespace upnp
 
 using namespace dlna;
 
-constexpr std::tuple<const char*, ProfileId> s_profileIdLookup[] {
+constexpr std::tuple<const char*, ProfileId> s_profileIdNames[] {
     { "JPEG_TN", ProfileId::JpegThumbnail },
     { "JPEG_SM", ProfileId::JpegSmall },
     { "JPEG_MED", ProfileId::JpegMedium },
     { "JPEG_LRG", ProfileId::JpegLarge }
 };
 
-template<>
-constexpr const std::tuple<const char*, ProfileId>* lut<ProfileId>()
-{
-    return s_profileIdLookup;
-}
+ADD_ENUM_MAP(ProfileId, s_profileIdNames)
 
-static_assert(enumCorrectNess<ProfileId>(), "ProfileId enum converion not correctly ordered or missing entries");
+static_assert(std::is_integral<decltype(enum_value(ProfileId::Unknown))>::value, "Oops");
 
 ProfileId dlna::profileIdFromString(const char* data, size_t size)
 {
@@ -38,7 +34,7 @@ ProfileId dlna::profileIdFromString(const char* data, size_t size)
 
 ProfileId dlna::profileIdFromString(const std::string& profile)
 {
-    return fromString<ProfileId>(profile.c_str(), profile.size());
+    return fromString<ProfileId>(profile.data(), profile.size());
 }
 
 const char* dlna::toString(ProfileId profile) noexcept

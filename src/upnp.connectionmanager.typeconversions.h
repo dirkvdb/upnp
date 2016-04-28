@@ -37,5 +37,6 @@ const char* toString(ConnectionStatus status) noexcept;
 Direction directionFromString(gsl::span<const char> value);
 const char* toString(Direction direction) noexcept;
 
+
 }
 }

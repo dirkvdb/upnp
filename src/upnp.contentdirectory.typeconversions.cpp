@@ -52,13 +52,9 @@ constexpr std::tuple<const char*, BrowseFlag> s_browseFlagNames[] {
     { "BrowseDirectChildren", BrowseFlag::DirectChildren }
 };
 
-template<> constexpr const std::tuple<const char*, Action>* lut<Action>() { return s_actionNames; }
-template<> constexpr const std::tuple<const char*, Variable>* lut<Variable>() { return s_variableNames; }
-template<> constexpr const std::tuple<const char*, BrowseFlag>* lut<BrowseFlag>() { return s_browseFlagNames; }
-
-static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<BrowseFlag>(), "BrowseFlag enum converion not correctly ordered or missing entries");
+ADD_ENUM_MAP(Action, s_actionNames)
+ADD_ENUM_MAP(Variable, s_variableNames)
+ADD_ENUM_MAP(BrowseFlag, s_browseFlagNames)
 
 Action ContentDirectory::actionFromString(gsl::span<const char> data)
 {

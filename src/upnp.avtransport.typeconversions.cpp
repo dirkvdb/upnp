@@ -191,29 +191,17 @@ constexpr std::tuple<const char*, SeekMode> s_seekModeNames[] {
     { "REL_FRAME",       SeekMode::RelativeFrame }
 };
 
-template<> constexpr const std::tuple<const char*, Action>* lut<Action>() { return s_actionNames; }
-template<> constexpr const std::tuple<const char*, Variable>* lut<Variable>() { return s_variableNames; }
-template<> constexpr const std::tuple<const char*, State>* lut<State>() { return s_stateNames; }
-template<> constexpr const std::tuple<const char*, PlaylistType>* lut<PlaylistType>() { return s_playlistTypeNames; }
-template<> constexpr const std::tuple<const char*, PlaylistState>* lut<PlaylistState>() { return s_playlistStateNames; }
-template<> constexpr const std::tuple<const char*, PlaylistStep>* lut<PlaylistStep>() { return s_playlistStepNames; }
-template<> constexpr const std::tuple<const char*, CurrentMediaCategory>* lut<CurrentMediaCategory>() { return s_curMediaCategoryNames; }
-template<> constexpr const std::tuple<const char*, DRMState>* lut<DRMState>() { return s_drmStateNames; }
-template<> constexpr const std::tuple<const char*, Status>* lut<Status>() { return s_statusNames; }
-template<> constexpr const std::tuple<const char*, PlayMode>* lut<PlayMode>() { return s_playModeNames; }
-template<> constexpr const std::tuple<const char*, SeekMode>* lut<SeekMode>() { return s_seekModeNames; }
-
-static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<State>(), "State enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<PlaylistType>(), "PlaylistType enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<PlaylistState>(), "PlaylistState enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<PlaylistStep>(), "PlaylistStep enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<CurrentMediaCategory>(), "CurrentMediaCategory enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<DRMState>(), "DRMState enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Status>(), "Status enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<PlayMode>(), "PlayMode enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<SeekMode>(), "SeekMode enum converion not correctly ordered or missing entries");
+ADD_ENUM_MAP(Action, s_actionNames)
+ADD_ENUM_MAP(Variable, s_variableNames)
+ADD_ENUM_MAP(State, s_stateNames)
+ADD_ENUM_MAP(PlaylistType, s_playlistTypeNames)
+ADD_ENUM_MAP(PlaylistState, s_playlistStateNames)
+ADD_ENUM_MAP(PlaylistStep, s_playlistStepNames)
+ADD_ENUM_MAP(CurrentMediaCategory, s_curMediaCategoryNames)
+ADD_ENUM_MAP(DRMState, s_drmStateNames)
+ADD_ENUM_MAP(Status, s_statusNames)
+ADD_ENUM_MAP(PlayMode, s_playModeNames)
+ADD_ENUM_MAP(SeekMode, s_seekModeNames)
 
 Action AVTransport::actionFromString(gsl::span<const char> value)
 {

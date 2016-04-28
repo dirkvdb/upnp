@@ -144,26 +144,8 @@ private:
     int32_t     m_errorCode;
 };
 
-inline ServiceType serviceTypeFromString(const std::string& name)
-{
-    if (name == "ContentDirectory")     return ServiceType::ContentDirectory;
-    if (name == "RenderingControl")     return ServiceType::RenderingControl;
-    if (name == "ConnectionManager")    return ServiceType::ConnectionManager;
-    if (name == "AVTransport")          return ServiceType::AVTransport;
-
-    return ServiceType::Unknown;
-}
-
-inline std::string serviceTypeToTypeString(ServiceType type)
-{
-    if (type == ServiceType::ContentDirectory)      return "ContentDirectory";
-    if (type == ServiceType::RenderingControl)      return "RenderingControl";
-    if (type == ServiceType::ConnectionManager)     return "ConnectionManager";
-    if (type == ServiceType::AVTransport)           return "AVTransport";
-    if (type == ServiceType::Unknown)               return "UnknownServiceType";
-
-    throw Exception("Invalid service type received");
-}
+ServiceType serviceTypeFromString(const std::string& name);
+const char* serviceTypeToTypeString(ServiceType type);
 
 inline const char* serviceTypeToUrnTypeString(ServiceType type)
 {
@@ -175,7 +157,7 @@ inline const char* serviceTypeToUrnTypeString(ServiceType type)
     throw Exception("Invalid service type received for urn");
 }
 
-inline std::string serviceTypeToUrnIdString(ServiceType type)
+inline const char* serviceTypeToUrnIdString(ServiceType type)
 {
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
@@ -184,7 +166,7 @@ inline std::string serviceTypeToUrnIdString(ServiceType type)
     throw Exception("Invalid service type received for id urn");
 }
 
-inline std::string serviceTypeToUrnMetadataString(ServiceType type)
+inline const char* serviceTypeToUrnMetadataString(ServiceType type)
 {
     if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
     if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
@@ -216,23 +198,6 @@ inline ServiceType serviceIdUrnStringToService(const std::string& type)
 Property propertyFromString(const char* data, size_t size);
 Property propertyFromString(const std::string& name);
 const char* toString(Property prop) noexcept;
-
-inline std::string toString(Class c)
-{
-    switch (c)
-    {
-    case Class::Container:          return "object.container";
-    case Class::VideoContainer:     return "object.container.videoContainer";
-    case Class::AudioContainer:     return "object.container.album.musicAlbum";
-    case Class::ImageContainer:     return "object.container.photoAlbum";
-    case Class::StorageFolder:      return "object.container.storageFolder";
-    case Class::Video:              return "object.item.videoItem";
-    case Class::Audio:              return "object.item.audioItem";
-    case Class::Image:              return "object.item.imageItem";
-    case Class::Generic:            return "object.generic";
-    default:
-        throw Exception("Invalid upnp class provided");
-    }
-}
+const char* toString(Class c) noexcept;
 
 }

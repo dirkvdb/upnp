@@ -17,8 +17,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnptypes.h"
-
-#include <array>
+#include "upnp.enumutils.h"
 
 namespace upnp
 {
@@ -37,56 +36,85 @@ const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata
 const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
 const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
-static constexpr std::array<const char*, static_cast<uint32_t>(Property::Unknown)> s_propertyNames {{
-    "id",
-    "parentID",
-    "dc:title",
-    "dc:creator",
-    "dc:date",
-    "dc:description",
-    "res",
-    "upnp:class",
-    "restricted",
-    "writeStatus",
-    "@refID",
-    "childCount",
-    "upnp:createClass",
-    "upnp:searchClass",
-    "searchable",
-    "upnp:artist",
-    "upnp:album",
-    "upnp:albumArtist",
-    "upnp:albumArtURI",
-    "upnp:icon",
-    "upnp:genre",
-    "upnp:originalTrackNumber",
-    "upnp:actor",
-    "upnp:storageUsed",
-    "*"
-}};
+constexpr std::tuple<const char*, Property> s_propertyNames[] {
+    { "id", Property::Id },
+    { "parentID", Property::ParentId },
+    { "dc:title", Property::Title },
+    { "dc:creator", Property::Creator },
+    { "dc:date", Property::Date },
+    { "dc:description", Property::Description },
+    { "res", Property::Res },
+    { "upnp:class", Property::Class },
+    { "restricted", Property::Restricted },
+    { "writeStatus", Property::WriteStatus },
+    { "@refID", Property::RefId },
+    { "childCount", Property::ChildCount },
+    { "upnp:createClass", Property::CreateClass },
+    { "upnp:searchClass", Property::SearchClass },
+    { "searchable", Property::Searchable },
+    { "upnp:artist", Property::Artist },
+    { "upnp:album", Property::Album },
+    { "upnp:albumArtist", Property::AlbumArtist },
+    { "upnp:albumArtURI", Property::AlbumArt },
+    { "upnp:icon", Property::Icon },
+    { "upnp:genre", Property::Genre },
+    { "upnp:originalTrackNumber", Property::TrackNumber },
+    { "upnp:actor", Property::Actor },
+    { "upnp:storageUsed", Property::StorageUsed },
+    { "*", Property::All },
+};
+
+constexpr std::tuple<const char*, ServiceType> s_serviceTypeNames[] {
+    { "ContentDirectory",     ServiceType::ContentDirectory },
+    { "RenderingControl",     ServiceType::RenderingControl },
+    { "ConnectionManager",    ServiceType::ConnectionManager },
+    { "AVTransport",          ServiceType::AVTransport }
+};
+
+constexpr std::tuple<const char*, Class> s_classNames[] {
+    { "object.container",                   Class::Container },
+    { "object.container.videoContainer",    Class::VideoContainer },
+    { "object.container.album.musicAlbum",  Class::AudioContainer },
+    { "object.container.photoAlbum",        Class::ImageContainer },
+    { "object.container.storageFolder",     Class::StorageFolder },
+    { "object.item.videoItem",              Class::Video },
+    { "object.item.audioItem",              Class::Audio },
+    { "object.item.imageItem",              Class::Image },
+    { "object.generic",                     Class::Generic }
+};
+
+ADD_ENUM_MAP(Property, s_propertyNames)
+ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)
+ADD_ENUM_MAP(Class, s_classNames)
 
 Property propertyFromString(const char* data, size_t dataSize)
 {
-    for (uint32_t i = 0; i < s_propertyNames.size(); ++i)
-    {
-        if (strncmp(s_propertyNames[i], data, dataSize) == 0)
-        {
-            return static_cast<Property>(i);
-        }
-    }
-
-    return Property::Unknown;
+    return upnp::fromString<Property>(data, dataSize);
 }
 
 Property propertyFromString(const std::string& value)
 {
-    return propertyFromString(value.c_str(), value.size());
+    return upnp::fromString<Property>(value.data(), value.size());
 }
 
 const char* toString(Property value) noexcept
 {
-    assert(static_cast<uint32_t>(value) < s_propertyNames.size());
-    return s_propertyNames[static_cast<int>(value)];
+    return upnp::toString<Property>(value);
+}
+
+ServiceType serviceTypeFromString(const std::string& value)
+{
+    return upnp::fromString<ServiceType>(value.data(), value.size());
+}
+
+const char* serviceTypeToTypeString(ServiceType type)
+{
+    return upnp::toString(type);
+}
+
+const char* toString(Class value) noexcept
+{
+    return upnp::toString<Class>(value);
 }
 
 }

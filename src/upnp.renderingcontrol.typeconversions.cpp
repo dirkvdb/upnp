@@ -107,13 +107,9 @@ constexpr std::tuple<const char*, Channel> s_channelNames[] {
     { "B",          Channel::B },
 };
 
-template<> constexpr const std::tuple<const char*, Action>* lut<Action>() { return s_actionNames; }
-template<> constexpr const std::tuple<const char*, Variable>* lut<Variable>() { return s_variableNames; }
-template<> constexpr const std::tuple<const char*, Channel>* lut<Channel>() { return s_channelNames; }
-
-static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Channel>(), "Channel enum converion not correctly ordered or missing entries");
+ADD_ENUM_MAP(Action, s_actionNames)
+ADD_ENUM_MAP(Variable, s_variableNames)
+ADD_ENUM_MAP(Channel, s_channelNames)
 
 Action RenderingControl::actionFromString(gsl::span<const char> value)
 {

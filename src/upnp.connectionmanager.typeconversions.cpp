@@ -60,15 +60,10 @@ constexpr std::tuple<const char*, Direction> s_directionNames[] {
     { "Output", Direction::Output}
 };
 
-template<> constexpr const std::tuple<const char*, Action>* lut<Action>() { return s_actionNames; }
-template<> constexpr const std::tuple<const char*, Variable>* lut<Variable>() { return s_variableNames; }
-template<> constexpr const std::tuple<const char*, ConnectionStatus>* lut<ConnectionStatus>() { return s_connStatusNames; }
-template<> constexpr const std::tuple<const char*, Direction>* lut<Direction>() { return s_directionNames; }
-
-static_assert(enumCorrectNess<Action>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Variable>(), "Action enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<ConnectionStatus>(), "ConnectionStatus enum converion not correctly ordered or missing entries");
-static_assert(enumCorrectNess<Direction>(), "Direction enum converion not correctly ordered or missing entries");
+ADD_ENUM_MAP(Action, s_actionNames)
+ADD_ENUM_MAP(Variable, s_variableNames)
+ADD_ENUM_MAP(ConnectionStatus, s_connStatusNames)
+ADD_ENUM_MAP(Direction, s_directionNames)
 
 Action ConnectionManager::actionFromString(gsl::span<const char> value)
 {
