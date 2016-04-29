@@ -63,7 +63,7 @@ Action ContentDirectory::actionFromString(gsl::cstring_span<> data)
 
 const char* ContentDirectory::actionToString(Action value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Variable ContentDirectory::variableFromString(gsl::cstring_span<> data)
@@ -73,7 +73,7 @@ Variable ContentDirectory::variableFromString(gsl::cstring_span<> data)
 
 const char* ContentDirectory::variableToString(Variable value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 BrowseFlag browseFlagFromString(gsl::cstring_span<> data)
@@ -83,7 +83,7 @@ BrowseFlag browseFlagFromString(gsl::cstring_span<> data)
 
 std::string browseFlagToString(BrowseFlag value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 SortType sortTypeFromString(char c)

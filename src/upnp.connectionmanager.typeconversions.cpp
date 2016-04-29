@@ -72,7 +72,7 @@ Action ConnectionManager::actionFromString(gsl::cstring_span<> value)
 
 const char* ConnectionManager::toString(Action value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Variable ConnectionManager::variableFromString(gsl::cstring_span<> value)
@@ -82,7 +82,7 @@ Variable ConnectionManager::variableFromString(gsl::cstring_span<> value)
 
 const char* ConnectionManager::toString(Variable var) noexcept
 {
-    return string_cast(var);
+    return enum_string(var);
 }
 
 ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::cstring_span<> value)
@@ -92,7 +92,7 @@ ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::cstring_span
 
 const char* ConnectionManager::toString(ConnectionStatus value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Direction ConnectionManager::directionFromString(gsl::cstring_span<> value)
@@ -102,7 +102,7 @@ Direction ConnectionManager::directionFromString(gsl::cstring_span<> value)
 
 const char* ConnectionManager::toString(Direction value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 }

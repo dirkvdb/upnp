@@ -38,7 +38,7 @@ ProfileId dlna::profileIdFromString(const std::string& profile)
 
 const char* dlna::toString(ProfileId profile) noexcept
 {
-    return string_cast(profile);
+    return enum_string(profile);
 }
 
 }

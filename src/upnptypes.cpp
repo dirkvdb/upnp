@@ -99,7 +99,7 @@ Property propertyFromString(const std::string& value)
 
 const char* toString(Property value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 ServiceType serviceTypeFromString(const std::string& value)
@@ -109,12 +109,12 @@ ServiceType serviceTypeFromString(const std::string& value)
 
 const char* serviceTypeToTypeString(ServiceType type)
 {
-    return string_cast(type);
+    return enum_string(type);
 }
 
 const char* toString(Class value) noexcept
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 }

@@ -210,7 +210,7 @@ Action AVTransport::actionFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::actionToString(Action value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Variable AVTransport::variableFromString(gsl::cstring_span<> value)
@@ -220,7 +220,7 @@ Variable AVTransport::variableFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::variableToString(Variable value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 State AVTransport::stateFromString(gsl::cstring_span<> value)
@@ -240,32 +240,32 @@ PlaylistStep AVTransport::playlistStepFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::toString(State value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 const char* AVTransport::toString(CurrentMediaCategory value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 const char* AVTransport::toString(DRMState value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 const char* AVTransport::toString(PlaylistStep value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 const char* AVTransport::toString(PlaylistType value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 const char* AVTransport::toString(PlaylistState value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Status AVTransport::statusFromString(gsl::cstring_span<> value)
@@ -275,7 +275,7 @@ Status AVTransport::statusFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::toString(Status value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 SeekMode AVTransport::seekModeFromString(gsl::cstring_span<> value)
@@ -285,7 +285,7 @@ SeekMode AVTransport::seekModeFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::toString(SeekMode value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 PlayMode AVTransport::playModeFromString(gsl::cstring_span<> value)
@@ -295,7 +295,7 @@ PlayMode AVTransport::playModeFromString(gsl::cstring_span<> value)
 
 const char* AVTransport::toString(PlayMode value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 }

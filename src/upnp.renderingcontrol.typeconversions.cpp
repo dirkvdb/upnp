@@ -118,7 +118,7 @@ Action RenderingControl::actionFromString(gsl::cstring_span<> value)
 
 const char* RenderingControl::toString(Action value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Variable RenderingControl::variableFromString(gsl::cstring_span<> value)
@@ -128,7 +128,7 @@ Variable RenderingControl::variableFromString(gsl::cstring_span<> value)
 
 const char* RenderingControl::toString(Variable value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 Channel RenderingControl::channelFromString(gsl::cstring_span<> value)
@@ -138,7 +138,7 @@ Channel RenderingControl::channelFromString(gsl::cstring_span<> value)
 
 const char* RenderingControl::toString(Channel value)
 {
-    return string_cast(value);
+    return enum_string(value);
 }
 
 }

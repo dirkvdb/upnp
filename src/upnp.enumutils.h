@@ -67,12 +67,12 @@ constexpr const EnumMap<EnumType>& lut()
 namespace details
 {
 
-template <typename EnumType, typename Cb>
-EnumType enum_cast(Cb&& cb)
+template <typename EnumType>
+EnumType enum_cast(const gsl::cstring_span<>& span)
 {
     auto& l = lut<EnumType>();
     auto iter = std::find_if(l.begin(), l.end(), [&] (auto& entry) {
-        return cb(std::get<0>(entry));
+        return strncmp(std::get<0>(entry), span.data(), span.size()) == 0;
     });
 
     return iter == l.end() ? static_cast<EnumType>(l.size()) : std::get<1>(*iter);
@@ -83,13 +83,10 @@ EnumType enum_cast(Cb&& cb)
 template <typename EnumType>
 IfEndsWithCount<EnumType> enum_cast(const gsl::cstring_span<>& span)
 {
-    auto value = details::enum_cast<EnumType>([&] (const char* value) {
-        return strncmp(value, span.data(), span.size()) == 0;
-    });
-
+    auto value = details::enum_cast<EnumType>(span);
     if (value == EnumType::EnumCount)
     {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(span.data(), span.size()));
+        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), gsl::to_string(span));
     }
 
     return value;
@@ -98,13 +95,11 @@ IfEndsWithCount<EnumType> enum_cast(const gsl::cstring_span<>& span)
 template <typename EnumType>
 IfEndsWithUnknown<EnumType> enum_cast(const gsl::cstring_span<>& span)
 {
-    return details::enum_cast<EnumType>([&] (const char* value) {
-        return strncmp(value, span.data(), span.size()) == 0;
-    });
+    return details::enum_cast<EnumType>(span);
 }
 
 template <typename EnumType>
-constexpr const char* string_cast(EnumType value) noexcept
+constexpr const char* enum_string(EnumType value) noexcept
 {
     return std::get<0>(lut<EnumType>()[enum_value(value)]);
 }
