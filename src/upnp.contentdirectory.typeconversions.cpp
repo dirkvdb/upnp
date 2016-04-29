@@ -22,15 +22,15 @@ namespace upnp
 
 using namespace ContentDirectory;
 
-constexpr std::tuple<const char*, Action> s_actionNames[] {
+static constexpr EnumMap<Action> s_actionNames  {{
     { "GetSearchCapabilities",  Action::GetSearchCapabilities },
     { "GetSortCapabilities",    Action::GetSortCapabilities },
     { "GetSystemUpdateID",      Action::GetSystemUpdateID },
     { "Browse",                 Action::Browse },
     { "Search",                 Action::Search }
-};
+}};
 
-constexpr std::tuple<const char*, Variable> s_variableNames[] {
+static constexpr EnumMap<Variable> s_variableNames  {{
     { "ContainerUpdateIDs",         Variable::ContainerUpdateIDs },
     { "TransferIDs",                Variable::TransferIDs },
     { "SystemUpdateID",             Variable::SystemUpdateID },
@@ -45,12 +45,12 @@ constexpr std::tuple<const char*, Variable> s_variableNames[] {
     { "A_ARG_TYPE_UpdateID",        Variable::ArgumentTypeUpdateID },
     { "SearchCapabilities",         Variable::SearchCapabilities },
     { "SortCapabilities",           Variable::SortCapabilities }
-};
+}};
 
-constexpr std::tuple<const char*, BrowseFlag> s_browseFlagNames[] {
+static constexpr EnumMap<BrowseFlag> s_browseFlagNames  {{
     { "BrowseMetadata", BrowseFlag::Metadata },
     { "BrowseDirectChildren", BrowseFlag::DirectChildren }
-};
+}};
 
 ADD_ENUM_MAP(Action, s_actionNames)
 ADD_ENUM_MAP(Variable, s_variableNames)

@@ -22,7 +22,7 @@ namespace upnp
 
 using namespace ConnectionManager;
 
-constexpr std::tuple<const char*, Action> s_actionNames[] {
+static constexpr EnumMap<Action> s_actionNames {{
     { "GetProtocolInfo",             Action::GetProtocolInfo },
     { "PrepareForConnection",        Action::PrepareForConnection },
     { "ConnectionComplete",          Action::ConnectionComplete },
@@ -30,9 +30,9 @@ constexpr std::tuple<const char*, Action> s_actionNames[] {
     { "GetCurrentConnectionInfo",    Action::GetCurrentConnectionInfo },
     { "GetRendererItemInfo",         Action::GetRendererItemInfo },
     { "GetFeatureList",              Action::GetFeatureList },
-};
+}};
 
-constexpr std::tuple<const char*, Variable> s_variableNames[] {
+static constexpr EnumMap<Variable> s_variableNames {{
     { "SourceProtocolInfo",            Variable::SourceProtocolInfo },
     { "SinkProtocolInfo",              Variable::SinkProtocolInfo },
     { "CurrentConnectionIDs",          Variable::CurrentConnectionIds },
@@ -46,19 +46,19 @@ constexpr std::tuple<const char*, Variable> s_variableNames[] {
     { "A_ARG_TYPE_ItemInfoFilter",     Variable::ArgumentTypeItemInfoFilter },
     { "A_ARG_TYPE_Result",             Variable::ArgumentTypeResult },
     { "A_ARG_TYPE_RenderingInfoList",  Variable::ArgumentTypeRenderingInfoList }
-};
+}};
 
-constexpr std::tuple<const char*, ConnectionStatus> s_connStatusNames[] {
+static constexpr EnumMap<ConnectionStatus> s_connStatusNames {{
     { "OK",                     ConnectionStatus::Ok },
     { "ContentFormatMismatch",  ConnectionStatus::ContentFormatMismatch },
     { "InsufficientBandwith",   ConnectionStatus::InsufficientBandwith },
     { "UnreliableChannel",      ConnectionStatus::UnreliableChannel }
-};
+}};
 
-constexpr std::tuple<const char*, Direction> s_directionNames[] {
+static constexpr EnumMap<Direction> s_directionNames {{
     { "Input",  Direction::Input},
     { "Output", Direction::Output}
-};
+}};
 
 ADD_ENUM_MAP(Action, s_actionNames)
 ADD_ENUM_MAP(Variable, s_variableNames)

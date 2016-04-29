@@ -22,7 +22,7 @@ namespace upnp
 
 using namespace RenderingControl;
 
-constexpr std::tuple<const char*, Action> s_actionNames[] {
+static constexpr EnumMap<Action> s_actionNames {{
     { "ListPresets",                Action::ListPresets },
     { "SelectPreset",               Action::SelectPreset },
     { "GetBrightness",              Action::GetBrightness },
@@ -61,9 +61,9 @@ constexpr std::tuple<const char*, Action> s_actionNames[] {
 
     { "GetStateVariables",          Action::GetStateVariables },
     { "SetStateVariables",          Action::SetStateVariables },
-};
+}};
 
-constexpr std::tuple<const char*, Variable> s_variableNames[] {
+static constexpr EnumMap<Variable> s_variableNames {{
     { "PresetNameList",                        Variable::PresetNameList },
     { "Brightness",                            Variable::Brightness },
     { "Contrast",                              Variable::Contrast },
@@ -88,9 +88,9 @@ constexpr std::tuple<const char*, Variable> s_variableNames[] {
     { "A_ARG_TYPE_ServiceId",                  Variable::ArgumentTypeServiceId },
     { "A_ARG_TYPE_StateVariableValuePairs",    Variable::ArgumentTypeStateVariableValuePairs },
     { "A_ARG_TYPE_StateVariableList",          Variable::ArgumentTypeStateVariableList },
-};
+}};
 
-constexpr std::tuple<const char*, Channel> s_channelNames[] {
+static constexpr EnumMapEndsWith<Channel, Channel::B> s_channelNames {{
     { "Master",     Channel::Master },
     { "LF",         Channel::LF },
     { "RF",         Channel::RF },
@@ -105,7 +105,7 @@ constexpr std::tuple<const char*, Channel> s_channelNames[] {
     { "SR",         Channel::SR },
     { "T",          Channel::T },
     { "B",          Channel::B },
-};
+}};
 
 ADD_ENUM_MAP(Action, s_actionNames)
 ADD_ENUM_MAP(Variable, s_variableNames)

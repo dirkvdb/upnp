@@ -36,42 +36,42 @@ const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata
 const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
 const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
-constexpr std::tuple<const char*, Property> s_propertyNames[] {
-    { "id", Property::Id },
-    { "parentID", Property::ParentId },
-    { "dc:title", Property::Title },
-    { "dc:creator", Property::Creator },
-    { "dc:date", Property::Date },
-    { "dc:description", Property::Description },
-    { "res", Property::Res },
-    { "upnp:class", Property::Class },
-    { "restricted", Property::Restricted },
-    { "writeStatus", Property::WriteStatus },
-    { "@refID", Property::RefId },
-    { "childCount", Property::ChildCount },
-    { "upnp:createClass", Property::CreateClass },
-    { "upnp:searchClass", Property::SearchClass },
-    { "searchable", Property::Searchable },
-    { "upnp:artist", Property::Artist },
-    { "upnp:album", Property::Album },
-    { "upnp:albumArtist", Property::AlbumArtist },
-    { "upnp:albumArtURI", Property::AlbumArt },
-    { "upnp:icon", Property::Icon },
-    { "upnp:genre", Property::Genre },
-    { "upnp:originalTrackNumber", Property::TrackNumber },
-    { "upnp:actor", Property::Actor },
-    { "upnp:storageUsed", Property::StorageUsed },
-    { "*", Property::All },
-};
+static constexpr EnumMap<Property> s_propertyNames {{
+    { "id",                         Property::Id },
+    { "parentID",                   Property::ParentId },
+    { "dc:title",                   Property::Title },
+    { "dc:creator",                 Property::Creator },
+    { "dc:date",                    Property::Date },
+    { "dc:description",             Property::Description },
+    { "res",                        Property::Res },
+    { "upnp:class",                 Property::Class },
+    { "restricted",                 Property::Restricted },
+    { "writeStatus",                Property::WriteStatus },
+    { "@refID",                     Property::RefId },
+    { "childCount",                 Property::ChildCount },
+    { "upnp:createClass",           Property::CreateClass },
+    { "upnp:searchClass",           Property::SearchClass },
+    { "searchable",                 Property::Searchable },
+    { "upnp:artist",                Property::Artist },
+    { "upnp:album",                 Property::Album },
+    { "upnp:albumArtist",           Property::AlbumArtist },
+    { "upnp:albumArtURI",           Property::AlbumArt },
+    { "upnp:icon",                  Property::Icon },
+    { "upnp:genre",                 Property::Genre },
+    { "upnp:originalTrackNumber",   Property::TrackNumber },
+    { "upnp:actor",                 Property::Actor },
+    { "upnp:storageUsed",           Property::StorageUsed },
+    { "*",                          Property::All },
+}};
 
-constexpr std::tuple<const char*, ServiceType> s_serviceTypeNames[] {
+static constexpr EnumMap<ServiceType> s_serviceTypeNames {{
     { "ContentDirectory",     ServiceType::ContentDirectory },
     { "RenderingControl",     ServiceType::RenderingControl },
     { "ConnectionManager",    ServiceType::ConnectionManager },
     { "AVTransport",          ServiceType::AVTransport }
-};
+}};
 
-constexpr std::tuple<const char*, Class> s_classNames[] {
+static constexpr EnumMap<Class> s_classNames {{
     { "object.container",                   Class::Container },
     { "object.container.videoContainer",    Class::VideoContainer },
     { "object.container.album.musicAlbum",  Class::AudioContainer },
@@ -81,7 +81,7 @@ constexpr std::tuple<const char*, Class> s_classNames[] {
     { "object.item.audioItem",              Class::Audio },
     { "object.item.imageItem",              Class::Image },
     { "object.generic",                     Class::Generic }
-};
+}};
 
 ADD_ENUM_MAP(Property, s_propertyNames)
 ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)

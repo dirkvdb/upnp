@@ -23,7 +23,7 @@ namespace upnp
 
 using namespace AVTransport;
 
-constexpr std::tuple<const char*, Action> s_actionNames[] {
+constexpr EnumMap<Action> s_actionNames {{
     { "SetAVTransportURI",              Action::SetAVTransportURI },
     { "SetNextAVTransportURI",          Action::SetNextAVTransportURI },
     { "GetMediaInfo",                   Action::GetMediaInfo },
@@ -56,9 +56,9 @@ constexpr std::tuple<const char*, Action> s_actionNames[] {
     { "SetStaticPlaylist",              Action::SetStaticPlaylist },
     { "SetStreamingPlaylist",           Action::SetStreamingPlaylist },
     { "GetPlaylistInfo",                Action::GetPlaylistInfo }
-};
+}};
 
-constexpr std::tuple<const char*, Variable> s_variableNames[] {
+constexpr EnumMap<Variable> s_variableNames {{
     { "TransportState",                        Variable::TransportState },
     { "TransportStatus",                       Variable::TransportStatus },
     { "PlaybackStorageMedium",                 Variable::PlaybackStorageMedium },
@@ -109,9 +109,9 @@ constexpr std::tuple<const char*, Variable> s_variableNames[] {
     { "A_ARG_TYPE_PlaylistType",               Variable::ArgumentTypePlaylistType },
     { "A_ARG_TYPE_PlaylistInfo",               Variable::ArgumentTypePlaylistInfo },
     { "A_ARG_TYPE_PlaylistStartObjID",         Variable::ArgumentTypePlaylistStartObjID }
-};
+}};
 
-constexpr std::tuple<const char*, State> s_stateNames[] {
+constexpr EnumMap<State> s_stateNames {{
     { "STOPPED",             State::Stopped },
     { "PLAYING",             State::Playing },
     { "TRANSITIONING",       State::Transitioning },
@@ -119,36 +119,36 @@ constexpr std::tuple<const char*, State> s_stateNames[] {
     { "PAUSED_RECORDING",    State::PausedRecording },
     { "RECORDING",           State::Recording },
     { "NO_MEDIA_PRESENT",    State::NoMediaPresent }
-};
+}};
 
-constexpr std::tuple<const char*, PlaylistType> s_playlistTypeNames[] {
+constexpr EnumMap<PlaylistType> s_playlistTypeNames {{
     {"Static",               PlaylistType::Static },
     {"StaticPIContents",     PlaylistType::StaticPIContents },
     {"Streaming",            PlaylistType::Streaming }
-};
+}};
 
-constexpr std::tuple<const char*, PlaylistState> s_playlistStateNames[] {
+constexpr EnumMap<PlaylistState> s_playlistStateNames {{
     { "Idle",           PlaylistState::Idle },
     { "Ready",          PlaylistState::Ready },
     { "Active",         PlaylistState::Active },
     { "Incomplete",     PlaylistState::Incomplete }
-};
+}};
 
-constexpr std::tuple<const char*, PlaylistStep> s_playlistStepNames[] {
+constexpr EnumMap<PlaylistStep> s_playlistStepNames {{
     { "Initial",                    PlaylistStep::Initial },
     { "Continue",                   PlaylistStep::Continue },
     { "Stop",                       PlaylistStep::Stop },
     { "Reset",                      PlaylistStep::Reset },
     { "Replace",                    PlaylistStep::Replace }
-};
+}};
 
-constexpr std::tuple<const char*, CurrentMediaCategory> s_curMediaCategoryNames[] {
+constexpr EnumMap<CurrentMediaCategory> s_curMediaCategoryNames {{
     { "NO_MEDIA",                   CurrentMediaCategory::NoMedia },
     { "TRACK_AWARE",                CurrentMediaCategory::TrackAware },
     { "TRACK_UNAWARE",              CurrentMediaCategory::TrackUnaware }
-};
+}};
 
-constexpr std::tuple<const char*, DRMState> s_drmStateNames[] {
+constexpr EnumMap<DRMState> s_drmStateNames {{
     { "OK",                         DRMState::Ok },
     { "UNKNOWN",                    DRMState::DRMUnknown },
     { "PROCESSING_CONTENT_KEY",     DRMState::ProcessingContentKey },
@@ -161,14 +161,14 @@ constexpr std::tuple<const char*, DRMState> s_drmStateNames[] {
     { "LICENSE_DENIED",             DRMState::LicenseDenied },
     { "LICENSE_EXPIRED",            DRMState::LicenseExpired },
     { "LICENSE_INSUFFICIENT",       DRMState::LicenseInsufficient }
-};
+}};
 
-constexpr std::tuple<const char*, Status> s_statusNames[] {
+constexpr EnumMap<Status> s_statusNames {{
     { "OK",                         Status::Ok },
     { "ERROR_OCCURRED",             Status::Error }
-};
+}};
 
-constexpr std::tuple<const char*, PlayMode> s_playModeNames[] {
+constexpr EnumMap<PlayMode> s_playModeNames {{
     { "NORMAL",           PlayMode::Normal },
     { "SHUFFLE",          PlayMode::Shuffle },
     { "REPEAT_ONE",       PlayMode::RepeatOne },
@@ -176,9 +176,9 @@ constexpr std::tuple<const char*, PlayMode> s_playModeNames[] {
     { "RANDOM",           PlayMode::Random },
     { "DIRECT_1",         PlayMode::Direct },
     { "INTRO",            PlayMode::Intro }
-};
+}};
 
-constexpr std::tuple<const char*, SeekMode> s_seekModeNames[] {
+constexpr EnumMap<SeekMode> s_seekModeNames {{
     { "TRACK_NR",        SeekMode::TrackNumber },
     { "ABS_TIME",        SeekMode::AbsoluteTime },
     { "REL_TIME",        SeekMode::RelativeTime },
@@ -189,7 +189,7 @@ constexpr std::tuple<const char*, SeekMode> s_seekModeNames[] {
     { "REL_TAPE-INDEX",  SeekMode::RelativeTapeIndex },
     { "FRAME",           SeekMode::Frame },
     { "REL_FRAME",       SeekMode::RelativeFrame }
-};
+}};
 
 ADD_ENUM_MAP(Action, s_actionNames)
 ADD_ENUM_MAP(Variable, s_variableNames)

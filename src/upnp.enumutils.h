@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <array>
 #include <tuple>
 #include <type_traits>
 
@@ -25,37 +26,123 @@ namespace upnp
 {
 
 template <typename EnumType>
-using EnumMap = std::tuple<const char*, EnumType>;
-
-template <typename EnumType>
 constexpr auto enum_value(EnumType e)
 {
     return static_cast<typename std::underlying_type_t<EnumType>>(e);
 }
 
-template<typename T>
-constexpr const std::tuple<const char*, T>* lut()
+template<typename EnumType>
+using IfEndsWithCount = typename std::enable_if_t<std::is_integral<decltype(enum_value(EnumType::EnumCount))>::value, EnumType>;
+
+template<typename EnumType>
+using IfEndsWithUnknown = typename std::enable_if_t<std::is_integral<decltype(enum_value(EnumType::Unknown))>::value, EnumType>;
+
+template <typename EnumType>
+constexpr std::underlying_type_t<IfEndsWithCount<EnumType>> enum_count()
 {
-    static_assert(!std::is_enum<T>::value, "No lookup table provided for type");
-    return nullptr;
+    return enum_value(EnumType::EnumCount);
 }
 
-template<typename EnumType>
-using IfEndsWithCount = typename std::enable_if_t<std::is_integral<decltype(enum_value(EnumType::EnumCount))>::value>;
+template <typename EnumType>
+constexpr std::underlying_type_t<IfEndsWithUnknown<EnumType>> enum_count()
+{
+    return enum_value(EnumType::Unknown);
+}
+
+template <typename EnumType>
+using EnumMap = std::array<std::tuple<const char*, EnumType>, enum_count<EnumType>()>;
+
+template <typename EnumType, EnumType endElem>
+using EnumMapEndsWith = std::array<std::tuple<const char*, EnumType>, enum_value<EnumType>(endElem) + 1>;
 
 template<typename EnumType>
-using IfEndsWithUnknown = typename std::enable_if_t<std::is_integral<decltype(enum_value(EnumType::Unknown))>::value>;
+constexpr const EnumMap<EnumType>& lut()
+{
+    static_assert(!std::is_enum<EnumType>::value, "No lookup table provided for type");
+    return nullptr;
+}
 
 namespace details
 {
 
-template <typename EnumType, std::underlying_type_t<EnumType> Count>
+template <typename EnumType, typename Cb>
+constexpr EnumType enum_cast(Cb&& cb)
+{
+    auto& l = lut<EnumType>();
+    auto iter = std::find_if(l.begin(), l.end(), [&] (auto& entry) {
+        return cb(std::get<0>(entry));
+    });
+
+    return iter == l.end() ? static_cast<EnumType>(l.size()) : std::get<1>(*iter);
+}
+
+template <typename EnumType>
+constexpr EnumType enum_cast(const char* data)
+{
+    return enum_cast<EnumType>([=] (const char* value) {
+        return strcmp(value, data) == 0;
+    });
+}
+
+template <typename EnumType>
+constexpr EnumType enum_cast(const char* data, size_t dataSize)
+{
+    return enum_cast<EnumType>([=] (const char* value) {
+        return strncmp(value, data, dataSize) == 0;
+    });
+}
+
+}
+
+template <typename EnumType>
+constexpr IfEndsWithCount<EnumType> enum_cast(const char* data, size_t dataSize)
+{
+    auto value = details::enum_cast<EnumType>(data, dataSize);
+    if (value == EnumType::EnumCount)
+    {
+        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(data, dataSize));
+    }
+
+    return value;
+}
+
+template <typename EnumType>
+constexpr IfEndsWithCount<EnumType> enum_cast(const char* data)
+{
+    auto value = details::enum_cast<EnumType>(data);
+    if (value == EnumType::EnumCount)
+    {
+        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), data);
+    }
+
+    return value;
+}
+
+template <typename EnumType>
+constexpr IfEndsWithUnknown<EnumType> enum_cast(const char* data, size_t dataSize)
+{
+    return details::enum_cast<EnumType>(data, dataSize);
+}
+
+template <typename EnumType>
+constexpr IfEndsWithUnknown<EnumType> enum_cast(const char* data)
+{
+    return details::enum_cast<EnumType>(data);
+}
+
+template <typename EnumType>
+constexpr const char* string_cast(EnumType value) noexcept
+{
+    return std::get<0>(lut<EnumType>()[enum_value(value)]);
+}
+
+template <typename EnumType>
 constexpr bool enumCorrectNess()
 {
-    for (decltype(Count) i = 0; i < Count; ++i)
+    for (size_t i = 0; i < lut<EnumType>().size(); ++i)
     {
         // Check that the enums appear in the correct order
-        if (std::get<1>(lut<EnumType>()[i]) != static_cast<EnumType>(i))
+        if (std::get<1>(lut<EnumType>().at(i)) != static_cast<EnumType>(i))
         {
             return false;
         }
@@ -64,116 +151,7 @@ constexpr bool enumCorrectNess()
     return true;
 }
 
-template <typename EnumType, std::underlying_type_t<EnumType> Count>
-constexpr auto fromString(const char* data)
-{
-    for (decltype(Count) i = 0; i < Count; ++i)
-    {
-        if (strcmp(std::get<0>(lut<EnumType>()[i]), data) == 0)
-        {
-            return static_cast<EnumType>(i);
-        }
-    }
-
-    return Count;
-}
-
-template <typename EnumType, std::underlying_type_t<EnumType> Count>
-constexpr auto fromString(const char* data, size_t dataSize)
-{
-    for (decltype(Count) i = 0; i < Count; ++i)
-    {
-        if (strncmp(std::get<0>(lut<EnumType>()[i]), data, dataSize) == 0)
-        {
-            return i;
-        }
-    }
-
-    return Count;
-}
-
-template <typename EnumType, int Count>
-constexpr const char* toString(EnumType value) noexcept
-{
-    assert(enum_value(value) < Count);
-    return std::get<0>(lut<EnumType>()[enum_value(value)]);
-}
-
-template <typename EnumType>
-constexpr EnumType handleFromStringUnknown(std::underlying_type_t<EnumType> index) noexcept
-{
-    if (index == enum_value(EnumType::Unknown))
-    {
-        return EnumType::Unknown;
-    }
-
-    return static_cast<EnumType>(index);
-}
-
-}
-
-template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr EnumType enum_cast(const char* data, size_t dataSize)
-{
-    auto index = details::fromString<EnumType, enum_value(EnumType::EnumCount)>(data, dataSize);
-    if (index == enum_value(EnumType::EnumCount))
-    {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(data, dataSize));
-    }
-
-    return static_cast<EnumType>(index);
-}
-
-template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr EnumType enum_cast(const char* data)
-{
-    auto index = details::fromString<EnumType, enum_value(EnumType::EnumCount)>(data);
-    if (index == enum_value(EnumType::EnumCount))
-    {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), data);
-    }
-
-    return static_cast<EnumType>(index);
-}
-
-template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr EnumType enum_cast(const char* data, size_t dataSize)
-{
-    return details::handleFromStringUnknown<EnumType>(details::fromString<EnumType, enum_value(EnumType::Unknown)>(data, dataSize));
-}
-
-template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr EnumType enum_cast(const char* data)
-{
-    return details::handleFromStringUnknown<EnumType>(details::fromString<EnumType, enum_value(EnumType::Unknown)>(data));
-}
-
-template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr const char* string_cast(EnumType value) noexcept
-{
-    return details::toString<EnumType, enum_value(EnumType::EnumCount)>(value);
-}
-
-template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr const char* string_cast(EnumType value) noexcept
-{
-    return details::toString<EnumType, enum_value(EnumType::Unknown)>(value);
-}
-
-template <typename EnumType, IfEndsWithCount<EnumType>* = nullptr>
-constexpr bool enumCorrectNess()
-{
-    return details::enumCorrectNess<EnumType, enum_value(EnumType::EnumCount)>();
-}
-
-template <typename EnumType, IfEndsWithUnknown<EnumType>* = nullptr>
-constexpr bool enumCorrectNess()
-{
-    return details::enumCorrectNess<EnumType, enum_value(EnumType::Unknown)>();
-}
-
 #define ADD_ENUM_MAP(enumType, lutVar) \
-    template<> constexpr const std::tuple<const char*, enumType>* lut<enumType>() { return lutVar; } \
+    template<> constexpr const EnumMap<enumType>& lut<enumType>() { return lutVar; } \
     static_assert(enumCorrectNess<enumType>(), #enumType " enum converion not correctly ordered or missing entries");
-
 }

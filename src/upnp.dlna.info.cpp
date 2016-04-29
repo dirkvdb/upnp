@@ -7,7 +7,7 @@
 //
 
 #include "upnp/upnp.dlna.info.h"
-#include "upnp.enumutils.h"
+#include "upnp.enumutils2.h"
 
 #include <cstring>
 
@@ -16,16 +16,14 @@ namespace upnp
 
 using namespace dlna;
 
-constexpr EnumMap<ProfileId> s_profileIdNames[] {
+static constexpr EnumMap<ProfileId> s_profileIdNames {{
     { "JPEG_TN", ProfileId::JpegThumbnail },
     { "JPEG_SM", ProfileId::JpegSmall },
     { "JPEG_MED", ProfileId::JpegMedium },
     { "JPEG_LRG", ProfileId::JpegLarge }
-};
+}};
 
 ADD_ENUM_MAP(ProfileId, s_profileIdNames)
-
-static_assert(std::is_integral<decltype(enum_value(ProfileId::Unknown))>::value, "Oops");
 
 ProfileId dlna::profileIdFromString(const char* data, size_t size)
 {
