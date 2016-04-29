@@ -56,9 +56,9 @@ ADD_ENUM_MAP(Action, s_actionNames)
 ADD_ENUM_MAP(Variable, s_variableNames)
 ADD_ENUM_MAP(BrowseFlag, s_browseFlagNames)
 
-Action ContentDirectory::actionFromString(gsl::span<const char> data)
+Action ContentDirectory::actionFromString(gsl::cstring_span<> data)
 {
-    return enum_cast<Action>(data.data(), data.size());
+    return enum_cast<Action>(data);
 }
 
 const char* ContentDirectory::actionToString(Action value) noexcept
@@ -66,9 +66,9 @@ const char* ContentDirectory::actionToString(Action value) noexcept
     return string_cast(value);
 }
 
-Variable ContentDirectory::variableFromString(gsl::span<const char> data)
+Variable ContentDirectory::variableFromString(gsl::cstring_span<> data)
 {
-    return enum_cast<Variable>(data.data(), data.size());
+    return enum_cast<Variable>(data);
 }
 
 const char* ContentDirectory::variableToString(Variable value) noexcept
@@ -76,9 +76,9 @@ const char* ContentDirectory::variableToString(Variable value) noexcept
     return string_cast(value);
 }
 
-BrowseFlag browseFlagFromString(gsl::span<const char> data)
+BrowseFlag browseFlagFromString(gsl::cstring_span<> data)
 {
-    return enum_cast<BrowseFlag>(data.data(), data.size());
+    return enum_cast<BrowseFlag>(data);
 }
 
 std::string browseFlagToString(BrowseFlag value) noexcept

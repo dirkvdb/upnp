@@ -87,14 +87,14 @@ ADD_ENUM_MAP(Property, s_propertyNames)
 ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)
 ADD_ENUM_MAP(Class, s_classNames)
 
-Property propertyFromString(const char* data, size_t dataSize)
+Property propertyFromString(const char* data, size_t size)
 {
-    return enum_cast<Property>(data, dataSize);
+    return enum_cast<Property>(gsl::cstring_span<>(data, size));
 }
 
 Property propertyFromString(const std::string& value)
 {
-    return enum_cast<Property>(value.data(), value.size());
+    return enum_cast<Property>(value);
 }
 
 const char* toString(Property value) noexcept
@@ -104,7 +104,7 @@ const char* toString(Property value) noexcept
 
 ServiceType serviceTypeFromString(const std::string& value)
 {
-    return enum_cast<ServiceType>(value.data(), value.size());
+    return enum_cast<ServiceType>(value);
 }
 
 const char* serviceTypeToTypeString(ServiceType type)

@@ -203,9 +203,9 @@ ADD_ENUM_MAP(Status, s_statusNames)
 ADD_ENUM_MAP(PlayMode, s_playModeNames)
 ADD_ENUM_MAP(SeekMode, s_seekModeNames)
 
-Action AVTransport::actionFromString(gsl::span<const char> value)
+Action AVTransport::actionFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Action>(value.data(), value.size());
+    return enum_cast<Action>(value);
 }
 
 const char* AVTransport::actionToString(Action value)
@@ -213,9 +213,9 @@ const char* AVTransport::actionToString(Action value)
     return string_cast(value);
 }
 
-Variable AVTransport::variableFromString(gsl::span<const char> value)
+Variable AVTransport::variableFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Variable>(value.data(), value.size());
+    return enum_cast<Variable>(value);
 }
 
 const char* AVTransport::variableToString(Variable value)
@@ -223,19 +223,19 @@ const char* AVTransport::variableToString(Variable value)
     return string_cast(value);
 }
 
-State AVTransport::stateFromString(gsl::span<const char> value)
+State AVTransport::stateFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<State>(value.data(), value.size());
+    return enum_cast<State>(value);
 }
 
-PlaylistType AVTransport::playlistTypeFromString(gsl::span<const char> value)
+PlaylistType AVTransport::playlistTypeFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<PlaylistType>(value.data(), value.size());
+    return enum_cast<PlaylistType>(value);
 }
 
-PlaylistStep AVTransport::playlistStepFromString(gsl::span<const char> value)
+PlaylistStep AVTransport::playlistStepFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<PlaylistStep>(value.data(), value.size());
+    return enum_cast<PlaylistStep>(value);
 }
 
 const char* AVTransport::toString(State value)
@@ -268,9 +268,9 @@ const char* AVTransport::toString(PlaylistState value)
     return string_cast(value);
 }
 
-Status AVTransport::statusFromString(gsl::span<const char> value)
+Status AVTransport::statusFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Status>(value.data(), value.size());
+    return enum_cast<Status>(value);
 }
 
 const char* AVTransport::toString(Status value)
@@ -278,9 +278,9 @@ const char* AVTransport::toString(Status value)
     return string_cast(value);
 }
 
-SeekMode AVTransport::seekModeFromString(gsl::span<const char> value)
+SeekMode AVTransport::seekModeFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<SeekMode>(value.data(), value.size());
+    return enum_cast<SeekMode>(value);
 }
 
 const char* AVTransport::toString(SeekMode value)
@@ -288,9 +288,9 @@ const char* AVTransport::toString(SeekMode value)
     return string_cast(value);
 }
 
-PlayMode AVTransport::playModeFromString(gsl::span<const char> value)
+PlayMode AVTransport::playModeFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<PlayMode>(value.data(), value.size());
+    return enum_cast<PlayMode>(value);
 }
 
 const char* AVTransport::toString(PlayMode value)

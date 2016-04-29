@@ -7,7 +7,8 @@
 //
 
 #include "upnp/upnp.dlna.info.h"
-#include "upnp.enumutils2.h"
+#include "upnp.enumutils.h"
+#include "gsl/string_span.h"
 
 #include <cstring>
 
@@ -27,12 +28,12 @@ ADD_ENUM_MAP(ProfileId, s_profileIdNames)
 
 ProfileId dlna::profileIdFromString(const char* data, size_t size)
 {
-    return enum_cast<ProfileId>(data, size);
+    return enum_cast<ProfileId>(gsl::cstring_span<>(data, size));
 }
 
 ProfileId dlna::profileIdFromString(const std::string& profile)
 {
-    return enum_cast<ProfileId>(profile.data(), profile.size());
+    return enum_cast<ProfileId>(profile);
 }
 
 const char* dlna::toString(ProfileId profile) noexcept

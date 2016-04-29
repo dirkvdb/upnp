@@ -18,23 +18,23 @@
 
 #include "upnp/upnp.connectionmanager.types.h"
 
-#include "gsl/gsl.h"
+#include "gsl/string_span.h"
 
 namespace upnp
 {
 namespace ConnectionManager
 {
 
-Action actionFromString(gsl::span<const char> value);
+Action actionFromString(gsl::cstring_span<> value);
 const char* toString(Action action) noexcept;
 
-Variable variableFromString(gsl::span<const char> value);
+Variable variableFromString(gsl::cstring_span<> value);
 const char* toString(Variable var) noexcept;
 
-ConnectionStatus connectionStatusFromString(gsl::span<const char> value);
+ConnectionStatus connectionStatusFromString(gsl::cstring_span<> value);
 const char* toString(ConnectionStatus status) noexcept;
 
-Direction directionFromString(gsl::span<const char> value);
+Direction directionFromString(gsl::cstring_span<> value);
 const char* toString(Direction direction) noexcept;
 
 

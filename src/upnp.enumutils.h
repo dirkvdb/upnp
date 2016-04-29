@@ -22,6 +22,8 @@
 
 #include "upnp/upnptypes.h"
 
+#include "gsl/string_span.h"
+
 namespace upnp
 {
 
@@ -66,7 +68,7 @@ namespace details
 {
 
 template <typename EnumType, typename Cb>
-constexpr EnumType enum_cast(Cb&& cb)
+EnumType enum_cast(Cb&& cb)
 {
     auto& l = lut<EnumType>();
     auto iter = std::find_if(l.begin(), l.end(), [&] (auto& entry) {
@@ -76,58 +78,29 @@ constexpr EnumType enum_cast(Cb&& cb)
     return iter == l.end() ? static_cast<EnumType>(l.size()) : std::get<1>(*iter);
 }
 
+}
+
 template <typename EnumType>
-constexpr EnumType enum_cast(const char* data)
+IfEndsWithCount<EnumType> enum_cast(const gsl::cstring_span<>& span)
 {
-    return enum_cast<EnumType>([=] (const char* value) {
-        return strcmp(value, data) == 0;
+    auto value = details::enum_cast<EnumType>([&] (const char* value) {
+        return strncmp(value, span.data(), span.size()) == 0;
     });
-}
 
-template <typename EnumType>
-constexpr EnumType enum_cast(const char* data, size_t dataSize)
-{
-    return enum_cast<EnumType>([=] (const char* value) {
-        return strncmp(value, data, dataSize) == 0;
-    });
-}
-
-}
-
-template <typename EnumType>
-constexpr IfEndsWithCount<EnumType> enum_cast(const char* data, size_t dataSize)
-{
-    auto value = details::enum_cast<EnumType>(data, dataSize);
     if (value == EnumType::EnumCount)
     {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(data, dataSize));
+        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), std::string(span.data(), span.size()));
     }
 
     return value;
 }
 
 template <typename EnumType>
-constexpr IfEndsWithCount<EnumType> enum_cast(const char* data)
+IfEndsWithUnknown<EnumType> enum_cast(const gsl::cstring_span<>& span)
 {
-    auto value = details::enum_cast<EnumType>(data);
-    if (value == EnumType::EnumCount)
-    {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), data);
-    }
-
-    return value;
-}
-
-template <typename EnumType>
-constexpr IfEndsWithUnknown<EnumType> enum_cast(const char* data, size_t dataSize)
-{
-    return details::enum_cast<EnumType>(data, dataSize);
-}
-
-template <typename EnumType>
-constexpr IfEndsWithUnknown<EnumType> enum_cast(const char* data)
-{
-    return details::enum_cast<EnumType>(data);
+    return details::enum_cast<EnumType>([&] (const char* value) {
+        return strncmp(value, span.data(), span.size()) == 0;
+    });
 }
 
 template <typename EnumType>

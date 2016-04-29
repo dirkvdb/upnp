@@ -65,9 +65,9 @@ ADD_ENUM_MAP(Variable, s_variableNames)
 ADD_ENUM_MAP(ConnectionStatus, s_connStatusNames)
 ADD_ENUM_MAP(Direction, s_directionNames)
 
-Action ConnectionManager::actionFromString(gsl::span<const char> value)
+Action ConnectionManager::actionFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Action>(value.data(), value.size());
+    return enum_cast<Action>(value);
 }
 
 const char* ConnectionManager::toString(Action value) noexcept
@@ -75,9 +75,9 @@ const char* ConnectionManager::toString(Action value) noexcept
     return string_cast(value);
 }
 
-Variable ConnectionManager::variableFromString(gsl::span<const char> value)
+Variable ConnectionManager::variableFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Variable>(value.data(), value.size());
+    return enum_cast<Variable>(value);
 }
 
 const char* ConnectionManager::toString(Variable var) noexcept
@@ -85,9 +85,9 @@ const char* ConnectionManager::toString(Variable var) noexcept
     return string_cast(var);
 }
 
-ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::span<const char> value)
+ConnectionStatus ConnectionManager::connectionStatusFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<ConnectionStatus>(value.data(), value.size());
+    return enum_cast<ConnectionStatus>(value);
 }
 
 const char* ConnectionManager::toString(ConnectionStatus value) noexcept
@@ -95,9 +95,9 @@ const char* ConnectionManager::toString(ConnectionStatus value) noexcept
     return string_cast(value);
 }
 
-Direction ConnectionManager::directionFromString(gsl::span<const char> value)
+Direction ConnectionManager::directionFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Direction>(value.data(), value.size());
+    return enum_cast<Direction>(value);
 }
 
 const char* ConnectionManager::toString(Direction value) noexcept
