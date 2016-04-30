@@ -76,17 +76,17 @@ public:
     Service(IRootDevice& dev, IAVTransport& av);
     ~Service();
 
-    virtual xml::Document getSubscriptionResponse();
-    virtual ActionResponse onAction(const std::string& action, const xml::Document& request);
+    virtual std::string getSubscriptionResponse() override;
+    virtual ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
-    virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value);
+    virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value) override;
 
     static const char* toString(State);
     static const char* toString(PlayMode);
     static State stateFromString(const std::string& value);
 
 protected:
-    virtual std::string variableToString(Variable type) const;
+    virtual std::string variableToString(Variable type) const override;
     xml::Document getStateVariables(uint32_t id, const std::string& variableList) const;
 
 private:

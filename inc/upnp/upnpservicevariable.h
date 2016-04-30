@@ -34,7 +34,7 @@ public:
     , m_value(value)
     {
     }
-    
+
     bool operator==(const ServiceVariable& other) const
     {
         // If the variable name and attibute matches we are dealing with the same
@@ -43,44 +43,44 @@ public:
                 m_attribute.first == other.m_attribute.first &&
                 m_attribute.second == other.m_attribute.second;
     }
-    
-    std::string getName() const
+
+    const std::string& getName() const
     {
         return m_name;
     }
-    
-    std::string getValue() const
+
+    const std::string& getValue() const
     {
         return m_value;
     }
-    
-    std::pair<std::string, std::string> getAttribute() const
+
+    const std::pair<std::string, std::string>& getAttribute() const
     {
         return m_attribute;
     }
-    
+
     void addAttribute(const std::string& name, const std::string& value)
     {
         m_attribute = std::make_pair(name, value);
     }
-    
+
     bool operator!() const
     {
         return !m_name.empty();
     }
-    
+
     std::string toString() const
     {
         std::stringstream ss;
         ss << "<" << m_name << " val=\"" << m_value << "\"";
-        
+
         if (!m_attribute.first.empty())
         {
             ss << " " << m_attribute.first << "=\"" << m_attribute.second << "\"";
         }
-        
+
         ss << "/>";
-        
+
         return ss.str();
     }
 

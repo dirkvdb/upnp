@@ -59,7 +59,7 @@ class Service : public DeviceService<Variable>
 public:
     Service(IRootDevice& dev, IContentDirectory& cd);
 
-    xml::Document getSubscriptionResponse() override;
+    std::string getSubscriptionResponse() override;
     ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
 protected:

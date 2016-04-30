@@ -38,7 +38,7 @@ Service::Service(IRootDevice& dev, IContentDirectory& cd)
 {
 }
 
-xml::Document Service::getSubscriptionResponse()
+std::string Service::getSubscriptionResponse()
 {
     const std::string ns = "urn:schemas-upnp-org:event-1-0";
 
@@ -56,7 +56,7 @@ xml::Document Service::getSubscriptionResponse()
     log::debug(doc.toString());
 #endif
 
-    return doc;
+    return doc.toString();
 }
 
 ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)

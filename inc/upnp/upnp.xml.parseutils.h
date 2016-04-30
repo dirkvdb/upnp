@@ -21,6 +21,7 @@ namespace upnp
 {
 
 class Device;
+class ServiceVariable;
 
 namespace xml
 {
@@ -44,6 +45,12 @@ void parseEvent(const std::string& data, std::function<void(const std::string& v
 std::vector<StateVariable> parseServiceDescription(const std::string& contents, std::function<void(const std::string& action)> actionCb);
 
 std::string optionalChildValue(rapidxml_ns::xml_node<char>& node, const char* child);
+
+rapidxml_ns::xml_node<char>* createServiceVariablesElement(rapidxml_ns::xml_document<char>& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars);
+rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var);
+
+std::string toString(rapidxml_ns::xml_document<char>& doc);
+std::string toString(rapidxml_ns::xml_node<char>& node);
 
 template <typename T>
 inline T optionalStringToUnsignedNumeric(const std::string& str)

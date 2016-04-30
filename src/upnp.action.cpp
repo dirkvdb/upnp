@@ -20,6 +20,7 @@
 
 #include "rapidxml.hpp"
 #include "rapidxml_print.hpp"
+#include "upnp/upnp.xml.parseutils.h"
 
 namespace upnp
 {
@@ -80,10 +81,7 @@ void Action::addArgument(const std::string& name, const std::string& value)
 
 std::string Action::toString() const
 {
-
-    std::string result("<?xml version=\"1.0\"?>");
-    rapidxml_ns::print(std::back_inserter(result), m_pimpl->doc, print_no_indenting);
-    return result;
+    return xml::toString(m_pimpl->doc);
 }
 
 std::string Action::getName() const

@@ -9,8 +9,10 @@
 
 #include "upnp/upnputils.h"
 #include "upnp/upnpdevice.h"
+#include "upnp/upnpservicevariable.h"
 
 #include "rapidxml.hpp"
+#include "rapidxml_print.hpp"
 
 namespace upnp
 {
@@ -19,6 +21,9 @@ namespace xml
 
 using namespace utils;
 using namespace rapidxml_ns;
+
+static const char* s_valAtr         = "val";
+static const char* s_instanceIdNode = "InstanceID";
 
 namespace
 {
@@ -730,6 +735,48 @@ std::string optionalChildValue(xml_node<char>& node, const char* child)
         result.assign(std::string(childNode->value(), childNode->value_size()));
     }
 
+    return result;
+}
+
+rapidxml_ns::xml_node<char>* createServiceVariablesElement(rapidxml_ns::xml_document<char>& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars)
+{
+    auto* instance = doc.allocate_node(node_element, s_instanceIdNode);
+    auto* indexString = doc.allocate_string(std::to_string(instanceId).c_str());
+    instance->append_attribute(doc.allocate_attribute(s_valAtr, indexString));
+
+    for (auto& var : vars)
+    {
+        instance->append_node(serviceVariableToElement(doc, var));
+    }
+
+    return instance;
+}
+
+rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var)
+{
+    auto* varNode = doc.allocate_node(node_element, var.getName().c_str());
+    varNode->append_attribute(doc.allocate_attribute(s_valAtr, var.getValue().c_str()));
+
+    auto& attr = var.getAttribute();
+    if (!attr.first.empty())
+    {
+        varNode->append_attribute(doc.allocate_attribute(attr.first.c_str(), attr.second.c_str()));
+    }
+
+    return varNode;
+}
+
+std::string toString(xml_document<char>& doc)
+{
+    std::string result("<?xml version=\"1.0\"?>");
+    rapidxml_ns::print(std::back_inserter(result), doc, print_no_indenting);
+    return result;
+}
+
+std::string toString(xml_node<char>& node)
+{
+    std::string result;
+    rapidxml_ns::print(std::back_inserter(result), node, print_no_indenting);
     return result;
 }
 

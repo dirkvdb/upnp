@@ -18,13 +18,27 @@
 #include "upnp.avtransport.typeconversions.h"
 
 #include "utils/log.h"
-
-using namespace utils;
+#include "rapidxml.hpp"
+#include "rapidxml_print.hpp"
+#include "upnp/upnp.xml.parseutils.h"
 
 namespace upnp
 {
 namespace AVTransport
 {
+
+using namespace utils;
+using namespace rapidxml_ns;
+
+static const char* s_ns             = "urn:schemas-upnp-org:event-1-0";
+static const char* s_propertySet    = "e:propertyset";
+static const char* s_property       = "e:property";
+static const char* s_lastChange     = "LastChange";
+static const char* s_xmlnsAtr       = "xmlns:e";
+static const char* s_eventNode      = "Event";
+
+static const char* s_valAtr         = "val";
+static const char* s_instanceIdNode = "InstanceID";
 
 Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, ServiceType::AVTransport)
@@ -42,46 +56,40 @@ Service::~Service()
     m_LastChange.LastChangeEvent = nullptr;
 }
 
-xml::Document Service::getSubscriptionResponse()
+std::string Service::getSubscriptionResponse()
 {
-    const std::string ns = "urn:schemas-upnp-org:event-1-0";
+    xml_document<> doc;
+    auto* propertySet = doc.allocate_node(node_element, s_propertySet);
+    propertySet->append_attribute(doc.allocate_attribute(s_xmlnsAtr, s_ns));
+    auto* property = doc.allocate_node(node_element, s_property);
+    auto* lastChange = doc.allocate_node(node_element, s_lastChange);
 
-    xml::Document doc;
-    auto propertySet    = doc.createElement("e:propertyset");
-    auto property       = doc.createElement("e:property");
-    auto lastChange     = doc.createElement("LastChange");
-
-    propertySet.addAttribute("xmlns:e", ns);
-
-    auto event = doc.createElement("Event");
-    event.addAttribute("xmlns", serviceTypeToUrnMetadataString(m_type));
+    auto* event = doc.allocate_node(node_element, s_eventNode);
+    event->append_attribute(doc.allocate_attribute(s_xmlnsAtr, serviceTypeToUrnMetadataString(m_type)));
 
     for (auto& vars : m_variables)
     {
-        auto instance = doc.createElement("InstanceID");
-        instance.addAttribute("val", std::to_string(vars.first));
+        auto* instance = doc.allocate_node(node_element, s_instanceIdNode);
+        auto* indexString = doc.allocate_string(std::to_string(vars.first).c_str());
+        instance->append_attribute(doc.allocate_attribute(s_valAtr, indexString));
 
         for (auto& var : vars.second)
         {
-            auto elem = xml::utils::serviceVariableToElement(doc, var.second);
-            instance.appendChild(elem);
+            instance->append_node(xml::serviceVariableToElement(doc, var.second));
         }
 
-        event.appendChild(instance);
+        event->append_node(instance);
     }
 
-    auto lastChangeValue = doc.createNode(event.toString());
+    auto* eventString = doc.allocate_string(xml::encode(xml::toString(*event)).c_str());
+    auto* lastChangeValue = doc.allocate_node(node_element, s_eventNode);
 
-    lastChange.appendChild(lastChangeValue);
-    property.appendChild(lastChange);
-    propertySet.appendChild(property);
-    doc.appendChild(propertySet);
+    lastChange->append_node(lastChangeValue);
+    property->append_node(lastChange);
+    propertySet->append_node(property);
+    doc.append_node(propertySet);
 
-#ifdef DEBUG_AVTRANSPORT
-    log::debug(doc.toString());
-#endif
-
-    return doc;
+    return xml::toString(doc);
 }
 
 

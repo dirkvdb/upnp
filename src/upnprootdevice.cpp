@@ -86,8 +86,8 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
     auto dev = reinterpret_cast<RootDevice*>(pCookie);
 
     switch (eventType)
-	{
-		case UPNP_EVENT_SUBSCRIPTION_REQUEST:
+    {
+        case UPNP_EVENT_SUBSCRIPTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Subscription_Request*>(pEvent);
             if (request->UDN == nullptr || request->ServiceId == nullptr)
@@ -97,12 +97,12 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
             }
 
             dev->EventSubscriptionRequested(request);
-			break;
+            break;
         }
-		case UPNP_CONTROL_GET_VAR_REQUEST:
-			log::warn("Deprecated: UPNP_CONTROL_GET_VAR_REQUEST");
-			break;
-		case UPNP_CONTROL_ACTION_REQUEST:
+        case UPNP_CONTROL_GET_VAR_REQUEST:
+            log::warn("Deprecated: UPNP_CONTROL_GET_VAR_REQUEST");
+            break;
+        case UPNP_CONTROL_ACTION_REQUEST:
         {
             auto request = reinterpret_cast<Upnp_Action_Request*>(pEvent);
 
@@ -120,11 +120,11 @@ int RootDevice::upnpCallback(Upnp_EventType eventType, void* pEvent, void* pCook
                 strcpy(request->ErrStr, e.what());
             }
 
-			break;
+            break;
         }
-		default:
-			log::error("RootDevice: Unknown eventType {}", eventType);
-	}
+        default:
+            log::error("RootDevice: Unknown eventType {}", eventType);
+    }
 
     return 0;
 }

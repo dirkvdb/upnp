@@ -70,7 +70,7 @@ public:
     void setVolume(uint32_t instanceId, Channel channel, uint16_t volume);
     void setVolumeDB(uint32_t instanceId, Channel channel, int16_t volume);
 
-    virtual xml::Document getSubscriptionResponse() override;
+    virtual std::string getSubscriptionResponse() override;
     virtual ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value) override;
