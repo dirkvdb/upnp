@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 #include "utils/log.h"
 #include "upnp/upnp.uv.h"
@@ -89,8 +89,8 @@ TEST_F(UVTest, TcpTest)
 
     client.connect(uv::Address::createIp4("127.0.0.1", 8888), [&] (int32_t status) {
         EXPECT_EQ(0, status);
-        client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
+        client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t stat) {
+            EXPECT_EQ(0, stat);
             client.close(nullptr);
         });
     });
@@ -132,8 +132,8 @@ TEST_F(UVTest, TcpTestModifiedPort)
 
     client.connect(server.getSocketName(), [&] (int32_t status) {
         EXPECT_EQ(0, status);
-        client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
+        client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t stat) {
+            EXPECT_EQ(0, stat);
             client.close(nullptr);
         });
     });

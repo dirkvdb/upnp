@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"

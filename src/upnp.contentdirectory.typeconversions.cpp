@@ -76,17 +76,17 @@ const char* ContentDirectory::variableToString(Variable value) noexcept
     return enum_string(value);
 }
 
-BrowseFlag browseFlagFromString(gsl::cstring_span<> data)
+BrowseFlag ContentDirectory::browseFlagFromString(gsl::cstring_span<> data)
 {
     return enum_cast<BrowseFlag>(data);
 }
 
-std::string browseFlagToString(BrowseFlag value) noexcept
+std::string ContentDirectory::browseFlagToString(BrowseFlag value) noexcept
 {
     return enum_string(value);
 }
 
-SortType sortTypeFromString(char c)
+SortType ContentDirectory::sortTypeFromString(char c)
 {
     if (c == '-')   return SortType::Descending;
     if (c == '+')   return SortType::Ascending;

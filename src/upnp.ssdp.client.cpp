@@ -46,7 +46,7 @@ void Client::run(const std::string& address)
     m_socket.recv([=] (const std::string& msg) {
         try
         {
-            utils::log::debug("Read {}", msg);
+            //utils::log::debug("Read {}", msg);
             auto parsed = m_parser->parse(msg);
             assert(parsed == msg.size());
         }

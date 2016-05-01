@@ -650,7 +650,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
     xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(response.c_str());
 
-    auto& browseResultNode = doc.first_node_ref();
+    auto& browseResultNode = doc.first_node_ref().first_node_ref().first_node_ref();
     if (strncmp("BrowseResponse", browseResultNode.local_name(), browseResultNode.local_name_size()) != 0)
     {
         throw std::runtime_error("Failed to find BrowseResponse node in browse result");

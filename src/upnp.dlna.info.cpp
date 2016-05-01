@@ -9,6 +9,7 @@
 #include "upnp/upnp.dlna.info.h"
 #include "upnp.enumutils.h"
 #include "gsl/string_span.h"
+#include "utils/stringoperations.h"
 
 #include <cstring>
 
@@ -39,6 +40,28 @@ ProfileId dlna::profileIdFromString(const std::string& profile)
 const char* dlna::toString(ProfileId profile) noexcept
 {
     return enum_string(profile);
+}
+
+Info::Info(const std::string& info)
+: m_profileId(ProfileId::Unknown)
+{
+    auto tokens = utils::stringops::tokenize(info, ";");
+    for (auto& token : tokens)
+    {
+        auto pair = utils::stringops::tokenize(token, "=");
+        if (pair.size() == 2)
+        {
+            if (pair[0] == "DLNA.ORG_PN")
+            {
+                m_profileId = profileIdFromString(pair[1]);
+            }
+        }
+    }
+}
+    
+ProfileId Info::getProfileId() const
+{
+    return m_profileId;
 }
 
 }

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 #include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.factory.h"

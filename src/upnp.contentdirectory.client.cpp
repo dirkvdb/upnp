@@ -53,7 +53,9 @@ void addPropertyToList(const std::string& propertyName, std::vector<Property>& v
     }
     else
     {
+#ifdef DEBUG_CONTENT_BROWSING
         log::warn("Unknown property: {}", propertyName);
+#endif
     }
 }
 

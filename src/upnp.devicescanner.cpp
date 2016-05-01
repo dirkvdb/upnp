@@ -145,8 +145,6 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
 
 void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
-    log::debug("Device discovered: {}", info.location);
-
     auto deviceType = Device::stringToDeviceType(info.deviceType);
     if (m_types.find(deviceType) == m_types.end())
     {
@@ -185,6 +183,8 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
             return;
         }
     }
+
+    log::debug("Device discovered: {} {}", info.serviceType, info.location);
 
     auto location = info.location;
     log::debug("download xml: {}", location);

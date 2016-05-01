@@ -48,8 +48,8 @@ public:
     {
         client.connect(server.getAddress(), [&] (int32_t status) {
             EXPECT_EQ(0, status);
-            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t status) {
-                EXPECT_EQ(0, status);
+            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t stat) {
+                EXPECT_EQ(0, stat);
                 client.read([&] (ssize_t size, const uv::Buffer& buf) {
                     EXPECT_TRUE(size > 0);
                     EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
@@ -135,8 +135,8 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
     uint32_t readCount = 0;
     client.connect(server.getAddress(), [&] (int32_t status) {
         EXPECT_EQ(0, status);
-        client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
+        client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t stat) {
+            EXPECT_EQ(0, stat);
             client.read([&] (ssize_t size, const uv::Buffer& buf) {
                 if (readCount == 0)
                 {

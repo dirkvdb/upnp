@@ -67,7 +67,10 @@ void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(
     executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
                                        {"DesiredVolume", numericops::toString(value)} }, [cb] (int32_t status, std::string) {
-        cb(status);
+        if (cb)
+        {
+            cb(status);
+        }
    });
 }
 

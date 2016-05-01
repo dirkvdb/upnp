@@ -52,9 +52,9 @@ template <typename SvcType, typename StatusCbMock, typename VarType>
 class ServiceClientTestBase : public Test
 {
 protected:
-    ServiceClientTestBase(ServiceType type, const std::string& serviceXml)
+    ServiceClientTestBase(ServiceType type, const std::string& svcXml)
     : serviceType(type)
-    , serviceXml(serviceXml)
+    , serviceXml(svcXml)
     {
     }
 

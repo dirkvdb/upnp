@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 
 #include "upnp/upnp.avtransport.client.h"
 #include "upnp/upnp.renderingcontrol.client.h"

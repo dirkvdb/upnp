@@ -82,7 +82,7 @@ std::string Service::getSubscriptionResponse()
     }
 
     auto* eventString = doc.allocate_string(xml::encode(xml::toString(*event)).c_str());
-    auto* lastChangeValue = doc.allocate_node(node_element, s_eventNode);
+    auto* lastChangeValue = doc.allocate_node(node_element, s_eventNode, eventString);
 
     lastChange->append_node(lastChangeValue);
     property->append_node(lastChange);

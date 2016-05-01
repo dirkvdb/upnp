@@ -26,7 +26,8 @@ namespace upnp
 class Device;
 class IClient2;
 
-typedef std::function<void(const Item&)> ItemCb;
+using ItemCb = std::function<void(const Item&)>;
+using ItemsCb = std::function<void(const std::vector<Item>&)>;
 
 namespace ContentDirectory
 {
