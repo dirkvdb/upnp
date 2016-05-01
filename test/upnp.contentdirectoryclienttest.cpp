@@ -193,7 +193,7 @@ TEST_F(ContentDirectoryClientTest, browseMetadataItem)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse({}, generateItems(1, "object.item.audioItem")));
+        cb(200, wrapSoap(generateBrowseResponse({}, generateItems(1, "object.item.audioItem"))));
     }));
     
     Item item;
@@ -215,7 +215,7 @@ TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(1, "object.container"), {}));
+        cb(200, wrapSoap(generateBrowseResponse(generateContainers(1, "object.container"), {})));
     }));
     
     Item item;
@@ -239,8 +239,8 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
-                                       generateItems(size, "object.item.audioItem")));
+        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem"))));
     }));
 
     ActionResult result;
@@ -284,8 +284,8 @@ TEST_F(ContentDirectoryClientTest, search)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
-                                       generateItems(size, "object.item.audioItem")));
+        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem"))));
     }));
 
     ActionResult result;
@@ -328,8 +328,8 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
-                                       generateItems(size, "object.item.audioItem")));
+        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem"))));
     }));
 
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
@@ -354,8 +354,8 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
             EXPECT_EQ(expectedAction.toString(), action.toString());
-            cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
-                                           generateItems(size, "object.item.audioItem")));
+            cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
+                                                    generateItems(size, "object.item.audioItem"))));
         }));
 
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));

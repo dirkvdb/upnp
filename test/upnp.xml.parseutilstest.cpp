@@ -6,6 +6,7 @@
 #include "upnp/upnp.xml.parseutils.h"
 
 #include "testxmls.h"
+#include "testutils.h"
 #include "rapidxml_print.hpp"
 
 namespace upnp
@@ -379,7 +380,7 @@ TEST(XmlParseTest, GetEventValues)
 TEST(XmlParseTest, ParseBrowseResponseItems)
 {
     ContentDirectory::ActionResult result;
-    auto didlLite = xml::parseBrowseResult(testxmls::browseResponseItems, result);
+    auto didlLite = xml::parseBrowseResult(wrapSoap(testxmls::browseResponseItems), result);
 
     EXPECT_EQ(2u, result.numberReturned);
     EXPECT_EQ(12u, result.totalMatches);
@@ -443,7 +444,7 @@ TEST(XmlParseTest, ParseBrowseResponseItems)
 TEST(XmlParseTest, ParseBrowseResponseContainers)
 {
     ContentDirectory::ActionResult result;
-    auto didlLite = xml::parseBrowseResult(testxmls::browseResponseContainers, result);
+    auto didlLite = xml::parseBrowseResult(wrapSoap(testxmls::browseResponseContainers), result);
 
     EXPECT_EQ(2u, result.numberReturned);
     EXPECT_EQ(3u, result.totalMatches);

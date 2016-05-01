@@ -32,7 +32,6 @@ namespace
 
 inline void addResponseHeader(std::ostream& ss, const std::string& action, ServiceType type)
 {
-    ss << "<?xml version=\"1.0\"?>" << std::endl;
     ss << "<u:" << action << "Response xmlns:u=\"" << serviceTypeToUrnTypeString(type) << "\">" << std::endl;
 }
 
@@ -55,6 +54,18 @@ inline std::string generateActionResponse(const std::string& action, ServiceType
 
     addResponseFooter(ss, action);
 
+    return ss.str();
+}
+
+inline std::string wrapSoap(const std::string& actionResponse)
+{
+    std::stringstream ss;
+    ss << "<?xml version=\"1.0\"?>" << std::endl
+       << "<s:Envelope s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+       << "<s:Body>"
+       << actionResponse
+       << "</s:Body>"
+       << "</s:Envelope>";
     return ss.str();
 }
 
