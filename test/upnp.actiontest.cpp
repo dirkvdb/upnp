@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "upnp.action.h"
+#include "upnp/upnp.action.h"
 
 namespace upnp
 {
