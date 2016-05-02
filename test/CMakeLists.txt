@@ -54,6 +54,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.connectionmanagerclienttest.cpp
     upnp.contentdirectoryclienttest.cpp
 
+    upnp.mediaservertest.cpp
     #upnp.mediarenderertest.cpp
 )
 

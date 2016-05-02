@@ -120,11 +120,11 @@ public:
 
         return items;
     }
-    
+
     void expectItem(uint32_t index, const Item& item)
     {
         std::string indexStr = getIndexString(index);
-        
+
         EXPECT_EQ("Id" + indexStr,          item.getObjectId());
         EXPECT_EQ("ParentId",               item.getParentId());
         EXPECT_EQ("Title" + indexStr,       item.getTitle());
@@ -138,11 +138,11 @@ public:
         EXPECT_EQ("01/01/196" + indexStr,   item.getMetaData(Property::Date));
         EXPECT_EQ(indexStr,                 item.getMetaData(Property::TrackNumber));
     }
-    
+
     void expectContainer(uint32_t index, const Item& item)
     {
         std::string indexStr = getIndexString(index);
-        
+
         EXPECT_EQ("Id" + indexStr,          item.getObjectId());
         EXPECT_EQ("ParentId",               item.getParentId());
         EXPECT_EQ("Title" + indexStr,       item.getTitle());
@@ -189,13 +189,13 @@ TEST_F(ContentDirectoryClientTest, browseMetadataItem)
     expectedAction.addArgument("RequestedCount", "0");
     expectedAction.addArgument("SortCriteria", "");
     expectedAction.addArgument("StartingIndex", "0");
-    
+
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(generateBrowseResponse({}, generateItems(1, "object.item.audioItem"))));
+        cb(200, generateBrowseResponse({}, generateItems(1, "object.item.audioItem")));
     }));
-    
+
     Item item;
     EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
     serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
@@ -211,13 +211,13 @@ TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
     expectedAction.addArgument("RequestedCount", "0");
     expectedAction.addArgument("SortCriteria", "");
     expectedAction.addArgument("StartingIndex", "0");
-    
+
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(generateBrowseResponse(generateContainers(1, "object.container"), {})));
+        cb(200, generateBrowseResponse(generateContainers(1, "object.container"), {}));
     }));
-    
+
     Item item;
     EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
     serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
@@ -239,8 +239,8 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
-                                                generateItems(size, "object.item.audioItem"))));
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem")));
     }));
 
     ActionResult result;
@@ -280,12 +280,12 @@ TEST_F(ContentDirectoryClientTest, search)
     expectedAction.addArgument("SearchCriteria", "crit");
     expectedAction.addArgument("SortCriteria", "sort");
     expectedAction.addArgument("StartingIndex", "0");
-    
+
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
-                                                generateItems(size, "object.item.audioItem"))));
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem")));
     }));
 
     ActionResult result;
@@ -328,8 +328,8 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
-                                                generateItems(size, "object.item.audioItem"))));
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem")));
     }));
 
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
@@ -353,10 +353,10 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
     expectedAction.addArgument("StartingIndex", "0");
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
-            EXPECT_EQ(expectedAction.toString(), action.toString());
-            cb(200, wrapSoap(generateBrowseResponse(generateContainers(size, "object.container"),
-                                                    generateItems(size, "object.item.audioItem"))));
-        }));
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+                                                generateItems(size, "object.item.audioItem")));
+    }));
 
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
 

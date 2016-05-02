@@ -37,8 +37,10 @@ class MediaServer
 public:
     static const std::string rootId;
 
-    typedef std::function<void()> CompletedCb;
-    typedef std::function<void(const std::string&)> ErrorCb;
+    using CompletedCb = std::function<void()>;
+    using ErrorCb = std::function<void(const std::string&)>;
+    using ItemCb = std::function<void(const Item&)>;
+    using ItemsCb = std::function<void(const std::vector<Item>&)>;
 
     enum class SortMode
     {

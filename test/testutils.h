@@ -90,7 +90,7 @@ inline std::string generateBrowseResponse(const std::vector<upnp::Item>& contain
     for (auto& item : items)
     {
         ss << "&lt;item id=&quot;" << item.getObjectId() << "&quot; parentID=&quot;" << item.getParentId() << "&quot; restricted=&quot;1&quot;&gt;"
-        << "&lt;dc:title&gt;" << item.getTitle() << "&lt;/dc:title&gt;";
+           << "&lt;dc:title&gt;" << item.getTitle() << "&lt;/dc:title&gt;";
 
         for (auto& meta : item.getMetaData())
         {
@@ -102,10 +102,10 @@ inline std::string generateBrowseResponse(const std::vector<upnp::Item>& contain
 
     ss << "&lt;/DIDL-Lite&gt;";
 
-    return generateActionResponse("Browse", ServiceType::ContentDirectory, { std::make_pair("Result", ss.str()),
-                                                                             std::make_pair("NumberReturned", numericops::toString(items.size())),
-                                                                             std::make_pair("TotalMatches", numericops::toString(items.size())),
-                                                                             std::make_pair("UpdateID", "1")});
+    return wrapSoap(generateActionResponse("Browse", ServiceType::ContentDirectory, { std::make_pair("Result", ss.str()),
+                                                                                      std::make_pair("NumberReturned", numericops::toString(items.size())),
+                                                                                      std::make_pair("TotalMatches", numericops::toString(items.size())),
+                                                                                      std::make_pair("UpdateID", "1")}));
 }
 
 }
