@@ -53,16 +53,15 @@ public:
 
     Client(upnp::IClient2& client);
 
-    void setDevice(const std::shared_ptr<Device>& device) override;
-
     void abort();
-
-    const std::vector<Property>& getSearchCapabilities() const;
-    const std::vector<Property>& getSortCapabilities() const;
 
     void browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb);
     void browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
     void search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
+    
+    void querySearchCapabilities(std::function<void(int32_t, std::vector<Property>)> cb);
+    void querySortCapabilities(std::function<void(int32_t, std::vector<Property>)> cb);
+    void querySystemUpdateID(std::function<void(int32_t, std::string)> cb);
 
 protected:
     virtual std::chrono::seconds getSubscriptionTimeout() override;
@@ -70,16 +69,9 @@ protected:
 
 private:
     void browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb);
+    void parseCapabilities(int32_t status, const std::string& nodeName, const std::string& response, std::function<void(int32_t, std::vector<Property>)> cb);
 
-    void querySearchCapabilities();
-    void querySortCapabilities();
-    void querySystemUpdateID();
-
-    std::vector<Property>       m_searchCaps;
-    std::vector<Property>       m_sortCaps;
-    std::string                 m_systemUpdateId;
-
-    bool                        m_abort;
+    bool    m_abort;
 };
 
 }

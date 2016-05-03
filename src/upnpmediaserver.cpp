@@ -46,24 +46,46 @@ MediaServer::~MediaServer()
     m_abort = true;
 }
 
-void MediaServer::setDevice(const std::shared_ptr<Device>& device)
+void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb)
 {
-    try
-    {
-        m_contentDirectory.setDevice(device);
-        m_connectionMgr.setDevice(device);
-        m_device = device;
-
-        if (m_device->implementsService(ServiceType::AVTransport))
+    m_device = device;
+    m_contentDirectory.setDevice(m_device, [this, cb] (int32_t status) {
+        if (status != 200)
         {
-            m_avTransport = std::make_unique<AVTransport::Client>(m_client);
-            m_avTransport->setDevice(device);
+            cb(status);
+            return;
         }
-    }
-    catch (std::exception& e)
-    {
-        throw Exception("Failed to set server device: {}", e.what());
-    }
+    
+        m_connectionMgr.setDevice(m_device, [this, cb] (int32_t status) {
+            if (status != 200)
+            {
+                cb(status);
+                return;
+            }
+            
+            if (m_device->implementsService(ServiceType::AVTransport))
+            {
+                m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+                m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
+                    cb(status);
+                });
+            }
+            else
+            {
+                cb(status);
+            }
+        });
+    });
+    
+    
+//        try { querySearchCapabilities(); }
+//        catch (const std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
+//
+//        try { querySortCapabilities(); }
+//        catch (const std::exception& e) { log::error("Failed to obtain sort capabilities: {}", e.what()); }
+//
+//        try { querySystemUpdateID(); }
+//        catch (const std::exception& e) { log::error("Failed to obtain system update id: {}", e.what()); }
 }
 
 std::shared_ptr<Device> MediaServer::getDevice()

@@ -88,111 +88,75 @@ Client::Client(upnp::IClient2& client)
     ixmlRelaxParser(1);
 }
 
-void Client::setDevice(const std::shared_ptr<Device>& device)
-{
-    ServiceClientBase::setDevice(device);
-
-    m_searchCaps.clear();
-    m_sortCaps.clear();
-    m_systemUpdateId.clear();
-
-    try { querySearchCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
-
-    try { querySortCapabilities(); }
-    catch (std::exception& e) { log::error("Failed to obtain sort capabilities: {}", e.what()); }
-
-    try { querySystemUpdateID(); }
-    catch (std::exception& e) { log::error("Failed to obtain system update id: {}", e.what()); }
-}
-
 void Client::abort()
 {
     m_abort = true;
 }
 
-const std::vector<Property>& Client::getSearchCapabilities() const
+void Client::querySearchCapabilities(std::function<void(int32_t, std::vector<Property>)> cb)
 {
-    return m_searchCaps;
+    executeAction(Action::GetSearchCapabilities, [this, cb] (int32_t status, const std::string& response) {
+        parseCapabilities(status, "SearchCaps", response, cb);
+    });
 }
 
-const std::vector<Property>& Client::getSortCapabilities() const
+void Client::querySortCapabilities(std::function<void(int32_t, std::vector<Property>)> cb)
 {
-    return m_sortCaps;
+    executeAction(Action::GetSortCapabilities, [this, cb] (int32_t status, const std::string& response) {
+        parseCapabilities(status, "SortCaps", response, cb);
+    });
 }
 
-void Client::querySearchCapabilities()
+void Client::parseCapabilities(int32_t status, const std::string& nodeName, const std::string& response,
+                               std::function<void(int32_t, std::vector<Property>)> cb)
 {
-    executeAction(Action::GetSearchCapabilities, [this] (int32_t status, const std::string& response) {
-        if (status != 200)
-        {
-            return;
-        }
-
+    std::vector<Property> props;
+    
+    if (status == 200)
+    {
         try
         {
             xml_document<> doc;
             doc.parse<parse_non_destructive>(response.c_str());
-            auto& caps = doc.first_node_ref().first_node_ref("SearchCaps");
+            auto& caps = doc.first_node_ref().first_node_ref(nodeName.c_str());
 
             // TODO: don't fail if the search caps is an empty list
             for (auto& cap : stringops::tokenize(caps.value_string(), ','))
             {
-                addPropertyToList(cap, m_searchCaps);
+                addPropertyToList(cap, props);
             }
         }
         catch (std::exception& e)
         {
             log::error(e.what());
+            status = -1;
         }
-    });
+    }
+    
+    cb(status, props);
 }
 
-void Client::querySortCapabilities()
+void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
 {
-    executeAction(Action::GetSortCapabilities, [this] (int32_t status, const std::string& response) {
-        if (status != 200)
+    executeAction(Action::GetSystemUpdateID, [this, cb] (int32_t status, const std::string& response) {
+        std::string sysUpdateId;
+    
+        if (status == 200)
         {
-            return;
-        }
-
-        try
-        {
-            xml_document<> doc;
-            doc.parse<parse_non_destructive>(&response.front());
-            auto& caps = doc.first_node_ref().first_node_ref("SortCaps");
-
-            // TODO: don't fail if the search caps is an empty list
-            for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+            try
             {
-                addPropertyToList(cap, m_sortCaps);
+                xml_document<> doc;
+                doc.parse<parse_non_destructive>(&response.front());
+                sysUpdateId = doc.first_node_ref().first_node_ref("Id").value_string();
+            }
+            catch (std::exception& e)
+            {
+                log::error(e.what());
+                status = -1;
             }
         }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
-    });
-}
-
-void Client::querySystemUpdateID()
-{
-    executeAction(Action::GetSystemUpdateID, [this] (int32_t status, const std::string& response) {
-        if (status != 200)
-        {
-            return;
-        }
-
-        try
-        {
-            xml_document<> doc;
-            doc.parse<parse_non_destructive>(&response.front());
-            m_systemUpdateId = doc.first_node_ref().first_node_ref("Id").value_string();
-        }
-        catch (std::exception& e)
-        {
-            log::error(e.what());
-        }
+        
+        cb(status, sysUpdateId);
     });
 }
 
@@ -209,7 +173,9 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
         auto browseResult = xml::parseBrowseResult(response, res);
         if (browseResult.empty())
         {
-            throw Exception("Failed to browse meta data");
+            utils::log::error("Failed to browse meta data");
+            cb(-1, Item());
+            return;
         }
 
         #ifdef DEBUG_CONTENT_BROWSING

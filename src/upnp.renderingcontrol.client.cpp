@@ -104,21 +104,26 @@ std::chrono::seconds Client::getSubscriptionTimeout()
     return g_subscriptionTimeout;
 }
 
-void Client::processServiceDescription(const std::string& descriptionUrl)
+void Client::processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb)
 {
-    ServiceClientBase::processServiceDescription(descriptionUrl);
-
-    for (auto& variable : m_StateVariables)
-    {
-        if (variable.name == toString(Variable::Volume))
+    ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb] (int32_t status) {
+        if (status == 200)
         {
-            if (variable.valueRange)
+            for (auto& variable : m_StateVariables)
             {
-                m_minVolume = variable.valueRange->minimumValue;
-                m_maxVolume = variable.valueRange->maximumValue;
+                if (variable.name == toString(Variable::Volume))
+                {
+                    if (variable.valueRange)
+                    {
+                        m_minVolume = variable.valueRange->minimumValue;
+                        m_maxVolume = variable.valueRange->maximumValue;
+                    }
+                }
             }
         }
-    }
+        
+        cb(status);
+    });
 }
 
 void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables)

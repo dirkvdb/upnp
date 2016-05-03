@@ -48,12 +48,16 @@ public:
 
     virtual ~ServiceClientBase() = default;
 
-    virtual void setDevice(const std::shared_ptr<Device>& device)
+    virtual void setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb)
     {
         if (device->implementsService(getType()))
         {
             m_service = device->m_services[getType()];
-            processServiceDescription(m_service.m_scpdUrl);
+            processServiceDescription(m_service.m_scpdUrl, cb);
+        }
+        else
+        {
+            cb(-1);
         }
     }
 
@@ -96,9 +100,9 @@ public:
     }
 
 protected:
-    virtual void processServiceDescription(const std::string& descriptionUrl)
+    virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb)
     {
-        m_client.getFile(descriptionUrl, [this] (int32_t status, const std::string& contents) {
+        m_client.getFile(descriptionUrl, [this, cb] (int32_t status, const std::string& contents) {
             if (status == 200)
             {
                 try
@@ -117,8 +121,11 @@ protected:
                 catch (std::exception& e)
                 {
                     utils::log::error(e.what());
+                    status = -1;
                 }
             }
+            
+            cb(status);
         });
     }
 

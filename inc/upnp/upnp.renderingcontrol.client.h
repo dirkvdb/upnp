@@ -61,7 +61,7 @@ public:
 protected:
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
-    virtual void processServiceDescription(const std::string& descriptionUrl) override;
+    virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb) override;
 
     virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
     virtual void handleUPnPResult(int errorCode) override;

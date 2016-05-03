@@ -51,7 +51,7 @@ public:
     MediaServer(IClient2& client);
     ~MediaServer();
 
-    void setDevice(const std::shared_ptr<Device>& device);
+    void setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb);
     std::shared_ptr<Device> getDevice();
 
     void abort();
