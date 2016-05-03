@@ -46,8 +46,12 @@ void ControlPoint::setWebserver(WebServer& webServer)
 
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
 {
-    m_renderer.setDevice(dev);
-    m_renderer.useDefaultConnection();
+    m_renderer.setDevice(dev, [this] (int32_t status) {
+        if (status == 200)
+        {
+            m_renderer.useDefaultConnection();
+        }
+    });
 }
 
 MediaRenderer& ControlPoint::getActiveRenderer()

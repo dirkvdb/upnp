@@ -64,7 +64,6 @@ protected:
     virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb) override;
 
     virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
-    virtual void handleUPnPResult(int errorCode) override;
 
 private:
     uint32_t                    m_minVolume;

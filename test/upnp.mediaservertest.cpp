@@ -48,6 +48,7 @@ public:
     MediaServerTest()
     : m_client(factory::createClient())
     , m_server(*m_client)
+    , m_device(std::make_shared<Device>())
     {
     }
 

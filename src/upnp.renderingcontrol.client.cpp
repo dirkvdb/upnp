@@ -121,7 +121,7 @@ void Client::processServiceDescription(const std::string& descriptionUrl, std::f
                 }
             }
         }
-        
+
         cb(status);
     });
 }
@@ -134,16 +134,16 @@ void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std
     }
 }
 
-void Client::handleUPnPResult(int errorCode)
-{
-    if (errorCode == UPNP_E_SUCCESS) return;
+// void Client::handleUPnPResult(int errorCode)
+// {
+//     if (errorCode == UPNP_E_SUCCESS) return;
 
-    switch (errorCode)
-    {
-        case 702: throw Exception(errorCode, "Invalid instance id");
-        default: upnp::handleUPnPResult(errorCode);
-    }
-}
+//     switch (errorCode)
+//     {
+//         case 702: throw Exception(errorCode, "Invalid instance id");
+//         default: upnp::handleUPnPResult(errorCode);
+//     }
+// }
 
 }
 }

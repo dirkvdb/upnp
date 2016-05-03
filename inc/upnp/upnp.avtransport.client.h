@@ -67,8 +67,6 @@ protected:
     void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
 
     std::chrono::seconds getSubscriptionTimeout() override;
-
-    void handleUPnPResult(int errorCode) override;
 };
 
 }

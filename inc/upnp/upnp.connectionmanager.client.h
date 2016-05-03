@@ -53,8 +53,6 @@ public:
 
 protected:
     std::chrono::seconds getSubscriptionTimeout() override;
-
-    void handleUPnPResult(int errorCode) override;
 };
 
 }

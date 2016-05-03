@@ -55,14 +55,14 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
             cb(status);
             return;
         }
-    
+
         m_connectionMgr.setDevice(m_device, [this, cb] (int32_t status) {
             if (status != 200)
             {
                 cb(status);
                 return;
             }
-            
+
             if (m_device->implementsService(ServiceType::AVTransport))
             {
                 m_avTransport = std::make_unique<AVTransport::Client>(m_client);
@@ -74,18 +74,28 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
             {
                 cb(status);
             }
+
+            m_contentDirectory.querySearchCapabilities([this] (int32_t status, const auto& caps) {
+                if (status != 200)
+                {
+                    log::error("Failed to obtain search capabilities");
+                    return;
+                }
+
+                m_searchCaps = caps;
+            });
+
+            m_contentDirectory.querySortCapabilities([this] (int32_t status, const auto& caps) {
+                if (status != 200)
+                {
+                    log::error("Failed to obtain sort capabilities");
+                    return;
+                }
+
+                m_sortCaps = caps;
+            });
         });
     });
-    
-    
-//        try { querySearchCapabilities(); }
-//        catch (const std::exception& e) { log::error("Failed to obtain search capabilities: {}", e.what()); }
-//
-//        try { querySortCapabilities(); }
-//        catch (const std::exception& e) { log::error("Failed to obtain sort capabilities: {}", e.what()); }
-//
-//        try { querySystemUpdateID(); }
-//        catch (const std::exception& e) { log::error("Failed to obtain system update id: {}", e.what()); }
 }
 
 std::shared_ptr<Device> MediaServer::getDevice()
@@ -148,35 +158,26 @@ uint32_t MediaServer::getConnectionId() const
 
 bool MediaServer::canSearchForProperty(Property prop) const
 {
-    auto& props = m_contentDirectory.getSearchCapabilities();
-    if (std::find(props.begin(), props.end(), prop) == props.end())
-    {
-        return std::find(props.begin(), props.end(), Property::All) != props.end();
-    }
-
-    return true;
+    return m_searchCaps.end() != std::find_if(m_searchCaps.begin(), m_searchCaps.end(), [&] (auto& supportedProp) {
+        return (supportedProp == prop) || (supportedProp == Property::All);
+    });
 }
 
 bool MediaServer::canSortOnProperty(Property prop) const
 {
-    auto& props = m_contentDirectory.getSortCapabilities();
-
-    if (std::find(props.begin(), props.end(), prop) == props.end())
-    {
-        return std::find(props.begin(), props.end(), Property::All) != props.end();
-    }
-
-    return true;
+    return m_sortCaps.end() != std::find_if(m_sortCaps.begin(), m_sortCaps.end(), [&] (auto& supportedProp) {
+        return (supportedProp == prop) || (supportedProp == Property::All);
+    });
 }
 
 const std::vector<Property>& MediaServer::getSearchCapabilities() const
 {
-    return m_contentDirectory.getSearchCapabilities();
+    return m_searchCaps;
 }
 
 const std::vector<Property>& MediaServer::getSortCapabilities() const
 {
-    return m_contentDirectory.getSortCapabilities();
+    return m_sortCaps;
 }
 
 void MediaServer::getItemsInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)

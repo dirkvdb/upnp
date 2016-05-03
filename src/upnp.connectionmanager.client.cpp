@@ -206,23 +206,23 @@ std::chrono::seconds Client::getSubscriptionTimeout()
     return g_subscriptionTimeout;
 }
 
-void Client::handleUPnPResult(int errorCode)
-{
-    if (errorCode == UPNP_E_SUCCESS) return;
+// void Client::handleUPnPResult(int errorCode)
+// {
+//     if (errorCode == UPNP_E_SUCCESS) return;
 
-    switch (errorCode)
-    {
-        case 701: throw Exception(errorCode, "Incompatible protocol info");
-        case 702: throw Exception(errorCode, "Incompatible directions");
-        case 703: throw Exception(errorCode, "Insufficient network resources");
-        case 704: throw Exception(errorCode, "Local restrictions");
-        case 705: throw Exception(errorCode, "Access denied");
-        case 706: throw Exception(errorCode, "Invalid connection reference");
-        case 707: throw Exception(errorCode, "Managers are not part of the same network");
+//     switch (errorCode)
+//     {
+//         case 701: throw Exception(errorCode, "Incompatible protocol info");
+//         case 702: throw Exception(errorCode, "Incompatible directions");
+//         case 703: throw Exception(errorCode, "Insufficient network resources");
+//         case 704: throw Exception(errorCode, "Local restrictions");
+//         case 705: throw Exception(errorCode, "Access denied");
+//         case 706: throw Exception(errorCode, "Invalid connection reference");
+//         case 707: throw Exception(errorCode, "Managers are not part of the same network");
 
-        default: upnp::handleUPnPResult(errorCode);
-    }
-}
+//         default: upnp::handleUPnPResult(errorCode);
+//     }
+// }
 
 }
 }

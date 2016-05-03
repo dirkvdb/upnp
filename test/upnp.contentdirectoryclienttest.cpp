@@ -42,6 +42,7 @@ struct ContentDirectoryStatusCallbackMock
     MOCK_METHOD1(onStatus, void(int32_t));
     MOCK_METHOD2(onStatus, void(int32_t, Item));
     MOCK_METHOD2(onStatus, void(int32_t, ActionResult));
+    MOCK_METHOD2(onStatus, void(int32_t, std::vector<Property>));
 };
 
 class ContentDirectoryClientTest : public ServiceClientTestBase<ContentDirectory::Client, ContentDirectoryStatusCallbackMock, ContentDirectory::Variable>
@@ -49,21 +50,6 @@ class ContentDirectoryClientTest : public ServiceClientTestBase<ContentDirectory
 public:
     ContentDirectoryClientTest() : ServiceClientTestBase(ServiceType::ContentDirectory, testxmls::contentDirectoryServiceDescription)
     {
-    }
-
-    virtual void setDevice(std::shared_ptr<Device> device) override
-    {
-        // set a valid device
-        Action searchCaps("GetSearchCapabilities", g_controlUrl, ServiceType::ContentDirectory);
-        Action sortCaps("GetSortCapabilities", g_controlUrl, ServiceType::ContentDirectory);
-        Action sysUpdateId("GetSystemUpdateID", g_controlUrl, ServiceType::ContentDirectory);
-
-        InSequence seq;
-        EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
-        expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
-        expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
-        expectAction(sysUpdateId, { { "Id", "UpdateId" } });
-        serviceInstance->setDevice(device);
     }
 
     std::string getIndexString(uint32_t index)
@@ -161,14 +147,24 @@ public:
     }
 };
 
-TEST_F(ContentDirectoryClientTest, getSearchCapabilities)
+TEST_F(ContentDirectoryClientTest, querySearchCapabilities)
 {
-    EXPECT_THAT(std::vector<Property>({Property::Artist, Property::Title}), ContainerEq(serviceInstance->getSearchCapabilities()));
+    Action searchCaps("GetSearchCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+    expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
+
+    std::vector<Property> props = { Property::Artist, Property::Title };
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<std::vector<Property>>(ContainerEq(props))));
+    serviceInstance->querySearchCapabilities(checkStatusCallback<std::vector<Property>>());
 }
 
-TEST_F(ContentDirectoryClientTest, getSortCapabilities)
+TEST_F(ContentDirectoryClientTest, querySortCapabilities)
 {
-    EXPECT_THAT(std::vector<Property>({Property::Artist, Property::Title, Property::Genre}), serviceInstance->getSortCapabilities());
+    Action sortCaps("GetSortCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+    expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
+
+    std::vector<Property> props = {Property::Artist, Property::Title, Property::Genre};
+    EXPECT_CALL(statusMock, onStatus(200, Matcher<std::vector<Property>>(ContainerEq(props))));
+    serviceInstance->querySortCapabilities(checkStatusCallback<std::vector<Property>>());
 }
 
 TEST_F(ContentDirectoryClientTest, supportedActions)

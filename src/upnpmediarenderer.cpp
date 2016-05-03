@@ -129,42 +129,54 @@ std::shared_ptr<Device> MediaRenderer::getDevice()
     return m_device;
 }
 
-void MediaRenderer::setDevice(const std::shared_ptr<Device>& device)
+void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb)
 {
-    try
-    {
-        if (m_device)
+    // if (m_device)
+    // {
+    //     deactivateEvents();
+    // }
+
+    m_device = device;
+    m_connectionMgr.setDevice(m_device, [this, cb] (int32_t status) {
+        if (status != 200)
         {
-            deactivateEvents();
+            cb(status);
+            return;
         }
 
-        m_device = device;
-        m_connectionMgr.setDevice(device);
-        m_renderingControl.setDevice(device);
-
-        if (m_device->implementsService(ServiceType::AVTransport))
-        {
-            m_avTransport = std::make_unique<AVTransport::Client>(m_client);
-            m_avTransport->setDevice(device);
-        }
-
-        // reset state related data
-        m_connectionMgr.getProtocolInfo([this] (int32_t status, std::vector<ProtocolInfo> info) {
-            if (status == 200)
+        m_renderingControl.setDevice(m_device, [this, cb] (int32_t status) {
+            if (status != 200)
             {
-                m_protocolInfo = std::move(info);
-                // make sure m3u is supported
-                m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
-                resetData();
-                activateEvents();
-                DeviceChanged(m_device);
+                cb(status);
+                return;
             }
+
+            if (m_device->implementsService(ServiceType::AVTransport))
+            {
+                m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+                m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
+                    cb(status);
+                });
+            }
+            else
+            {
+                cb(status);
+            }
+
+            // reset state related data
+            m_connectionMgr.getProtocolInfo([this] (int32_t status, std::vector<ProtocolInfo> info) {
+                if (status == 200)
+                {
+                    m_protocolInfo = std::move(info);
+                    // make sure m3u is supported
+                    m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
+                    resetData();
+                    activateEvents();
+                    DeviceChanged(m_device);
+                }
+            });
         });
-    }
-    catch (std::exception& e)
-    {
-        throw Exception("Failed to set renderer device: {}", e.what());
-    }
+    });
 }
 
 bool MediaRenderer::supportsPlayback(const upnp::Item& item, Resource& suggestedResource) const

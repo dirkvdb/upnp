@@ -96,7 +96,9 @@ protected:
     {
         // set a valid device
         EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
-        serviceInstance->setDevice(device);
+        serviceInstance->setDevice(device, [] (int32_t status) {
+            EXPECT_EQ(200, status);
+        });
     }
 
     void subscribe()

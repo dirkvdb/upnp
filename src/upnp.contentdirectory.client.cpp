@@ -19,7 +19,6 @@
 #include "upnp.contentdirectory.typeconversions.h"
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnpdevice.h"
-#include "upnp/upnputils.h"
 
 #include <cassert>
 
@@ -85,7 +84,6 @@ Client::Client(upnp::IClient2& client)
 : ServiceClientBase(client)
 , m_abort(false)
 {
-    ixmlRelaxParser(1);
 }
 
 void Client::abort()
@@ -111,7 +109,7 @@ void Client::parseCapabilities(int32_t status, const std::string& nodeName, cons
                                std::function<void(int32_t, std::vector<Property>)> cb)
 {
     std::vector<Property> props;
-    
+
     if (status == 200)
     {
         try
@@ -132,7 +130,7 @@ void Client::parseCapabilities(int32_t status, const std::string& nodeName, cons
             status = -1;
         }
     }
-    
+
     cb(status, props);
 }
 
@@ -140,7 +138,7 @@ void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
 {
     executeAction(Action::GetSystemUpdateID, [this, cb] (int32_t status, const std::string& response) {
         std::string sysUpdateId;
-    
+
         if (status == 200)
         {
             try
@@ -155,7 +153,7 @@ void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
                 status = -1;
             }
         }
-        
+
         cb(status, sysUpdateId);
     });
 }
@@ -294,34 +292,34 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
                                     {"SortCriteria", sort} }, cb);
 }
 
-void Client::handleUPnPResult(int errorCode)
-{
-    if (errorCode == UPNP_E_SUCCESS) return;
+// void Client::handleUPnPResult(int errorCode)
+// {
+//     if (errorCode == UPNP_E_SUCCESS) return;
 
-    switch (errorCode)
-    {
-    case 701: throw Exception(errorCode, "No such object, the specified id is invalid");
-    case 702: throw Exception(errorCode, "Invalid CurrentTagValue, probably out of date");
-    case 703: throw Exception(errorCode, "Invalid NewTagValue, parameter is invalid");
-    case 704: throw Exception(errorCode, "Unable to delete a required tag");
-    case 705: throw Exception(errorCode, "UPdate read only tag not allowed");
-    case 706: throw Exception(errorCode, "Parameter Mismatch");
-    case 708: throw Exception(errorCode, "Unsupported or invalid search criteria");
-    case 709: throw Exception(errorCode, "Unsupported or invalid sort criteria");
-    case 710: throw Exception(errorCode, "No such container");
-    case 711: throw Exception(errorCode, "This is a restricted object");
-    case 712: throw Exception(errorCode, "Operation would result in bad metadata");
-    case 713: throw Exception(errorCode, "The parent object is restricted");
-    case 714: throw Exception(errorCode, "No such source resource");
-    case 715: throw Exception(errorCode, "Source resource access denied");
-    case 716: throw Exception(errorCode, "A transfer is busy");
-    case 717: throw Exception(errorCode, "No such file transfer");
-    case 718: throw Exception(errorCode, "No such destination resource");
-    case 719: throw Exception(errorCode, "Destination resource access denied");
-    case 720: throw Exception(errorCode, "Cannot process the request");
-    default: upnp::handleUPnPResult(errorCode);
-    }
-}
+//     switch (errorCode)
+//     {
+//     case 701: throw Exception(errorCode, "No such object, the specified id is invalid");
+//     case 702: throw Exception(errorCode, "Invalid CurrentTagValue, probably out of date");
+//     case 703: throw Exception(errorCode, "Invalid NewTagValue, parameter is invalid");
+//     case 704: throw Exception(errorCode, "Unable to delete a required tag");
+//     case 705: throw Exception(errorCode, "UPdate read only tag not allowed");
+//     case 706: throw Exception(errorCode, "Parameter Mismatch");
+//     case 708: throw Exception(errorCode, "Unsupported or invalid search criteria");
+//     case 709: throw Exception(errorCode, "Unsupported or invalid sort criteria");
+//     case 710: throw Exception(errorCode, "No such container");
+//     case 711: throw Exception(errorCode, "This is a restricted object");
+//     case 712: throw Exception(errorCode, "Operation would result in bad metadata");
+//     case 713: throw Exception(errorCode, "The parent object is restricted");
+//     case 714: throw Exception(errorCode, "No such source resource");
+//     case 715: throw Exception(errorCode, "Source resource access denied");
+//     case 716: throw Exception(errorCode, "A transfer is busy");
+//     case 717: throw Exception(errorCode, "No such file transfer");
+//     case 718: throw Exception(errorCode, "No such destination resource");
+//     case 719: throw Exception(errorCode, "Destination resource access denied");
+//     case 720: throw Exception(errorCode, "Cannot process the request");
+//     default: upnp::handleUPnPResult(errorCode);
+//     }
+// }
 
 std::chrono::seconds Client::getSubscriptionTimeout()
 {

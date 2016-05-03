@@ -71,7 +71,7 @@ public:
     MediaRenderer(const MediaRenderer&) = delete;
 
     std::shared_ptr<Device> getDevice();
-    void setDevice(const std::shared_ptr<Device>& device);
+    void setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb);
     bool supportsPlayback(const upnp::Item& item, Resource& suggestedResource) const;
 
     // Connection management

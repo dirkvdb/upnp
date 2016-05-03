@@ -111,6 +111,9 @@ private:
 
     bool                                    m_abort;
 
+    std::vector<Property>                   m_searchCaps;
+    std::vector<Property>                   m_sortCaps;
+
     CompletedCb                             m_completedCb;
     ErrorCb                                 m_errorCb;
 };

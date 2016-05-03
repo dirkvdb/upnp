@@ -124,7 +124,7 @@ protected:
                     status = -1;
                 }
             }
-            
+
             cb(status);
         });
     }
@@ -147,7 +147,6 @@ protected:
 
     virtual std::chrono::seconds getSubscriptionTimeout() = 0;
     virtual void handleStateVariableEvent(typename Traits::VariableType /*changedVariable*/, const std::map<typename Traits::VariableType, std::string>& /*variables*/) {}
-    virtual void handleUPnPResult(int errorCode) = 0;
 
     std::vector<StateVariable> m_StateVariables;
 
