@@ -33,6 +33,7 @@ ADD_EXECUTABLE(upnpframeworktest
     main.cpp
 
     testenvironment.h
+    upnpclientmock.h
 
     testxmls.h
     upnp.uvtest.cpp

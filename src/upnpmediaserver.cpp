@@ -67,33 +67,45 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
             {
                 m_avTransport = std::make_unique<AVTransport::Client>(m_client);
                 m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
-                    cb(status);
+                    if (status != 200)
+                    {
+                        cb(status);
+                        return;
+                    }
+                    
+                    queryCapabilities(cb);
                 });
             }
             else
             {
+                queryCapabilities(cb);
+            }
+        });
+    });
+}
+
+void MediaServer::queryCapabilities(std::function<void(int32_t)> cb)
+{
+    m_contentDirectory.querySearchCapabilities([this, cb] (int32_t status, const auto& caps) {
+        if (status != 200)
+        {
+            log::error("Failed to obtain search capabilities");
+            cb(status);
+            return;
+        }
+
+        m_searchCaps = caps;
+        
+        m_contentDirectory.querySortCapabilities([this, cb] (int32_t status, const auto& caps) {
+            if (status != 200)
+            {
+                log::error("Failed to obtain sort capabilities");
                 cb(status);
+                return;
             }
 
-            m_contentDirectory.querySearchCapabilities([this] (int32_t status, const auto& caps) {
-                if (status != 200)
-                {
-                    log::error("Failed to obtain search capabilities");
-                    return;
-                }
-
-                m_searchCaps = caps;
-            });
-
-            m_contentDirectory.querySortCapabilities([this] (int32_t status, const auto& caps) {
-                if (status != 200)
-                {
-                    log::error("Failed to obtain sort capabilities");
-                    return;
-                }
-
-                m_sortCaps = caps;
-            });
+            m_sortCaps = caps;
+            cb(status);
         });
     });
 }

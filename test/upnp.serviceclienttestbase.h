@@ -66,10 +66,6 @@ protected:
         service.m_eventSubscriptionURL  = g_subscriptionUrl;
         service.m_scpdUrl               = g_serviceDescriptionUrl;
 
-        EXPECT_CALL(client, loop())
-            .Times(AnyNumber())
-            .WillRepeatedly(ReturnRef(loop));
-
         serviceInstance = std::make_unique<SvcType>(client);
 
         auto device = std::make_shared<Device>();
@@ -142,7 +138,6 @@ protected:
     ServiceType                            serviceType;
     std::string                            serviceXml;
     std::unique_ptr<SvcType>               serviceInstance;
-    uv::Loop                               loop;
     std::function<void(SubscriptionEvent)> eventCb;
 
     StrictMock<Client2Mock>                client;

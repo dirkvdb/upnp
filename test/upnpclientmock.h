@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 
+#include "upnp/upnp.uv.h"
 #include "upnp/upnpclientinterface.h"
 #include "upnp/upnp.clientinterface.h"
 
@@ -51,6 +52,13 @@ public:
 class Client2Mock : public IClient2
 {
 public:
+    Client2Mock()
+    {
+        EXPECT_CALL(*this, loop())
+            .Times(AnyNumber())
+            .WillRepeatedly(ReturnRef(m_loop));
+    }
+    
     MOCK_METHOD0(initialize, void());
     MOCK_METHOD2(initialize, void(const std::string&, uint16_t));
     MOCK_METHOD0(uninitialize, void());
@@ -64,6 +72,9 @@ public:
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(int32_t status, std::string contents)>));
 
     MOCK_CONST_METHOD0(loop, uv::Loop&());
+    
+private:
+    uv::Loop m_loop;
 };
 
 }

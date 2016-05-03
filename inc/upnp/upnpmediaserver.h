@@ -88,6 +88,8 @@ public:
     ConnectionManager::Client& connectionManager();
 
 private:
+    void queryCapabilities(std::function<void(int32_t)> cb);
+    
     void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemsCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
     void handleSearchResult(const std::string& id, const std::string& criteria, int32_t status, uint32_t offset, const ContentDirectory::ActionResult& res, const ItemsCb& cb);
     void handleBrowseResult(ContentDirectory::Client::BrowseType type,

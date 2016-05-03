@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <future>
 
 using namespace utils;
 using namespace testing;
@@ -27,7 +28,9 @@ using namespace testing;
 #include "upnp/upnpitem.h"
 #include "upnp/upnp.factory.h"
 
+#include "testxmls.h"
 #include "testutils.h"
+#include "upnpclientmock.h"
 
 namespace upnp
 {
@@ -42,18 +45,63 @@ public:
     MOCK_METHOD1(onError, void(const std::string&));
 };
 
+namespace
+{
+
+void addServiceToDevice(Device& dev, ServiceType type, const std::string& scpUrl, const std::string& controlUrl)
+{
+    Service svc;
+    svc.m_type = type;
+    svc.m_scpdUrl = scpUrl;
+    svc.m_controlURL = controlUrl;
+    
+    dev.m_services.emplace(svc.m_type, svc);
+}
+
+}
+
 class MediaServerTest : public Test
 {
 public:
     MediaServerTest()
-    : m_client(factory::createClient())
-    , m_server(*m_client)
+    : m_server(m_client)
     , m_device(std::make_shared<Device>())
     {
+        std::promise<int32_t> promise;
+        auto fut = promise.get_future();
+        
+        addServiceToDevice(*m_device, ServiceType::ConnectionManager, "CMSCPUrl", "CMCurl");
+        addServiceToDevice(*m_device, ServiceType::ContentDirectory, "CDSCPUrl", "CDCurl");
+        
+        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(200, testxmls::connectionManagerServiceDescription));
+        EXPECT_CALL(m_client, getFile("CDSCPUrl", _)).WillOnce(InvokeArgument<1>(200, testxmls::contentDirectoryServiceDescription));
+        
+        InSequence seq;
+        Action searchCaps("GetSearchCapabilities", "CDCurl", ServiceType::ContentDirectory);
+        Action sortCaps("GetSortCapabilities", "CDCurl", ServiceType::ContentDirectory);
+        expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
+        expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
+        
+        m_server.setDevice(m_device, [&] (int32_t status) {
+            auto p = std::move(promise);
+            p.set_value(status);
+        });
+        
+        EXPECT_EQ(200, fut.get());
     }
-
+    
+    void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
+    {
+        using namespace ContentDirectory;
+        EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
+            EXPECT_EQ(expected.toString(), action.toString());
+            cb(200, generateActionResponse(expected.getName(), expected.getServiceType(), responseVars));
+        }));
+    }
+    
 protected:
-    std::unique_ptr<IClient2>   m_client;
+    Client2Mock                 m_client;
+    
     MediaServer                 m_server;
     std::shared_ptr<Device>     m_device;
 };
@@ -67,25 +115,16 @@ TEST_F(MediaServerTest, DiscoveredServices)
 
 TEST_F(MediaServerTest, SearchCapabilities)
 {
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Creator));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Date));
     EXPECT_TRUE(m_server.canSearchForProperty(Property::Title));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Album));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Actor));
     EXPECT_TRUE(m_server.canSearchForProperty(Property::Artist));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Class));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::Genre));
-    EXPECT_TRUE(m_server.canSearchForProperty(Property::RefId));
     EXPECT_FALSE(m_server.canSearchForProperty(Property::All));
 }
 
 TEST_F(MediaServerTest, SortCapabilities)
 {
-    EXPECT_TRUE(m_server.canSortOnProperty(Property::Date));
-    EXPECT_TRUE(m_server.canSortOnProperty(Property::Album));
+    EXPECT_TRUE(m_server.canSortOnProperty(Property::Artist));
     EXPECT_TRUE(m_server.canSortOnProperty(Property::Title));
-    EXPECT_TRUE(m_server.canSortOnProperty(Property::Class));
-    EXPECT_TRUE(m_server.canSortOnProperty(Property::TrackNumber));
+    EXPECT_TRUE(m_server.canSortOnProperty(Property::Genre));
     EXPECT_FALSE(m_server.canSortOnProperty(Property::All));
 }
 

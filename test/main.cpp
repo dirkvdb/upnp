@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    FLAGS_gmock_verbose = "error";
+    //FLAGS_gmock_verbose = "error";
     //g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
 
     InitGoogleMock(&argc, argv);
