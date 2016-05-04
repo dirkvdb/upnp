@@ -52,61 +52,6 @@ public:
     {
     }
 
-    std::string getIndexString(uint32_t index)
-    {
-        std::stringstream ss;
-        ss << std::setw(6) << std::setfill('0') << index;
-        return ss.str();
-    }
-
-    std::vector<Item> generateContainers(uint32_t count, const std::string& upnpClass)
-    {
-        std::vector<Item> containers;
-
-        for (uint32_t i = 0; i < count; ++i)
-        {
-            std::string index = getIndexString(i);
-            Item container("Id" + index, "Title" + index);
-            container.setParentId("ParentId");
-            container.setChildCount(i);
-
-            container.addMetaData(Property::Creator,        "Creator" + index);
-            container.addMetaData(Property::AlbumArt,       "AlbumArt" + index);
-            container.addMetaData(Property::Class,          upnpClass);
-            container.addMetaData(Property::Genre,          "Genre" + index);
-            container.addMetaData(Property::Artist,         "Artist" + index);
-
-            containers.push_back(container);
-        }
-
-        return containers;
-    }
-
-    std::vector<Item> generateItems(uint32_t count, const std::string& upnpClass)
-    {
-        std::vector<Item> items;
-
-        for (uint32_t i = 0; i < count; ++i)
-        {
-            std::string index = getIndexString(i);
-            Item item("Id" + index, "Title" + index);
-            item.setParentId("ParentId");
-
-            item.addMetaData(Property::Actor,           "Actor" + index);
-            item.addMetaData(Property::Album,           "Album" + index);
-            item.addMetaData(Property::AlbumArt,        "AlbumArt" + index);
-            item.addMetaData(Property::Class,           upnpClass);
-            item.addMetaData(Property::Genre,           "Genre" + index);
-            item.addMetaData(Property::Description,     "Description" + index);
-            item.addMetaData(Property::Date,            "01/01/196" + index);
-            item.addMetaData(Property::TrackNumber,     index);
-
-            items.push_back(item);
-        }
-
-        return items;
-    }
-
     void expectItem(uint32_t index, const Item& item)
     {
         std::string indexStr = getIndexString(index);
@@ -243,8 +188,8 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
     serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort", checkStatusCallback<ActionResult>());
 
-    EXPECT_EQ(size, result.totalMatches);
-    EXPECT_EQ(size, result.numberReturned);
+    EXPECT_EQ(size * 2, result.totalMatches);
+    EXPECT_EQ(size * 2, result.numberReturned);
 
     uint32_t containerCount = 0;
     uint32_t itemCount = 0;
@@ -288,8 +233,8 @@ TEST_F(ContentDirectoryClientTest, search)
     EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
     serviceInstance->search("ObjectId", "crit", "filt", 0, 100, "sort", checkStatusCallback<ActionResult>());
 
-    EXPECT_EQ(size, result.totalMatches);
-    EXPECT_EQ(size, result.numberReturned);
+    EXPECT_EQ(size * 2, result.totalMatches);
+    EXPECT_EQ(size * 2, result.numberReturned);
 
     uint32_t containerCount = 0;
     uint32_t itemCount = 0;

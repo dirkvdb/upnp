@@ -31,13 +31,14 @@ namespace upnp
 {
 
 const std::string MediaServer::rootId = "0";
-static const uint32_t g_requestSize = 32;
+static const uint32_t g_defaultRequestSize = 32;
 
 MediaServer::MediaServer(IClient2& client)
 : m_client(client)
 , m_contentDirectory(client)
 , m_connectionMgr(client)
 , m_abort(false)
+, m_requestSize(g_defaultRequestSize)
 {
 }
 
@@ -72,7 +73,7 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
                         cb(status);
                         return;
                     }
-                    
+
                     queryCapabilities(cb);
                 });
             }
@@ -95,7 +96,7 @@ void MediaServer::queryCapabilities(std::function<void(int32_t)> cb)
         }
 
         m_searchCaps = caps;
-        
+
         m_contentDirectory.querySortCapabilities([this, cb] (int32_t status, const auto& caps) {
             if (status != 200)
             {
@@ -192,54 +193,68 @@ const std::vector<Property>& MediaServer::getSortCapabilities() const
     return m_sortCaps;
 }
 
-void MediaServer::getItemsInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainer(const std::string& id, const ItemsCb& onItems)
 {
-    performBrowseRequest(ContentDirectory::Client::ItemsOnly, id, onItem, offset, limit, sort, sortMode);
+    getItemsInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending, onItems);
 }
 
-void MediaServer::getContainersInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode, const ItemsCb& onItems)
 {
-    performBrowseRequest(ContentDirectory::Client::ContainersOnly, id, onItem, offset, limit, sort, sortMode);
+    performBrowseRequest(ContentDirectory::Client::ItemsOnly, id, offset, limit, sort, sortMode, onItems);
 }
 
-void MediaServer::getAllInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::getContainersInContainer(const std::string& id, const ItemsCb& onItems)
 {
-    performBrowseRequest(ContentDirectory::Client::All, id, onItem, offset, limit, sort, sortMode);
+    getContainersInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending, onItems);
 }
 
-void MediaServer::handleSearchResult(const std::string& id, const std::string& criteria, int32_t status, uint32_t offset, const ContentDirectory::ActionResult& result, const ItemsCb& onItems)
+void MediaServer::getContainersInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode, const ItemsCb& onItems)
+{
+    performBrowseRequest(ContentDirectory::Client::ContainersOnly, id, offset, limit, sort, sortMode, onItems);
+}
+
+void MediaServer::getAllInContainer(const std::string& id, const ItemsCb& onItems)
+{
+    getAllInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending, onItems);
+}
+
+void MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode, const ItemsCb& onItems)
+{
+    performBrowseRequest(ContentDirectory::Client::All, id, offset, limit, sort, sortMode, onItems);
+}
+
+void MediaServer::handleSearchResult(const std::string& id, const std::string& criteria, uint32_t offset, uint32_t requestSize, int32_t status, const ContentDirectory::ActionResult& result, const ItemsCb& onItems)
 {
     if (status != 200)
     {
+        onItems(status, {});
         return;
     }
 
-    onItems(result.result);
+    onItems(status, result.result);
     offset += result.numberReturned;
 
     if (offset < result.totalMatches || (result.totalMatches == 0 && result.numberReturned != 0))
     {
-        m_contentDirectory.search(id, criteria, "*", offset, g_requestSize, "", [=] (int32_t stat, const ContentDirectory::ActionResult& res) {
-            handleSearchResult(id, criteria, stat, offset, res, onItems);
+        m_contentDirectory.search(id, criteria, "*", offset, requestSize, "", [=] (int32_t stat, const ContentDirectory::ActionResult& res) {
+            handleSearchResult(id, criteria, offset, requestSize, stat, res, onItems);
         });
     }
-
-    //res.totalMatches
-
-    //    if (m_completedCb)
-    //    {
-    //        m_completedCb();
-    //    }
-
+    else if (result.totalMatches > 0)
+    {
+        // signal completion
+        onItems(200, {});
+    }
 }
 
 void MediaServer::search(const std::string& id, const std::string& criteria, const ItemsCb& onItems)
 {
     m_abort = false;
     uint32_t offset = 0;
+    auto requestSize = m_requestSize;
 
-    m_contentDirectory.search(id, criteria, "*", offset, g_requestSize, "", [=] (int32_t status, const ContentDirectory::ActionResult& res) {
-        handleSearchResult(id, criteria, status, offset, res, onItems);
+    m_contentDirectory.search(id, criteria, "*", offset, requestSize, "", [=] (int32_t status, const ContentDirectory::ActionResult& res) {
+        handleSearchResult(id, criteria, offset, requestSize, status, res, onItems);
     });
 }
 
@@ -269,16 +284,6 @@ void MediaServer::search(const std::string& id, const std::map<Property, std::st
     search(id, critString.str(), onItems);
 }
 
-void MediaServer::setCompletedCallback(const CompletedCb& completedCb)
-{
-    m_completedCb = completedCb;
-}
-
-void MediaServer::setErrorCallback(const ErrorCb& errorCb)
-{
-    m_errorCb = errorCb;
-}
-
 void MediaServer::setTransportItem(Resource& resource)
 {
     if (m_avTransport)
@@ -287,11 +292,17 @@ void MediaServer::setTransportItem(Resource& resource)
     }
 }
 
+void MediaServer::setRequestSize(uint32_t size)
+{
+    m_requestSize = size;
+}
+
 void MediaServer::handleBrowseResult(ContentDirectory::Client::BrowseType type,
                                      const std::string& id,
                                      uint32_t offset,
                                      uint32_t limit,
                                      const std::string& sort,
+                                     uint32_t requestSize,
                                      int32_t status,
                                      const ContentDirectory::ActionResult& result,
                                      const ItemsCb& onItems,
@@ -299,11 +310,12 @@ void MediaServer::handleBrowseResult(ContentDirectory::Client::BrowseType type,
 {
     if (status != 200)
     {
+        onItems(status, {});
         return;
     }
 
     itemsReceived += result.numberReturned;
-    onItems(result.result);
+    onItems(200, result.result);
 
     bool itemsLeft = false;
     if (limit > 0)
@@ -312,26 +324,26 @@ void MediaServer::handleBrowseResult(ContentDirectory::Client::BrowseType type,
     }
     else
     {
-        itemsLeft = result.numberReturned == g_requestSize;
+        itemsLeft = result.numberReturned == requestSize;
     }
 
     if (itemsLeft)
     {
-        uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit - itemsReceived);
-        offset += g_requestSize;
+        offset += m_requestSize;
+        requestSize = std::min(requestSize, limit == 0 ? requestSize : limit - itemsReceived);
         log::info("Browse: {} {}", offset, requestSize);
         m_contentDirectory.browseDirectChildren(type, id, "*", offset, requestSize, sort, [=] (int32_t stat, const ContentDirectory::ActionResult& res) {
-            handleBrowseResult(type, id, offset, limit, sort, stat, res, onItems, itemsReceived);
+            handleBrowseResult(type, id, offset, limit, sort, requestSize, stat, res, onItems, itemsReceived);
         });
     }
-
-//    if (m_completedCb)
-//    {
-//        m_completedCb();
-//    }
+    else if (itemsReceived > 0)
+    {
+        // signal completion
+        onItems(200, {});
+    }
 }
 
-void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemsCb& onItem, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode, const ItemsCb& onItem)
 {
     m_abort = false;
 
@@ -347,10 +359,9 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
     }
 
     auto sortStr = ss.str();
-
-    uint32_t requestSize = std::min(g_requestSize, limit == 0 ? g_requestSize : limit);
+    uint32_t requestSize = std::min(m_requestSize, limit == 0 ? m_requestSize : limit);
     m_contentDirectory.browseDirectChildren(type, id, "*", offset, requestSize, sortStr, [=] (int32_t status, const ContentDirectory::ActionResult& res) {
-        handleBrowseResult(type, id, offset, limit, sortStr, status, res, onItem, 0);
+        handleBrowseResult(type, id, offset, limit, sortStr, requestSize, status, res, onItem, 0);
     });
 }
 

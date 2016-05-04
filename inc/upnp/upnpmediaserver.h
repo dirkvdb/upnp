@@ -40,7 +40,7 @@ public:
     using CompletedCb = std::function<void()>;
     using ErrorCb = std::function<void(const std::string&)>;
     using ItemCb = std::function<void(const Item&)>;
-    using ItemsCb = std::function<void(const std::vector<Item>&)>;
+    using ItemsCb = std::function<void(int32_t status, const std::vector<Item>&)>;
 
     enum class SortMode
     {
@@ -70,33 +70,46 @@ public:
     const std::vector<Property>& getSearchCapabilities() const;
     const std::vector<Property>& getSortCapabilities() const;
 
-    void getItemsInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getContainersInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
-    void getAllInContainer(const std::string& id, const ItemsCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode mode = SortMode::Ascending);
+    void getItemsInContainer(const std::string& id, const ItemsCb& onItem);
+    void getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+
+    void getContainersInContainer(const std::string& id, const ItemsCb& onItem);
+    void getContainersInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+
+    void getAllInContainer(const std::string& id, const ItemsCb& onItem);
+    void getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+
     void getMetaData(const std::string& id, const ItemCb& onItem);
     void search(const std::string& id, const std::string& criteria, const ItemsCb& onItem);
     void search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemsCb& onItem);
 
-    // callbacks for the asynchronous methods
-    void setItemCallback(const ItemCb& itemCb);
-    void setCompletedCallback(const CompletedCb& completedCb);
-    void setErrorCallback(const ErrorCb& errorCb);
-
     // AVTransport related methods
     void setTransportItem(Resource& resource);
+
+    // override the default requestSize of 32
+    // Influences the size of the vector in the callbacks
+    void setRequestSize(uint32_t size);
 
     ConnectionManager::Client& connectionManager();
 
 private:
     void queryCapabilities(std::function<void(int32_t)> cb);
-    
-    void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, const ItemsCb& onItem, uint32_t offset = 0, uint32_t limit = 0, Property sort = Property::Unknown, SortMode = SortMode::Ascending);
-    void handleSearchResult(const std::string& id, const std::string& criteria, int32_t status, uint32_t offset, const ContentDirectory::ActionResult& res, const ItemsCb& cb);
+
+    void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode, const ItemsCb& onItem);
+    void handleSearchResult(const std::string& id,
+                            const std::string& criteria,
+                            uint32_t offset,
+                            uint32_t requestSize,
+                            int32_t status,
+                            const ContentDirectory::ActionResult& res,
+                            const ItemsCb& cb);
+
     void handleBrowseResult(ContentDirectory::Client::BrowseType type,
                             const std::string& id,
                             uint32_t offset,
                             uint32_t limit,
                             const std::string& sort,
+                            uint32_t requestSize,
                             int32_t status,
                             const ContentDirectory::ActionResult& res,
                             const ItemsCb& onItem,
@@ -116,8 +129,7 @@ private:
     std::vector<Property>                   m_searchCaps;
     std::vector<Property>                   m_sortCaps;
 
-    CompletedCb                             m_completedCb;
-    ErrorCb                                 m_errorCb;
+    uint32_t                                m_requestSize;
 };
 
 }
