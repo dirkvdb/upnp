@@ -37,8 +37,6 @@ class MediaServer
 public:
     static const std::string rootId;
 
-    using CompletedCb = std::function<void()>;
-    using ErrorCb = std::function<void(const std::string&)>;
     using ItemCb = std::function<void(const Item&)>;
     using ItemsCb = std::function<void(int32_t status, const std::vector<Item>&)>;
 
