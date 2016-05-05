@@ -33,6 +33,7 @@ public:
     ~Server();
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
+    std::string getWebRootUrl() const;
 
 private:
     static void eventHandler(mg_connection* nc, int event, void* eventData);

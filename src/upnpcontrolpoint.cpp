@@ -23,7 +23,7 @@
 #include "upnp/upnpmediarenderer.h"
 #include "upnp/upnpprotocolinfo.h"
 #include "upnp/upnp.connectionmanager.client.h"
-#include "upnp/upnpwebserver.h"
+#include "upnp/upnp.http.server.h"
 
 #include "utils/log.h"
 
@@ -38,10 +38,9 @@ ControlPoint::ControlPoint(IClient2& client)
 {
 }
 
-void ControlPoint::setWebserver(WebServer& webServer)
+void ControlPoint::setWebserver(http::Server& webServer)
 {
     m_pWebServer = &webServer;
-    m_pWebServer->addVirtualDirectory("playlists");
 }
 
 void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
@@ -111,7 +110,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vec
     }
 
     std::string filename = generatePlaylistFilename();
-    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
+    m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
     playItem(server, createPlaylistItem(filename));
 }
 
@@ -152,7 +151,7 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
     }
 
     std::string filename = generatePlaylistFilename();
-    m_pWebServer->addFile("playlists", filename, "audio/m3u", playlist.str());
+    m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
     queueItem(server, createPlaylistItem(filename));
 }
 
@@ -177,7 +176,7 @@ void ControlPoint::throwOnMissingWebserver()
 
 std::string ControlPoint::generatePlaylistFilename()
 {
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
 
     std::stringstream playlistFilename;
     playlistFilename << "playlist-" << now.time_since_epoch().count() << ".m3u";
@@ -188,7 +187,7 @@ std::string ControlPoint::generatePlaylistFilename()
 Item ControlPoint::createPlaylistItem(const std::string& filename)
 {
     Resource res;
-    res.setUrl(m_pWebServer->getWebRootUrl() + "playlists/" + filename);
+    res.setUrl(m_pWebServer->getWebRootUrl() + filename);
     res.setProtocolInfo(ProtocolInfo("http-get:*:audio/m3u:*"));
 
     auto playlistItem = Item();

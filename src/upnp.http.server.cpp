@@ -27,6 +27,8 @@
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 
+#include "upnp/upnp.uv.h"
+
 using namespace utils;
 using namespace std::literals::chrono_literals;
 
@@ -63,6 +65,12 @@ Server::~Server()
 void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents)
 {
     m_serverdFiles.emplace(urlPath, HostedFile{contentType, contents});
+}
+
+std::string Server::getWebRootUrl() const
+{
+    auto addr = uv::Address::createIp4(m_connection->sa.sin);
+    return fmt::format("http://{}:{}/", addr.ip(), addr.port());
 }
 
 void Server::eventHandler(mg_connection* conn, int event, void* eventData)

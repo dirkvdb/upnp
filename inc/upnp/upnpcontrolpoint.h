@@ -28,9 +28,10 @@
 namespace upnp
 {
 
+namespace http { class Server; }
+
 class IClient2;
 class Item;
-class WebServer;
 class MediaServer;
 class ProtocolInfo;
 
@@ -42,7 +43,7 @@ public:
 
     ControlPoint& operator=(const ControlPoint&) = delete;
 
-    void setWebserver(WebServer& webServer);
+    void setWebserver(http::Server& webServer);
     void setRendererDevice(const std::shared_ptr<Device>& dev);
     MediaRenderer& getActiveRenderer();
 
@@ -71,7 +72,7 @@ private:
     Item createPlaylistItem(const std::string& filename);
 
     MediaRenderer m_renderer;
-    WebServer*    m_pWebServer;
+    http::Server* m_pWebServer;
 };
 
 }
