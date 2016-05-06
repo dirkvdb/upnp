@@ -503,11 +503,12 @@ void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingCo
 
 void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    for (auto& pair : vars)
     {
-        m_avTransportInfo[pair.first] = pair.second;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto& pair : vars)
+        {
+            m_avTransportInfo[pair.first] = pair.second;
+        }
     }
 
     auto iter = vars.find(AVTransport::Variable::CurrentTransportActions);
