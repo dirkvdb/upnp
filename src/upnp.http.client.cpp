@@ -548,7 +548,7 @@ void Client::soapAction(const std::string& url,
     data->callback = std::move(cb);
 
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, fmt::format("SOAPACTION: urn:schemas-upnp-org:service:{}#{}", serviceName, actionName).c_str());
+    list = curl_slist_append(list, fmt::format("SOAPACTION: \"{}#{}\"", serviceName, actionName).c_str());
     list = curl_slist_append(list, "CONTENT-TYPE: text/xml; charset=\"utf-8\"");
     data->headerData = list;
 
