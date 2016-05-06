@@ -29,7 +29,7 @@ namespace http
 class Server
 {
 public:
-    Server(uv::Loop& loop, int32_t port);
+    Server(uv::Loop& loop, const std::string& ip, int32_t port);
     ~Server();
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);

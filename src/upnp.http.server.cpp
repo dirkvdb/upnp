@@ -37,12 +37,12 @@ namespace upnp
 namespace http
 {
 
-Server::Server(uv::Loop& loop, int32_t port)
+Server::Server(uv::Loop& loop, const std::string& ip, int32_t port)
 : m_timer(loop)
 , m_connection(nullptr)
 {
     mg_mgr_init(&m_mgr, this);
-    m_connection = mg_bind(&m_mgr, std::to_string(port).c_str(), &Server::eventHandler);
+    m_connection = mg_bind(&m_mgr, fmt::format("{}:{}", ip, port).c_str(), &Server::eventHandler);
     m_connection->user_data = this;
 
     // Set up HTTP server parameters
@@ -70,7 +70,7 @@ void Server::addFile(const std::string& urlPath, const std::string& contentType,
 std::string Server::getWebRootUrl() const
 {
     auto addr = uv::Address::createIp4(m_connection->sa.sin);
-    return fmt::format("http://{}:{}/", addr.ip(), addr.port());
+    return fmt::format("http://{}:{}", addr.ip(), addr.port());
 }
 
 void Server::eventHandler(mg_connection* conn, int event, void* eventData)
