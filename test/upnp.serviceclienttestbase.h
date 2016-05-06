@@ -120,7 +120,7 @@ protected:
     {
         EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
             EXPECT_EQ(expected.toString(), action.toString());
-            cb(200, generateActionResponse(expected.getName(), expected.getServiceType(), responseVars));
+            cb(200, wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
         }));
     }
 

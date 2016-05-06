@@ -1,1 +1,2 @@
 - Proper parser for csv values that takes \, into account
+- The soap error code does not always match the http error code, parse it

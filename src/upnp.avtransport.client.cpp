@@ -138,7 +138,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& responseNode = doc.first_node_ref();
+                auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
                 info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
                 info.trackDuration = xml::optionalChildValue(responseNode, "TrackDuration");
                 info.trackMetaData = xml::optionalChildValue(responseNode, "TrackMetaData");
@@ -169,7 +169,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& responseNode = doc.first_node_ref();
+                auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
                 info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
                 info.mediaDuration = xml::optionalChildValue(responseNode, "MediaDuration");
@@ -202,7 +202,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& responseNode = doc.first_node_ref();
+                auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
                 auto* child = responseNode.first_node("CurrentTransportState");
                 if (child)
                 {
@@ -242,7 +242,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
-                auto& actionsNode = doc.first_node_ref().first_node_ref("Actions");
+                auto& actionsNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Actions");
                 for (auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
                 {
                     try

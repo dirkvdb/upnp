@@ -118,7 +118,7 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& rootNode = doc.first_node_ref();
+                auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
                 connInfo.peerConnectionManager      = peerConnectionManager;
                 connInfo.peerConnectionId           = peerConnectionId;
@@ -156,7 +156,7 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                ids = stringops::tokenize(doc.first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+                ids = stringops::tokenize(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
             }
             catch(std::exception& e)
             {
@@ -179,7 +179,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                auto& rootNode = doc.first_node_ref();
+                auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
                 connInfo.connectionId               = connectionId;
                 connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());

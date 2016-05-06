@@ -140,13 +140,13 @@ TEST_F(HttpClientTest, ClientServer)
 {
     uv::Loop        loop;
     http::Client    client(loop);
-    http::Server    server(loop, 8080);
+    http::Server    server(loop, "127.0.0.1", 0);
     bool gotCallback = false;
 
     auto servedFile = "This is my amazing file"s;
     server.addFile("/test.txt", "text/plain", servedFile);
 
-    client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
+    client.get(server.getWebRootUrl() + "/test.txt", [&] (int32_t status, std::string contents) {
         EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
         EXPECT_EQ(servedFile, contents);
         gotCallback = true;
