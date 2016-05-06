@@ -126,12 +126,12 @@ void addPropertyToItem(const char* propertyName, size_t propertySize, const char
     auto prop = propertyFromString(propertyName, propertySize);
     if (prop != Property::Unknown)
     {
-        item.addMetaData(prop, std::string(propertyValue, propertyValueSize));
+        item.addMetaData(prop, decode(propertyValue, propertyValueSize));
     }
     else
     {
 #ifndef NDEBUG
-        log::warn("Unknown property: {}", propertyName);
+        //log::warn("Unknown property: {}", propertyName);
 #endif
     }
 }
@@ -488,16 +488,16 @@ Item parseContainer(xml_node<char>& containerElem)
             try
             {
                 auto& attrRef = elem->first_attribute_ref("dlna:profileID");
-                item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), elem->value_string());
+                item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), decode(elem->value(), elem->value_size()));
             }
             catch (std::exception&)
             {
                 // no profile id present, add it as regular metadata
-                item.addMetaData(prop, elem->value_string());
+                addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
             }
         }
 
-        item.addMetaData(prop, elem->value_string());
+        addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
     }
 
     // check required properties
@@ -556,7 +556,7 @@ Item parseItem(xml_node<char>& itemElem)
                     // multiple art uris can be present with different dlna profiles (size)
                     try
                     {
-                        item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), elem->value_string());
+                        item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), decode(elem->value(), elem->value_size()));
                     }
                     catch (std::exception&)
                     {

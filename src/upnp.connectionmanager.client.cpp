@@ -72,7 +72,7 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
-                auto& sink = doc.first_node_ref().first_node_ref("Sink");
+                auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
 
                 auto infos = stringops::tokenize(sink.value_string(), ',');
                 for (auto& info : infos)

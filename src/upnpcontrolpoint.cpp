@@ -179,7 +179,7 @@ std::string ControlPoint::generatePlaylistFilename()
     auto now = std::chrono::system_clock::now();
 
     std::stringstream playlistFilename;
-    playlistFilename << "playlist-" << now.time_since_epoch().count() << ".m3u";
+    playlistFilename << "/playlist-" << now.time_since_epoch().count() << ".m3u";
 
     return playlistFilename.str();
 }

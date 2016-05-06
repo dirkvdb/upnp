@@ -116,7 +116,7 @@ void Client::parseCapabilities(int32_t status, const std::string& nodeName, cons
         {
             xml_document<> doc;
             doc.parse<parse_non_destructive>(response.c_str());
-            auto& caps = doc.first_node_ref().first_node_ref(nodeName.c_str());
+            auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
 
             // TODO: don't fail if the search caps is an empty list
             for (auto& cap : stringops::tokenize(caps.value_string(), ','))
