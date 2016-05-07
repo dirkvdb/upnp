@@ -90,11 +90,15 @@ void Server::eventHandler(mg_connection* conn, int event, void* eventData)
                             "Content-length: %lu\r\n"
                             "\r\n%s", file.contentType.c_str(), file.data.size(), file.data.c_str());
         }
-        catch (std::exception&)
+        catch (std::exception& e)
         {
             // Serve static content
+            log::error("http server error: {}", e.what());
             mg_serve_http(conn, message, thisPtr->m_serverOptions);
         }
+        break;
+    case MG_EV_HTTP_CHUNK:
+        log::error("http server chunk requested");
         break;
     default:
       break;

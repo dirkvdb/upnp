@@ -150,32 +150,44 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
                 cb(status);
                 return;
             }
-
+            
             if (m_device->implementsService(ServiceType::AVTransport))
             {
                 m_avTransport = std::make_unique<AVTransport::Client>(m_client);
                 m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
-                    cb(status);
+                    if (status != 200)
+                    {
+                        cb(status);
+                    }
+                    else
+                    {
+                        getProtocolInfo(cb);
+                    }
                 });
             }
             else
             {
-                cb(status);
+                getProtocolInfo(cb);
             }
-
-            // reset state related data
-            m_connectionMgr.getProtocolInfo([this] (int32_t status, std::vector<ProtocolInfo> info) {
-                if (status == 200)
-                {
-                    m_protocolInfo = std::move(info);
-                    // make sure m3u is supported
-                    m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
-                    resetData();
-                    activateEvents();
-                    DeviceChanged(m_device);
-                }
-            });
         });
+    });
+}
+
+void MediaRenderer::getProtocolInfo(std::function<void(int32_t)> cb)
+{
+    // reset state related data
+    m_connectionMgr.getProtocolInfo([this, cb] (int32_t status, std::vector<ProtocolInfo> info) {
+        if (status == 200)
+        {
+            m_protocolInfo = std::move(info);
+            // make sure m3u is supported
+            m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
+            resetData();
+            activateEvents();
+            DeviceChanged(m_device);
+        }
+        
+        cb(status);
     });
 }
 

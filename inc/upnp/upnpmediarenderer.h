@@ -122,6 +122,7 @@ private:
 
     void resetData();
     std::set<Action> parseAvailableActions(const std::string& actions) const;
+    void getProtocolInfo(std::function<void(int32_t)> cb);
 
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
