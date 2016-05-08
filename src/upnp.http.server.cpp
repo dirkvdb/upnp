@@ -28,6 +28,7 @@
 #include "utils/fileoperations.h"
 
 #include "upnp/upnp.uv.h"
+#include "upnp.http.parser.h"
 
 using namespace utils;
 using namespace std::literals::chrono_literals;
@@ -37,29 +38,94 @@ namespace upnp
 namespace http
 {
 
-Server::Server(uv::Loop& loop, const std::string& ip, int32_t port)
-: m_timer(loop)
-, m_connection(nullptr)
+static const std::string s_errorResponse =
+    "HTTP/1.1 {} {}\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "\r\n";
+
+static const std::string s_response =
+    "HTTP/1.1 200 OK\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: {}\r\n"
+    "CONTENT-TYPE: {}\r\n"
+    "\r\n";
+
+Server::Server(uv::Loop& loop, const uv::Address& address)
+: m_loop(loop)
+, m_socket(loop)
 {
-    mg_mgr_init(&m_mgr, this);
-    m_connection = mg_bind(&m_mgr, fmt::format("{}:{}", ip, port).c_str(), &Server::eventHandler);
-    m_connection->user_data = this;
+    log::info("Start HTTP server on http://{}:{}", address.ip(), address.port());
 
-    // Set up HTTP server parameters
-    mg_set_protocol_http_websocket(m_connection);
-    memset(&m_serverOptions, 0, sizeof(m_serverOptions));
-    m_serverOptions.document_root = "/DOESNOTEXIST";  // don't serve files on disk
-    m_serverOptions.enable_directory_listing = "no";
+    m_socket.bind(address);
+    m_socket.listen(128, [this] (int32_t status) {
+        if (status == 0)
+        {
+            log::info("Http server: Connection attempt");
+            auto client = std::make_unique<uv::socket::Tcp>(m_loop);
+            auto parser = std::make_shared<http::Parser>(http::Type::Request);
 
-    m_timer.start(1s, 1s, [=] () {
-        mg_mgr_poll(&m_mgr, 1);
+            auto clientPtr = client.get();
+            m_clients.emplace(clientPtr, std::move(client));
+
+            parser->setCompletedCallback([this, parser, client = clientPtr] () {
+                bool closeConnection = parser->getFlags().isSet(http::Parser::Flag::ConnectionClose);
+            
+                try
+                {
+                    auto& file = m_serverdFiles.at(parser->getUrl());
+                    writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
+                }
+                catch (std::out_of_range&)
+                {
+                    writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), "", closeConnection);
+                }
+                catch (std::exception& e)
+                {
+                    writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), "", closeConnection);
+                }
+            });
+
+            try
+            {
+                m_socket.accept(*clientPtr);
+                clientPtr->read([this, clientPtr, parser] (ssize_t nread, const uv::Buffer& data) {
+                    if (nread < 0)
+                    {
+                        if (nread != UV_EOF)
+                        {
+                            log::error("Failed to read from socket");
+                        }
+                        else
+                        {
+                            log::debug("Conection closed by client");
+                            cleanupClient(clientPtr);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            parser->parse(data.data(), nread);
+                        }
+                        catch (std::exception& e)
+                        {
+                            log::error("Failed to parse request: {}", e.what());
+                            cleanupClient(clientPtr);
+                        }
+                    }
+                });
+            }
+            catch (std::exception& e)
+            {
+                log::error("HTTP server: Failed to accept connection: {}", e.what());
+                cleanupClient(clientPtr);
+            }
+        }
+        else
+        {
+            log::error("HTTP server: Failed to listen on socket: {}", status);
+        }
     });
-}
-
-Server::~Server()
-{
-    m_timer.stop();
-    mg_mgr_free(&m_mgr);
 }
 
 void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents)
@@ -69,40 +135,44 @@ void Server::addFile(const std::string& urlPath, const std::string& contentType,
 
 std::string Server::getWebRootUrl() const
 {
-    auto addr = uv::Address::createIp4(m_connection->sa.sin);
-    return fmt::format("http://{}:{}", addr.ip(), addr.port());
+    auto addr = m_socket.getSocketName();
+    return fmt::format("http://{}:{}/", addr.ip(), addr.port());
 }
 
-void Server::eventHandler(mg_connection* conn, int event, void* eventData)
+void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection)
 {
-    http_message* message = reinterpret_cast<http_message*>(eventData);
-    auto* thisPtr = reinterpret_cast<Server*>(conn->user_data);
+    client->write(uv::Buffer(header, uv::Buffer::Ownership::No), [this, client, closeConnection, &body] (int32_t status) {
+        if (status != 0)
+        {
+            log::error("Failed to write response: {}", status);
+            
+            if (closeConnection)
+            {
+                cleanupClient(client);
+            }
+        }
+        else
+        {
+            client->write(uv::Buffer(body, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
+                if (status != 0)
+                {
+                    log::error("Failed to write response: {}", status);
+                }
+            
+                if (closeConnection)
+                {
+                    cleanupClient(client);
+                }
+            });
+        }
+    });
+}
 
-    switch (event)
-    {
-    case MG_EV_HTTP_REQUEST:
-        log::info("HTTP request: {}", std::string(message->uri.p, message->uri.len));
-        try
-        {
-            auto& file = thisPtr->m_serverdFiles.at(std::string(message->uri.p, message->uri.len));
-            mg_printf(conn, "HTTP/1.1 200 OK\r\n"
-                            "Content-type: %s\r\n"
-                            "Content-length: %lu\r\n"
-                            "\r\n%s", file.contentType.c_str(), file.data.size(), file.data.c_str());
-        }
-        catch (std::exception& e)
-        {
-            // Serve static content
-            log::error("http server error: {}", e.what());
-            mg_serve_http(conn, message, thisPtr->m_serverOptions);
-        }
-        break;
-    case MG_EV_HTTP_CHUNK:
-        log::error("http server chunk requested");
-        break;
-    default:
-      break;
-    }
+void Server::cleanupClient(uv::socket::Tcp* client) noexcept
+{
+    client->close([=] () {
+        m_clients.erase(client);
+    });
 }
 
 }

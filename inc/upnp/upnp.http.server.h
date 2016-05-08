@@ -18,7 +18,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <mongoose.h>
 #include "upnp/upnp.uv.h"
 
 namespace upnp
@@ -29,27 +28,25 @@ namespace http
 class Server
 {
 public:
-    Server(uv::Loop& loop, const std::string& ip, int32_t port);
-    ~Server();
+    Server(uv::Loop& loop, const uv::Address& address);
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
     std::string getWebRootUrl() const;
 
 private:
-    static void eventHandler(mg_connection* nc, int event, void* eventData);
-
     struct HostedFile
     {
         std::string contentType;
         std::string data;
     };
+    
+    void writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection);
+    void cleanupClient(uv::socket::Tcp* client) noexcept;
 
-    uv::Timer m_timer;
-    mg_mgr m_mgr;
-    mg_connection* m_connection;
-    mg_serve_http_opts m_serverOptions;
-
+    uv::Loop& m_loop;
+    uv::socket::Tcp m_socket;
     std::unordered_map<std::string, HostedFile> m_serverdFiles;
+    std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
 };
 
 }
