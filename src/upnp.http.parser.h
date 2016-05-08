@@ -86,8 +86,13 @@ public:
             return 0;
         };
         m_settings.on_message_complete = nullptr;
-        m_settings.on_url = nullptr;
         m_settings.on_status = nullptr;
+        
+        m_settings.on_url = [] (http_parser* parser, const char* str, size_t length) -> int {
+            auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+            thisPtr->m_url.append(str, length);
+            return 0;
+        };
 
         m_settings.on_header_value = [] (http_parser* parser, const char* str, size_t length) -> int {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);
@@ -153,7 +158,7 @@ public:
             return 1;
         };
     }
-
+    
     void setCompletedCallback(std::function<void()> cb)
     {
         m_completedCb = std::move(cb);
@@ -203,6 +208,11 @@ public:
     {
         return std::move(m_body);
     }
+    
+    std::string getUrl() noexcept
+    {
+        return m_url;
+    }
 
     const std::vector<Header>& headers() const
     {
@@ -241,6 +251,7 @@ private:
     State m_state;
     std::vector<Header> m_headers;
     std::string m_body;
+    std::string m_url;
     std::function<void()> m_completedCb;
     std::function<void()> m_headersCompletedCb;
 };
