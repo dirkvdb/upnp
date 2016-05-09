@@ -17,7 +17,7 @@
 #pragma once
 
 #include "utils/signal.h"
-#include "upnp/upnpserviceclientbase.h"
+#include "upnp/upnp.serviceclientbase.h"
 #include "upnp/upnp.avtransport.types.h"
 
 namespace upnp

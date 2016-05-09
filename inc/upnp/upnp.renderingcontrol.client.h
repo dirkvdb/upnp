@@ -18,7 +18,7 @@
 
 #include "utils/signal.h"
 
-#include "upnp/upnpserviceclientbase.h"
+#include "upnp/upnp.serviceclientbase.h"
 #include "upnp/upnpdevice.h"
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnpprotocolinfo.h"
