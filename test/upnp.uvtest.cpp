@@ -3,6 +3,8 @@
 #include "utils/log.h"
 #include "upnp/upnp.uv.h"
 
+#include <future>
+
 namespace upnp
 {
 namespace test
@@ -55,6 +57,38 @@ TEST_F(UVTest, TimerTest)
     });
 
     loop.run(uv::RunMode::Default);
+}
+
+TEST_F(UVTest, QueueWork)
+{
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+    uv::queueWork(loop, [&] () {
+        auto p = std::move(prom);
+        p.set_value();
+    });
+
+    loop.run(uv::RunMode::Default);
+    fut.wait();
+}
+
+TEST_F(UVTest, QueueWorkAsync)
+{
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+    
+    
+    uv::queueWork(loop, [&] () {
+        auto launchThread = std::async(std::launch::async, [&] {
+            uv::queueWorkAsync(loop, [&] () {
+                auto p = std::move(prom);
+                p.set_value();
+            });
+        });
+    });
+
+    loop.run(uv::RunMode::Default);
+    fut.wait();
 }
 
 TEST_F(UVTest, TcpTest)

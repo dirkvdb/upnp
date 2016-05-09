@@ -184,7 +184,32 @@ inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
     handle->data = cbPtr.get();
     checkRc(uv_async_send(handle.release()));
     cbPtr.release();
+}
+
+inline void queueWork(uv::Loop& loop, std::function<void()> cb)
+{
+    auto cbPtr = std::make_unique<std::function<void()>>(std::move(cb));
+    auto handle = std::make_unique<uv_work_t>();
+    handle->data = cbPtr.get();
+
+    checkRc(uv_queue_work(loop.get(), handle.get(), [] (uv_work_t* asyHandle) {
+        auto* cbPtr = reinterpret_cast<std::function<void()>*>(asyHandle->data);
+        (*cbPtr)();
+    }, [] (uv_work_t* asyHandle, int) {
+        delete reinterpret_cast<std::function<void()>*>(asyHandle->data);
+        delete asyHandle;
+    }));
+
     handle.release();
+    cbPtr.release();
+}
+
+// Call this when queueing work from outside the loop thread
+inline void queueWorkAsync(uv::Loop& loop, std::function<void()> cb)
+{
+    asyncSend(loop, [cb, &loop] () {
+        queueWork(loop, cb);
+    });
 }
 
 template <typename HandleType>
@@ -244,7 +269,7 @@ protected:
         checkRc(func(m_loop.get(), m_handle.get()));
         m_handle->data = this;
     }
-    
+
     template <typename InitFunc, typename Arg>
     Handle(Loop& loop, InitFunc func, Arg&& arg)
     : m_loop(loop)
@@ -309,14 +334,14 @@ public:
     {
         checkRc(uv_accept(reinterpret_cast<uv_stream_t*>(this->get()), reinterpret_cast<uv_stream_t*>(client.get())));
     }
-    
+
 protected:
     template <typename InitFunc>
     Stream(Loop& loop, InitFunc func)
     : Handle<HandleType>(loop, func)
     {
     }
-    
+
     template <typename InitFunc, typename Arg>
     Stream(Loop& loop, InitFunc func, Arg&& arg)
     : Handle<HandleType>(loop, func, std::forward<Arg&&>(arg))
@@ -427,7 +452,7 @@ private:
     {
         reinterpret_cast<Async*>(handle->data)->m_callback();
     }
-    
+
     std::function<void()> m_callback;
 };
 

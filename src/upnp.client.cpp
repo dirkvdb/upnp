@@ -114,9 +114,9 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
         m_httpClient.subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
-#ifdef DEBUG_UPNP_CLIENT
+//#ifdef DEBUG_UPNP_CLIENT
             log::debug("Subscribe response: {}", response);
-#endif
+//#endif
             if (cb)
             {
                 auto subCb = cb(status, subId, subTimeout);
@@ -133,9 +133,9 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
 {
     uv::asyncSend(*m_loop, [=] () {
         m_httpClient.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
-#ifdef DEBUG_UPNP_CLIENT
+//#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
-#endif
+//#endif
             if (cb)
             {
                 cb(status);
