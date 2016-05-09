@@ -19,7 +19,7 @@
 #include "upnp/upnpitem.h"
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnp/upnpavtransportservice.h"
+#include "upnp.avtransport.typeconversions.h"
 
 #include <sstream>
 
@@ -105,7 +105,7 @@ MediaRenderer::PlaybackState parsePlaybackState(const std::string& state)
 {
     try
     {
-        return transportStateToPlaybackState(AVTransport::Service::stateFromString(state));
+        return transportStateToPlaybackState(AVTransport::stateFromString(state));
     }
     catch (std::exception& e)
     {

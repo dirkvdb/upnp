@@ -20,7 +20,6 @@
 #include <string>
 
 #include "utils/readerinterface.h"
-#include "upnp/upnphttpclient.h"
 
 namespace upnp
 {
@@ -47,10 +46,9 @@ public:
 private:
     void throwOnEmptyUrl();
 
-    HttpClient  m_httpClient;
-    std::string m_Url;
-    uint64_t    m_ContentLength;
-    uint64_t    m_CurrentPosition;
+    std::string m_url;
+    uint64_t    m_contentLength;
+    uint64_t    m_currentPosition;
 };
 
 class HttpReaderBuilder : public utils::IReaderBuilder
