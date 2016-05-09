@@ -354,20 +354,5 @@ void Service::throwIfNoAVTransport3Support()
     }
 }
 
-const char* Service::toString(State value)
-{
-    return AVTransport::toString(value);
-}
-
-const char* Service::toString(PlayMode value)
-{
-    return AVTransport::toString(value);
-}
-
-State Service::stateFromString(const std::string& value)
-{
-    return AVTransport::stateFromString(value);
-}
-
 }
 }
