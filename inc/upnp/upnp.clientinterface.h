@@ -43,6 +43,7 @@ public:
     virtual uint16_t getPort() const = 0;
 
     virtual void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) = 0;
+    virtual void renewSubscription(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) = 0;
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb) = 0;
 
     virtual void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb) = 0;

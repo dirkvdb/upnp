@@ -74,8 +74,9 @@ public:
             }
 
             m_subscriptionId = subId;
-            m_subTimer.start(subTimeout / 2, subTimeout / 2, [] () {
+            m_subTimer.start(subTimeout / 2, subTimeout / 2, [this] () {
                 utils::log::warn("TODO: renew subscription");
+                renewSubscription();
             });
 
             return std::bind(&ServiceClientBase<Traits>::eventCb, this, std::placeholders::_1);
@@ -106,7 +107,7 @@ protected:
             {
                 try
                 {
-                    m_StateVariables = xml::parseServiceDescription(contents, [this] (const std::string& action) {
+                    m_stateVariables = xml::parseServiceDescription(contents, [this] (const std::string& action) {
                         try
                         {
                             m_supportedActions.insert(actionFromString(action));
@@ -147,7 +148,7 @@ protected:
     virtual std::chrono::seconds getSubscriptionTimeout() = 0;
     virtual void handleStateVariableEvent(typename Traits::VariableType /*changedVariable*/, const std::map<typename Traits::VariableType, std::string>& /*variables*/) {}
 
-    std::vector<StateVariable> m_StateVariables;
+    std::vector<StateVariable> m_stateVariables;
 
 private:
     static ServiceType getType()
@@ -173,6 +174,11 @@ private:
     std::string variableToString(typename Traits::VariableType var)
     {
         return Traits::variableToString(var);
+    }
+
+    void renewSubscription()
+    {
+
     }
 
     void eventCb(const SubscriptionEvent& event)

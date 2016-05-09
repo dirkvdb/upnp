@@ -109,7 +109,7 @@ void Client::processServiceDescription(const std::string& descriptionUrl, std::f
     ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb] (int32_t status) {
         if (status == 200)
         {
-            for (auto& variable : m_StateVariables)
+            for (auto& variable : m_stateVariables)
             {
                 if (variable.name == toString(Variable::Volume))
                 {

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "utils/log.h"
-#include "upnp/upnp.client.h"
+#include "upnp.client.h"
 
 #include <future>
 

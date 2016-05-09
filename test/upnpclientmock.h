@@ -58,7 +58,7 @@ public:
             .Times(AnyNumber())
             .WillRepeatedly(ReturnRef(m_loop));
     }
-    
+
     MOCK_METHOD0(initialize, void());
     MOCK_METHOD2(initialize, void(const std::string&, uint16_t));
     MOCK_METHOD0(uninitialize, void());
@@ -67,12 +67,13 @@ public:
     MOCK_CONST_METHOD0(getPort, uint16_t());
 
     MOCK_METHOD3(subscribeToService, void(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)>));
+    MOCK_METHOD4(renewSubscription, void(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)>));
     MOCK_METHOD3(unsubscribeFromService, void(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)>));
     MOCK_METHOD2(sendAction, void(const Action&, std::function<void(int32_t status, std::string actionResult)>));
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(int32_t status, std::string contents)>));
 
     MOCK_CONST_METHOD0(loop, uv::Loop&());
-    
+
 private:
     uv::Loop m_loop;
 };

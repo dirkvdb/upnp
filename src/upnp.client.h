@@ -42,8 +42,18 @@ public:
     std::string getIpAddress() const override;
     uint16_t getPort() const override;
 
-    void subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) override;
-    void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb) override;
+    void subscribeToService(const std::string& publisherUrl,
+                            std::chrono::seconds timeout,
+                            std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) override;
+
+    void renewSubscription(const std::string& publisherUrl,
+                           const std::string& subscriptionId,
+                           std::chrono::seconds timeout,
+                           std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) override;
+
+    void unsubscribeFromService(const std::string& publisherUrl,
+                                const std::string& subscriptionId,
+                                std::function<void(int32_t status)> cb) override;
 
     void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb) override;

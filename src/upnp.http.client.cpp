@@ -474,7 +474,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     data->callback = std::move(cb);
 
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, "Accept:");
+    list = curl_slist_append(list, "Accept:"); // remove accept header added by curl
     list = curl_slist_append(list, fmt::format("CALLBACK: <{}>", callbackUrl).c_str());
     list = curl_slist_append(list, "NT: upnp:event");
     list = curl_slist_append(list, createTimeoutHeader(timeout).c_str());
@@ -499,7 +499,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     data->sid = sid;
 
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, "Accept:");
+    list = curl_slist_append(list, "Accept:"); // remove accept header added by curl
     list = curl_slist_append(list, fmt::format("SID: {}", sid).c_str());
     list = curl_slist_append(list, createTimeoutHeader(timeout).c_str());
     data->headerData = list;

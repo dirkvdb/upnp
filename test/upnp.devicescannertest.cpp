@@ -3,7 +3,7 @@
 
 #include "utils/log.h"
 #include "upnp/upnp.devicescanner.h"
-#include "upnp/upnp.client.h"
+#include "upnp.client.h"
 
 namespace upnp
 {

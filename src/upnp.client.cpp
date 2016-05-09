@@ -129,6 +129,29 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
     });
 }
 
+void Client2::renewSubscription(const std::string& publisherUrl,
+                                const std::string& subscriptionId,
+                                std::chrono::seconds timeout,
+                                std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
+{
+    assert(m_eventServer);
+
+    uv::asyncSend(*m_loop, [=] () {
+#ifdef DEBUG_UPNP_CLIENT
+        log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
+#endif
+        m_httpClient.renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+//#ifdef DEBUG_UPNP_CLIENT
+            log::debug("Subscription renewal response: {}", response);
+//#endif
+            if (cb)
+            {
+                cb(status, subId, subTimeout);
+            }
+        });
+    });
+}
+
 void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb)
 {
     uv::asyncSend(*m_loop, [=] () {
