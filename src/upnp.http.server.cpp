@@ -72,6 +72,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
             
                 try
                 {
+                    log::info("requested file: {}", parser->getUrl());
                     auto& file = m_serverdFiles.at(parser->getUrl());
                     writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
                 }
@@ -136,7 +137,7 @@ void Server::addFile(const std::string& urlPath, const std::string& contentType,
 std::string Server::getWebRootUrl() const
 {
     auto addr = m_socket.getSocketName();
-    return fmt::format("http://{}:{}/", addr.ip(), addr.port());
+    return fmt::format("http://{}:{}", addr.ip(), addr.port());
 }
 
 void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection)
