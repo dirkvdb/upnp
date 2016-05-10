@@ -20,8 +20,7 @@
 
 #include "upnp/upnp.serviceclientbase.h"
 #include "upnp/upnpdevice.h"
-#include "upnp/upnpxmlutils.h"
-#include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.renderingcontrol.types.h"
 
 #include <set>

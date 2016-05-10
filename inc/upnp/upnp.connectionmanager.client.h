@@ -17,7 +17,7 @@
 #pragma once
 
 #include "upnp/upnp.serviceclientbase.h"
-#include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.connectionmanager.types.h"
 
 namespace upnp

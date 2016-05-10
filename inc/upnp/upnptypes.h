@@ -25,7 +25,7 @@
 
 #include "utils/format.h"
 #include "upnp/upnpfwd.h"
-#include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnp.protocolinfo.h"
 
 namespace upnp
 {

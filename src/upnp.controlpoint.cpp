@@ -14,14 +14,14 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpcontrolpoint.h"
+#include "upnp/upnp.controlpoint.h"
 
 #include <chrono>
 #include <condition_variable>
 
-#include "upnp/upnpmediaserver.h"
-#include "upnp/upnpmediarenderer.h"
-#include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnp.mediaserver.h"
+#include "upnp/upnp.mediarenderer.h"
+#include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.connectionmanager.client.h"
 #include "upnp/upnp.http.server.h"
 

@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpmediarenderer.h"
+#include "upnp/upnp.mediarenderer.h"
 
 #include "upnp/upnpitem.h"
 #include "utils/log.h"
@@ -150,7 +150,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
                 cb(status);
                 return;
             }
-            
+
             if (m_device->implementsService(ServiceType::AVTransport))
             {
                 m_avTransport = std::make_unique<AVTransport::Client>(m_client);
@@ -186,7 +186,7 @@ void MediaRenderer::getProtocolInfo(std::function<void(int32_t)> cb)
             activateEvents();
             DeviceChanged(m_device);
         }
-        
+
         cb(status);
     });
 }

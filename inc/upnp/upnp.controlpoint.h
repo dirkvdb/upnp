@@ -22,7 +22,7 @@
 #include "utils/signal.h"
 
 #include "upnp/upnp.connectionmanager.client.h"
-#include "upnp/upnpmediarenderer.h"
+#include "upnp/upnp.mediarenderer.h"
 
 
 namespace upnp

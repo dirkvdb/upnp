@@ -99,7 +99,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.contentdirectory.client.h             src/upnp.contentdirectory.client.cpp
     inc/upnp/upnpcontentdirectoryservice.h              src/upnpcontentdirectoryservice.cpp
     inc/upnp/upnp.contentdirectory.types.h
-    inc/upnp/upnpcontrolpoint.h                         src/upnpcontrolpoint.cpp
+    inc/upnp/upnp.controlpoint.h                        src/upnp.controlpoint.cpp
     inc/upnp/upnpdevice.h
     inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
@@ -112,9 +112,9 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnphttpreader.h                           src/upnphttpreader.cpp
     inc/upnp/upnpitem.h                                 src/upnpitem.cpp
     inc/upnp/upnplastchangevariable.h                   src/upnplastchangevariable.cpp
-    inc/upnp/upnpmediarenderer.h                        src/upnpmediarenderer.cpp
-    inc/upnp/upnpmediaserver.h                          src/upnpmediaserver.cpp
-    inc/upnp/upnpprotocolinfo.h                         src/upnpprotocolinfo.cpp
+    inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
+    inc/upnp/upnp.mediaserver.h                         src/upnp.mediaserver.cpp
+    inc/upnp/upnp.protocolinfo.h                        src/upnp.protocolinfo.cpp
     inc/upnp/upnp.renderingcontrol.types.h
     inc/upnp/upnp.renderingcontrol.client.h             src/upnp.renderingcontrol.client.cpp
     inc/upnp/upnprenderingcontrolservice.h              src/upnprenderingcontrolservice.cpp

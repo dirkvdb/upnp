@@ -17,7 +17,7 @@
 #include "upnp/upnp.renderingcontrol.client.h"
 
 #include "upnp/upnputils.h"
-#include "upnp/upnpcontrolpoint.h"
+#include "upnp/upnp.controlpoint.h"
 #include "upnp.renderingcontrol.typeconversions.h"
 
 #include "utils/numericoperations.h"

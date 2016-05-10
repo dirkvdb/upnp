@@ -22,7 +22,7 @@
 #include <iostream>
 
 #include "upnp/upnptypes.h"
-#include "upnp/upnpprotocolinfo.h"
+#include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.dlna.info.h"
 
 namespace upnp
