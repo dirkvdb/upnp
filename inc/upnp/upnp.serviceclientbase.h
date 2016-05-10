@@ -74,9 +74,8 @@ public:
             }
 
             m_subscriptionId = subId;
-            m_subTimer.start(subTimeout / 2, subTimeout / 2, [this] () {
-                utils::log::warn("TODO: renew subscription");
-                renewSubscription();
+            m_subTimer.start(subTimeout * 3 / 4, [this, subTimeout] () {
+                renewSubscription(subTimeout);
             });
 
             return std::bind(&ServiceClientBase<Traits>::eventCb, this, std::placeholders::_1);
@@ -176,9 +175,20 @@ private:
         return Traits::variableToString(var);
     }
 
-    void renewSubscription()
+    void renewSubscription(std::chrono::seconds timeout)
     {
-
+        m_client.renewSubscription(m_service.m_eventSubscriptionURL, m_subscriptionId, timeout, [this] (int32_t status, std::string, auto timeout) {
+            if (status != 200)
+            {
+                utils::log::error("Failed to renew subscription");
+            }
+            else
+            {
+                m_subTimer.start(timeout * 3 / 4, [this, timeout] () {
+                    renewSubscription(timeout);
+                });
+            }
+        });
     }
 
     void eventCb(const SubscriptionEvent& event)
@@ -208,59 +218,6 @@ private:
             utils::log::error("Failed to parse event: {}", e.what());
         }
     }
-
-//    void eventCb(Upnp_EventType eventType, void* pEvent)
-//    {
-//        std::lock_guard<std::mutex> lock(m_eventMutex);
-//        switch (eventType)
-//        {
-//            case UPNP_EVENT_SUBSCRIBE_COMPLETE:
-//            {
-//                auto pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
-//                if (pSubEvent->ErrCode != UPNP_E_SUCCESS)
-//                {
-//                    utils::log::error("Error in Event Subscribe Callback: {} ({})", UpnpGetErrorMessage(pSubEvent->ErrCode), pSubEvent->ErrCode);
-//                }
-//                else
-//                {
-//                    m_subscriber->setSubscriptionId(pSubEvent->Sid);
-//
-//#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-//                    utils::log::debug("Subscription complete: {}", m_SubscriptionId);
-//#endif
-//                }
-//                break;
-//            }
-//            case UPNP_EVENT_AUTORENEWAL_FAILED:
-//            case UPNP_EVENT_SUBSCRIPTION_EXPIRED:
-//            {
-//                auto pSubEvent = reinterpret_cast<Upnp_Event_Subscribe*>(pEvent);
-//
-//                try
-//                {
-//                    int32_t timeout = getSubscriptionTimeout();
-//                    m_subscriber->setSubscriptionId(m_client.subscribeToService(pSubEvent->PublisherUrl, timeout));
-//
-//#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-//                    utils::log::debug("Service subscription renewed: {}", m_SubscriptionId);
-//#endif
-//                }
-//                catch (std::exception& e)
-//                {
-//                    utils::log::error("Failed to renew event subscription: {}", e.what());
-//                }
-//                break;
-//            }
-//            case UPNP_EVENT_RENEWAL_COMPLETE:
-//#ifdef DEBUG_SERVICE_SUBSCRIPTIONS
-//                utils::log::debug("Event subscription renewal complete");
-//#endif
-//                break;
-//            default:
-//                utils::log::info("Unhandled action: {}", eventType);
-//                break;
-//        }
-//    }
 
     IClient2&                               m_client;
     Service                                 m_service;

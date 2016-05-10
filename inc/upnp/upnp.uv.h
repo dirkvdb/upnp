@@ -541,6 +541,11 @@ public:
     : Handle<uv_timer_t>(loop, uv_timer_init)
     {
     }
+    
+    void start(std::chrono::milliseconds timeout, std::function<void()> cb)
+    {
+        start(timeout, std::chrono::milliseconds(0), cb);
+    }
 
     void start(std::chrono::milliseconds timeout, std::chrono::milliseconds repeat, std::function<void()> cb)
     {
