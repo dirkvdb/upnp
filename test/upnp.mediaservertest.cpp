@@ -25,7 +25,7 @@ using namespace utils;
 using namespace testing;
 
 #include "upnp/upnp.mediaserver.h"
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnp.factory.h"
 
 #include "testxmls.h"

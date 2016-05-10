@@ -15,7 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnpxmlutils.h"
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnpservicevariable.h"
 #include "upnp/upnputils.h"
 

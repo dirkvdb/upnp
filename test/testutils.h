@@ -17,7 +17,7 @@
 #ifndef UPNP_TEST_UTILS_H
 #define UPNP_TEST_UTILS_H
 
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnptypes.h"
 
 #include "utils/numericoperations.h"

@@ -18,7 +18,7 @@
 
 #include <cinttypes>
 #include <vector>
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 
 namespace upnp
 {

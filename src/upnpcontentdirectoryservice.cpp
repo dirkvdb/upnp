@@ -23,7 +23,7 @@
 #include "utils/numericoperations.h"
 #include "utils/stringoperations.h"
 
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 
 using namespace utils;
 

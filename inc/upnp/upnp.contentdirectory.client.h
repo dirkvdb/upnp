@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnp.serviceclientbase.h"
 #include "upnp/upnp.contentdirectory.types.h"
 

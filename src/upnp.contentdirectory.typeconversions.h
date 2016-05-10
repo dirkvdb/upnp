@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "gsl/string_span.h"
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnp.contentdirectory.types.h"
 
 namespace upnp

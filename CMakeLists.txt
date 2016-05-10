@@ -110,7 +110,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpfwd.h
     inc/upnp/upnphttpclient.h                           src/upnphttpclient.cpp
     inc/upnp/upnphttpreader.h                           src/upnphttpreader.cpp
-    inc/upnp/upnpitem.h                                 src/upnpitem.cpp
+    inc/upnp/upnp.item.h                                src/upnp.item.cpp
     inc/upnp/upnplastchangevariable.h                   src/upnplastchangevariable.cpp
     inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
     inc/upnp/upnp.mediaserver.h                         src/upnp.mediaserver.cpp

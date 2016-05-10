@@ -16,7 +16,7 @@
 
 #include "upnp/upnp.mediaserver.h"
 
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 #include "upnp/upnpdevice.h"
 
 #include "utils/log.h"
