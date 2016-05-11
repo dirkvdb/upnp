@@ -76,8 +76,8 @@ TEST_F(UVTest, QueueWorkAsync)
 {
     std::promise<void> prom;
     auto fut = prom.get_future();
-    
-    
+
+
     uv::queueWork(loop, [&] () {
         auto launchThread = std::async(std::launch::async, [&] {
             uv::queueWorkAsync(loop, [&] () {
@@ -85,10 +85,13 @@ TEST_F(UVTest, QueueWorkAsync)
                 p.set_value();
             });
         });
+
+        launchThread.get();
     });
 
     loop.run(uv::RunMode::Default);
     fut.wait();
+    uv::stopLoopAndCloseRequests(loop);
 }
 
 TEST_F(UVTest, TcpTest)

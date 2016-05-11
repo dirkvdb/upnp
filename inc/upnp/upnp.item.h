@@ -14,9 +14,9 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ITEM_H
-#define UPNP_ITEM_H
+#pragma once
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -161,6 +161,3 @@ inline std::ostream& operator<< (std::ostream& os, const Item& item)
 }
 
 }
-
-#endif
-

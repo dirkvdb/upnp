@@ -86,6 +86,9 @@ void Client2::uninitialize()
     });
 
     m_thread->join();
+
+    stopLoopAndCloseRequests(*m_loop);
+
     m_thread.reset();
 }
 

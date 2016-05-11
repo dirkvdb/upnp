@@ -146,7 +146,7 @@ TEST_F(HttpClientTest, ClientServer)
     auto servedFile = "This is my amazing file"s;
     server.addFile("/test.txt", "text/plain", servedFile);
 
-    client.get(server.getWebRootUrl() + "test.txt", [&] (int32_t status, std::string contents) {
+    client.get(server.getWebRootUrl() + "/test.txt", [&] (int32_t status, std::string contents) {
         EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
         EXPECT_EQ(servedFile, contents);
         gotCallback = true;

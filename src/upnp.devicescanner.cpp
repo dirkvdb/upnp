@@ -30,7 +30,7 @@ using namespace utils;
 using namespace std::placeholders;
 using namespace std::chrono_literals;
 
-static const auto g_timeCheckInterval = 60s;
+static const auto s_timeCheckInterval = 60s;
 
 DeviceScanner::DeviceScanner(IClient2& client, DeviceType type)
 : DeviceScanner(client, std::set<DeviceType>{ type })
@@ -62,7 +62,7 @@ void DeviceScanner::start()
 
     uv::asyncSend(m_upnpClient.loop(), [this] () {
         m_ssdpClient.run();
-        m_timer.start(g_timeCheckInterval, g_timeCheckInterval, [this] () {
+        m_timer.start(s_timeCheckInterval, s_timeCheckInterval, [this] () {
             checkForDeviceTimeouts();
         });
     });

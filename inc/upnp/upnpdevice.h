@@ -27,12 +27,9 @@
 namespace upnp
 {
 
-namespace
-{
-    static const char* MediaServerDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaServer:1";
-    static const char* MediaRendererDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaRenderer:1";
-    static const char* InternetGatewayDeviceTypeUrn = "urn:schemas-upnp-org:device:InternetGatewayDevice:1";
-}
+static const char* MediaServerDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaServer:1";
+static const char* MediaRendererDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaRenderer:1";
+static const char* InternetGatewayDeviceTypeUrn = "urn:schemas-upnp-org:device:InternetGatewayDevice:1";
 
 class Service
 {
@@ -66,7 +63,7 @@ public:
 
     std::map<ServiceType, Service>    m_services;
 
-    static const std::string deviceTypeToString(DeviceType type)
+    static const char* deviceTypeToString(DeviceType type)
     {
         switch (type)
         {

@@ -541,7 +541,7 @@ public:
     : Handle<uv_timer_t>(loop, uv_timer_init)
     {
     }
-    
+
     void start(std::chrono::milliseconds timeout, std::function<void()> cb)
     {
         start(timeout, std::chrono::milliseconds(0), cb);
@@ -768,18 +768,26 @@ public:
         checkRc(uv_udp_recv_stop(get()));
     }
 
+    // Important: the message data has to be valid until the callback is called
     void send(const Address& addr, const std::string& message, std::function<void(int32_t)> cb)
     {
-        auto buf = uv_buf_init(const_cast<char*>(&message[0]), static_cast<int32_t>(message.size()));
+        struct ContextData
+        {
+            uv_udp_send_t handle;
+            std::function<void(int32_t)> cb;
+        };
 
-        auto reqPtr = std::make_unique<uv_udp_send_t>();
-        reqPtr->data = new std::function<void(int32_t)>(cb);
-        checkRc(uv_udp_send(reqPtr.release(), get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
-            std::unique_ptr<uv_udp_send_t> reqInst(reinterpret_cast<uv_udp_send_t*>(req));
-            std::unique_ptr<std::function<void(int32_t)>> cbPtr(reinterpret_cast<std::function<void(int32_t)>*>(reqInst->data));
-            assert(cbPtr);
-            (*cbPtr)(status);
+        auto context = std::make_unique<ContextData>();
+        context->cb = std::move(cb);
+
+        auto buf = uv_buf_init(const_cast<char*>(&message[0]), static_cast<int32_t>(message.size()));
+        checkRc(uv_udp_send(&context->handle, get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
+            std::unique_ptr<ContextData> contextPtr(reinterpret_cast<ContextData*>(req));
+            assert(contextPtr->cb);
+            contextPtr->cb(status);
         }));
+
+        context.release();
     }
 
 private:

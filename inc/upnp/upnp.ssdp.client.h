@@ -43,9 +43,9 @@ public:
     // Search for any device that provides any service type
     void search();
     // Search for any device that provides the serviceType
-    void search(const std::string& serviceType);
+    void search(const char* serviceType);
     // Search for a specific device that provides the serviceType
-    void search(const std::string& serviceType, const std::string& deviceIp);
+    void search(const char* serviceType, const char* deviceIp);
 
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 

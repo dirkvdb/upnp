@@ -87,7 +87,7 @@ public:
         };
         m_settings.on_message_complete = nullptr;
         m_settings.on_status = nullptr;
-        
+
         m_settings.on_url = [] (http_parser* parser, const char* str, size_t length) -> int {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);
             thisPtr->m_url.append(str, length);
@@ -104,7 +104,7 @@ public:
             {
                 thisPtr->m_headers.back().value.assign(str, length);
             }
-            
+
             thisPtr->m_state = State::ParsingFieldValue;
             return 0;
         };
@@ -121,7 +121,7 @@ public:
                 {
                     thisPtr->m_headers.emplace_back(std::string(str, length));
                 }
-                
+
                 thisPtr->m_state = State::ParsingField;
             }
             return 0;
@@ -139,7 +139,7 @@ public:
                 {
                     thisPtr->m_body.assign(str, length);
                 }
-                
+
                 thisPtr->m_state = State::ParsingBody;
             }
             return 0;
@@ -158,7 +158,7 @@ public:
             return 1;
         };
     }
-    
+
     void setCompletedCallback(std::function<void()> cb)
     {
         m_completedCb = std::move(cb);
@@ -208,7 +208,7 @@ public:
     {
         return std::move(m_body);
     }
-    
+
     std::string getUrl() noexcept
     {
         return m_url;
@@ -218,17 +218,17 @@ public:
     {
         return m_headers;
     }
-    
+
     Flags<Flag> getFlags() const noexcept
     {
         return Flags<Flag>(m_parser.flags);
     }
-    
+
     static const char* methodToString(Method m) noexcept
     {
         return http_method_str(static_cast<http_method>(m));
     }
-    
+
 private:
     enum class State
     {
@@ -237,7 +237,7 @@ private:
         ParsingFieldValue,
         ParsingBody
     };
-    
+
     void reset()
     {
         m_headers.clear();

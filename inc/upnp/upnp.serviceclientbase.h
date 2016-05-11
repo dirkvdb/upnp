@@ -185,7 +185,7 @@ private:
             else
             {
                 m_subTimer.start(timeout * 3 / 4, [this, timeout] () {
-                    renewSubscription(timeout);
+                    this->renewSubscription(timeout);
                 });
             }
         });

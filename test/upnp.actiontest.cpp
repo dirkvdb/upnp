@@ -32,7 +32,7 @@ TEST(UpnpActionTest, CreateAction)
     EXPECT_EQ("SetVolume", action.getName());
     EXPECT_EQ("url", action.getUrl());
     EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType());
-    EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1", action.getServiceTypeUrn());
+    EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1"s, action.getServiceTypeUrn());
     EXPECT_EQ(expected, action.toString());
 }
 
@@ -51,7 +51,7 @@ TEST(UpnpActionTest, CreateActionNoArguments)
     EXPECT_EQ("SetVolume", action.getName());
     EXPECT_EQ("url", action.getUrl());
     EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType());
-    EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1", action.getServiceTypeUrn());
+    EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1"s, action.getServiceTypeUrn());
     EXPECT_EQ(expected, action.toString());
 }
 
