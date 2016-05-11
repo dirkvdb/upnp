@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnp.protocolinfo.h"
@@ -99,7 +100,7 @@ public:
     std::string getAlbumArtUri(dlna::ProfileId profile) const;
 
     const std::vector<Resource>& getResources() const;
-    const std::map<dlna::ProfileId, std::string>& getAlbumArtUris() const;
+    const std::unordered_map<dlna::ProfileId, std::string>& getAlbumArtUris() const;
 
     uint32_t getChildCount() const;
     Class getClass() const;
@@ -116,26 +117,28 @@ public:
 
     void setAlbumArt(dlna::ProfileId profile, const std::string& uri);
 
-    void addMetaData(Property prop, const std::string& value);
+    void addMetaData(Property prop, std::string value);
+    void addMetaData(std::string, std::string value);
     void addResource(const Resource& resource);
 
     const std::string& getMetaData(Property prop) const;
-    std::map<Property, std::string> getMetaData() const;
+    std::unordered_map<Property, std::string> getMetaData() const;
 
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
 
 private:
-    std::string                             m_objectId;
-    std::string                             m_parentId;
-    std::string                             m_refId;
+    std::string                                         m_objectId;
+    std::string                                         m_parentId;
+    std::string                                         m_refId;
 
-    bool                                    m_restricted;
+    bool                                                m_restricted;
 
-    std::map<Property, std::string>         m_metaData;
-    std::map<dlna::ProfileId, std::string>  m_albumArtUris;
-
-    std::vector<Resource>                   m_resources;
-    uint32_t                                m_childCount;
+    std::unordered_map<Property, std::string>           m_metaData;
+    std::unordered_map<std::string, std::string>        m_unknownMetaData;
+    std::unordered_map<dlna::ProfileId, std::string>    m_albumArtUris;
+    
+    std::vector<Resource>                               m_resources;
+    uint32_t                                            m_childCount;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const Item& item)

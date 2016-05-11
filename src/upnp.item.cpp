@@ -143,7 +143,10 @@ Item::Item(const std::string& id, const std::string& title)
 , m_restricted(true)
 , m_childCount(0)
 {
-    setTitle(title);
+    if (!title.empty())
+    {
+        setTitle(title);
+    }
 }
 
 Item::~Item()
@@ -223,7 +226,7 @@ const std::vector<Resource>& Item::getResources() const
     return m_resources;
 }
 
-const std::map<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
+const std::unordered_map<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
 {
     return m_albumArtUris;
 }
@@ -338,11 +341,19 @@ void Item::setAlbumArt(dlna::ProfileId profile, const std::string& uri)
     m_albumArtUris[profile] = uri;
 }
 
-void Item::addMetaData(Property prop, const std::string& value)
+void Item::addMetaData(Property prop, std::string value)
 {
     if (!value.empty())
     {
-        m_metaData[prop] = value;
+        m_metaData[prop] = std::move(value);
+    }
+}
+
+void Item::addMetaData(std::string prop, std::string value)
+{
+    if (!value.empty())
+    {
+        m_unknownMetaData[prop] = std::move(value);
     }
 }
 
@@ -362,7 +373,7 @@ const std::string& Item::getMetaData(Property prop) const
     return emptyString;
 }
 
-std::map<Property, std::string> Item::getMetaData() const
+std::unordered_map<Property, std::string> Item::getMetaData() const
 {
     return m_metaData;
 }

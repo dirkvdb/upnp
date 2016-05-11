@@ -113,7 +113,7 @@ protected:
                         }
                         catch (std::exception& e)
                         {
-                            utils::log::error(e.what());
+                            utils::log::warn(e.what());
                         }
                     });
                 }
@@ -193,7 +193,7 @@ private:
 
     void eventCb(const SubscriptionEvent& event)
     {
-        utils::log::info(event.data);
+        //utils::log::info(event.data);
 
         try
         {

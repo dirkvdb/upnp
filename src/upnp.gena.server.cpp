@@ -175,9 +175,7 @@ void Server::stop(std::function<void()> cb)
 
 uv::Address Server::getAddress() const
 {
-    auto addr = m_socket.getSocketName();
-    log::debug("GENA address: {} {}", addr.ip(), addr.port());
-    return addr;
+    return m_socket.getSocketName();
 }
 
 void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)

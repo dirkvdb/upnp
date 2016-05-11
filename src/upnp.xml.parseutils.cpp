@@ -121,21 +121,6 @@ bool findAndParseService(const xml_node<char>& node, const ServiceType serviceTy
     return false;
 }
 
-void addPropertyToItem(const char* propertyName, size_t propertySize, const char* propertyValue, size_t propertyValueSize, Item& item)
-{
-    auto prop = propertyFromString(propertyName, propertySize);
-    if (prop != Property::Unknown)
-    {
-        item.addMetaData(prop, decode(propertyValue, propertyValueSize));
-    }
-    else
-    {
-#ifndef NDEBUG
-        //log::warn("Unknown property: {}", propertyName);
-#endif
-    }
-}
-
 std::vector<std::string> getActionsFromDescription(xml_document<char>& doc)
 {
     std::vector<std::string> actions;
@@ -416,10 +401,10 @@ std::map<std::string, std::string> getEventValues(xml_document<char>& doc)
     return values;
 }
 
-Resource parseResource(xml_node<char>& node, const char* url, size_t urlSize)
+Resource parseResource(xml_node<char>& node, const std::string& url)
 {
     Resource res;
-    res.setUrl(std::string(url, urlSize));
+    res.setUrl(url);
 
     for (auto* attr = node.first_attribute(); attr != nullptr; attr = attr->next_attribute())
     {
@@ -478,7 +463,7 @@ Item parseContainer(xml_node<char>& containerElem)
         Property prop = propertyFromString(elem->name(), elem->name_size());
         if (prop == Property::Unknown)
         {
-            log::warn("Unknown property {}", elem->name_string());
+            item.addMetaData(elem->name_string(), elem->value_string());
             continue;
         }
 
@@ -493,11 +478,13 @@ Item parseContainer(xml_node<char>& containerElem)
             catch (std::exception&)
             {
                 // no profile id present, add it as regular metadata
-                addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
+                item.addMetaData(prop, elem->value_string());
             }
+            
+            continue;
         }
-
-        addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
+        
+        item.addMetaData(prop, elem->value_string());
     }
 
     // check required properties
@@ -547,11 +534,12 @@ Item parseItem(xml_node<char>& itemElem)
         {
             try
             {
-                if (strncmp("res", elem->name(), elem->name_size()) == 0)
+                auto prop = propertyFromString(elem->name(), elem->name_size());
+                if (prop == Property::Res)
                 {
-                    item.addResource(parseResource(*elem, elem->value(), elem->value_size()));
+                    item.addResource(parseResource(*elem, decode(elem->value(), elem->value_size())));
                 }
-                else if (strncmp("upnp:albumArtURI", elem->name(), elem->name_size()) == 0)
+                else if (prop == Property::AlbumArt)
                 {
                     // multiple art uris can be present with different dlna profiles (size)
                     try
@@ -561,12 +549,16 @@ Item parseItem(xml_node<char>& itemElem)
                     catch (std::exception&)
                     {
                         // no profile id present, add it as regular metadata
-                        addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
+                        item.addMetaData(prop, decode(elem->value(), elem->value_size()));
                     }
+                }
+                else if (prop != Property::Unknown)
+                {
+                    item.addMetaData(prop, decode(elem->value(), elem->value_size()));
                 }
                 else
                 {
-                    addPropertyToItem(elem->name(), elem->name_size(), elem->value(), elem->value_size(), item);
+                    item.addMetaData(elem->name_string(), decode(elem->value(), elem->value_size()));
                 }
             }
             catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: {}", e.what()); }

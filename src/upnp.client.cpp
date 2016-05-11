@@ -117,9 +117,8 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
         m_httpClient.subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
-//#ifdef DEBUG_UPNP_CLIENT
-            log::debug("Subscribe response: {}", response);
-//#endif
+            //log::debug("Subscribe response: {}", response);
+            
             if (cb)
             {
                 auto subCb = cb(status, subId, subTimeout);
@@ -144,9 +143,8 @@ void Client2::renewSubscription(const std::string& publisherUrl,
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
         m_httpClient.renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
-//#ifdef DEBUG_UPNP_CLIENT
-            log::debug("Subscription renewal response: {}", response);
-//#endif
+            //log::debug("Subscription renewal response: {}", response);
+
             if (cb)
             {
                 cb(status, subId, subTimeout);
