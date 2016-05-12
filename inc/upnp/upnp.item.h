@@ -122,6 +122,7 @@ public:
     void addResource(const Resource& resource);
 
     const std::string& getMetaData(Property prop) const;
+    const std::string& getMetaData(const std::string& prop) const;
     std::unordered_map<Property, std::string> getMetaData() const;
 
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
@@ -136,7 +137,7 @@ private:
     std::unordered_map<Property, std::string>           m_metaData;
     std::unordered_map<std::string, std::string>        m_unknownMetaData;
     std::unordered_map<dlna::ProfileId, std::string>    m_albumArtUris;
-    
+
     std::vector<Resource>                               m_resources;
     uint32_t                                            m_childCount;
 };

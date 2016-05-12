@@ -21,11 +21,11 @@
 namespace upnp
 {
 
-static const std::string protocolInfo   = "protocolInfo";
-static const std::string dlnaThumbnail  = "DLNA.ORG_PN=JPEG_TN";
+static const std::string s_protocolInfo   = "protocolInfo";
+static const std::string s_dlnaThumbnail  = "DLNA.ORG_PN=JPEG_TN";
 
-static const std::string emptyString;
-static const std::string resourceTag    = "res";
+static const std::string s_emptyString;
+static const std::string s_resourceTag    = "res";
 
 Resource::Resource()
 : m_size(0)
@@ -45,7 +45,7 @@ const std::string& Resource::getMetaData(const std::string& metaKey) const
         return iter->second;
     }
 
-    return emptyString;
+    return s_emptyString;
 }
 
 const std::string& Resource::getUrl() const
@@ -90,7 +90,7 @@ uint32_t Resource::getBitsPerSample() const
 
 bool Resource::isThumbnail() const
 {
-    return (0 != getMetaData(protocolInfo).find(dlnaThumbnail));
+    return (0 != getMetaData(s_protocolInfo).find(s_dlnaThumbnail));
 }
 
 void Resource::addMetaData(const std::string& key, const std::string& value)
@@ -370,7 +370,18 @@ const std::string& Item::getMetaData(Property prop) const
         return iter->second;
     }
 
-    return emptyString;
+    return s_emptyString;
+}
+
+const std::string& Item::getMetaData(const std::string& prop) const
+{
+    auto iter = m_unknownMetaData.find(prop);
+    if (iter != m_unknownMetaData.end())
+    {
+        return iter->second;
+    }
+
+    return s_emptyString;
 }
 
 std::unordered_map<Property, std::string> Item::getMetaData() const
