@@ -42,7 +42,7 @@ public:
     DeviceScanner(IClient2& client, std::set<DeviceType> types);
 
     void start();
-    void stop();
+    void stop(std::function<void()> cb);
     void refresh();
 
     uint32_t getDeviceCount() const;

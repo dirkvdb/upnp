@@ -68,12 +68,12 @@ void DeviceScanner::start()
     });
 }
 
-void DeviceScanner::stop()
+void DeviceScanner::stop(std::function<void()> cb)
 {
-    uv::asyncSend(m_upnpClient.loop(), [this] () {
-        m_timer.stop();
-        m_ssdpClient.stop();
+    uv::asyncSend(m_upnpClient.loop(), [this, cb] () {
         log::debug("Stop device scanner, known devices ({})", m_devices.size());
+        m_timer.stop();
+        m_ssdpClient.stop(cb);
     });
 }
 

@@ -22,6 +22,7 @@ static const uv::Address s_ssdpAddressIpv4 = uv::Address::createIp4(s_ssdpIp, s_
 
 Client::Client(uv::Loop& loop)
 : m_searchTimeout(3)
+, m_loop(loop)
 , m_socket(loop)
 , m_parser(std::make_unique<Parser>())
 {
@@ -56,11 +57,9 @@ void Client::run(const std::string& address)
     });
 }
 
-void Client::stop()
+void Client::stop(std::function<void()> cb)
 {
-    m_socket.close([] () {
-        log::debug("SSDP client socket closed");
-    });
+    m_socket.close(std::move(cb));
 }
 
 void Client::setSearchTimeout(std::chrono::seconds timeout)

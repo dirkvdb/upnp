@@ -36,7 +36,7 @@ public:
 
     void run();
     void run(const std::string& address);
-    void stop();
+    void stop(std::function<void()> cb);
 
     void setSearchTimeout(std::chrono::seconds timeout);
 
@@ -53,6 +53,7 @@ private:
     void parseData();
 
     uint32_t m_searchTimeout;
+    uv::Loop& m_loop;
     uv::socket::Udp m_socket;
     std::unique_ptr<Parser> m_parser;
 };

@@ -29,8 +29,9 @@ TEST(DeviceScannerTest, DiscoverClient)
         {
             discovered = true;
             log::info("Discovered: {}", dev->m_udn);
-            scanner.stop();
-            prom.set_value();
+            scanner.stop([&] () {
+                prom.set_value();
+            });
         }
     }, &client);
 
@@ -40,8 +41,7 @@ TEST(DeviceScannerTest, DiscoverClient)
     });
 
     fut.wait();
-    
-    scanner.stop();
+
     client.uninitialize();
 }
 
