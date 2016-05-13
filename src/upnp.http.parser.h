@@ -242,6 +242,7 @@ private:
     {
         m_headers.clear();
         m_body.clear();
+        m_url.clear();
         m_state = State::Initial;
     }
 
