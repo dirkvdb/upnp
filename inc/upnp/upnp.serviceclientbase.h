@@ -203,7 +203,7 @@ private:
                 std::map<typename Traits::VariableType, std::string> vars;
                 for (auto& val : values)
                 {
-                    vars.emplace(variableFromString(val.first), val.second);
+                    vars.emplace(variableFromString(val.first), xml::decode(val.second));
                 }
 
                 // let the service implementation process the event if necessary
