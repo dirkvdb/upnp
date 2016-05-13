@@ -198,6 +198,13 @@ bool MediaRenderer::supportsPlayback(const upnp::Item& item, Resource& suggested
         throw Exception("No UPnP renderer selected");
     }
 
+    if (m_protocolInfo.empty())
+    {
+        // No protocol info available, let's just try
+        log::warn("Renderer: No protocol info available: assuming supported");
+        return true;
+    }
+
     for (auto& res : item.getResources())
     {
         auto iter = std::find_if(m_protocolInfo.begin(), m_protocolInfo.end(), [res] (const ProtocolInfo& info) {
