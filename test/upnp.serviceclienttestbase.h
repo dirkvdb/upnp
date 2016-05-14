@@ -74,14 +74,10 @@ protected:
 
         setDevice(device);
         subscribe();
-
-        Mock::VerifyAndClearExpectations(&client);
     }
 
     virtual void TearDown() override
     {
-        Mock::VerifyAndClearExpectations(&client);
-
         unsubscribe();
         Mock::VerifyAndClearExpectations(&client);
 
@@ -105,7 +101,9 @@ protected:
             })));
 
         serviceInstance->StateVariableEvent.connect(std::bind(&EventListenerMock<VarType>::LastChangedEvent, &eventListener, _1, _2), this);
-        serviceInstance->subscribe();
+        serviceInstance->subscribe([] (int32_t status) {
+            EXPECT_EQ(status, 200);
+        });
     }
 
     void unsubscribe()
@@ -113,7 +111,9 @@ protected:
         EXPECT_CALL(client, unsubscribeFromService(g_subscriptionUrl, g_subscriptionId, _)).WillOnce(InvokeArgument<2>(200));
 
         serviceInstance->StateVariableEvent.disconnect(this);
-        serviceInstance->unsubscribe();
+        serviceInstance->unsubscribe([] (int32_t status) {
+            EXPECT_EQ(status, 200);
+        });
     }
 
     void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})

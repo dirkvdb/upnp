@@ -88,6 +88,8 @@ TEST_F(RenderingControlClientTest, setVolume)
     // the service description xml defines the volume range between 10 and 110
     std::map<int32_t, std::string> values = { {69, "69"}, {120, "110"}, {0, "10"} };
 
+    InSequence seq;
+
     for (auto& value : values)
     {
         Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
@@ -98,7 +100,6 @@ TEST_F(RenderingControlClientTest, setVolume)
         expectAction(expectedAction);
         EXPECT_CALL(statusMock, onStatus(200));
         serviceInstance->setVolume(g_connectionId, value.first, checkStatusCallback());
-        Mock::VerifyAndClearExpectations(&client);
     }
 }
 
