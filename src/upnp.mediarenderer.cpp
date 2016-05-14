@@ -255,11 +255,11 @@ void MediaRenderer::prepareConnection(const Resource& res, const std::string& pe
     });
 }
 
-void MediaRenderer::setTransportItem(Resource& resource)
+void MediaRenderer::setTransportItem(Resource& resource, std::function<void(int32_t)> cb)
 {
     if (m_avTransport)
     {
-        m_avTransport->setAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", nullptr);
+        m_avTransport->setAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", cb);
     }
 }
 

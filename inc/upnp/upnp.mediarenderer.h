@@ -82,7 +82,7 @@ public:
     void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
 
     // AV Transport
-    void setTransportItem(Resource& resource);
+    void setTransportItem(Resource& resource, std::function<void(int32_t)> cb);
     void setNextTransportItem(Resource& resource);
     void play();
     void pause();

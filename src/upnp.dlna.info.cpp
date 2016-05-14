@@ -22,7 +22,8 @@ static constexpr EnumMap<ProfileId> s_profileIdNames {{
     { "JPEG_TN", ProfileId::JpegThumbnail },
     { "JPEG_SM", ProfileId::JpegSmall },
     { "JPEG_MED", ProfileId::JpegMedium },
-    { "JPEG_LRG", ProfileId::JpegLarge }
+    { "JPEG_LRG", ProfileId::JpegLarge },
+    { "PNG_TN", ProfileId::PngThumbnail },
 }};
 
 ADD_ENUM_MAP(ProfileId, s_profileIdNames)

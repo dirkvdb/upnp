@@ -302,11 +302,6 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
-				43FE3DE11CE3CA720048C6EB /* upnp.protocolinfo.cpp */,
-				43FE3DD91CE3CA640048C6EB /* upnp.controlpoint.cpp */,
-				43FE3DDA1CE3CA640048C6EB /* upnp.item.cpp */,
-				43FE3DDB1CE3CA640048C6EB /* upnp.mediarenderer.cpp */,
-				43FE3DDC1CE3CA640048C6EB /* upnp.mediaserver.cpp */,
 				43AECDC51CC2B0CB00C47341 /* http_parser.cpp */,
 				43AECDC61CC2B0CB00C47341 /* http_parser.h */,
 				4341AB371387B66600297297 /* Products */,
@@ -326,6 +321,7 @@
 				43A6157E1CD4ABA800FE1F8B /* upnp.contentdirectory.client.cpp */,
 				43A6157F1CD4ABA800FE1F8B /* upnp.contentdirectory.typeconversions.cpp */,
 				43A615801CD4ABA800FE1F8B /* upnp.contentdirectory.typeconversions.h */,
+				43FE3DD91CE3CA640048C6EB /* upnp.controlpoint.cpp */,
 				43AECDC91CC2B0CB00C47341 /* upnp.devicescanner.cpp */,
 				43A615811CD4ABA800FE1F8B /* upnp.dlna.info.cpp */,
 				43A615821CD4ABA800FE1F8B /* upnp.enumutils.h */,
@@ -335,6 +331,10 @@
 				43AECDCC1CC2B0CB00C47341 /* upnp.http.client.cpp */,
 				43AECDCD1CC2B0CB00C47341 /* upnp.http.parser.h */,
 				43AECDCE1CC2B0CB00C47341 /* upnp.http.server.cpp */,
+				43FE3DDA1CE3CA640048C6EB /* upnp.item.cpp */,
+				43FE3DDB1CE3CA640048C6EB /* upnp.mediarenderer.cpp */,
+				43FE3DDC1CE3CA640048C6EB /* upnp.mediaserver.cpp */,
+				43FE3DE11CE3CA720048C6EB /* upnp.protocolinfo.cpp */,
 				43A615841CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp */,
 				43A615851CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.cpp */,
 				43A615861CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.h */,

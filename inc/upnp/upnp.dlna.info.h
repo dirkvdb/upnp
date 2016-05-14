@@ -21,6 +21,7 @@ enum class ProfileId
     JpegSmall,      // Max 640x640
     JpegMedium,     // Max 1024x768
     JpegLarge,
+    PngThumbnail,   // Max 160x160
     Unknown
 };
 

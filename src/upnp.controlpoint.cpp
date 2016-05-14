@@ -80,8 +80,12 @@ void ControlPoint::playItem(MediaServer& server, const Item& item)
 
     prepareConnection(server, resource);
     server.setTransportItem(resource);
-    m_renderer.setTransportItem(resource);
-    m_renderer.play();
+    m_renderer.setTransportItem(resource, [this] (int32_t status) {
+        if (status == 200)
+        {
+            m_renderer.play();
+        }
+    });
 }
 
 void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item> &items)
