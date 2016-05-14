@@ -954,5 +954,10 @@ inline std::vector<InterfaceInfo> getNetworkInterfaces()
     return res;
 }
 
+inline const char* getErrorString(int32_t status)
+{
+    return uv_strerror(status);
+}
+
 }
 }

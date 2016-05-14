@@ -718,7 +718,7 @@
 					"$(inherited)",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					/opt/ioslibs/include/upnp,
@@ -754,7 +754,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					/opt/ioslibs/include/upnp,
@@ -891,7 +891,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SHADOW = NO;
 				HEADER_SEARCH_PATHS = (
 					/opt/ioslibs/include/upnp,
 					/opt/ioslibs/include,
@@ -922,7 +922,7 @@
 				GCC_PREFIX_HEADER = "";
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SHADOW = NO;
 				HEADER_SEARCH_PATHS = (
 					/opt/ioslibs/include/upnp,
 					/opt/ioslibs/include,

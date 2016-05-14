@@ -74,7 +74,18 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
                 {
                     log::info("requested file: {}", parser->getUrl());
                     auto& file = m_serverdFiles.at(parser->getUrl());
-                    writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
+                    if (parser->getMethod() == Method::Head)
+                    {
+                        writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
+                    }
+                    else if (parser->getMethod() == Method::Get)
+                    {
+                        writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
+                    }
+                    else
+                    {
+                        writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), "", closeConnection);
+                    }
                 }
                 catch (std::out_of_range&)
                 {
@@ -94,7 +105,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
                     {
                         if (nread != UV_EOF)
                         {
-                            log::error("Failed to read from socket");
+                            log::error("Failed to read from socket {}", uv::getErrorString(nread));
                         }
                         else
                         {

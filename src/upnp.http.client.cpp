@@ -351,12 +351,6 @@ Client::Client(uv::Loop& loop)
 , m_timeout(5000)
 , m_multiHandle(curl_multi_init())
 {
-    static auto curlInit = curl_global_init(CURL_GLOBAL_ALL);
-    if (curlInit)
-    {
-        throw std::runtime_error("Failed to init curl library");
-    }
-
     curl_multi_setopt(m_multiHandle, CURLMOPT_SOCKETFUNCTION, handleSocket);
     curl_multi_setopt(m_multiHandle, CURLMOPT_SOCKETDATA, this);
 
@@ -366,8 +360,9 @@ Client::Client(uv::Loop& loop)
 
 Client::~Client() noexcept
 {
+    m_timer.stop();
+
     curl_multi_cleanup(m_multiHandle);
-    curl_global_cleanup();
 }
 
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
@@ -381,6 +376,7 @@ void Client::getContentLength(const std::string& url, std::function<void(int32_t
     data->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_NOBODY, 1);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
@@ -394,6 +390,7 @@ void Client::get(const std::string& url, std::function<void(int32_t, std::string
     data->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);
@@ -409,6 +406,7 @@ void Client::get(const std::string& url, std::function<void(int32_t, std::vector
     data->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);
@@ -424,6 +422,7 @@ void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, st
     data->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);
@@ -441,6 +440,7 @@ void Client::get(const std::string& url, uint8_t* data, std::function<void(int32
     cbData->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);
@@ -457,6 +457,7 @@ void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, ui
     cbData->callback = std::move(cb);
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);
@@ -481,6 +482,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     data->headerData = list;
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "SUBSCRIBE");
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
@@ -505,6 +507,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     data->headerData = list;
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "SUBSCRIBE");
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
@@ -525,6 +528,7 @@ void Client::unsubscribe(const std::string& url, const std::string& sid, std::fu
     data->headerData = list;
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "UNSUBSCRIBE");
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
@@ -553,6 +557,7 @@ void Client::soapAction(const std::string& url,
     data->headerData = list;
 
     CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0);

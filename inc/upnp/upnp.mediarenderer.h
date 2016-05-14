@@ -88,7 +88,7 @@ public:
     void pause();
     void stop();
     void next();
-    void seekInTrack(uint32_t position);
+    void seekInTrack(std::chrono::seconds position);
     void previous();
     void getCurrentTrackPosition(std::function<void(int32_t, std::chrono::seconds)> cb);
     void getPlaybackState(std::function<void(int32_t, PlaybackState)> cb);
@@ -106,9 +106,9 @@ public:
     // Rendering control
     void setVolume(uint32_t value);
     void getVolume(std::function<void(int32_t status, uint32_t volume)> cb);
-
-    void activateEvents();
-    void deactivateEvents();
+    
+    void activateEvents(std::function<void(int32_t)> cb);
+    void deactivateEvents(std::function<void(int32_t)> cb);
 
     utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
     utils::Signal<uint32_t>                   VolumeChanged;
@@ -126,7 +126,6 @@ private:
 
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
-    std::string positionToString(uint32_t position) const;
 
     std::shared_ptr<Device>                         m_device;
     IClient2&                                       m_client;

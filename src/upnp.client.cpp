@@ -73,7 +73,16 @@ void Client2::initialize(const uv::Address& addr)
         }
     });
 
-    runLoop();
+    m_thread = std::make_unique<std::thread>([this] () {
+        auto curlInit = curl_global_init(CURL_GLOBAL_WIN32);
+        if (curlInit)
+        {
+            throw std::runtime_error("Failed to init curl library");
+        }
+        
+        m_loop->run(upnp::uv::RunMode::Default);
+        curl_global_cleanup();
+    });
 }
 
 void Client2::uninitialize()
@@ -137,6 +146,7 @@ void Client2::renewSubscription(const std::string& publisherUrl,
                                 std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     assert(m_eventServer);
+    assert(timeout.count() > 0);
 
     uv::asyncSend(*m_loop, [=] () {
 #ifdef DEBUG_UPNP_CLIENT
@@ -188,13 +198,6 @@ void Client2::sendAction(const Action& action, std::function<void(int32_t, std::
 void Client2::getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb)
 {
     m_httpClient.get(url, cb);
-}
-
-void Client2::runLoop()
-{
-    m_thread = std::make_unique<std::thread>([this] () {
-        m_loop->run(upnp::uv::RunMode::Default);
-    });
 }
 
 uv::Loop& Client2::loop() const

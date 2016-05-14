@@ -63,7 +63,6 @@ public:
 private:
     void initialize(const uv::Address& addr);
 
-    void runLoop();
     void handlEvent(const SubscriptionEvent& event);
 
     std::unique_ptr<std::thread> m_thread;

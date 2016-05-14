@@ -43,13 +43,15 @@ void ControlPoint::setWebserver(http::Server& webServer)
     m_pWebServer = &webServer;
 }
 
-void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
+void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(int32_t)> cb)
 {
-    m_renderer.setDevice(dev, [this] (int32_t status) {
+    m_renderer.setDevice(dev, [this, cb] (int32_t status) {
         if (status == 200)
         {
             m_renderer.useDefaultConnection();
         }
+        
+        cb(status);
     });
 }
 
@@ -58,14 +60,14 @@ MediaRenderer& ControlPoint::getActiveRenderer()
     return m_renderer;
 }
 
-void ControlPoint::activate()
+void ControlPoint::activate(std::function<void(int32_t)> cb)
 {
-    m_renderer.activateEvents();
+    m_renderer.activateEvents(cb);
 }
 
-void ControlPoint::deactivate()
+void ControlPoint::deactivate(std::function<void(int32_t)> cb)
 {
-    m_renderer.deactivateEvents();
+    m_renderer.deactivateEvents(cb);
 }
 
 void ControlPoint::playItem(MediaServer& server, const Item& item)

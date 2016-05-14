@@ -17,6 +17,7 @@
 #include "upnp/upnp.mediarenderer.h"
 
 #include "upnp/upnp.item.h"
+#include "upnp/upnputils.h"
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp.avtransport.typeconversions.h"
@@ -131,16 +132,18 @@ std::shared_ptr<Device> MediaRenderer::getDevice()
 
 void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb)
 {
-    // if (m_device)
-    // {
-    //     deactivateEvents();
-    // }
+    assert(!m_active);
+    if (m_active)
+    {
+        throw std::runtime_error("Deactivate events before setting a new renderer device");
+    }
 
     m_device = device;
     m_connectionMgr.setDevice(m_device, [this, cb] (int32_t status) {
         if (status != 200)
         {
             cb(status);
+            log::error("Failed to set connection manager device: {}", status);
             return;
         }
 
@@ -148,16 +151,22 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
             if (status != 200)
             {
                 cb(status);
+                log::error("Failed to set rendering control device: {}", status);
                 return;
             }
 
             if (m_device->implementsService(ServiceType::AVTransport))
             {
-                m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+                if (!m_avTransport)
+                {
+                    m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+                }
+                
                 m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
                     if (status != 200)
                     {
                         cb(status);
+                        log::error("Failed to set avtransport device: {}", status);
                     }
                     else
                     {
@@ -167,6 +176,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
             }
             else
             {
+                m_avTransport.reset();
                 getProtocolInfo(cb);
             }
         });
@@ -183,11 +193,14 @@ void MediaRenderer::getProtocolInfo(std::function<void(int32_t)> cb)
             // make sure m3u is supported
             m_protocolInfo.push_back(ProtocolInfo("http-get:*:audio/m3u:*"));
             resetData();
-            activateEvents();
-            DeviceChanged(m_device);
+        }
+        else
+        {
+            log::error("Renderer: Failed to obtain protocol info: {}", status);
         }
 
         cb(status);
+        log::info("Renderer: GetProtocolInfo complete {}", status);
     });
 }
 
@@ -308,12 +321,12 @@ void MediaRenderer::next()
     }
 }
 
-void MediaRenderer::seekInTrack(uint32_t position)
+void MediaRenderer::seekInTrack(std::chrono::seconds position)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, positionToString(position), nullptr);
+        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, durationToString(position), nullptr);
     }
 }
 
@@ -434,53 +447,71 @@ void MediaRenderer::getVolume(std::function<void(int32_t status, uint32_t volume
     });
 }
 
-void MediaRenderer::activateEvents()
+void MediaRenderer::activateEvents(std::function<void(int32_t)> cb)
 {
     if (!m_active && m_device)
     {
         m_renderingControl.LastChangeEvent.connect(std::bind(&MediaRenderer::onRenderingControlLastChangeEvent, this, _1), this);
-        m_renderingControl.subscribe();
-
-        if (m_avTransport)
-        {
-            m_avTransport->LastChangeEvent.connect(std::bind(&MediaRenderer::onAVTransportLastChangeEvent, this, _1), this);
-            m_avTransport->subscribe();
-        }
-
-        m_active = true;
+        m_renderingControl.subscribe([this, cb] (int32_t status) {
+            if (m_avTransport)
+            {
+                m_avTransport->LastChangeEvent.connect(std::bind(&MediaRenderer::onAVTransportLastChangeEvent, this, _1), this);
+                m_avTransport->subscribe([this, cb] (int32_t status) {
+                    if (status == 200)
+                    {
+                        m_active = true;
+                    }
+                    
+                    cb(status);
+                });
+            }
+            else
+            {
+                if (status == 200)
+                {
+                    m_active = true;
+                }
+                
+                cb(status);
+            }
+        });
     }
 }
 
-void MediaRenderer::deactivateEvents()
+void MediaRenderer::deactivateEvents(std::function<void(int32_t)> cb)
 {
     if (m_active && m_device)
     {
-        try
-        {
-            m_renderingControl.StateVariableEvent.disconnect(this);
-            m_renderingControl.unsubscribe();
-        }
-        catch (std::exception& e)
-        {
-            // this can fail if the device disappeared
-            log::warn(e.what());
-        }
-
-        try
-        {
+        m_renderingControl.StateVariableEvent.disconnect(this);
+        m_renderingControl.unsubscribe([this, cb] (int32_t status) {
+            if (status != 200)
+            {
+                log::warn("Rendering control unsubscribe failed");
+            }
+            
             if (m_avTransport)
             {
                 m_avTransport->StateVariableEvent.disconnect(this);
-                m_avTransport->unsubscribe();
+                m_avTransport->unsubscribe([this, cb] (int32_t status) {
+                    if (status != 200)
+                    {
+                        log::warn("AVTransport unsubscribe failed");
+                    }
+                    
+                    m_active = false;
+                    cb(status);
+                });
             }
-        }
-        catch (std::exception& e)
-        {
-            // this can fail if the device disappeared
-            log::warn(e.what());
-        }
-
-        m_active = false;
+            else
+            {
+                m_active = false;
+                cb(status);
+            }
+        });
+    }
+    else
+    {
+        cb(200);
     }
 }
 
@@ -493,7 +524,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
 {
     std::set<Action> availableActions;
 
-    auto actionsStrings = stringops::tokenize(actions, ",");
+    auto actionsStrings = stringops::tokenize(actions, ',');
     for (auto& action : actionsStrings)
     {
         try
@@ -563,26 +594,6 @@ void MediaRenderer::onAVTransportLastChangeEvent(const std::map<AVTransport::Var
     {
         PlaybackStateChanged(parsePlaybackState(iter->second));
     }
-}
-
-std::string MediaRenderer::positionToString(uint32_t position) const
-{
-    uint32_t hours   = position / 3600;
-    position -= hours * 3600;
-
-    uint32_t minutes = position / 60;
-    uint32_t seconds = position % 60;
-
-
-    std::stringstream ss;
-
-    if (hours > 0)
-    {
-        ss << hours << ':';
-    }
-
-    ss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2) << std::setfill('0')  << seconds;
-    return ss.str();
 }
 
 void MediaRenderer::throwOnUnknownConnectionId() const

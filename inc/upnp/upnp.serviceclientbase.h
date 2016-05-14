@@ -60,37 +60,37 @@ public:
         }
     }
 
-    void subscribe()
+    void subscribe(std::function<void(int32_t)> cb)
     {
-        // try { unsubscribe(); }
-        // catch (std::exception& e) { utils::log::warn(e.what()); }
-
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this] (int32_t status, const std::string& subId, std::chrono::seconds subTimeout) -> std::function<void(SubscriptionEvent)> {
+        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this, cb] (int32_t status, const std::string& subId, std::chrono::seconds subTimeout) -> std::function<void(SubscriptionEvent)> {
             if (status < 0)
             {
                 utils::log::error("Error subscribing to service");
+                cb(status);
                 return nullptr;
             }
 
             m_subscriptionId = subId;
-            m_subTimer.start(subTimeout * 3 / 4, [this, subTimeout] () {
-                renewSubscription(subTimeout);
-            });
+            
+            if (subTimeout.count() > 0) // 0 timeout is infinite subscription, no need to renew
+            {
+                m_subTimer.start(subTimeout * 3 / 4, [this, subTimeout] () {
+                    renewSubscription(subTimeout);
+                });
+            }
 
+            cb(status);
             return std::bind(&ServiceClientBase<Traits>::eventCb, this, std::placeholders::_1);
         });
     }
 
-    void unsubscribe()
+    void unsubscribe(std::function<void(int32_t)> cb)
     {
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        m_client.unsubscribeFromService(m_service.m_eventSubscriptionURL, m_subscriptionId, [] (int32_t status) {
-            if (status < 0)
-            {
-                utils::log::debug("Unsubscribe from service failed");
-            }
+        uv::asyncSend(m_client.loop(), [this] () {
+            m_subTimer.stop();
         });
+    
+        m_client.unsubscribeFromService(m_service.m_eventSubscriptionURL, m_subscriptionId, cb);
     }
 
     bool supportsAction(typename Traits::ActionType action) const
@@ -122,6 +122,10 @@ protected:
                     utils::log::error(e.what());
                     status = -1;
                 }
+            }
+            else
+            {
+                utils::log::error("Failed to download service description {}", uv::getErrorString(status));
             }
 
             cb(status);
@@ -185,7 +189,10 @@ private:
             else
             {
                 m_subTimer.start(timeout * 3 / 4, [this, timeout] () {
-                    this->renewSubscription(timeout);
+                    if (timeout.count() > 0)
+                    {
+                        this->renewSubscription(timeout);
+                    }
                 });
             }
         });
@@ -224,7 +231,6 @@ private:
     uv::Timer                               m_subTimer;
     std::set<typename Traits::ActionType>   m_supportedActions;
     std::string                             m_subscriptionId;
-    std::mutex                              m_eventMutex;
 };
 
 }

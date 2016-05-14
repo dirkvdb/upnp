@@ -66,6 +66,7 @@ void HttpReader::open(const std::string& url)
     m_url = url;
     
     CurlHandle curl;
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, s_timeout);
@@ -157,6 +158,7 @@ uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
         WriteData writeData{ pData, 0 };
         
         CurlHandle curl;
+        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
         curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, s_timeout);
         curl_easy_setopt(curl, CURLOPT_RANGE, range.c_str());
