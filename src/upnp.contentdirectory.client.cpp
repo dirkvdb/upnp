@@ -41,7 +41,7 @@ namespace ContentDirectory
 namespace
 {
 
-const std::chrono::seconds g_subscriptionTimeout(1801);
+const std::chrono::seconds s_subscriptionTimeout(1801);
 
 void addPropertyToList(const std::string& propertyName, std::vector<Property>& vec)
 {
@@ -91,26 +91,26 @@ void Client::abort()
     m_abort = true;
 }
 
-void Client::querySearchCapabilities(std::function<void(int32_t, std::vector<Property>)> cb)
+void Client::querySearchCapabilities(std::function<void(Status, std::vector<Property>)> cb)
 {
-    executeAction(Action::GetSearchCapabilities, [this, cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetSearchCapabilities, [this, cb] (Status status, const std::string& response) {
         parseCapabilities(status, "SearchCaps", response, cb);
     });
 }
 
-void Client::querySortCapabilities(std::function<void(int32_t, std::vector<Property>)> cb)
+void Client::querySortCapabilities(std::function<void(Status, std::vector<Property>)> cb)
 {
-    executeAction(Action::GetSortCapabilities, [this, cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetSortCapabilities, [this, cb] (Status status, const std::string& response) {
         parseCapabilities(status, "SortCaps", response, cb);
     });
 }
 
-void Client::parseCapabilities(int32_t status, const std::string& nodeName, const std::string& response,
-                               std::function<void(int32_t, std::vector<Property>)> cb)
+void Client::parseCapabilities(Status status, const std::string& nodeName, const std::string& response,
+                               std::function<void(Status, std::vector<Property>)> cb)
 {
     std::vector<Property> props;
 
-    if (status == 200)
+    if (status)
     {
         try
         {
@@ -126,20 +126,19 @@ void Client::parseCapabilities(int32_t status, const std::string& nodeName, cons
         }
         catch (std::exception& e)
         {
-            log::error(e.what());
-            status = -1;
+            status = Status(ErrorCode::Unexpected, e.what());
         }
     }
 
     cb(status, props);
 }
 
-void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
+void Client::querySystemUpdateID(std::function<void(Status, std::string)> cb)
 {
-    executeAction(Action::GetSystemUpdateID, [this, cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetSystemUpdateID, [this, cb] (Status status, const std::string& response) {
         std::string sysUpdateId;
 
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -149,8 +148,7 @@ void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
             }
             catch (std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -158,10 +156,10 @@ void Client::querySystemUpdateID(std::function<void(int32_t, std::string)> cb)
     });
 }
 
-void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb)
+void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(Status, Item)> cb)
 {
-    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [this, cb] (int32_t status, const std::string& response) {
-        if (status != 200)
+    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [this, cb] (Status status, const std::string& response) {
+        if (!status)
         {
             cb(status, Item());
             return;
@@ -171,8 +169,7 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
         auto browseResult = xml::parseBrowseResult(response, res);
         if (browseResult.empty())
         {
-            utils::log::error("Failed to browse meta data");
-            cb(-1, Item());
+            cb(Status(ErrorCode::Unexpected, "Failed to browse metadata"), Item());
             return;
         }
 
@@ -184,10 +181,10 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
     });
 }
 
-void Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
+void Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(Status, ActionResult)> cb)
 {
-    browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort, [type, cb] (int32_t status, const std::string& response) {
-        if (status != 200)
+    browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort, [type, cb] (Status status, const std::string& response) {
+        if (!status)
         {
             cb(status, ActionResult());
             return;
@@ -223,15 +220,14 @@ void Client::browseDirectChildren(BrowseType type, const std::string& objectId, 
         }
         catch (std::exception& e)
         {
-            log::error(e.what());
-            status = -1;
+            status = Status(ErrorCode::Unexpected, e.what());
         }
 
         cb(status, res);
     });
 }
 
-void Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb)
+void Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(Status, ActionResult)> cb)
 {
     m_abort = false;
 
@@ -240,8 +236,8 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
                                     {"Filter", filter},
                                     {"StartingIndex", numericops::toString(startIndex)},
                                     {"RequestedCount", numericops::toString(limit)},
-                                    {"SortCriteria", sort} }, [cb] (int32_t status, const std::string& response) {
-        if (status != 200)
+                                    {"SortCriteria", sort} }, [cb] (Status status, const std::string& response) {
+        if (!status)
         {
             cb(status, ActionResult());
             return;
@@ -268,15 +264,14 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
         }
         catch (std::exception& e)
         {
-            log::error(e.what());
-            status = -1;
+            status = Status(ErrorCode::Unexpected, e.what());
         }
 
         cb(status, searchResult);
     });
 }
 
-void Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb)
+void Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(Status, std::string)> cb)
 {
     m_abort = false;
 
@@ -323,7 +318,7 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
 
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
-    return g_subscriptionTimeout;
+    return s_subscriptionTimeout;
 }
 
 }

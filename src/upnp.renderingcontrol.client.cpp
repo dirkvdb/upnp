@@ -32,7 +32,7 @@ using namespace utils;
 using namespace rapidxml_ns;
 using namespace std::placeholders;
 
-static const std::chrono::seconds g_subscriptionTimeout(1801);
+static const std::chrono::seconds s_subscriptionTimeout(1801);
 
 Action ServiceTraits::actionFromString(const std::string& action)
 {
@@ -61,12 +61,12 @@ Client::Client(upnp::IClient2& client)
 {
 }
 
-void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(int32_t status)> cb)
+void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(Status status)> cb)
 {
     numericops::clip(value, m_minVolume, m_maxVolume);
     executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
                                        {"Channel", "Master"},
-                                       {"DesiredVolume", numericops::toString(value)} }, [cb] (int32_t status, std::string) {
+                                       {"DesiredVolume", numericops::toString(value)} }, [cb] (Status status, std::string) {
         if (cb)
         {
             cb(status);
@@ -74,12 +74,12 @@ void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(
    });
 }
 
-void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, uint32_t volume)> cb)
+void Client::getVolume(int32_t connectionId, std::function<void(Status status, uint32_t volume)> cb)
 {
     executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                       {"Channel", "Master"} }, [cb] (int32_t status, const std::string& response) {
+                                       {"Channel", "Master"} }, [cb] (Status status, const std::string& response) {
         uint32_t volume = 0;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -90,8 +90,7 @@ void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, 
             }
             catch (std::exception& e)
             {
-                log::error("Failed to parse volume: {}", e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, "Failed to parse volume");
             }
         }
 
@@ -101,13 +100,13 @@ void Client::getVolume(int32_t connectionId, std::function<void(int32_t status, 
 
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
-    return g_subscriptionTimeout;
+    return s_subscriptionTimeout;
 }
 
-void Client::processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb)
+void Client::processServiceDescription(const std::string& descriptionUrl, std::function<void(Status)> cb)
 {
-    ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb] (int32_t status) {
-        if (status == 200)
+    ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb] (Status status) {
+        if (status)
         {
             for (auto& variable : m_stateVariables)
             {

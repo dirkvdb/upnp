@@ -39,7 +39,6 @@ DeviceScanner::DeviceScanner(IClient2& client, DeviceType type)
 
 DeviceScanner::DeviceScanner(IClient2& client, std::set<DeviceType> types)
 : m_upnpClient(client)
-, m_httpClient(client.loop())
 , m_ssdpClient(client.loop())
 , m_timer(client.loop())
 , m_types(types)
@@ -132,10 +131,10 @@ void DeviceScanner::checkForDeviceTimeouts()
 
 void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void(std::string)> cb)
 {
-    m_httpClient.get(url, [=] (int32_t status, std::string xml) {
-        if (status != 200)
+    m_upnpClient.getFile(url, [=] (Status status, std::string xml) {
+        if (!status)
         {
-            log::error("Failed to download device info {} ({})", url, http::Client::errorToString(status));
+            log::error("Failed to download device info {} ({})", url, status.what());
             return;
         }
 

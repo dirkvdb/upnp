@@ -28,12 +28,12 @@ namespace upnp
 namespace test
 {
 
-static const std::string g_eventNameSpaceId = "RCS";
+static const std::string s_eventNameSpaceId = "RCS";
 
 struct RenderingControlStatusCallbackMock
 {
-    MOCK_METHOD1(onStatus, void(int32_t));
-    MOCK_METHOD2(onStatus, void(int32_t, uint32_t volume));
+    MOCK_METHOD1(onStatus, void(Status));
+    MOCK_METHOD2(onStatus, void(Status, uint32_t volume));
 };
 
 class RenderingControlClientTest : public ServiceClientTestBase<RenderingControl::Client, RenderingControlStatusCallbackMock, RenderingControl::Variable>
@@ -50,8 +50,8 @@ public:
                                                  { "Volume", volume, {{ "channel", "master" }} } };
 
         SubscriptionEvent event;
-        event.sid  = g_subscriptionId;
-        event.data = testxmls::generateStateVariableChangeEvent("LastChange", g_eventNameSpaceId, ev);
+        event.sid  = s_subscriptionId;
+        event.data = testxmls::generateStateVariableChangeEvent("LastChange", s_eventNameSpaceId, ev);
         eventCb(event);
     }
 };
@@ -92,27 +92,27 @@ TEST_F(RenderingControlClientTest, setVolume)
 
     for (auto& value : values)
     {
-        Action expectedAction("SetVolume", g_controlUrl, ServiceType::RenderingControl);
+        Action expectedAction("SetVolume", s_controlUrl, ServiceType::RenderingControl);
         expectedAction.addArgument("Channel", "Master");
         expectedAction.addArgument("DesiredVolume", value.second);
-        expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
+        expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
         expectAction(expectedAction);
-        EXPECT_CALL(statusMock, onStatus(200));
-        serviceInstance->setVolume(g_connectionId, value.first, checkStatusCallback());
+        EXPECT_CALL(statusMock, onStatus(Status()));
+        serviceInstance->setVolume(s_connectionId, value.first, checkStatusCallback());
     }
 }
 
 TEST_F(RenderingControlClientTest, getVolume)
 {
-    Action expectedAction("GetVolume", g_controlUrl, ServiceType::RenderingControl);
+    Action expectedAction("GetVolume", s_controlUrl, ServiceType::RenderingControl);
     expectedAction.addArgument("Channel", "Master");
-    expectedAction.addArgument("InstanceID", std::to_string(g_connectionId));
+    expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "CurrentVolume", "36" } } );
 
-    EXPECT_CALL(statusMock, onStatus(200, 36u));
-    serviceInstance->getVolume(g_connectionId, checkStatusCallback<uint32_t>());
+    EXPECT_CALL(statusMock, onStatus(Status(), 36u));
+    serviceInstance->getVolume(s_connectionId, checkStatusCallback<uint32_t>());
 }
 
 }

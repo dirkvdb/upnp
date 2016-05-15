@@ -46,20 +46,20 @@ class Client : public ServiceClientBase<ServiceTraits>
 public:
     Client(IClient2& client);
 
-    void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb);
-    void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb);
+    void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb);
+    void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb);
 
-    void play(int32_t connectionId, const std::string& speed, std::function<void(int32_t)> cb);
-    void pause(int32_t connectionId, std::function<void(int32_t)> cb);
-    void stop(int32_t connectionId, std::function<void(int32_t)> cb);
-    void previous(int32_t connectionId, std::function<void(int32_t)> cb);
-    void seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(int32_t)> cb);
-    void next(int32_t connectionId, std::function<void(int32_t)> cb);
+    void play(int32_t connectionId, const std::string& speed, std::function<void(upnp::Status)> cb);
+    void pause(int32_t connectionId, std::function<void(upnp::Status)> cb);
+    void stop(int32_t connectionId, std::function<void(upnp::Status)> cb);
+    void previous(int32_t connectionId, std::function<void(upnp::Status)> cb);
+    void seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(upnp::Status)> cb);
+    void next(int32_t connectionId, std::function<void(upnp::Status)> cb);
 
-    void getPositionInfo(int32_t connectionId, std::function<void(int32_t, PositionInfo)> cb);
-    void getMediaInfo(int32_t connectionId, std::function<void(int32_t, MediaInfo)> cb);
-    void getTransportInfo(int32_t connectionId, std::function<void(int32_t, TransportInfo)> cb);
-    void getCurrentTransportActions(int32_t connectionId, std::function<void(int32_t, std::set<Action>)> cb);
+    void getPositionInfo(int32_t connectionId, std::function<void(upnp::Status, PositionInfo)> cb);
+    void getMediaInfo(int32_t connectionId, std::function<void(upnp::Status, MediaInfo)> cb);
+    void getTransportInfo(int32_t connectionId, std::function<void(upnp::Status, TransportInfo)> cb);
+    void getCurrentTransportActions(int32_t connectionId, std::function<void(upnp::Status, std::set<Action>)> cb);
 
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 

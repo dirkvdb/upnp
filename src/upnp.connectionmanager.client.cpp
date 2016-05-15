@@ -35,7 +35,7 @@ using namespace utils;
 using namespace rapidxml_ns;
 using namespace std::string_literals;
 
-static const std::chrono::seconds g_subscriptionTimeout(1801);
+static const std::chrono::seconds s_subscriptionTimeout(1801);
 
 Action ServiceTraits::actionFromString(const std::string& action)
 {
@@ -62,11 +62,11 @@ Client::Client(IClient2& client)
 {
 }
 
-void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInfo>)> cb)
+void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo>)> cb)
 {
-    executeAction(Action::GetProtocolInfo, [=] (int32_t status, std::string response) {
+    executeAction(Action::GetProtocolInfo, [=] (Status status, std::string response) {
         std::vector<ProtocolInfo> protocolInfo;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -92,8 +92,7 @@ void Client::getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInf
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -105,14 +104,14 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
                                   const std::string& peerConnectionManager,
                                   int32_t peerConnectionId,
                                   Direction direction,
-                                  std::function<void(int32_t, ConnectionInfo)> cb)
+                                  std::function<void(Status, ConnectionInfo)> cb)
 {
     executeAction(Action::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
                                                   {"PeerConnectionManager", peerConnectionManager},
                                                   {"PeerConnectionID", std::to_string(peerConnectionId)},
-                                                  {"Direction", toString(direction)} }, [=] (int32_t status, const std::string& response) {
+                                                  {"Direction", toString(direction)} }, [=] (Status status, const std::string& response) {
         ConnectionInfo connInfo;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -130,8 +129,7 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -139,18 +137,18 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
     });
 }
 
-void Client::connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(int32_t)> cb)
+void Client::connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(Status)> cb)
 {
-    executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} }, [cb] (int32_t status, const std::string&) {
+    executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} }, [cb] (Status status, const std::string&) {
         cb(status);
     });
 }
 
-void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std::string>)> cb)
+void Client::getCurrentConnectionIds(std::function<void(Status, std::vector<std::string>)> cb)
 {
-    executeAction(Action::GetCurrentConnectionIDs, [cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetCurrentConnectionIDs, [cb] (Status status, const std::string& response) {
         std::vector<std::string> ids;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -160,8 +158,7 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -169,11 +166,11 @@ void Client::getCurrentConnectionIds(std::function<void(int32_t, std::vector<std
     });
 }
 
-void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(int32_t, ConnectionInfo)> cb)
+void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(Status, ConnectionInfo)> cb)
 {
-    executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} }, [=] (int32_t status, const std::string& response) {
+    executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} }, [=] (Status status, const std::string& response) {
         ConnectionInfo connInfo;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -192,8 +189,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -203,7 +199,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(i
 
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
-    return g_subscriptionTimeout;
+    return s_subscriptionTimeout;
 }
 
 // void Client::handleUPnPResult(int errorCode)

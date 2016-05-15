@@ -28,7 +28,7 @@ namespace upnp
 namespace test
 {
 
-static const std::string g_eventNameSpaceId = "CDS";
+static const std::string s_eventNameSpaceId = "CDS";
 using ActionResult = ContentDirectory::ActionResult;
 
 class ItemSubscriber
@@ -39,10 +39,10 @@ public:
 
 struct ContentDirectoryStatusCallbackMock
 {
-    MOCK_METHOD1(onStatus, void(int32_t));
-    MOCK_METHOD2(onStatus, void(int32_t, Item));
-    MOCK_METHOD2(onStatus, void(int32_t, ActionResult));
-    MOCK_METHOD2(onStatus, void(int32_t, std::vector<Property>));
+    MOCK_METHOD1(onStatus, void(Status));
+    MOCK_METHOD2(onStatus, void(Status, Item));
+    MOCK_METHOD2(onStatus, void(Status, ActionResult));
+    MOCK_METHOD2(onStatus, void(Status, std::vector<Property>));
 };
 
 class ContentDirectoryClientTest : public ServiceClientTestBase<ContentDirectory::Client, ContentDirectoryStatusCallbackMock, ContentDirectory::Variable>
@@ -94,21 +94,21 @@ public:
 
 TEST_F(ContentDirectoryClientTest, querySearchCapabilities)
 {
-    Action searchCaps("GetSearchCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+    Action searchCaps("GetSearchCapabilities", s_controlUrl, ServiceType::ContentDirectory);
     expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
 
     std::vector<Property> props = { Property::Artist, Property::Title };
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<std::vector<Property>>(ContainerEq(props))));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<std::vector<Property>>(ContainerEq(props))));
     serviceInstance->querySearchCapabilities(checkStatusCallback<std::vector<Property>>());
 }
 
 TEST_F(ContentDirectoryClientTest, querySortCapabilities)
 {
-    Action sortCaps("GetSortCapabilities", g_controlUrl, ServiceType::ContentDirectory);
+    Action sortCaps("GetSortCapabilities", s_controlUrl, ServiceType::ContentDirectory);
     expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
 
     std::vector<Property> props = {Property::Artist, Property::Title, Property::Genre};
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<std::vector<Property>>(ContainerEq(props))));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<std::vector<Property>>(ContainerEq(props))));
     serviceInstance->querySortCapabilities(checkStatusCallback<std::vector<Property>>());
 }
 
@@ -123,7 +123,7 @@ TEST_F(ContentDirectoryClientTest, supportedActions)
 
 TEST_F(ContentDirectoryClientTest, browseMetadataItem)
 {
-    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -134,18 +134,18 @@ TEST_F(ContentDirectoryClientTest, browseMetadataItem)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse({}, generateItems(1, "object.item.audioItem")));
+        cb(Status(), generateBrowseResponse({}, generateItems(1, "object.item.audioItem")));
     }));
 
     Item item;
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
     serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
     expectItem(0, item);
 }
 
 TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
 {
-    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -156,11 +156,11 @@ TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(1, "object.container"), {}));
+        cb(Status(), generateBrowseResponse(generateContainers(1, "object.container"), {}));
     }));
 
     Item item;
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
     serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
     expectContainer(0, item);
 }
@@ -169,7 +169,7 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
 {
     const uint32_t size = 10;
 
-    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -180,12 +180,12 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+        cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem")));
     }));
 
     ActionResult result;
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
     serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort", checkStatusCallback<ActionResult>());
 
     EXPECT_EQ(size * 2, result.totalMatches);
@@ -214,7 +214,7 @@ TEST_F(ContentDirectoryClientTest, search)
 {
     const uint32_t size = 10;
 
-    Action expectedAction("Search", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Search", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("Filter", "filt");
     expectedAction.addArgument("ObjectID", "ObjectId");
     expectedAction.addArgument("RequestedCount", "100");
@@ -225,12 +225,12 @@ TEST_F(ContentDirectoryClientTest, search)
     InSequence seq;
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+        cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem")));
     }));
 
     ActionResult result;
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
     serviceInstance->search("ObjectId", "crit", "filt", 0, 100, "sort", checkStatusCallback<ActionResult>());
 
     EXPECT_EQ(size * 2, result.totalMatches);
@@ -259,7 +259,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 {
     const uint32_t size = 10000;
 
-    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -269,11 +269,11 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+        cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem")));
     }));
 
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_)));
 
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test");
@@ -285,7 +285,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
 {
     const uint32_t size = 10000;
 
-    Action expectedAction("Browse", g_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -295,11 +295,11 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
 
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(size, "object.container"),
+        cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
                                                 generateItems(size, "object.item.audioItem")));
     }));
 
-    EXPECT_CALL(statusMock, onStatus(200, Matcher<ActionResult>(_)));
+    EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_)));
 
     uint64_t startTime = timeops::getTimeInMilliSeconds();
     log::info("Start browse performance test containers only");

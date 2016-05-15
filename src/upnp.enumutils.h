@@ -51,14 +51,14 @@ constexpr std::underlying_type_t<IfEndsWithUnknown<EnumType>> enum_count()
     return enum_value(EnumType::Unknown);
 }
 
-template <typename EnumType>
-using EnumMap = std::array<std::tuple<const char*, EnumType>, enum_count<EnumType>()>;
+template <typename EnumType, typename ValueType=const char*>
+using EnumMap = std::array<std::tuple<ValueType, EnumType>, enum_count<EnumType>()>;
 
-template <typename EnumType, EnumType endElem>
-using EnumMapEndsWith = std::array<std::tuple<const char*, EnumType>, enum_value<EnumType>(endElem) + 1>;
+template <typename EnumType, EnumType endElem, typename ValueType=const char*>
+using EnumMapEndsWith = std::array<std::tuple<ValueType, EnumType>, enum_value<EnumType>(endElem) + 1>;
 
-template<typename EnumType>
-constexpr const EnumMap<EnumType>& lut()
+template<typename EnumType, typename ValueType=const char*>
+constexpr const EnumMap<EnumType, ValueType>& lut()
 {
     static_assert(!std::is_enum<EnumType>::value, "No lookup table provided for type");
     return nullptr;
@@ -104,13 +104,19 @@ constexpr const char* enum_string(EnumType value) noexcept
     return std::get<0>(lut<EnumType>()[enum_value(value)]);
 }
 
-template <typename EnumType>
+template <typename EnumValue, typename EnumType>
+constexpr EnumValue enum_typecast(EnumType value) noexcept
+{
+    return std::get<0>(lut<EnumType, EnumValue>()[enum_value(value)]);
+}
+
+template <typename EnumType, typename ValueType=const char*>
 constexpr bool enumCorrectNess()
 {
-    for (size_t i = 0; i < lut<EnumType>().size(); ++i)
+    for (size_t i = 0; i < lut<EnumType, ValueType>().size(); ++i)
     {
         // Check that the enums appear in the correct order
-        if (std::get<1>(lut<EnumType>().at(i)) != static_cast<EnumType>(i))
+        if (std::get<1>(lut<EnumType, ValueType>().at(i)) != static_cast<EnumType>(i))
         {
             return false;
         }
@@ -122,4 +128,9 @@ constexpr bool enumCorrectNess()
 #define ADD_ENUM_MAP(enumType, lutVar) \
     template<> constexpr const EnumMap<enumType>& lut<enumType>() { return lutVar; } \
     static_assert(enumCorrectNess<enumType>(), #enumType " enum converion not correctly ordered or missing entries");
+
+#define ADD_ENUM_MAP_TYPED(enumType, enumValue, lutVar) \
+    template<> constexpr const EnumMap<enumType, enumValue>& lut<enumType, enumValue>() { return lutVar; } \
+    static_assert(enumCorrectNess<enumType, enumValue>(), #enumType " typed enum converion not correctly ordered or missing entries");
+
 }

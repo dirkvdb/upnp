@@ -41,12 +41,12 @@ using namespace testing;
 using namespace std::placeholders;
 using namespace std::chrono_literals;
 
-static const std::string g_controlUrl               = "ControlUrl";
-static const std::string g_subscriptionUrl          = "SubscriptionUrl";
-static const std::string g_serviceDescriptionUrl    = "ServiceDescriptionUrl";
-static const std::string g_subscriptionId           = "subscriptionId";
-static const uint32_t g_connectionId                = 0;
-static const std::chrono::seconds g_defaultTimeout  = 1801s;
+static const std::string s_controlUrl               = "ControlUrl";
+static const std::string s_subscriptionUrl          = "SubscriptionUrl";
+static const std::string s_serviceDescriptionUrl    = "ServiceDescriptionUrl";
+static const std::string s_subscriptionId           = "subscriptionId";
+static const uint32_t s_connectionId                = 0;
+static const std::chrono::seconds s_defaultTimeout  = 1801s;
 
 template <typename SvcType, typename StatusCbMock, typename VarType>
 class ServiceClientTestBase : public Test
@@ -62,9 +62,9 @@ protected:
     {
         Service service;
         service.m_type                  = serviceType;
-        service.m_controlURL            = g_controlUrl;
-        service.m_eventSubscriptionURL  = g_subscriptionUrl;
-        service.m_scpdUrl               = g_serviceDescriptionUrl;
+        service.m_controlURL            = s_controlUrl;
+        service.m_eventSubscriptionURL  = s_subscriptionUrl;
+        service.m_scpdUrl               = s_serviceDescriptionUrl;
 
         serviceInstance = std::make_unique<SvcType>(client);
 
@@ -87,32 +87,32 @@ protected:
     virtual void setDevice(std::shared_ptr<Device> device)
     {
         // set a valid device
-        EXPECT_CALL(client, getFile(g_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(200, serviceXml));
-        serviceInstance->setDevice(device, [] (int32_t status) {
-            EXPECT_EQ(200, status);
+        EXPECT_CALL(client, getFile(s_serviceDescriptionUrl, _)).WillOnce(InvokeArgument<1>(Status(), serviceXml));
+        serviceInstance->setDevice(device, [] (Status status) {
+            EXPECT_EQ(ErrorCode::Success, status.getErrorCode());
         });
     }
 
     void subscribe()
     {
-        EXPECT_CALL(client, subscribeToService(g_subscriptionUrl, g_defaultTimeout, _))
+        EXPECT_CALL(client, subscribeToService(s_subscriptionUrl, s_defaultTimeout, _))
             .WillOnce(WithArg<2>(Invoke([&] (auto& cb) {
-                eventCb = cb(200, g_subscriptionId, g_defaultTimeout);
+                eventCb = cb(Status(), s_subscriptionId, s_defaultTimeout);
             })));
 
         serviceInstance->StateVariableEvent.connect(std::bind(&EventListenerMock<VarType>::LastChangedEvent, &eventListener, _1, _2), this);
-        serviceInstance->subscribe([] (int32_t status) {
-            EXPECT_EQ(status, 200);
+        serviceInstance->subscribe([] (Status status) {
+            EXPECT_EQ(ErrorCode::Success, status.getErrorCode());
         });
     }
 
     void unsubscribe()
     {
-        EXPECT_CALL(client, unsubscribeFromService(g_subscriptionUrl, g_subscriptionId, _)).WillOnce(InvokeArgument<2>(200));
+        EXPECT_CALL(client, unsubscribeFromService(s_subscriptionUrl, s_subscriptionId, _)).WillOnce(InvokeArgument<2>(Status()));
 
         serviceInstance->StateVariableEvent.disconnect(this);
-        serviceInstance->unsubscribe([] (int32_t status) {
-            EXPECT_EQ(status, 200);
+        serviceInstance->unsubscribe([] (Status status) {
+            EXPECT_EQ(ErrorCode::Success, status.getErrorCode());
         });
     }
 
@@ -120,19 +120,19 @@ protected:
     {
         EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
             EXPECT_EQ(expected.toString(), action.toString());
-            cb(200, wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
+            cb(Status(), wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
         }));
     }
 
-    std::function<void(int32_t)> checkStatusCallback()
+    std::function<void(Status)> checkStatusCallback()
     {
-        return [this] (int32_t status) { statusMock.onStatus(status); };
+        return [this] (Status status) { statusMock.onStatus(status); };
     }
 
     template <typename T>
-    std::function<void(int32_t, const T&)> checkStatusCallback()
+    std::function<void(Status, const T&)> checkStatusCallback()
     {
-        return [this] (int32_t status, const T& arg) { statusMock.onStatus(status, arg); };
+        return [this] (Status status, const T& arg) { statusMock.onStatus(status, arg); };
     }
 
     ServiceType                            serviceType;

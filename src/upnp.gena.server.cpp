@@ -108,12 +108,13 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                 }
                 catch (Exception& e)
                 {
-                    auto body = fmt::format(g_body, e.getErrorCode(), e.what());
-                    writeResponse(client, fmt::format(errorResponse, e.getErrorCode(), e.what(), body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
+                    auto ec = errorCodeToInt(ErrorCode(e.getErrorCode()));
+                    auto body = fmt::format(g_body, ec, e.what());
+                    writeResponse(client, fmt::format(errorResponse, ec, e.what(), body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                 }
                 catch (std::exception& e)
                 {
-                    auto ec = static_cast<int32_t>(ErrorCode::BadRequest);
+                    auto ec = errorCodeToInt(ErrorCode::BadRequest);
                     auto body = fmt::format(g_body, ec, e.what());
                     writeResponse(client, fmt::format(errorResponse, ec, e.what(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
                 }

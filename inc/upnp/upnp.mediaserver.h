@@ -37,8 +37,7 @@ class MediaServer
 public:
     static const std::string rootId;
 
-    using ItemCb = std::function<void(const Item&)>;
-    using ItemsCb = std::function<void(int32_t status, const std::vector<Item>&)>;
+    using ItemsCb = std::function<void(Status, const std::vector<Item>&)>;
 
     enum class SortMode
     {
@@ -49,7 +48,7 @@ public:
     MediaServer(IClient2& client);
     ~MediaServer();
 
-    void setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb);
+    void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb);
     std::shared_ptr<Device> getDevice();
 
     void abort();
@@ -77,7 +76,6 @@ public:
     void getAllInContainer(const std::string& id, const ItemsCb& onItem);
     void getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
 
-    void getMetaData(const std::string& id, const ItemCb& onItem);
     void search(const std::string& id, const std::string& criteria, const ItemsCb& onItem);
     void search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemsCb& onItem);
 
@@ -91,14 +89,14 @@ public:
     ConnectionManager::Client& connectionManager();
 
 private:
-    void queryCapabilities(std::function<void(int32_t)> cb);
+    void queryCapabilities(std::function<void(Status)> cb);
 
     void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode, const ItemsCb& onItem);
     void handleSearchResult(const std::string& id,
                             const std::string& criteria,
                             uint32_t offset,
                             uint32_t requestSize,
-                            int32_t status,
+                            Status status,
                             const ContentDirectory::ActionResult& res,
                             const ItemsCb& cb);
 
@@ -108,7 +106,7 @@ private:
                             uint32_t limit,
                             const std::string& sort,
                             uint32_t requestSize,
-                            int32_t status,
+                            Status status,
                             const ContentDirectory::ActionResult& res,
                             const ItemsCb& onItem,
                             uint32_t itemsReceived);

@@ -25,26 +25,11 @@
 
 #include "utils/format.h"
 #include "upnp/upnpfwd.h"
+#include "upnp/upnp.types.h"
 #include "upnp/upnp.protocolinfo.h"
 
 namespace upnp
 {
-
-enum class ErrorCode : int32_t
-{
-    BadRequest = 400,
-    PreconditionFailed = 412
-};
-
-inline std::string errorCodeToString(ErrorCode code)
-{
-    switch (code)
-    {
-    case ErrorCode::BadRequest:             return "Bad request";
-    case ErrorCode::PreconditionFailed:     return "Precondition Failed";
-    default:                                return "Unspecified error";
-    }
-}
 
 class Exception : public std::runtime_error
 {

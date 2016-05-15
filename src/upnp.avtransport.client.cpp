@@ -33,7 +33,7 @@ using namespace utils;
 using namespace rapidxml_ns;
 using namespace std::placeholders;
 
-static const std::chrono::seconds g_subscriptionTimeout(1801);
+static const std::chrono::seconds s_subscriptionTimeout(1801);
 
 namespace
 {
@@ -47,9 +47,9 @@ void invoke(Func&& func, Args&&... args)
     }
 }
 
-std::function<void(int32_t, std::string)> stripResponse(std::function<void(int32_t)> cb)
+std::function<void(upnp::Status, std::string)> stripResponse(std::function<void(upnp::Status)> cb)
 {
-    return [cb] (int32_t status, const std::string&) {
+    return [cb] (upnp::Status status, const std::string&) {
         invoke(cb, status);
     };
 }
@@ -81,58 +81,58 @@ Client::Client(IClient2& client)
 {
 }
 
-void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb)
+void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb)
 {
     executeAction(Action::SetAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
                                                {"CurrentURI", uri},
                                                {"CurrentURIMetaData", uriMetaData} }, stripResponse(cb));
 }
 
-void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(int32_t)> cb)
+void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb)
 {
     executeAction(Action::SetNextAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
                                                    {"NextURI", uri},
                                                    {"NextURIMetaData", uriMetaData} }, stripResponse(cb));
 }
 
-void Client::play(int32_t connectionId, const std::string& speed, std::function<void(int32_t)> cb)
+void Client::play(int32_t connectionId, const std::string& speed, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},
                                                {"Speed", speed} }, stripResponse(cb));
 }
 
-void Client::pause(int32_t connectionId, std::function<void(int32_t)> cb)
+void Client::pause(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::stop(int32_t connectionId, std::function<void(int32_t)> cb)
+void Client::stop(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::next(int32_t connectionId, std::function<void(int32_t)> cb)
+void Client::next(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::previous(int32_t connectionId, std::function<void(int32_t)> cb)
+void Client::previous(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
 }
 
-void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(int32_t)> cb)
+void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(upnp::Status)> cb)
 {
     executeAction(AVTransport::Action::Seek, { {"InstanceID", std::to_string(connectionId)},
                                                {"Unit", toString(mode)},
                                                {"Target", target} }, stripResponse(cb));
 }
 
-void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, PositionInfo)> cb)
+void Client::getPositionInfo(int32_t connectionId, std::function<void(upnp::Status, PositionInfo)> cb)
 {
-    executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
         PositionInfo info;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -150,8 +150,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -159,11 +158,11 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(int32_t, P
     });
 }
 
-void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, MediaInfo)> cb)
+void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status, MediaInfo)> cb)
 {
-    executeAction(Action::GetMediaInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetMediaInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
         MediaInfo info;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -183,8 +182,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -192,11 +190,11 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(int32_t, Medi
     });
 }
 
-void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, TransportInfo)> cb)
+void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Status, TransportInfo)> cb)
 {
-    executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (int32_t status, const std::string& response) {
+    executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
         TransportInfo info;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -223,8 +221,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -232,11 +229,11 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(int32_t, 
     });
 }
 
-void Client::getCurrentTransportActions(int32_t connectionId, std::function<void(int32_t, std::set<Action>)> cb)
+void Client::getCurrentTransportActions(int32_t connectionId, std::function<void(upnp::Status, std::set<Action>)> cb)
 {
-    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [this, cb] (int32_t status, std::string response) {
+    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [this, cb] (upnp::Status status, std::string response) {
         std::set<Action> actions;
-        if (status == 200)
+        if (status)
         {
             try
             {
@@ -257,8 +254,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
             }
             catch(std::exception& e)
             {
-                log::error(e.what());
-                status = -1;
+                status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
         }
 
@@ -268,7 +264,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
 
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
-    return g_subscriptionTimeout;
+    return s_subscriptionTimeout;
 }
 
 void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables)

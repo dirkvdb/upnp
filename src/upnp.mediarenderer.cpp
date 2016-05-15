@@ -130,7 +130,7 @@ std::shared_ptr<Device> MediaRenderer::getDevice()
     return m_device;
 }
 
-void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::function<void(int32_t)> cb)
+void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb)
 {
     assert(!m_active);
     if (m_active)
@@ -139,16 +139,16 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
     }
 
     m_device = device;
-    m_connectionMgr.setDevice(m_device, [this, cb] (int32_t status) {
-        if (status != 200)
+    m_connectionMgr.setDevice(m_device, [this, cb] (Status status) {
+        if (!status)
         {
             cb(status);
-            log::error("Failed to set connection manager device: {}", status);
+            log::error("Failed to set connection manager device: {}", status.what());
             return;
         }
 
-        m_renderingControl.setDevice(m_device, [this, cb] (int32_t status) {
-            if (status != 200)
+        m_renderingControl.setDevice(m_device, [this, cb] (Status status) {
+            if (!status)
             {
                 cb(status);
                 log::error("Failed to set rendering control device: {}", status);
@@ -162,8 +162,8 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
                     m_avTransport = std::make_unique<AVTransport::Client>(m_client);
                 }
                 
-                m_avTransport->setDevice(m_device, [this, cb] (int32_t status) {
-                    if (status != 200)
+                m_avTransport->setDevice(m_device, [this, cb] (Status status) {
+                    if (!status)
                     {
                         cb(status);
                         log::error("Failed to set avtransport device: {}", status);
@@ -183,11 +183,11 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
     });
 }
 
-void MediaRenderer::getProtocolInfo(std::function<void(int32_t)> cb)
+void MediaRenderer::getProtocolInfo(std::function<void(Status)> cb)
 {
     // reset state related data
-    m_connectionMgr.getProtocolInfo([this, cb] (int32_t status, std::vector<ProtocolInfo> info) {
-        if (status == 200)
+    m_connectionMgr.getProtocolInfo([this, cb] (Status status, std::vector<ProtocolInfo> info) {
+        if (status)
         {
             m_protocolInfo = std::move(info);
             // make sure m3u is supported
@@ -260,15 +260,15 @@ void MediaRenderer::prepareConnection(const Resource& res, const std::string& pe
                                          peerConnectionManager,
                                          serverConnectionId,
                                          ConnectionManager::Direction::Input,
-                                         [this] (int32_t status, ConnectionManager::ConnectionInfo info) {
-        if (status == 200)
+                                         [this] (Status status, ConnectionManager::ConnectionInfo info) {
+        if (status)
         {
             m_connInfo = info;
         }
     });
 }
 
-void MediaRenderer::setTransportItem(Resource& resource, std::function<void(int32_t)> cb)
+void MediaRenderer::setTransportItem(Resource& resource, std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
@@ -339,13 +339,13 @@ void MediaRenderer::previous()
     }
 }
 
-void MediaRenderer::getCurrentTrackPosition(std::function<void(int32_t, std::chrono::seconds)> cb)
+void MediaRenderer::getCurrentTrackPosition(std::function<void(Status, std::chrono::seconds)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->getPositionInfo(m_connInfo.connectionId, [this, cb] (int32_t status, AVTransport::PositionInfo info) {
-            if (status == 200)
+        m_avTransport->getPositionInfo(m_connInfo.connectionId, [this, cb] (Status status, AVTransport::PositionInfo info) {
+            if (status)
             {
                 cb(status, parseDuration(info.relativeTime));
             }
@@ -353,14 +353,14 @@ void MediaRenderer::getCurrentTrackPosition(std::function<void(int32_t, std::chr
     }
 }
 
-void MediaRenderer::getPlaybackState(std::function<void(int32_t, PlaybackState)> cb)
+void MediaRenderer::getPlaybackState(std::function<void(Status, PlaybackState)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->getTransportInfo(m_connInfo.connectionId, [cb] (int32_t status, AVTransport::TransportInfo info) {
+        m_avTransport->getTransportInfo(m_connInfo.connectionId, [cb] (Status status, AVTransport::TransportInfo info) {
             auto state = PlaybackState::Stopped;
-            if (status == 200)
+            if (status)
             {
                 state = transportStateToPlaybackState(info.currentTransportState);
             }
@@ -384,14 +384,14 @@ std::chrono::seconds MediaRenderer::getCurrentTrackDuration() const
     return iter == m_avTransportInfo.end() ? 0s : parseDuration(iter->second);
 }
 
-void MediaRenderer::getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) const
+void MediaRenderer::getCurrentTrackInfo(std::function<void(Status, Item)> cb) const
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->getMediaInfo(m_connInfo.connectionId, [cb] (int32_t status, AVTransport::MediaInfo info) {
+        m_avTransport->getMediaInfo(m_connInfo.connectionId, [cb] (Status status, AVTransport::MediaInfo info) {
             Item track;
-            if (status == 200)
+            if (status)
             {
                 track = parseCurrentTrack(info.currentURIMetaData);
             }
@@ -401,15 +401,15 @@ void MediaRenderer::getCurrentTrackInfo(std::function<void(int32_t, Item)> cb) c
     }
 }
 
-void MediaRenderer::getAvailableActions(std::function<void(int32_t, std::set<MediaRenderer::Action>)> cb)
+void MediaRenderer::getAvailableActions(std::function<void(Status, std::set<MediaRenderer::Action>)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->getCurrentTransportActions(m_connInfo.connectionId, [cb] (int32_t status, const std::set<AVTransport::Action>& transpActions) {
+        m_avTransport->getCurrentTransportActions(m_connInfo.connectionId, [cb] (Status status, const std::set<AVTransport::Action>& transpActions) {
             std::set<MediaRenderer::Action> actions;
 
-            if (status == 200)
+            if (status)
             {
                 for (auto& action : transpActions)
                 {
@@ -439,25 +439,25 @@ void MediaRenderer::setVolume(uint32_t value)
     m_renderingControl.setVolume(m_connInfo.connectionId, value, nullptr);
 }
 
-void MediaRenderer::getVolume(std::function<void(int32_t status, uint32_t volume)> cb)
+void MediaRenderer::getVolume(std::function<void(Status status, uint32_t volume)> cb)
 {
     throwOnUnknownConnectionId();
-    m_renderingControl.getVolume(m_connInfo.connectionId, [cb] (int32_t status, uint32_t volume) {
+    m_renderingControl.getVolume(m_connInfo.connectionId, [cb] (Status status, uint32_t volume) {
         cb(status, volume);
     });
 }
 
-void MediaRenderer::activateEvents(std::function<void(int32_t)> cb)
+void MediaRenderer::activateEvents(std::function<void(Status)> cb)
 {
     if (!m_active && m_device)
     {
         m_renderingControl.LastChangeEvent.connect(std::bind(&MediaRenderer::onRenderingControlLastChangeEvent, this, _1), this);
-        m_renderingControl.subscribe([this, cb] (int32_t status) {
+        m_renderingControl.subscribe([this, cb] (Status status) {
             if (m_avTransport)
             {
                 m_avTransport->LastChangeEvent.connect(std::bind(&MediaRenderer::onAVTransportLastChangeEvent, this, _1), this);
-                m_avTransport->subscribe([this, cb] (int32_t status) {
-                    if (status == 200)
+                m_avTransport->subscribe([this, cb] (Status status) {
+                    if (status)
                     {
                         m_active = true;
                     }
@@ -467,7 +467,7 @@ void MediaRenderer::activateEvents(std::function<void(int32_t)> cb)
             }
             else
             {
-                if (status == 200)
+                if (status)
                 {
                     m_active = true;
                 }
@@ -478,24 +478,24 @@ void MediaRenderer::activateEvents(std::function<void(int32_t)> cb)
     }
 }
 
-void MediaRenderer::deactivateEvents(std::function<void(int32_t)> cb)
+void MediaRenderer::deactivateEvents(std::function<void(Status)> cb)
 {
     if (m_active && m_device)
     {
         m_renderingControl.StateVariableEvent.disconnect(this);
-        m_renderingControl.unsubscribe([this, cb] (int32_t status) {
-            if (status != 200)
+        m_renderingControl.unsubscribe([this, cb] (Status status) {
+            if (!status)
             {
-                log::warn("Rendering control unsubscribe failed");
+                log::warn("Rendering control unsubscribe failed: {}", status.what());
             }
             
             if (m_avTransport)
             {
                 m_avTransport->StateVariableEvent.disconnect(this);
-                m_avTransport->unsubscribe([this, cb] (int32_t status) {
-                    if (status != 200)
+                m_avTransport->unsubscribe([this, cb] (Status status) {
+                    if (!status)
                     {
-                        log::warn("AVTransport unsubscribe failed");
+                        log::warn("AVTransport unsubscribe failed: {}", status.what());
                     }
                     
                     m_active = false;
@@ -511,7 +511,7 @@ void MediaRenderer::deactivateEvents(std::function<void(int32_t)> cb)
     }
     else
     {
-        cb(200);
+        cb(Status());
     }
 }
 

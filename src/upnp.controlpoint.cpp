@@ -43,10 +43,10 @@ void ControlPoint::setWebserver(http::Server& webServer)
     m_pWebServer = &webServer;
 }
 
-void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(int32_t)> cb)
+void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(Status)> cb)
 {
-    m_renderer.setDevice(dev, [this, cb] (int32_t status) {
-        if (status == 200)
+    m_renderer.setDevice(dev, [this, cb] (Status status) {
+        if (status)
         {
             m_renderer.useDefaultConnection();
         }
@@ -60,12 +60,12 @@ MediaRenderer& ControlPoint::getActiveRenderer()
     return m_renderer;
 }
 
-void ControlPoint::activate(std::function<void(int32_t)> cb)
+void ControlPoint::activate(std::function<void(Status)> cb)
 {
     m_renderer.activateEvents(cb);
 }
 
-void ControlPoint::deactivate(std::function<void(int32_t)> cb)
+void ControlPoint::deactivate(std::function<void(Status)> cb)
 {
     m_renderer.deactivateEvents(cb);
 }
@@ -82,15 +82,15 @@ void ControlPoint::playItem(MediaServer& server, const Item& item)
 
     prepareConnection(server, resource);
     server.setTransportItem(resource);
-    m_renderer.setTransportItem(resource, [this] (int32_t status) {
-        if (status == 200)
+    m_renderer.setTransportItem(resource, [this] (Status status) {
+        if (status)
         {
             m_renderer.play();
         }
     });
 }
 
-void ControlPoint::playItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item> &items)
+void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vector<Item> &items)
 {
     if (items.empty())
     {

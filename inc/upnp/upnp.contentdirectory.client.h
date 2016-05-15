@@ -55,20 +55,20 @@ public:
 
     void abort();
 
-    void browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(int32_t, Item)> cb);
-    void browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
-    void search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(int32_t, ActionResult)> cb);
+    void browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(Status, Item)> cb);
+    void browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(Status, ActionResult)> cb);
+    void search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(Status, ActionResult)> cb);
 
-    void querySearchCapabilities(std::function<void(int32_t, std::vector<Property>)> cb);
-    void querySortCapabilities(std::function<void(int32_t, std::vector<Property>)> cb);
-    void querySystemUpdateID(std::function<void(int32_t, std::string)> cb);
+    void querySearchCapabilities(std::function<void(Status, std::vector<Property>)> cb);
+    void querySortCapabilities(std::function<void(Status, std::vector<Property>)> cb);
+    void querySystemUpdateID(std::function<void(Status, std::string)> cb);
 
 protected:
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
 private:
-    void browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(int32_t, std::string)> cb);
-    void parseCapabilities(int32_t status, const std::string& nodeName, const std::string& response, std::function<void(int32_t, std::vector<Property>)> cb);
+    void browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(Status, std::string)> cb);
+    void parseCapabilities(Status status, const std::string& nodeName, const std::string& response, std::function<void(Status, std::vector<Property>)> cb);
 
     bool    m_abort;
 };

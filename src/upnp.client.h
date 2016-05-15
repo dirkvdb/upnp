@@ -44,19 +44,19 @@ public:
 
     void subscribeToService(const std::string& publisherUrl,
                             std::chrono::seconds timeout,
-                            std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) override;
+                            std::function<std::function<void(SubscriptionEvent)>(Status status, std::string subId, std::chrono::seconds timeout)> cb) override;
 
     void renewSubscription(const std::string& publisherUrl,
                            const std::string& subscriptionId,
                            std::chrono::seconds timeout,
-                           std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb) override;
+                           std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb) override;
 
     void unsubscribeFromService(const std::string& publisherUrl,
                                 const std::string& subscriptionId,
-                                std::function<void(int32_t status)> cb) override;
+                                std::function<void(Status status)> cb) override;
 
-    void sendAction(const Action& action, std::function<void(int32_t status, std::string actionResult)> cb) override;
-    void getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb) override;
+    void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) override;
+    void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
     uv::Loop& loop() const override;
 

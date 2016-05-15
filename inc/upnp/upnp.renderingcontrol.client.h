@@ -52,15 +52,15 @@ class Client : public ServiceClientBase<ServiceTraits>
 public:
     Client(upnp::IClient2& client);
 
-    void setVolume(int32_t connectionId, uint32_t value, std::function<void(int32_t status)> cb);
-    void getVolume(int32_t connectionId, std::function<void(int32_t status, uint32_t volume)> cb);
+    void setVolume(int32_t connectionId, uint32_t value, std::function<void(Status status)> cb);
+    void getVolume(int32_t connectionId, std::function<void(Status status, uint32_t volume)> cb);
 
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 
 protected:
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
-    virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(int32_t)> cb) override;
+    virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(Status)> cb) override;
 
     virtual void handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables) override;
 

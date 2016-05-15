@@ -83,9 +83,41 @@ static constexpr EnumMap<Class> s_classNames {{
     { "object.generic",                     Class::Generic }
 }};
 
+static constexpr EnumMap<ErrorCode> s_errorNames {{
+    { "Success",                ErrorCode::Success },
+    { "Unexpected",             ErrorCode::Unexpected },
+    { "Invalid argument",       ErrorCode::InvalidArgument },
+    { "Bad request",            ErrorCode::BadRequest },
+    { "Precondition failed",    ErrorCode::PreconditionFailed },
+    { "Network error",          ErrorCode::NetworkError },
+    { "Http error",             ErrorCode::HttpError },
+}};
+
+static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
+    { 0,        ErrorCode::Success },
+    { 1,        ErrorCode::Unexpected },
+    { 2,        ErrorCode::InvalidArgument },
+    { 400,      ErrorCode::BadRequest },
+    { 412,      ErrorCode::PreconditionFailed },
+    { 3,        ErrorCode::NetworkError },
+    { 4,        ErrorCode::HttpError },
+}};
+
 ADD_ENUM_MAP(Property, s_propertyNames)
 ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)
 ADD_ENUM_MAP(Class, s_classNames)
+ADD_ENUM_MAP(ErrorCode, s_errorNames)
+ADD_ENUM_MAP_TYPED(ErrorCode, int32_t, s_errorValues)
+
+const char* errorCodeToString(ErrorCode value)
+{
+    return enum_string(value);
+}
+
+int32_t errorCodeToInt(ErrorCode code)
+{
+    return enum_typecast<int32_t>(code);
+}
 
 Property propertyFromString(const char* data, size_t size)
 {
@@ -110,6 +142,54 @@ ServiceType serviceTypeFromString(const std::string& value)
 const char* serviceTypeToTypeString(ServiceType type)
 {
     return enum_string(type);
+}
+
+const char* serviceTypeToUrnTypeString(ServiceType type)
+{
+    if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
+    if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;
+    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
+    if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
+
+    throw std::invalid_argument("Invalid service type received for urn");
+}
+
+const char* serviceTypeToUrnIdString(ServiceType type)
+{
+    if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
+    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
+    if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
+
+    throw std::invalid_argument("Invalid service type received for id urn");
+}
+
+const char* serviceTypeToUrnMetadataString(ServiceType type)
+{
+    if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
+    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
+    if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
+
+    throw std::invalid_argument("Invalid service type received for id urn");
+}
+
+ServiceType serviceTypeUrnStringToService(const std::string& type)
+{
+    if (type == ContentDirectoryServiceTypeUrn)    return ServiceType::ContentDirectory;
+    if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
+    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
+    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
+
+    return ServiceType::Unknown;
+}
+
+ServiceType serviceIdUrnStringToService(const std::string& type)
+{
+    if (type == ContentDirectoryServiceIdUrn)    return ServiceType::ContentDirectory;
+    if (type == RenderingControlServiceIdUrn)    return ServiceType::RenderingControl;
+    if (type == ConnectionManagerServiceIdUrn)   return ServiceType::ConnectionManager;
+    if (type == AVTransportServiceIdUrn)         return ServiceType::AVTransport;
+
+    return ServiceType::Unknown;
 }
 
 const char* toString(Class value) noexcept

@@ -33,6 +33,20 @@ using namespace std::placeholders;
 namespace upnp
 {
 
+Status httpStatusToStatus(int32_t httpStatus)
+{
+    if (httpStatus < 0)
+    {
+        return Status(ErrorCode::NetworkError, uv::getErrorString(httpStatus));
+    }
+    else if (httpStatus != 200)
+    {
+        return Status(ErrorCode::HttpError, http::Client::errorToString(httpStatus));
+    }
+
+    return Status();
+}
+
 Client2::Client2()
 : m_loop(std::make_unique<uv::Loop>())
 , m_httpClient(*m_loop)
@@ -79,7 +93,7 @@ void Client2::initialize(const uv::Address& addr)
         {
             throw std::runtime_error("Failed to init curl library");
         }
-        
+
         m_loop->run(upnp::uv::RunMode::Default);
         curl_global_cleanup();
     });
@@ -111,7 +125,7 @@ uint16_t Client2::getPort() const
     return m_eventServer->getAddress().port();
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t, std::string, std::chrono::seconds)> cb)
+void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(Status, std::string, std::chrono::seconds)> cb)
 {
     if (!m_eventServer)
     {
@@ -127,10 +141,10 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 #endif
         m_httpClient.subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
             //log::debug("Subscribe response: {}", response);
-            
+
             if (cb)
             {
-                auto subCb = cb(status, subId, subTimeout);
+                auto subCb = cb(httpStatusToStatus(status), subId, subTimeout);
                 if (subCb)
                 {
                     m_eventCallbacks.emplace(subId, subCb);
@@ -143,7 +157,7 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 void Client2::renewSubscription(const std::string& publisherUrl,
                                 const std::string& subscriptionId,
                                 std::chrono::seconds timeout,
-                                std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)> cb)
+                                std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     assert(m_eventServer);
     assert(timeout.count() > 0);
@@ -157,13 +171,13 @@ void Client2::renewSubscription(const std::string& publisherUrl,
 
             if (cb)
             {
-                cb(status, subId, subTimeout);
+                cb(httpStatusToStatus(status), subId, subTimeout);
             }
         });
     });
 }
 
-void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)> cb)
+void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
     uv::asyncSend(*m_loop, [=] () {
         m_httpClient.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
@@ -172,7 +186,7 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
 //#endif
             if (cb)
             {
-                cb(status);
+                cb(httpStatusToStatus(status));
             }
 
             m_eventCallbacks.erase(subscriptionId);
@@ -180,14 +194,16 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
     });
 }
 
-void Client2::sendAction(const Action& action, std::function<void(int32_t, std::string)> cb)
+void Client2::sendAction(const Action& action, std::function<void(Status, std::string)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
     uv::asyncSend(*m_loop, [this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
-        m_httpClient.soapAction(url, name, urn, env, std::move(cb));
+        m_httpClient.soapAction(url, name, urn, env, [cb] (int32_t status, std::string response) {
+            cb(httpStatusToStatus(status), std::move(response));
+        });
     });
 
 #ifdef DEBUG_UPNP_CLIENT
@@ -195,9 +211,11 @@ void Client2::sendAction(const Action& action, std::function<void(int32_t, std::
 #endif
 }
 
-void Client2::getFile(const std::string& url, std::function<void(int32_t status, std::string contents)> cb)
+void Client2::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
-    m_httpClient.get(url, cb);
+    m_httpClient.get(url, [cb] (int32_t status, std::string contents) {
+        cb(httpStatusToStatus(status), std::move(contents));
+    });
 }
 
 uv::Loop& Client2::loop() const

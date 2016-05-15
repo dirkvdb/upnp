@@ -163,9 +163,9 @@ constexpr EnumMap<DRMState> s_drmStateNames {{
     { "LICENSE_INSUFFICIENT",       DRMState::LicenseInsufficient }
 }};
 
-constexpr EnumMap<Status> s_statusNames {{
-    { "OK",                         Status::Ok },
-    { "ERROR_OCCURRED",             Status::Error }
+constexpr EnumMap<AVTransport::Status> s_statusNames {{
+    { "OK",                         AVTransport::Status::Ok },
+    { "ERROR_OCCURRED",             AVTransport::Status::Error }
 }};
 
 constexpr EnumMap<PlayMode> s_playModeNames {{
@@ -199,7 +199,7 @@ ADD_ENUM_MAP(PlaylistState, s_playlistStateNames)
 ADD_ENUM_MAP(PlaylistStep, s_playlistStepNames)
 ADD_ENUM_MAP(CurrentMediaCategory, s_curMediaCategoryNames)
 ADD_ENUM_MAP(DRMState, s_drmStateNames)
-ADD_ENUM_MAP(Status, s_statusNames)
+ADD_ENUM_MAP(AVTransport::Status, s_statusNames)
 ADD_ENUM_MAP(PlayMode, s_playModeNames)
 ADD_ENUM_MAP(SeekMode, s_seekModeNames)
 
@@ -268,12 +268,12 @@ const char* AVTransport::toString(PlaylistState value)
     return enum_string(value);
 }
 
-Status AVTransport::statusFromString(gsl::cstring_span<> value)
+AVTransport::Status AVTransport::statusFromString(gsl::cstring_span<> value)
 {
-    return enum_cast<Status>(value);
+    return enum_cast<AVTransport::Status>(value);
 }
 
-const char* AVTransport::toString(Status value)
+const char* AVTransport::toString(AVTransport::Status value)
 {
     return enum_string(value);
 }

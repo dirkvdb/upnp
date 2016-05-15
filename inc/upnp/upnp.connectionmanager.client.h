@@ -45,11 +45,11 @@ class Client : public ServiceClientBase<ServiceTraits>
 public:
     Client(IClient2& client);
 
-    void getProtocolInfo(std::function<void(int32_t, std::vector<ProtocolInfo>)> cb);
-    void prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction, std::function<void(int32_t, ConnectionInfo)> cb);
-    void connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(int32_t)> cb);
-    void getCurrentConnectionIds(std::function<void(int32_t, std::vector<std::string>)> cb);
-    void getCurrentConnectionInfo(int32_t connectionId, std::function<void(int32_t, ConnectionInfo)> cb);
+    void getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo>)> cb);
+    void prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction, std::function<void(Status, ConnectionInfo)> cb);
+    void connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(Status)> cb);
+    void getCurrentConnectionIds(std::function<void(Status, std::vector<std::string>)> cb);
+    void getCurrentConnectionInfo(int32_t connectionId, std::function<void(Status, ConnectionInfo)> cb);
 
 protected:
     std::chrono::seconds getSubscriptionTimeout() override;

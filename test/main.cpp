@@ -16,6 +16,7 @@
 
 #include "gmock/gmock.h"
 #include <clocale>
+#include <curl/curl.h>
 
 using namespace testing;
 
@@ -31,9 +32,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    //FLAGS_gmock_verbose = "error";
-    //g_Env = reinterpret_cast<upnp::test::TestEnvironment*>(AddGlobalTestEnvironment(new upnp::test::TestEnvironment()));
-
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     InitGoogleMock(&argc, argv);
-    return RUN_ALL_TESTS();
+    auto rc = RUN_ALL_TESTS();
+    curl_global_cleanup();
+    
+    return rc;
 }

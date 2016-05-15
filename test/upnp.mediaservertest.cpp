@@ -40,8 +40,8 @@ namespace test
 class StatusMock
 {
 public:
-    MOCK_METHOD1(onStatus, void(int32_t));
-    MOCK_METHOD2(onStatus, void(int32_t, std::vector<Item>));
+    MOCK_METHOD1(onStatus, void(Status));
+    MOCK_METHOD2(onStatus, void(Status, std::vector<Item>));
 };
 
 namespace
@@ -66,14 +66,14 @@ public:
     : m_server(m_client)
     , m_device(std::make_shared<Device>())
     {
-        std::promise<int32_t> promise;
+        std::promise<ErrorCode> promise;
         auto fut = promise.get_future();
 
         addServiceToDevice(*m_device, ServiceType::ConnectionManager, "CMSCPUrl", "CMCurl");
         addServiceToDevice(*m_device, ServiceType::ContentDirectory, "CDSCPUrl", "CDCurl");
 
-        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(200, testxmls::connectionManagerServiceDescription));
-        EXPECT_CALL(m_client, getFile("CDSCPUrl", _)).WillOnce(InvokeArgument<1>(200, testxmls::contentDirectoryServiceDescription));
+        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::connectionManagerServiceDescription));
+        EXPECT_CALL(m_client, getFile("CDSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::contentDirectoryServiceDescription));
 
         InSequence seq;
         Action searchCaps("GetSearchCapabilities", "CDCurl", ServiceType::ContentDirectory);
@@ -81,12 +81,12 @@ public:
         expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
         expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
 
-        m_server.setDevice(m_device, [&] (int32_t status) {
+        m_server.setDevice(m_device, [&] (Status status) {
             auto p = std::move(promise);
-            p.set_value(status);
+            p.set_value(status.getErrorCode());
         });
 
-        EXPECT_EQ(200, fut.get());
+        EXPECT_EQ(ErrorCode::Success, fut.get());
     }
 
     void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
@@ -94,19 +94,19 @@ public:
         using namespace ContentDirectory;
         EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
             EXPECT_EQ(expected.toString(), action.toString());
-            cb(200, wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
+            cb(Status(), wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
         }));
     }
 
-    std::function<void(int32_t)> checkStatusCallback()
+    std::function<void(Status)> checkStatusCallback()
     {
-        return [this] (int32_t status) { m_statusMock.onStatus(status); };
+        return [this] (Status status) { m_statusMock.onStatus(status); };
     }
 
     template <typename T>
-    std::function<void(int32_t, const T&)> checkStatusCallback()
+    std::function<void(Status, const T&)> checkStatusCallback()
     {
-        return [this] (int32_t status, const T& arg) { m_statusMock.onStatus(status, arg); };
+        return [this] (Status status, const T& arg) { m_statusMock.onStatus(status, arg); };
     }
 
 protected:
@@ -151,12 +151,12 @@ TEST_F(MediaServerTest, getAllInContainer)
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(testxmls::browseResponseContainers));
+        cb(Status(), wrapSoap(testxmls::browseResponseContainers));
     }));
 
     InSequence seq;
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(SizeIs(2))));
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
 }
 
@@ -171,10 +171,10 @@ TEST_F(MediaServerTest, getAllInContainerNoResults)
     expectedAction.addArgument("StartingIndex", "0");
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(WithArg<1>(Invoke([&] (auto& cb) {
-        cb(200, generateBrowseResponse({}, {}));
+        cb(Status(), generateBrowseResponse({}, {}));
     })));
 
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
 }
 
@@ -190,12 +190,12 @@ TEST_F(MediaServerTest, getAllInContainerSortAscending)
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(testxmls::browseResponseContainers));
+        cb(Status(), wrapSoap(testxmls::browseResponseContainers));
     }));
 
     InSequence seq;
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(SizeIs(2))));
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Title, MediaServer::SortMode::Ascending, checkStatusCallback<std::vector<Item>>());
 }
 
@@ -211,12 +211,12 @@ TEST_F(MediaServerTest, getAllInContainerSortDescending)
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, wrapSoap(testxmls::browseResponseContainers));
+        cb(Status(), wrapSoap(testxmls::browseResponseContainers));
     }));
 
     InSequence seq;
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(SizeIs(2))));
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Genre, MediaServer::SortMode::Descending, checkStatusCallback<std::vector<Item>>());
 }
 
@@ -234,12 +234,12 @@ TEST_F(MediaServerTest, SearchRootContainer)
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
-        cb(200, generateBrowseResponse(generateContainers(2, "object.container"), {}));
+        cb(Status(), generateBrowseResponse(generateContainers(2, "object.container"), {}));
     }));
 
     InSequence seq;
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(SizeIs(2))));
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.search(MediaServer::rootId, criteria, checkStatusCallback<std::vector<Item>>());
 }
 
@@ -256,11 +256,11 @@ TEST_F(MediaServerTest, SearchRootContainerNoResults)
     expectedAction.addArgument("StartingIndex", "0");
 
     EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(WithArg<1>(Invoke([&] (auto& cb) {
-        cb(200, generateBrowseResponse({}, {}));
+        cb(Status(), generateBrowseResponse({}, {}));
     })));
 
     InSequence seq;
-    EXPECT_CALL(m_statusMock, onStatus(200, Matcher<std::vector<Item>>(IsEmpty())));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.search(MediaServer::rootId, criteria, checkStatusCallback<std::vector<Item>>());
 }
 

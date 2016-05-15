@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_CLIENT_MOCK_H
-#define UPNP_CLIENT_MOCK_H
+#pragma once
 
 #include "gmock/gmock.h"
 
@@ -66,11 +65,11 @@ public:
     MOCK_CONST_METHOD0(getIpAddress, std::string());
     MOCK_CONST_METHOD0(getPort, uint16_t());
 
-    MOCK_METHOD3(subscribeToService, void(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(int32_t status, std::string subId, std::chrono::seconds timeout)>));
-    MOCK_METHOD4(renewSubscription, void(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout)>));
-    MOCK_METHOD3(unsubscribeFromService, void(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(int32_t status)>));
-    MOCK_METHOD2(sendAction, void(const Action&, std::function<void(int32_t status, std::string actionResult)>));
-    MOCK_METHOD2(getFile, void(const std::string&, std::function<void(int32_t status, std::string contents)>));
+    MOCK_METHOD3(subscribeToService, void(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(Status status, std::string subId, std::chrono::seconds timeout)>));
+    MOCK_METHOD4(renewSubscription, void(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(Status status, std::string subId, std::chrono::seconds timeout)>));
+    MOCK_METHOD3(unsubscribeFromService, void(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)>));
+    MOCK_METHOD2(sendAction, void(const Action&, std::function<void(Status status, std::string actionResult)>));
+    MOCK_METHOD2(getFile, void(const std::string&, std::function<void(Status, std::string contents)>));
 
     MOCK_CONST_METHOD0(loop, uv::Loop&());
 
@@ -80,5 +79,3 @@ private:
 
 }
 }
-
-#endif

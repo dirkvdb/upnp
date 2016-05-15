@@ -59,7 +59,6 @@ private:
     void checkForDeviceTimeouts();
 
     IClient2&                                       m_upnpClient;
-    http::Client                                    m_httpClient;
     ssdp::Client                                    m_ssdpClient;
     uv::Timer                                       m_timer;
     const std::set<DeviceType>                      m_types;

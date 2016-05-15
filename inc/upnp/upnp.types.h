@@ -19,6 +19,8 @@
 #include <string>
 #include <cinttypes>
 
+#include "utils/format.h"
+
 namespace upnp
 {
 
@@ -35,6 +37,63 @@ extern const char* ContentDirectoryServiceIdUrn;
 extern const char* RenderingControlServiceMetadataUrn;
 extern const char* ConnectionManagerServiceMetadataUrn;
 extern const char* AVTransportServiceMetadataUrn;
+
+enum class ErrorCode
+{
+    Success,
+    Unexpected,
+    InvalidArgument,
+    BadRequest,
+    PreconditionFailed,
+    NetworkError,
+    HttpError,
+    EnumCount
+};
+
+const char* errorCodeToString(ErrorCode code);
+int32_t errorCodeToInt(ErrorCode code);
+
+class Status
+{
+public:
+    Status() : m_errorCode(ErrorCode::Success) {}
+    explicit Status(std::string msg) : m_errorCode(ErrorCode::Unexpected), m_message(std::move(msg)) {}
+    explicit Status(const char* msg) : Status(std::string(msg)) {}
+    explicit Status(ErrorCode ec) : m_errorCode(ec), m_message(errorCodeToString(ec)) {}
+
+    Status(ErrorCode ec, const std::string& additionalInfo)
+    : m_errorCode(ec)
+    , m_message(fmt::format("{} ({})", errorCodeToString(ec), additionalInfo))
+    {
+    }
+
+    template<typename... T>
+    Status(const char* fmt, const T&... args) : Status(fmt::format(fmt, std::forward<const T>(args)...)) {}
+
+    ErrorCode getErrorCode() const noexcept
+    {
+        return m_errorCode;
+    }
+
+    operator bool() const noexcept
+    {
+        return m_errorCode == ErrorCode::Success;
+    }
+
+    bool operator ==(const Status& other) const noexcept
+    {
+        return m_errorCode == other.m_errorCode;
+    }
+    
+    const char* what() const noexcept
+    {
+        return m_message.c_str();
+    }
+
+private:
+    ErrorCode m_errorCode;
+    std::string m_message;
+};
 
 enum class ServiceType
 {
@@ -109,55 +168,18 @@ Property propertyFromString(const std::string& name);
 const char* toString(Property prop) noexcept;
 const char* toString(Class c) noexcept;
 
-ServiceType serviceTypeFromString(const std::string& name);
 const char* serviceTypeToTypeString(ServiceType type);
+const char* serviceTypeToUrnTypeString(ServiceType type);
+const char* serviceTypeToUrnIdString(ServiceType type);
+const char* serviceTypeToUrnMetadataString(ServiceType type);
 
-inline const char* serviceTypeToUrnTypeString(ServiceType type)
+ServiceType serviceTypeFromString(const std::string& name);
+ServiceType serviceTypeUrnStringToService(const std::string& type);
+ServiceType serviceIdUrnStringToService(const std::string& type);
+
+inline std::ostream& operator<<(std::ostream& os, const Status s)
 {
-    if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
-
-    throw std::invalid_argument("Invalid service type received for urn");
-}
-
-inline const char* serviceTypeToUrnIdString(ServiceType type)
-{
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
-
-    throw std::invalid_argument("Invalid service type received for id urn");
-}
-
-inline const char* serviceTypeToUrnMetadataString(ServiceType type)
-{
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
-
-    throw std::invalid_argument("Invalid service type received for id urn");
-}
-
-inline ServiceType serviceTypeUrnStringToService(const std::string& type)
-{
-    if (type == ContentDirectoryServiceTypeUrn)    return ServiceType::ContentDirectory;
-    if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
-    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
-    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
-
-    return ServiceType::Unknown;
-}
-
-inline ServiceType serviceIdUrnStringToService(const std::string& type)
-{
-    if (type == ContentDirectoryServiceIdUrn)    return ServiceType::ContentDirectory;
-    if (type == RenderingControlServiceIdUrn)    return ServiceType::RenderingControl;
-    if (type == ConnectionManagerServiceIdUrn)   return ServiceType::ConnectionManager;
-    if (type == AVTransportServiceIdUrn)         return ServiceType::AVTransport;
-
-    return ServiceType::Unknown;
+    return os << errorCodeToInt(s.getErrorCode()) << " - " << s.what();
 }
 
 }

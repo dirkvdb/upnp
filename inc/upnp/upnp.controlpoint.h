@@ -44,11 +44,11 @@ public:
     ControlPoint& operator=(const ControlPoint&) = delete;
 
     void setWebserver(http::Server& webServer);
-    void setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(int32_t)> cb);
+    void setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(Status)> cb);
     MediaRenderer& getActiveRenderer();
 
-    void activate(std::function<void(int32_t)> cb);
-    void deactivate(std::function<void(int32_t)> cb);
+    void activate(std::function<void(Status)> cb);
+    void deactivate(std::function<void(Status)> cb);
 
     // these items are immediately set as the current item, send play when stopped to
     // actually start playback
