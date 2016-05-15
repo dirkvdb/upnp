@@ -29,8 +29,8 @@ namespace upnp
 {
 
 class Item;
-class Device;
 class IClient2;
+struct Device;
 
 class MediaServer
 {

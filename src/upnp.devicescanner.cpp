@@ -115,10 +115,10 @@ void DeviceScanner::checkForDeviceTimeouts()
     auto mapEnd = m_devices.end();
     for (auto iter = m_devices.begin(); iter != mapEnd;)
     {
-        if (now > iter->second->m_timeoutTime)
+        if (now > iter->second->timeoutTime)
         {
             auto dev = iter->second;
-            log::info("Device timed out removing it from the list: {}", iter->second->m_friendlyName);
+            log::info("Device timed out removing it from the list: {}", iter->second->friendlyName);
             iter = m_devices.erase(iter);
             DeviceDissapearedEvent(dev);
         }
@@ -159,17 +159,17 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
             auto device = iter->second;
 
             // device already known, just update the timeout time
-            device->m_timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
+            device->timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
 
             // check if the location is still the same (perhaps a new ip or port)
-            if (device->m_location != info.location)
+            if (device->location != info.location)
             {
                 // update the device, ip or port has changed
-                log::debug("Update device, location has changed: {} -> {}", device->m_location, info.location);
+                log::debug("Update device, location has changed: {} -> {}", device->location, info.location);
                 downloadDeviceXml(info.location, [this, device, exp = info.expirationTime] (const std::string& xml) {
                     try
                     {
-                        device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
+                        device->timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
                         xml::parseDeviceInfo(xml, *device);
                     }
                     catch (std::exception& e)
@@ -191,16 +191,16 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
         try
         {
             auto device = std::make_shared<Device>();
-            device->m_location = location;
-            device->m_timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
+            device->location = location;
+            device->timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
             xml::parseDeviceInfo(xml, *device);
 
             std::lock_guard<std::mutex> lock(m_dataMutex);
-            auto iter = m_devices.find(device->m_udn);
+            auto iter = m_devices.find(device->udn);
             if (iter == m_devices.end())
             {
-                log::info("Device added to the list: {} ({})", device->m_friendlyName, device->m_udn);
-                m_devices.emplace(device->m_udn, device);
+                log::info("Device added to the list: {} ({})", device->friendlyName, device->udn);
+                m_devices.emplace(device->udn, device);
 
                 m_dataMutex.unlock();
                 DeviceDiscoveredEvent(device);

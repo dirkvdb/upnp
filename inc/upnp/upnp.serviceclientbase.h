@@ -51,8 +51,8 @@ public:
     {
         if (device->implementsService(getType()))
         {
-            m_service = device->m_services[getType()];
-            processServiceDescription(m_service.m_scpdUrl, cb);
+            m_service = device->services[getType()];
+            processServiceDescription(m_service.scpdUrl, cb);
         }
         else
         {
@@ -62,7 +62,7 @@ public:
 
     void subscribe(std::function<void(Status)> cb)
     {
-        m_client.subscribeToService(m_service.m_eventSubscriptionURL, getSubscriptionTimeout(), [this, cb] (Status status, const std::string& subId, std::chrono::seconds subTimeout) -> std::function<void(SubscriptionEvent)> {
+        m_client.subscribeToService(m_service.eventSubscriptionURL, getSubscriptionTimeout(), [this, cb] (Status status, const std::string& subId, std::chrono::seconds subTimeout) -> std::function<void(SubscriptionEvent)> {
             if (!status)
             {
                 utils::log::error("Error subscribing to service: {}", status.what());
@@ -90,7 +90,7 @@ public:
             m_subTimer.stop();
         });
 
-        m_client.unsubscribeFromService(m_service.m_eventSubscriptionURL, m_subscriptionId, cb);
+        m_client.unsubscribeFromService(m_service.eventSubscriptionURL, m_subscriptionId, cb);
     }
 
     bool supportsAction(typename Traits::ActionType action) const
@@ -138,7 +138,7 @@ protected:
 
     void executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(Status, std::string)> cb)
     {
-        Action action(actionToString(actionType), m_service.m_controlURL, getType());
+        Action action(actionToString(actionType), m_service.controlURL, getType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
@@ -180,7 +180,7 @@ private:
 
     void renewSubscription(std::chrono::seconds timeout)
     {
-        m_client.renewSubscription(m_service.m_eventSubscriptionURL, m_subscriptionId, timeout, [this] (int32_t status, std::string, auto timeout) {
+        m_client.renewSubscription(m_service.eventSubscriptionURL, m_subscriptionId, timeout, [this] (int32_t status, std::string, auto timeout) {
             if (!status)
             {
                 utils::log::error("Failed to renew subscription");

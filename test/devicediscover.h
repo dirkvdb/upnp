@@ -50,7 +50,7 @@ public:
 
     void deviceDiscovered(std::shared_ptr<upnp::Device> dev)
     {
-        if (dev->m_friendlyName == m_deviceName)
+        if (dev->friendlyName == m_deviceName)
         {
             m_device = dev;
             m_promise.set_value();

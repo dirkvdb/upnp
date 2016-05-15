@@ -61,16 +61,16 @@ protected:
     virtual void SetUp() override
     {
         Service service;
-        service.m_type                  = serviceType;
-        service.m_controlURL            = s_controlUrl;
-        service.m_eventSubscriptionURL  = s_subscriptionUrl;
-        service.m_scpdUrl               = s_serviceDescriptionUrl;
+        service.type                  = serviceType;
+        service.controlURL            = s_controlUrl;
+        service.eventSubscriptionURL  = s_subscriptionUrl;
+        service.scpdUrl               = s_serviceDescriptionUrl;
 
         serviceInstance = std::make_unique<SvcType>(client);
 
         auto device = std::make_shared<Device>();
-        device->m_type = DeviceType::MediaRenderer;
-        device->m_services[service.m_type] = service;
+        device->type = DeviceType::MediaRenderer;
+        device->services[service.type] = service;
 
         setDevice(device);
         subscribe();

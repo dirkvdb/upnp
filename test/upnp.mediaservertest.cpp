@@ -50,11 +50,11 @@ namespace
 void addServiceToDevice(Device& dev, ServiceType type, const std::string& scpUrl, const std::string& controlUrl)
 {
     Service svc;
-    svc.m_type = type;
-    svc.m_scpdUrl = scpUrl;
-    svc.m_controlURL = controlUrl;
+    svc.type = type;
+    svc.scpdUrl = scpUrl;
+    svc.controlURL = controlUrl;
 
-    dev.m_services.emplace(svc.m_type, svc);
+    dev.services.emplace(svc.type, svc);
 }
 
 }
@@ -119,9 +119,9 @@ protected:
 
 TEST_F(MediaServerTest, DiscoveredServices)
 {
-    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(upnp::ServiceType::ContentDirectory));
-    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(upnp::ServiceType::ConnectionManager));
-    EXPECT_TRUE(m_device->m_services.end() == m_device->m_services.find(upnp::ServiceType::AVTransport));
+    EXPECT_FALSE(m_device->services.end() == m_device->services.find(upnp::ServiceType::ContentDirectory));
+    EXPECT_FALSE(m_device->services.end() == m_device->services.find(upnp::ServiceType::ConnectionManager));
+    EXPECT_TRUE(m_device->services.end() == m_device->services.find(upnp::ServiceType::AVTransport));
 }
 
 TEST_F(MediaServerTest, SearchCapabilities)

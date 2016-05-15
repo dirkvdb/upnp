@@ -145,51 +145,51 @@ TEST(XmlParseTest, Encode)
 TEST(XmlParseTest, GatewayDeviceInfo)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.1:5000/rootDesc.xml";
+    dev.location = "http://192.168.1.1:5000/rootDesc.xml";
 
     xml::parseDeviceInfo(testxmls::gatewayRootDesc, dev);
 
-    EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, dev.m_udn);
-    EXPECT_EQ("Compal Broadband Networks, Inc CH6643"s, dev.m_friendlyName);
-    EXPECT_TRUE(dev.m_baseURL.empty());
-    EXPECT_EQ(DeviceType::InternetGateway, dev.m_type);
-    EXPECT_TRUE(dev.m_presURL.empty());
+    EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, dev.udn);
+    EXPECT_EQ("Compal Broadband Networks, Inc CH6643"s, dev.friendlyName);
+    EXPECT_TRUE(dev.baseURL.empty());
+    EXPECT_EQ(DeviceType::InternetGateway, dev.type);
+    EXPECT_TRUE(dev.presURL.empty());
 }
 
 TEST(XmlParseTest, MediaServerInfo)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+    dev.location = "http://192.168.1.13:9000/desc.xml";
 
     xml::parseDeviceInfo(testxmls::mediaServerRootDesc, dev);
 
-    EXPECT_EQ("uuid:55076f6e-6b79-1d65-a4eb-00089be34071"s, dev.m_udn);
-    EXPECT_EQ("NAS"s, dev.m_friendlyName);
-    EXPECT_TRUE(dev.m_baseURL.empty());
-    EXPECT_EQ(DeviceType::MediaServer, dev.m_type);
-    EXPECT_EQ("http://192.168.1.13:9000/"s, dev.m_presURL);
+    EXPECT_EQ("uuid:55076f6e-6b79-1d65-a4eb-00089be34071"s, dev.udn);
+    EXPECT_EQ("NAS"s, dev.friendlyName);
+    EXPECT_TRUE(dev.baseURL.empty());
+    EXPECT_EQ(DeviceType::MediaServer, dev.type);
+    EXPECT_EQ("http://192.168.1.13:9000/"s, dev.presURL);
 
-    EXPECT_EQ(2u, dev.m_services.size());
+    EXPECT_EQ(2u, dev.services.size());
 
-    auto& connMgrSvc = dev.m_services.at(ServiceType::ConnectionManager);
-    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.m_type);
-    EXPECT_EQ("urn:upnp-org:serviceId:ConnectionManager"s, connMgrSvc.m_id);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/control"s, connMgrSvc.m_controlURL);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/event"s, connMgrSvc.m_eventSubscriptionURL);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0.xml"s, connMgrSvc.m_scpdUrl);
+    auto& connMgrSvc = dev.services.at(ServiceType::ConnectionManager);
+    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.type);
+    EXPECT_EQ("urn:upnp-org:serviceId:ConnectionManager"s, connMgrSvc.id);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/control"s, connMgrSvc.controlURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/event"s, connMgrSvc.eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0.xml"s, connMgrSvc.scpdUrl);
 
-    auto& contDirMgrSvc = dev.m_services.at(ServiceType::ContentDirectory);
-    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.m_type);
-    EXPECT_EQ("urn:upnp-org:serviceId:ContentDirectory"s, contDirMgrSvc.m_id);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/control"s, contDirMgrSvc.m_controlURL);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/event"s, contDirMgrSvc.m_eventSubscriptionURL);
-    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1.xml"s, contDirMgrSvc.m_scpdUrl);
+    auto& contDirMgrSvc = dev.services.at(ServiceType::ContentDirectory);
+    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.type);
+    EXPECT_EQ("urn:upnp-org:serviceId:ContentDirectory"s, contDirMgrSvc.id);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/control"s, contDirMgrSvc.controlURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/event"s, contDirMgrSvc.eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1.xml"s, contDirMgrSvc.scpdUrl);
 }
 
 TEST(XmlParseTest, EmptyXml)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+    dev.location = "http://192.168.1.13:9000/desc.xml";
 
     EXPECT_THROW(xml::parseDeviceInfo("", dev), std::runtime_error);
 }
@@ -197,7 +197,7 @@ TEST(XmlParseTest, EmptyXml)
 TEST(XmlParseTest, MissingFriendlyName)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+    dev.location = "http://192.168.1.13:9000/desc.xml";
 
     auto xml = testxmls::gatewayRootDesc;
     xml_document<> doc;
@@ -212,7 +212,7 @@ TEST(XmlParseTest, MissingFriendlyName)
 TEST(XmlParseTest, MissingUdn)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+    dev.location = "http://192.168.1.13:9000/desc.xml";
 
     auto xml = testxmls::gatewayRootDesc;
     xml_document<> doc;
@@ -227,7 +227,7 @@ TEST(XmlParseTest, MissingUdn)
 TEST(XmlParseTest, MissingDeviceType)
 {
     Device dev;
-    dev.m_location = "http://192.168.1.13:9000/desc.xml";
+    dev.location = "http://192.168.1.13:9000/desc.xml";
 
     xml_document<> doc;
     doc.parse<parse_non_destructive>(testxmls::gatewayRootDesc.c_str());

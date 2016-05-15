@@ -125,11 +125,11 @@ void MediaServer::abort()
 std::string MediaServer::getPeerConnectionManager() const
 {
     std::stringstream ss;
-    ss << m_device->m_udn << "/";
+    ss << m_device->udn << "/";
 
     if (m_device->implementsService(ServiceType::ConnectionManager))
     {
-        ss << m_device->m_services[ServiceType::ConnectionManager].m_id;
+        ss << m_device->services[ServiceType::ConnectionManager].id;
     }
 
     return ss.str();

@@ -100,20 +100,20 @@ T optionalAttributeValue(xml_node<char>& elem, const char* name, T defaultValue)
 
 bool findAndParseService(const xml_node<char>& node, const ServiceType serviceType, Device& device)
 {
-    auto base = URI(device.m_baseURL.empty() ? device.m_location : device.m_baseURL);
+    auto base = URI(device.baseURL.empty() ? device.location : device.baseURL);
 
     for (auto* serviceNode = node.first_node("service"); serviceNode != nullptr; serviceNode = serviceNode->next_sibling("service"))
     {
         Service service;
-        service.m_type = serviceTypeUrnStringToService(requiredChildValue(*serviceNode, "serviceType"));
-        if (service.m_type == serviceType)
+        service.type = serviceTypeUrnStringToService(requiredChildValue(*serviceNode, "serviceType"));
+        if (service.type == serviceType)
         {
-            service.m_id                    = requiredChildValue(*serviceNode, "serviceId");
-            service.m_controlURL            = URI(base, requiredChildValue(*serviceNode, "controlURL")).toString();
-            service.m_eventSubscriptionURL  = URI(base, requiredChildValue(*serviceNode, "eventSubURL")).toString();
-            service.m_scpdUrl               = URI(base, requiredChildValue(*serviceNode, "SCPDURL")).toString();
+            service.id                    = requiredChildValue(*serviceNode, "serviceId");
+            service.controlURL            = URI(base, requiredChildValue(*serviceNode, "controlURL")).toString();
+            service.eventSubscriptionURL  = URI(base, requiredChildValue(*serviceNode, "eventSubURL")).toString();
+            service.scpdUrl               = URI(base, requiredChildValue(*serviceNode, "SCPDURL")).toString();
 
-            device.m_services[serviceType] = service;
+            device.services[serviceType] = service;
             return true;
         }
     }
@@ -349,27 +349,27 @@ void parseDeviceInfo(const std::string& xml, Device& device)
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
-    device.m_udn            = requiredChildValue(deviceNode, "UDN");
-    device.m_type           = Device::stringToDeviceType(requiredChildValue(deviceNode, "deviceType"));
-    device.m_friendlyName   = requiredChildValue(deviceNode, "friendlyName");
-    device.m_baseURL        = optionalChildValue(deviceNode, "URLBase");
+    device.udn            = requiredChildValue(deviceNode, "UDN");
+    device.type           = Device::stringToDeviceType(requiredChildValue(deviceNode, "deviceType"));
+    device.friendlyName   = requiredChildValue(deviceNode, "friendlyName");
+    device.baseURL        = optionalChildValue(deviceNode, "URLBase");
 
     URI presUrl(optionalChildValue(deviceNode, "presentationURL"));
     if (!presUrl.empty())
     {
         if (presUrl.isRelative())
         {
-            device.m_presURL = URI(URI(device.m_baseURL.empty() ? device.m_location : device.m_baseURL, presUrl.toString())).toString();
+            device.presURL = URI(URI(device.baseURL.empty() ? device.location : device.baseURL, presUrl.toString())).toString();
         }
         else
         {
-            device.m_presURL = presUrl.toString();
+            device.presURL = presUrl.toString();
         }
     }
 
     auto& serviceListNode = deviceNode.first_node_ref("serviceList");
 
-    if (device.m_type == DeviceType::MediaServer)
+    if (device.type == DeviceType::MediaServer)
     {
         if (findAndParseService(serviceListNode, ServiceType::ContentDirectory, device))
         {
@@ -378,7 +378,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
             findAndParseService(serviceListNode, ServiceType::ConnectionManager, device);
         }
     }
-    else if (device.m_type == DeviceType::MediaRenderer)
+    else if (device.type == DeviceType::MediaRenderer)
     {
         if (findAndParseService(serviceListNode, ServiceType::RenderingControl, device) &&
             findAndParseService(serviceListNode, ServiceType::ConnectionManager, device))

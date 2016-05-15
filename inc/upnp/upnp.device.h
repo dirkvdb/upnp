@@ -26,65 +26,36 @@
 namespace upnp
 {
 
-static const char* MediaServerDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaServer:1";
-static const char* MediaRendererDeviceTypeUrn = "urn:schemas-upnp-org:device:MediaRenderer:1";
-static const char* InternetGatewayDeviceTypeUrn = "urn:schemas-upnp-org:device:InternetGatewayDevice:1";
-
-class Service
+struct Service
 {
-public:
-    ServiceType     m_type;
-    std::string     m_id;
-    std::string     m_scpdUrl;
-    std::string     m_controlURL;
-    std::string     m_eventSubscriptionURL;
-    std::string     m_eventSubscriptionID;
+    ServiceType     type;
+    std::string     id;
+    std::string     scpdUrl;
+    std::string     controlURL;
+    std::string     eventSubscriptionURL;
+    std::string     eventSubscriptionID;
 };
 
-class Device
+struct Device
 {
-public:
-    bool operator==(const Device& otherDevice) const { return m_udn == otherDevice.m_udn; }
+    bool operator==(const Device& otherDevice) const { return udn == otherDevice.udn; }
+    bool implementsService(ServiceType type) const { return services.find(type) != services.end(); }
 
-    bool implementsService(ServiceType type) const { return m_services.find(type) != m_services.end(); }
+    DeviceType      type;
+    std::string     userDefinedName;
+    std::string     friendlyName;
+    std::string     udn;
+    std::string     baseURL;
+    std::string     relURL;
+    std::string     presURL;
+    std::string     location;
+    std::string     containerId;
 
-    DeviceType      m_type;
-    std::string     m_userDefinedName;
-    std::string     m_friendlyName;
-    std::string     m_udn;
-    std::string     m_baseURL;
-    std::string     m_relURL;
-    std::string     m_presURL;
-    std::string     m_location;
-    std::string     m_containerId;
+    std::chrono::system_clock::time_point   timeoutTime;
+    std::map<ServiceType, Service>    services;
 
-    std::chrono::system_clock::time_point   m_timeoutTime;
-
-    std::map<ServiceType, Service>    m_services;
-
-    static const char* deviceTypeToString(DeviceType type)
-    {
-        switch (type)
-        {
-            case DeviceType::MediaServer:
-                return MediaServerDeviceTypeUrn;
-            case DeviceType::MediaRenderer:
-                return MediaRendererDeviceTypeUrn;
-            case DeviceType::InternetGateway:
-                return InternetGatewayDeviceTypeUrn;
-            default:
-                throw std::invalid_argument("Invalid device type encountered");
-        }
-    }
-
-    static DeviceType stringToDeviceType(const std::string& type)
-    {
-        if (type == MediaServerDeviceTypeUrn)       { return DeviceType::MediaServer; }
-        if (type == MediaRendererDeviceTypeUrn)     { return DeviceType::MediaRenderer; }
-        if (type == InternetGatewayDeviceTypeUrn)   { return DeviceType::InternetGateway; }
-
-        return DeviceType::Unknown;
-    }
+    static const char* deviceTypeToString(DeviceType type);
+    static DeviceType stringToDeviceType(const std::string& type);
 };
 
 }

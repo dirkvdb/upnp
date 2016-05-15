@@ -20,7 +20,7 @@ template<class Ch> class xml_document;
 namespace upnp
 {
 
-class Device;
+struct Device;
 class ServiceVariable;
 
 namespace xml

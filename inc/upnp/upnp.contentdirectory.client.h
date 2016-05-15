@@ -23,7 +23,7 @@
 namespace upnp
 {
 
-class Device;
+struct Device;
 class IClient2;
 
 namespace ContentDirectory

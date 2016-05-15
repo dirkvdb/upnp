@@ -28,7 +28,7 @@ TEST(DeviceScannerTest, DiscoverClient)
         if (!discovered)
         {
             discovered = true;
-            log::info("Discovered: {}", dev->m_udn);
+            log::info("Discovered: {}", dev->udn);
             scanner.stop([&] () {
                 prom.set_value();
             });

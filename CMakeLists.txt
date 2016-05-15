@@ -100,7 +100,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpcontentdirectoryservice.h              src/upnpcontentdirectoryservice.cpp
     inc/upnp/upnp.contentdirectory.types.h
     inc/upnp/upnp.controlpoint.h                        src/upnp.controlpoint.cpp
-    inc/upnp/upnp.device.h
+    inc/upnp/upnp.device.h                              src/upnp.device.cpp
     inc/upnp/upnpdeviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnp.devicescanner.h                       src/upnp.devicescanner.cpp

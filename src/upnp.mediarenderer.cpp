@@ -161,7 +161,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
                 {
                     m_avTransport = std::make_unique<AVTransport::Client>(m_client);
                 }
-                
+
                 m_avTransport->setDevice(m_device, [this, cb] (Status status) {
                     if (!status)
                     {
@@ -236,7 +236,7 @@ bool MediaRenderer::supportsPlayback(const upnp::Item& item, Resource& suggested
 
 std::string MediaRenderer::getPeerConnectionManager() const
 {
-    return fmt::format("{}/{}", m_device->m_udn, m_device->m_services[ServiceType::ConnectionManager].m_id);
+    return fmt::format("{}/{}", m_device->udn, m_device->services[ServiceType::ConnectionManager].id);
 }
 
 void MediaRenderer::resetConnection()
@@ -461,7 +461,7 @@ void MediaRenderer::activateEvents(std::function<void(Status)> cb)
                     {
                         m_active = true;
                     }
-                    
+
                     cb(status);
                 });
             }
@@ -471,7 +471,7 @@ void MediaRenderer::activateEvents(std::function<void(Status)> cb)
                 {
                     m_active = true;
                 }
-                
+
                 cb(status);
             }
         });
@@ -488,7 +488,7 @@ void MediaRenderer::deactivateEvents(std::function<void(Status)> cb)
             {
                 log::warn("Rendering control unsubscribe failed: {}", status.what());
             }
-            
+
             if (m_avTransport)
             {
                 m_avTransport->StateVariableEvent.disconnect(this);
@@ -497,7 +497,7 @@ void MediaRenderer::deactivateEvents(std::function<void(Status)> cb)
                     {
                         log::warn("AVTransport unsubscribe failed: {}", status.what());
                     }
-                    
+
                     m_active = false;
                     cb(status);
                 });
