@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_DEVICE_H
-#define UPNP_DEVICE_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -88,19 +87,5 @@ public:
     }
 };
 
-class IDeviceSubscriber
-{
-public:
-    enum DeviceEvent
-    {
-        deviceDiscovered,
-        deviceDissapeared
-    };
-
-    virtual ~IDeviceSubscriber() = default;
-    virtual void onUPnPDeviceEvent(const Device& item, DeviceEvent event) = 0;
-};
-
 }
 
-#endif

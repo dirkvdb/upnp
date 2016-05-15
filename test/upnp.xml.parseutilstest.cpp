@@ -2,7 +2,7 @@
 #include <sstream>
 
 #include "utils/log.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnp.xml.parseutils.h"
 
 #include "testxmls.h"

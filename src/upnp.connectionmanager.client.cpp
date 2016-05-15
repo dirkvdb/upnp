@@ -17,8 +17,7 @@
 #include "upnp/upnp.connectionmanager.client.h"
 #include "upnp.connectionmanager.typeconversions.h"
 
-#include "upnp/upnpclientinterface.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnputils.h"
 
 #include "utils/log.h"

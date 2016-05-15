@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include <condition_variable>
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnp.devicescanner.h"
 
 namespace upnp

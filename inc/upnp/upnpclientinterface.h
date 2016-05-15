@@ -22,7 +22,7 @@
 #include "utils/signal.h"
 
 #include "upnp/upnptypes.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnpxmlutils.h"
 
 struct Upnp_Event;

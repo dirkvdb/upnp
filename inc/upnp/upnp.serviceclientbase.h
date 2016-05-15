@@ -21,7 +21,7 @@
 
 #include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.action.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnp.xml.parseutils.h"
 #include "upnp/upnp.uv.h"
 

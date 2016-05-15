@@ -19,7 +19,7 @@
 #include "utils/signal.h"
 
 #include "upnp/upnp.serviceclientbase.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.renderingcontrol.types.h"
 

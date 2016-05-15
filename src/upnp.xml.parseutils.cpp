@@ -8,7 +8,7 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnputils.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 #include "upnp/upnpservicevariable.h"
 
 #include "rapidxml.hpp"
@@ -480,10 +480,10 @@ Item parseContainer(xml_node<char>& containerElem)
                 // no profile id present, add it as regular metadata
                 item.addMetaData(prop, elem->value_string());
             }
-            
+
             continue;
         }
-        
+
         item.addMetaData(prop, elem->value_string());
     }
 

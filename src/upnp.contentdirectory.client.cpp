@@ -17,8 +17,7 @@
 #include "upnp/upnp.contentdirectory.client.h"
 
 #include "upnp.contentdirectory.typeconversions.h"
-#include "upnp/upnpclientinterface.h"
-#include "upnp/upnpdevice.h"
+#include "upnp/upnp.device.h"
 
 #include <cassert>
 
