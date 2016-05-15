@@ -22,7 +22,7 @@
 #include <chrono>
 #include <cinttypes>
 
-#include "upnp/upnptypes.h"
+#include "upnp/upnp.types.h"
 
 namespace upnp
 {
@@ -74,7 +74,7 @@ public:
             case DeviceType::InternetGateway:
                 return InternetGatewayDeviceTypeUrn;
             default:
-                throw Exception("Invalid device type encountered");
+                throw std::invalid_argument("Invalid device type encountered");
         }
     }
 

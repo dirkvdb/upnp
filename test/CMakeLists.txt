@@ -86,5 +86,5 @@ TARGET_LINK_LIBRARIES(upnpframeworktest
     upnpframework
 )
 
-ADD_TEST(NAME UPnPTests COMMAND upnptest)
+#ADD_TEST(NAME UPnPTests COMMAND upnptest)
 ADD_TEST(NAME UPnPFrameworkTests COMMAND upnpframeworktest)

@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_FWD_H
-#define UPNP_FWD_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -25,8 +24,6 @@ namespace upnp
 
 class Item;
 
-typedef std::map<std::string, std::string> MetaMap;
+using MetaMap = std::map<std::string, std::string>;
 
 }
-
-#endif

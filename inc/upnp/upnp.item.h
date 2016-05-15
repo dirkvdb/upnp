@@ -22,7 +22,8 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "upnp/upnptypes.h"
+#include "upnp/upnpfwd.h"
+#include "upnp/upnp.types.h"
 #include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.dlna.info.h"
 

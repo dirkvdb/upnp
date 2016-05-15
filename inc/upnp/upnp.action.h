@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "upnp/upnptypes.h"
+#include "upnp/upnp.types.h"
 
 namespace upnp
 {

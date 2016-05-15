@@ -122,8 +122,8 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnprootdeviceinterface.h
     inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
-    inc/upnp/upnptypes.h                                src/upnptypes.cpp
-    inc/upnp/upnp.types.h
+    inc/upnp/upnptypes.h
+    inc/upnp/upnp.types.h                               src/upnp.types.cpp
     inc/upnp/upnp.flags.h
     inc/upnp/upnputils.h
     inc/upnp/upnpwebserver.h                            src/upnpwebserver.cpp
