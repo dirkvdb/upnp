@@ -128,7 +128,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
                     {
                         if (nread != UV_EOF)
                         {
-                            log::error("Failed to read from socket {}", uv::getErrorString(nread));
+                            log::error("Failed to read from socket {}", uv::getErrorString(static_cast<int32_t>(nread)));
                         }
                         else
                         {

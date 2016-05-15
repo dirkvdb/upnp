@@ -72,7 +72,7 @@
 		43A615981CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43A615841CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp */; };
 		43A615991CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43A615851CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.cpp */; };
 		43A6159A1CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.h in Headers */ = {isa = PBXBuildFile; fileRef = 43A615861CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.h */; };
-		43A6159C1CD4ABA800FE1F8B /* upnptypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43A615881CD4ABA800FE1F8B /* upnptypes.cpp */; };
+		43A6159C1CD4ABA800FE1F8B /* upnp.types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43A615881CD4ABA800FE1F8B /* upnp.types.cpp */; };
 		43AECDBA1CC2B0AF00C47341 /* upnp.action.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDAF1CC2B0AF00C47341 /* upnp.action.h */; };
 		43AECDBC1CC2B0AF00C47341 /* upnp.devicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB11CC2B0AF00C47341 /* upnp.devicescanner.h */; };
 		43AECDBD1CC2B0AF00C47341 /* upnp.flags.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB21CC2B0AF00C47341 /* upnp.flags.h */; };
@@ -229,7 +229,7 @@
 		43A615841CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnp.renderingcontrol.client.cpp; path = src/upnp.renderingcontrol.client.cpp; sourceTree = "<group>"; };
 		43A615851CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnp.renderingcontrol.typeconversions.cpp; path = src/upnp.renderingcontrol.typeconversions.cpp; sourceTree = "<group>"; };
 		43A615861CD4ABA800FE1F8B /* upnp.renderingcontrol.typeconversions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnp.renderingcontrol.typeconversions.h; path = src/upnp.renderingcontrol.typeconversions.h; sourceTree = "<group>"; };
-		43A615881CD4ABA800FE1F8B /* upnptypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnptypes.cpp; path = src/upnptypes.cpp; sourceTree = "<group>"; };
+		43A615881CD4ABA800FE1F8B /* upnp.types.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnp.types.cpp; path = src/upnp.types.cpp; sourceTree = "<group>"; };
 		43A615A71CD4ABF800FE1F8B /* gmock-gtest-all.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "gmock-gtest-all.cpp"; path = "test/testframework/gmock-gtest-all.cpp"; sourceTree = "<group>"; };
 		43AECDAF1CC2B0AF00C47341 /* upnp.action.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.action.h; sourceTree = "<group>"; };
 		43AECDB11CC2B0AF00C47341 /* upnp.devicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.devicescanner.h; sourceTree = "<group>"; };
@@ -343,7 +343,7 @@
 				43AECDD11CC2B0CB00C47341 /* upnp.ssdp.parseutils.h */,
 				43AECDD21CC2B0CB00C47341 /* upnp.xml.parseutils.cpp */,
 				43CD846A17072E7C00C5B1AB /* upnphttpreader.cpp */,
-				43A615881CD4ABA800FE1F8B /* upnptypes.cpp */,
+				43A615881CD4ABA800FE1F8B /* upnp.types.cpp */,
 				43AECDD41CC2B0CB00C47341 /* URI.cpp */,
 				43AECDD51CC2B0CB00C47341 /* URI.h */,
 			);
@@ -681,7 +681,7 @@
 				43A615931CD4ABA800FE1F8B /* upnp.contentdirectory.typeconversions.cpp in Sources */,
 				43AECDDB1CC2B0CB00C47341 /* upnp.gena.server.cpp in Sources */,
 				43A615981CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp in Sources */,
-				43A6159C1CD4ABA800FE1F8B /* upnptypes.cpp in Sources */,
+				43A6159C1CD4ABA800FE1F8B /* upnp.types.cpp in Sources */,
 				43AECDE11CC2B0CB00C47341 /* upnp.ssdp.client.cpp in Sources */,
 				43A615921CD4ABA800FE1F8B /* upnp.contentdirectory.client.cpp in Sources */,
 				43AECDDF1CC2B0CB00C47341 /* upnp.http.server.cpp in Sources */,

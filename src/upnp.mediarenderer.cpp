@@ -433,10 +433,10 @@ bool MediaRenderer::supportsQueueItem() const
     return m_avTransport ? m_avTransport->supportsAction(AVTransport::Action::SetNextAVTransportURI) : false;
 }
 
-void MediaRenderer::setVolume(uint32_t value)
+void MediaRenderer::setVolume(uint32_t value, std::function<void(Status)> cb)
 {
     throwOnUnknownConnectionId();
-    m_renderingControl.setVolume(m_connInfo.connectionId, value, nullptr);
+    m_renderingControl.setVolume(m_connInfo.connectionId, value, cb);
 }
 
 void MediaRenderer::getVolume(std::function<void(Status status, uint32_t volume)> cb)

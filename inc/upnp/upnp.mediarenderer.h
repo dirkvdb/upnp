@@ -103,8 +103,8 @@ public:
 
 
     // Rendering control
-    void setVolume(uint32_t value);
-    void getVolume(std::function<void(Status status, uint32_t volume)> cb);
+    void setVolume(uint32_t value, std::function<void(Status)> cb);
+    void getVolume(std::function<void(Status, uint32_t volume)> cb);
     
     void activateEvents(std::function<void(Status)> cb);
     void deactivateEvents(std::function<void(Status)> cb);
