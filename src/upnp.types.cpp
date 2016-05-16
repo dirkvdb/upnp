@@ -36,6 +36,10 @@ const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata
 const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
 const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
+static constexpr const char* MediaServerDeviceTypeUrn       = "urn:schemas-upnp-org:device:MediaServer:";
+static constexpr const char* MediaRendererDeviceTypeUrn     = "urn:schemas-upnp-org:device:MediaRenderer:";
+static constexpr const char* InternetGatewayDeviceTypeUrn   = "urn:schemas-upnp-org:device:InternetGatewayDevice:";
+
 static constexpr EnumMap<Property> s_propertyNames {{
     { "id",                         Property::Id },
     { "parentID",                   Property::ParentId },
@@ -83,6 +87,12 @@ static constexpr EnumMap<Class> s_classNames {{
     { "object.generic",                     Class::Generic }
 }};
 
+static constexpr EnumMap<DeviceType::Type> s_deviceTypeNames {{
+    { MediaServerDeviceTypeUrn,          DeviceType::MediaServer },
+    { MediaRendererDeviceTypeUrn,        DeviceType::MediaRenderer },
+    { InternetGatewayDeviceTypeUrn,      DeviceType::InternetGateway },
+}};
+
 static constexpr EnumMap<ErrorCode> s_errorNames {{
     { "Success",                ErrorCode::Success },
     { "Unexpected",             ErrorCode::Unexpected },
@@ -106,6 +116,7 @@ static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
 ADD_ENUM_MAP(Property, s_propertyNames)
 ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)
 ADD_ENUM_MAP(Class, s_classNames)
+ADD_ENUM_MAP(DeviceType::Type, s_deviceTypeNames)
 ADD_ENUM_MAP(ErrorCode, s_errorNames)
 ADD_ENUM_MAP_TYPED(ErrorCode, int32_t, s_errorValues)
 
@@ -142,6 +153,20 @@ ServiceType serviceTypeFromString(const std::string& value)
 const char* serviceTypeToTypeString(ServiceType type)
 {
     return enum_string(type);
+}
+
+std::string deviceTypeToString(DeviceType value)
+{
+    return fmt::format("{}{}", enum_string(value.type), value.version);
+}
+
+DeviceType stringToDeviceType(const std::string& value)
+{
+    DeviceType type;
+    type.type = enum_cast<DeviceType::Type>(gsl::cstring_span<>(value.data(), value.size() - 1));
+    type.version = value[value.size() - 1] - '0';
+
+    return type;
 }
 
 const char* serviceTypeToUrnTypeString(ServiceType type)

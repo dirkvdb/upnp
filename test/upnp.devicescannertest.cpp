@@ -17,7 +17,7 @@ TEST(DeviceScannerTest, DiscoverClient)
 {
     Client2 client;
 
-    DeviceScanner scanner(client, { DeviceType::MediaServer, DeviceType::MediaRenderer });
+    DeviceScanner scanner(client, { { DeviceType::MediaServer, 1 }, { DeviceType::MediaRenderer, 1 } });
     client.initialize();
 
     std::promise<void> prom;

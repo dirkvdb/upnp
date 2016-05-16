@@ -37,8 +37,8 @@ class TestEnvironment : public Environment
 public:
     TestEnvironment()
     : m_client(factory::createClient())
-    , m_serverDiscoverer(*m_client, DeviceType::MediaServer, SERVER_DEVICE)
-    , m_rendererDiscoverer(*m_client, DeviceType::MediaRenderer, RENDERER_DEVICE)
+    , m_serverDiscoverer(*m_client, { DeviceType::MediaServer, 1 }, SERVER_DEVICE)
+    , m_rendererDiscoverer(*m_client, { DeviceType::MediaRenderer, 1 }, RENDERER_DEVICE)
     {
 
     }

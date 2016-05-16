@@ -17,9 +17,9 @@
 #pragma once
 
 #include <string>
-#include <map>
 #include <chrono>
 #include <cinttypes>
+#include <unordered_map>
 
 #include "upnp/upnp.types.h"
 
@@ -51,11 +51,8 @@ struct Device
     std::string     location;
     std::string     containerId;
 
-    std::chrono::system_clock::time_point   timeoutTime;
-    std::map<ServiceType, Service>    services;
-
-    static const char* deviceTypeToString(DeviceType type);
-    static DeviceType stringToDeviceType(const std::string& type);
+    std::chrono::system_clock::time_point timeoutTime;
+    std::unordered_map<ServiceType, Service> services;
 };
 
 }

@@ -69,7 +69,7 @@ protected:
         serviceInstance = std::make_unique<SvcType>(client);
 
         auto device = std::make_shared<Device>();
-        device->type = DeviceType::MediaRenderer;
+        device->type = { DeviceType::MediaRenderer, 1 };
         device->services[service.type] = service;
 
         setDevice(device);

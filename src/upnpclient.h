@@ -52,7 +52,6 @@ public:
  private:
     static int upnpCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
     static int upnpServiceCallback(Upnp_EventType EventType, void* pEvent, void* pcookie);
-    static const char* deviceTypeToString(DeviceType type);
 
     class UpnpInitialization;
     class ClientHandle;

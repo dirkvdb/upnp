@@ -350,7 +350,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
     device.udn            = requiredChildValue(deviceNode, "UDN");
-    device.type           = Device::stringToDeviceType(requiredChildValue(deviceNode, "deviceType"));
+    device.type           = stringToDeviceType(requiredChildValue(deviceNode, "deviceType"));
     device.friendlyName   = requiredChildValue(deviceNode, "friendlyName");
     device.baseURL        = optionalChildValue(deviceNode, "URLBase");
 
@@ -369,7 +369,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
 
     auto& serviceListNode = deviceNode.first_node_ref("serviceList");
 
-    if (device.type == DeviceType::MediaServer)
+    if (device.type.type == DeviceType::MediaServer)
     {
         if (findAndParseService(serviceListNode, ServiceType::ContentDirectory, device))
         {
@@ -378,7 +378,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
             findAndParseService(serviceListNode, ServiceType::ConnectionManager, device);
         }
     }
-    else if (device.type == DeviceType::MediaRenderer)
+    else if (device.type.type == DeviceType::MediaRenderer)
     {
         if (findAndParseService(serviceListNode, ServiceType::RenderingControl, device) &&
             findAndParseService(serviceListNode, ServiceType::ConnectionManager, device))

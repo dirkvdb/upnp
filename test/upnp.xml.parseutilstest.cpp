@@ -152,7 +152,8 @@ TEST(XmlParseTest, GatewayDeviceInfo)
     EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, dev.udn);
     EXPECT_EQ("Compal Broadband Networks, Inc CH6643"s, dev.friendlyName);
     EXPECT_TRUE(dev.baseURL.empty());
-    EXPECT_EQ(DeviceType::InternetGateway, dev.type);
+    EXPECT_EQ(DeviceType::InternetGateway, dev.type.type);
+    EXPECT_EQ(1u, dev.type.version);
     EXPECT_TRUE(dev.presURL.empty());
 }
 
@@ -166,7 +167,8 @@ TEST(XmlParseTest, MediaServerInfo)
     EXPECT_EQ("uuid:55076f6e-6b79-1d65-a4eb-00089be34071"s, dev.udn);
     EXPECT_EQ("NAS"s, dev.friendlyName);
     EXPECT_TRUE(dev.baseURL.empty());
-    EXPECT_EQ(DeviceType::MediaServer, dev.type);
+    EXPECT_EQ(DeviceType::MediaServer, dev.type.type);
+    EXPECT_EQ(1u, dev.type.version);
     EXPECT_EQ("http://192.168.1.13:9000/"s, dev.presURL);
 
     EXPECT_EQ(2u, dev.services.size());

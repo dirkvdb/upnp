@@ -84,7 +84,7 @@ public:
     {
         return m_errorCode == other.m_errorCode;
     }
-    
+
     const char* what() const noexcept
     {
         return m_message.c_str();
@@ -104,12 +104,25 @@ enum class ServiceType
     Unknown
 };
 
-enum class DeviceType
+struct DeviceType
 {
-    MediaServer,
-    MediaRenderer,
-    InternetGateway,
-    Unknown
+    enum Type
+    {
+        MediaServer,
+        MediaRenderer,
+        InternetGateway,
+        Unknown
+    };
+
+    DeviceType() = default;
+    DeviceType(Type t, uint32_t v) : type(t), version(v) {}
+
+    bool operator==(const DeviceType& other) const { return type == other.type; }
+    bool operator<(const DeviceType& other) const { return type < other.type; }
+
+
+    Type      type;
+    uint32_t  version = 0;
 };
 
 enum class Property
@@ -176,6 +189,9 @@ const char* serviceTypeToUrnMetadataString(ServiceType type);
 ServiceType serviceTypeFromString(const std::string& name);
 ServiceType serviceTypeUrnStringToService(const std::string& type);
 ServiceType serviceIdUrnStringToService(const std::string& type);
+
+std::string deviceTypeToString(DeviceType type);
+DeviceType stringToDeviceType(const std::string& type);
 
 inline std::ostream& operator<<(std::ostream& os, const Status s)
 {

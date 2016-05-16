@@ -81,7 +81,7 @@ void DeviceScanner::refresh()
     uv::asyncSend(m_upnpClient.loop(), [this] () {
         if (m_types.size() == 1)
         {
-            m_ssdpClient.search(Device::deviceTypeToString(*m_types.begin()));
+            m_ssdpClient.search(deviceTypeToString(*m_types.begin()).c_str());
         }
         else
         {
@@ -144,8 +144,9 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
 
 void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
-    auto deviceType = Device::stringToDeviceType(info.deviceType);
-    if (m_types.find(deviceType) == m_types.end())
+    auto deviceType = stringToDeviceType(info.deviceType);
+    auto iter = m_types.find(deviceType);
+    if (iter == m_types.end() || deviceType.version < iter->version)
     {
         return;
     }

@@ -122,7 +122,7 @@ int32_t Client::getPort() const
 void Client::searchDevicesOfType(DeviceType type, int32_t timeout) const
 {
     log::debug("Send UPnP discovery");
-    handleUPnPResult(UpnpSearchAsync(*m_client, timeout, Device::deviceTypeToString(type), this), "Error sending search request");
+    handleUPnPResult(UpnpSearchAsync(*m_client, timeout, deviceTypeToString(type).c_str(), this), "Error sending search request");
 }
 
 void Client::searchAllDevices(int32_t timeout) const
