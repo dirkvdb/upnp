@@ -39,7 +39,7 @@ struct Service
 struct Device
 {
     bool operator==(const Device& otherDevice) const { return udn == otherDevice.udn; }
-    bool implementsService(ServiceType type) const { return services.find(type) != services.end(); }
+    bool implementsService(ServiceType type) const { return services.find(type.type) != services.end(); }
 
     DeviceType      type;
     std::string     userDefinedName;
@@ -52,7 +52,7 @@ struct Device
     std::string     containerId;
 
     std::chrono::system_clock::time_point timeoutTime;
-    std::unordered_map<ServiceType, Service> services;
+    std::unordered_map<ServiceType::Type, Service> services;
 };
 
 }

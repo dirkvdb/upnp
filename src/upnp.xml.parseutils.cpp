@@ -98,7 +98,7 @@ T optionalAttributeValue(xml_node<char>& elem, const char* name, T defaultValue)
     return stringops::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
 }
 
-bool findAndParseService(const xml_node<char>& node, const ServiceType serviceType, Device& device)
+bool findAndParseService(const xml_node<char>& node, const ServiceType::Type serviceType, Device& device)
 {
     auto base = URI(device.baseURL.empty() ? device.location : device.baseURL);
 
@@ -106,7 +106,7 @@ bool findAndParseService(const xml_node<char>& node, const ServiceType serviceTy
     {
         Service service;
         service.type = serviceTypeUrnStringToService(requiredChildValue(*serviceNode, "serviceType"));
-        if (service.type == serviceType)
+        if (service.type.type == serviceType)
         {
             service.id                    = requiredChildValue(*serviceNode, "serviceId");
             service.controlURL            = URI(base, requiredChildValue(*serviceNode, "controlURL")).toString();

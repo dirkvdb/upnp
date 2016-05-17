@@ -49,9 +49,9 @@ public:
 
     virtual void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb)
     {
-        if (device->implementsService(getType()))
+        if (device->implementsService(serviceType()))
         {
-            m_service = device->services[getType()];
+            m_service = device->services[Traits::SvcType];
             processServiceDescription(m_service.scpdUrl, cb);
         }
         else
@@ -98,6 +98,11 @@ public:
         return m_supportedActions.find(action) != m_supportedActions.end();
     }
 
+    static constexpr ServiceType serviceType()
+    {
+        return ServiceType { Traits::SvcType, Traits::SvcVersion };
+    }
+
 protected:
     virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(Status)> cb)
     {
@@ -138,7 +143,7 @@ protected:
 
     void executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(Status, std::string)> cb)
     {
-        Action action(actionToString(actionType), m_service.controlURL, getType());
+        Action action(actionToString(actionType), m_service.controlURL, serviceType());
         for (auto& arg : args)
         {
             action.addArgument(arg.first, arg.second);
@@ -153,11 +158,6 @@ protected:
     std::vector<StateVariable> m_stateVariables;
 
 private:
-    static ServiceType getType()
-    {
-        return Traits::SvcType;
-    }
-
     typename Traits::ActionType actionFromString(const std::string& action)
     {
         return Traits::actionFromString(action);

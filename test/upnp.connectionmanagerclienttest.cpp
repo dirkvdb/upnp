@@ -69,7 +69,7 @@ struct ConnectionManagerStatusCallbackMock
 class ConnectionManagerClientTest : public ServiceClientTestBase<ConnectionManager::Client, ConnectionManagerStatusCallbackMock, ConnectionManager::Variable>
 {
 public:
-    ConnectionManagerClientTest() : ServiceClientTestBase(ServiceType::ConnectionManager, testxmls::connectionManagerServiceDescription)
+    ConnectionManagerClientTest() : ServiceClientTestBase(testxmls::connectionManagerServiceDescription)
     {
     }
 
@@ -98,7 +98,7 @@ TEST_F(ConnectionManagerClientTest, supportedActions)
 
 TEST_F(ConnectionManagerClientTest, getProtocolInfo)
 {
-    Action expectedAction("GetProtocolInfo", s_controlUrl, ServiceType::ConnectionManager);
+    Action expectedAction("GetProtocolInfo", s_controlUrl, serviceType());
 
     std::vector<ProtocolInfo> sinks = { ProtocolInfo("http-get:*:audio/mpeg:*"), ProtocolInfo("http-get:*:audio/wav:*") };
     expectAction(expectedAction, { { "Sink", "http-get:*:audio/mpeg:*,http-get:*:audio/wav:*" } });
@@ -112,7 +112,7 @@ TEST_F(ConnectionManagerClientTest, prepareForConnection)
     const std::string peerMgr = "ConnMgr";
     const int32_t peerConnectionId = 1;
 
-    Action expectedAction("PrepareForConnection", s_controlUrl, ServiceType::ConnectionManager);
+    Action expectedAction("PrepareForConnection", s_controlUrl, serviceType());
     expectedAction.addArgument("Direction", "Input");
     expectedAction.addArgument("PeerConnectionID", std::to_string(peerConnectionId));
     expectedAction.addArgument("PeerConnectionManager", peerMgr);
@@ -137,7 +137,7 @@ TEST_F(ConnectionManagerClientTest, prepareForConnection)
 
 TEST_F(ConnectionManagerClientTest, connectionComplete)
 {
-    Action expectedAction("ConnectionComplete", s_controlUrl, ServiceType::ConnectionManager);
+    Action expectedAction("ConnectionComplete", s_controlUrl, serviceType());
     expectedAction.addArgument("ConnectionID", std::to_string(s_connectionId));
 
     expectAction(expectedAction);
@@ -151,7 +151,7 @@ TEST_F(ConnectionManagerClientTest, connectionComplete)
 
 TEST_F(ConnectionManagerClientTest, getCurrentConnectionIds)
 {
-    Action expectedAction("GetCurrentConnectionIDs", s_controlUrl, ServiceType::ConnectionManager);
+    Action expectedAction("GetCurrentConnectionIDs", s_controlUrl, serviceType());
 
     expectAction(expectedAction, { { "ConnectionIDs", "3,5,6" } });
 
@@ -166,7 +166,7 @@ TEST_F(ConnectionManagerClientTest, getCurrentConnectionInfo)
     const std::string peerMgr = "ConnMgr";
     const int32_t peerConnectionId = 1;
 
-    Action expectedAction("GetCurrentConnectionInfo", s_controlUrl, ServiceType::ConnectionManager);
+    Action expectedAction("GetCurrentConnectionInfo", s_controlUrl, serviceType());
     expectedAction.addArgument("ConnectionID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "AVTransportID", "5" },

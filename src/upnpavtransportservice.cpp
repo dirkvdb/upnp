@@ -41,7 +41,7 @@ static const char* s_valAtr         = "val";
 static const char* s_instanceIdNode = "InstanceID";
 
 Service::Service(IRootDevice& dev, IAVTransport& av)
-: DeviceService(dev, ServiceType::AVTransport)
+: DeviceService(dev, { ServiceType::AVTransport, 1 })
 , m_avTransport(av)
 , m_avTransport3(dynamic_cast<IAVTransport3*>(&av))
 , m_LastChange(m_type, std::chrono::milliseconds(200))
@@ -97,7 +97,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
 {
     try
     {
-        ActionResponse response(action, ServiceType::AVTransport);
+        ActionResponse response(action, { ServiceType::AVTransport, 1 });
         auto req = doc.getFirstChild();
         uint32_t id = static_cast<uint32_t>(std::stoul(req.getChildNodeValue("InstanceID")));
 

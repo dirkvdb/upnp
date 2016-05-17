@@ -174,18 +174,52 @@ TEST(XmlParseTest, MediaServerInfo)
     EXPECT_EQ(2u, dev.services.size());
 
     auto& connMgrSvc = dev.services.at(ServiceType::ConnectionManager);
-    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.type);
-    EXPECT_EQ("urn:upnp-org:serviceId:ConnectionManager"s, connMgrSvc.id);
+    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.type.type);
+    EXPECT_EQ(1u, connMgrSvc.type.version);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/control"s, connMgrSvc.controlURL);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0/event"s, connMgrSvc.eventSubscriptionURL);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv0.xml"s, connMgrSvc.scpdUrl);
 
     auto& contDirMgrSvc = dev.services.at(ServiceType::ContentDirectory);
-    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.type);
+    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.type.type);
+    EXPECT_EQ(1u, contDirMgrSvc.type.version);
     EXPECT_EQ("urn:upnp-org:serviceId:ContentDirectory"s, contDirMgrSvc.id);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/control"s, contDirMgrSvc.controlURL);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1/event"s, contDirMgrSvc.eventSubscriptionURL);
     EXPECT_EQ("http://192.168.1.13:9000/dev0/srv1.xml"s, contDirMgrSvc.scpdUrl);
+}
+
+TEST(XmlParseTest, MediaServer2Info)
+{
+    Device dev;
+    dev.location = "http://192.168.1.77:8080/upnpdev/devc/uuid_1774e860-1dd2-11b2-a62f-686359528055/00";
+
+    xml::parseDeviceInfo(testxmls::mediaServer2RootDesc, dev);
+
+    EXPECT_EQ("uuid:1774e860-1dd2-11b2-a62f-686359528055"s, dev.udn);
+    EXPECT_EQ("DIGIBOX"s, dev.friendlyName);
+    EXPECT_TRUE(dev.baseURL.empty());
+    EXPECT_EQ(DeviceType::MediaServer, dev.type.type);
+    EXPECT_EQ(2u, dev.type.version);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpdev/devc/uuid_1774e860-1dd2-11b2-a62f-686359528055/00`"s, dev.presURL);
+
+    EXPECT_EQ(2u, dev.services.size());
+
+    auto& connMgrSvc = dev.services.at(ServiceType::ConnectionManager);
+    EXPECT_EQ(ServiceType::ConnectionManager, connMgrSvc.type.type);
+    EXPECT_EQ(2u, connMgrSvc.type.version);
+    EXPECT_EQ("urn:upnp-org:serviceId:ConnectionManager"s, connMgrSvc.id);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpfun/ctrl/uuid_1774e860-1dd2-11b2-a62f-686359528055/00"s, connMgrSvc.controlURL);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpfun/evnt/uuid_1774e860-1dd2-11b2-a62f-686359528055/00"s, connMgrSvc.eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpdev/serv/uuid_1774e860-1dd2-11b2-a62f-686359528055/00"s, connMgrSvc.scpdUrl);
+
+    auto& contDirMgrSvc = dev.services.at(ServiceType::ContentDirectory);
+    EXPECT_EQ(ServiceType::ContentDirectory, contDirMgrSvc.type.type);
+    EXPECT_EQ(2u, contDirMgrSvc.type.version);
+    EXPECT_EQ("urn:upnp-org:serviceId:ContentDirectory"s, contDirMgrSvc.id);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpfun/ctrl/uuid_1774e860-1dd2-11b2-a62f-686359528055/01"s, contDirMgrSvc.controlURL);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpfun/evnt/uuid_1774e860-1dd2-11b2-a62f-686359528055/01"s, contDirMgrSvc.eventSubscriptionURL);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpdev/serv/uuid_1774e860-1dd2-11b2-a62f-686359528055/01"s, contDirMgrSvc.scpdUrl);
 }
 
 TEST(XmlParseTest, EmptyXml)

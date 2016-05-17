@@ -27,7 +27,7 @@ namespace ConnectionManager
 {
 
 Service::Service(IRootDevice& dev, IConnectionManager& cm)
-: DeviceService(dev, ServiceType::ConnectionManager)
+: DeviceService(dev, { ServiceType::ConnectionManager, 1 })
 , m_connectionManager(cm)
 , m_connectionManager3(dynamic_cast<IConnectionManager3*>(&cm))
 {
@@ -58,7 +58,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
 {
     try
     {
-        ActionResponse response(action, ServiceType::ConnectionManager);
+        ActionResponse response(action, { ServiceType::ConnectionManager, 1 });
         auto request = doc.getFirstChild();
 
         switch (actionFromString(action))

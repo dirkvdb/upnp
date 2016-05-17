@@ -24,14 +24,15 @@ TEST(UpnpActionTest, CreateAction)
     "</s:Body>"
     "</s:Envelope>"s;
 
-    Action action("SetVolume", "url", ServiceType::RenderingControl);
+    Action action("SetVolume", "url", { ServiceType::RenderingControl, 1 });
     action.addArgument("Channel", "Master");
     action.addArgument("DesiredVolume", "49");
     action.addArgument("InstanceID", "0");
 
     EXPECT_EQ("SetVolume", action.getName());
     EXPECT_EQ("url", action.getUrl());
-    EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType());
+    EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType().type);
+    EXPECT_EQ(1u, action.getServiceType().version);
     EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1"s, action.getServiceTypeUrn());
     EXPECT_EQ(expected, action.toString());
 }
@@ -46,11 +47,12 @@ TEST(UpnpActionTest, CreateActionNoArguments)
     "</s:Body>"
     "</s:Envelope>"s;
 
-    Action action("SetVolume", "url", ServiceType::RenderingControl);
+    Action action("SetVolume", "url", { ServiceType::RenderingControl, 1 });
 
     EXPECT_EQ("SetVolume", action.getName());
     EXPECT_EQ("url", action.getUrl());
-    EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType());
+    EXPECT_EQ(ServiceType::RenderingControl, action.getServiceType().type);
+    EXPECT_EQ(1u, action.getServiceType().version);
     EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1"s, action.getServiceTypeUrn());
     EXPECT_EQ(expected, action.toString());
 }

@@ -22,10 +22,10 @@
 namespace upnp
 {
 
-const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:1";
-const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:1";
-const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:1";
-const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:1";
+const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:";
+const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:";
+const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:";
+const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:";
 
 const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
 const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
@@ -68,7 +68,7 @@ static constexpr EnumMap<Property> s_propertyNames {{
     { "*",                          Property::All },
 }};
 
-static constexpr EnumMap<ServiceType> s_serviceTypeNames {{
+static constexpr EnumMap<ServiceType::Type> s_serviceTypeNames {{
     { "ContentDirectory",     ServiceType::ContentDirectory },
     { "RenderingControl",     ServiceType::RenderingControl },
     { "ConnectionManager",    ServiceType::ConnectionManager },
@@ -114,7 +114,7 @@ static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
 }};
 
 ADD_ENUM_MAP(Property, s_propertyNames)
-ADD_ENUM_MAP(ServiceType, s_serviceTypeNames)
+ADD_ENUM_MAP(ServiceType::Type, s_serviceTypeNames)
 ADD_ENUM_MAP(Class, s_classNames)
 ADD_ENUM_MAP(DeviceType::Type, s_deviceTypeNames)
 ADD_ENUM_MAP(ErrorCode, s_errorNames)
@@ -145,14 +145,14 @@ const char* toString(Property value) noexcept
     return enum_string(value);
 }
 
-ServiceType serviceTypeFromString(const std::string& value)
+ServiceType::Type serviceTypeFromString(const std::string& value)
 {
-    return enum_cast<ServiceType>(value);
+    return enum_cast<ServiceType::Type>(value);
 }
 
-const char* serviceTypeToTypeString(ServiceType type)
+const char* serviceTypeToTypeString(ServiceType value)
 {
-    return enum_string(type);
+    return enum_string(value.type);
 }
 
 std::string deviceTypeToString(DeviceType value)
@@ -169,45 +169,71 @@ DeviceType stringToDeviceType(const std::string& value)
     return type;
 }
 
-const char* serviceTypeToUrnTypeString(ServiceType type)
+std::string serviceTypeToUrnTypeString(ServiceType type)
 {
-    if (type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn;
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn;
+    std::string result;
 
-    throw std::invalid_argument("Invalid service type received for urn");
+         if (type.type == ServiceType::RenderingControl)      result = RenderingControlServiceTypeUrn;
+    else if (type.type == ServiceType::ConnectionManager)     result = ConnectionManagerServiceTypeUrn;
+    else if (type.type == ServiceType::AVTransport)           result = AVTransportServiceTypeUrn;
+    else if (type.type == ServiceType::ContentDirectory)      result = ContentDirectoryServiceTypeUrn;
+    else throw std::invalid_argument("Invalid service type received for urn");
+
+    result.append(1, static_cast<char>(type.version + '0'));
+    return result;
 }
 
 const char* serviceTypeToUrnIdString(ServiceType type)
 {
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
+    std::string result;
+
+    if (type.type == ServiceType::RenderingControl)      return RenderingControlServiceIdUrn;
+    if (type.type == ServiceType::ConnectionManager)     return ConnectionManagerServiceIdUrn;
+    if (type.type == ServiceType::AVTransport)           return AVTransportServiceIdUrn;
 
     throw std::invalid_argument("Invalid service type received for id urn");
 }
 
 const char* serviceTypeToUrnMetadataString(ServiceType type)
 {
-    if (type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
-    if (type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
-    if (type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
+    if (type.type == ServiceType::RenderingControl)      return RenderingControlServiceMetadataUrn;
+    if (type.type == ServiceType::ConnectionManager)     return ConnectionManagerServiceMetadataUrn;
+    if (type.type == ServiceType::AVTransport)           return AVTransportServiceMetadataUrn;
 
     throw std::invalid_argument("Invalid service type received for id urn");
 }
 
-ServiceType serviceTypeUrnStringToService(const std::string& type)
+ServiceType serviceTypeUrnStringToService(const std::string& value)
 {
-    if (type == ContentDirectoryServiceTypeUrn)    return ServiceType::ContentDirectory;
-    if (type == RenderingControlServiceTypeUrn)    return ServiceType::RenderingControl;
-    if (type == ConnectionManagerServiceTypeUrn)   return ServiceType::ConnectionManager;
-    if (type == AVTransportServiceTypeUrn)         return ServiceType::AVTransport;
+    ServiceType result;
 
-    return ServiceType::Unknown;
+    if (strncmp(ContentDirectoryServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    {
+        result.type = ServiceType::ContentDirectory;
+    }
+    else if (strncmp(RenderingControlServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    {
+        result.type = ServiceType::RenderingControl;
+    }
+    else if (strncmp(ConnectionManagerServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    {
+        result.type = ServiceType::ConnectionManager;
+    }
+    else if (strncmp(AVTransportServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    {
+        result.type = ServiceType::AVTransport;
+    }
+    else
+    {
+        result.type = ServiceType::Unknown;
+        return result;
+    }
+
+    result.version = value[value.size() - 1] - '0';
+    return result;
 }
 
-ServiceType serviceIdUrnStringToService(const std::string& type)
+ServiceType::Type serviceIdUrnStringToService(const std::string& type)
 {
     if (type == ContentDirectoryServiceIdUrn)    return ServiceType::ContentDirectory;
     if (type == RenderingControlServiceIdUrn)    return ServiceType::RenderingControl;

@@ -64,7 +64,7 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
                 return;
             }
 
-            if (m_device->implementsService(ServiceType::AVTransport))
+            if (m_device->implementsService({ ServiceType::AVTransport, 1}))
             {
                 m_avTransport = std::make_unique<AVTransport::Client>(m_client);
                 m_avTransport->setDevice(m_device, [this, cb] (Status status) {
@@ -127,7 +127,7 @@ std::string MediaServer::getPeerConnectionManager() const
     std::stringstream ss;
     ss << m_device->udn << "/";
 
-    if (m_device->implementsService(ServiceType::ConnectionManager))
+    if (m_device->implementsService({ ServiceType::ConnectionManager, 1 }))
     {
         ss << m_device->services[ServiceType::ConnectionManager].id;
     }

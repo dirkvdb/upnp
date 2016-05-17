@@ -79,7 +79,7 @@ struct AVTransportStatusCallbackMock
 class AVTransportClientTest : public ServiceClientTestBase<AVTransport::Client, AVTransportStatusCallbackMock, AVTransport::Variable>
 {
 public:
-    AVTransportClientTest() : ServiceClientTestBase(ServiceType::AVTransport, testxmls::avtransportServiceDescription)
+    AVTransportClientTest() : ServiceClientTestBase(testxmls::avtransportServiceDescription)
     {
     }
 
@@ -183,7 +183,7 @@ TEST_F(AVTransportClientTest, lastChangeEvent)
 
 TEST_F(AVTransportClientTest, play)
 {
-    Action expectedAction("Play", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("Play", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
     expectedAction.addArgument("Speed", "2");
 
@@ -194,7 +194,7 @@ TEST_F(AVTransportClientTest, play)
 
 TEST_F(AVTransportClientTest, stop)
 {
-    Action expectedAction("Stop", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("Stop", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction);
@@ -204,7 +204,7 @@ TEST_F(AVTransportClientTest, stop)
 
 TEST_F(AVTransportClientTest, pause)
 {
-    Action expectedAction("Pause", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("Pause", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction);
@@ -214,7 +214,7 @@ TEST_F(AVTransportClientTest, pause)
 
 TEST_F(AVTransportClientTest, previous)
 {
-    Action expectedAction("Previous", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("Previous", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction);
@@ -224,7 +224,7 @@ TEST_F(AVTransportClientTest, previous)
 
 TEST_F(AVTransportClientTest, next)
 {
-    Action expectedAction("Next", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("Next", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction);
@@ -234,7 +234,7 @@ TEST_F(AVTransportClientTest, next)
 
 TEST_F(AVTransportClientTest, getTransportInfo)
 {
-    Action expectedAction("GetTransportInfo", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("GetTransportInfo", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "CurrentTransportState",  "PLAYING" },
@@ -252,7 +252,7 @@ TEST_F(AVTransportClientTest, getTransportInfo)
 
 TEST_F(AVTransportClientTest, getPositionInfo)
 {
-    Action expectedAction("GetPositionInfo", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("GetPositionInfo", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "AbsCount",      "1" },
@@ -280,7 +280,7 @@ TEST_F(AVTransportClientTest, getPositionInfo)
 
 TEST_F(AVTransportClientTest, getMediaInfo)
 {
-    Action expectedAction("GetMediaInfo", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("GetMediaInfo", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "NrTracks",            "5" },
@@ -310,7 +310,7 @@ TEST_F(AVTransportClientTest, getMediaInfo)
 
 TEST_F(AVTransportClientTest, getCurrentTransportActions)
 {
-    Action expectedAction("GetCurrentTransportActions", s_controlUrl, ServiceType::AVTransport);
+    Action expectedAction("GetCurrentTransportActions", s_controlUrl, serviceType());
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 
     expectAction(expectedAction, { { "Actions", "Pause,Stop,Play" } } );

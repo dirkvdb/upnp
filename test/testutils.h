@@ -102,10 +102,10 @@ inline std::string generateBrowseResponse(const std::vector<upnp::Item>& contain
 
     ss << "&lt;/DIDL-Lite&gt;";
 
-    return wrapSoap(generateActionResponse("Browse", ServiceType::ContentDirectory, { std::make_pair("Result", ss.str()),
-                                                                                      std::make_pair("NumberReturned", numericops::toString(containers.size() + items.size())),
-                                                                                      std::make_pair("TotalMatches", numericops::toString(containers.size() + items.size())),
-                                                                                      std::make_pair("UpdateID", "1")}));
+    return wrapSoap(generateActionResponse("Browse", { ServiceType::ContentDirectory, 1 }, { std::make_pair("Result", ss.str()),
+                                                                                             std::make_pair("NumberReturned", numericops::toString(containers.size() + items.size())),
+                                                                                             std::make_pair("TotalMatches", numericops::toString(containers.size() + items.size())),
+                                                                                             std::make_pair("UpdateID", "1")}));
 }
 
 inline std::string getIndexString(uint32_t index)

@@ -33,7 +33,8 @@ struct ServiceTraits
 {
     using ActionType = AVTransport::Action;
     using VariableType = AVTransport::Variable;
-    static const ServiceType SvcType = ServiceType::AVTransport;
+    static ServiceType::Type SvcType;
+    static constexpr uint8_t SvcVersion = 1;
 
     static Action actionFromString(const std::string& action);
     static const char* actionToString(Action action);

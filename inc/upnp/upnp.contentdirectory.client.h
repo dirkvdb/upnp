@@ -33,7 +33,8 @@ struct ServiceTraits
 {
     using ActionType = ContentDirectory::Action;
     using VariableType = ContentDirectory::Variable;
-    static const ServiceType SvcType = ServiceType::ContentDirectory;
+    static ServiceType::Type SvcType;
+    static constexpr uint8_t SvcVersion = 1;
 
     static ActionType actionFromString(const std::string& action);
     static const char* actionToString(ActionType action);

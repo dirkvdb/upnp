@@ -39,7 +39,8 @@ struct ServiceTraits
 {
     using ActionType = RenderingControl::Action;
     using VariableType = RenderingControl::Variable;
-    static const ServiceType SvcType = ServiceType::RenderingControl;
+    static ServiceType::Type SvcType;
+    static constexpr uint8_t SvcVersion = 1;
 
     static ActionType actionFromString(const std::string& action);
     static const char* actionToString(ActionType action);

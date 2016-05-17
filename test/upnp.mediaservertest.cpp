@@ -54,7 +54,7 @@ void addServiceToDevice(Device& dev, ServiceType type, const std::string& scpUrl
     svc.scpdUrl = scpUrl;
     svc.controlURL = controlUrl;
 
-    dev.services.emplace(svc.type, svc);
+    dev.services.emplace(type.type, svc);
 }
 
 }
@@ -65,19 +65,20 @@ public:
     MediaServerTest()
     : m_server(m_client)
     , m_device(std::make_shared<Device>())
+    , m_cdSvcType({ ServiceType::ContentDirectory, 1 })
     {
         std::promise<ErrorCode> promise;
         auto fut = promise.get_future();
 
-        addServiceToDevice(*m_device, ServiceType::ConnectionManager, "CMSCPUrl", "CMCurl");
-        addServiceToDevice(*m_device, ServiceType::ContentDirectory, "CDSCPUrl", "CDCurl");
+        addServiceToDevice(*m_device, { ServiceType::ConnectionManager, 1 }, "CMSCPUrl", "CMCurl");
+        addServiceToDevice(*m_device, m_cdSvcType, "CDSCPUrl", "CDCurl");
 
         EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::connectionManagerServiceDescription));
         EXPECT_CALL(m_client, getFile("CDSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::contentDirectoryServiceDescription));
 
         InSequence seq;
-        Action searchCaps("GetSearchCapabilities", "CDCurl", ServiceType::ContentDirectory);
-        Action sortCaps("GetSortCapabilities", "CDCurl", ServiceType::ContentDirectory);
+        Action searchCaps("GetSearchCapabilities", "CDCurl", m_cdSvcType);
+        Action sortCaps("GetSortCapabilities", "CDCurl", m_cdSvcType);
         expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
         expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
 
@@ -115,6 +116,8 @@ protected:
 
     MediaServer                 m_server;
     std::shared_ptr<Device>     m_device;
+
+    ServiceType                 m_cdSvcType;
 };
 
 TEST_F(MediaServerTest, DiscoveredServices)
@@ -141,7 +144,7 @@ TEST_F(MediaServerTest, SortCapabilities)
 
 TEST_F(MediaServerTest, getAllInContainer)
 {
-    Action expectedAction("Browse", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
@@ -162,7 +165,7 @@ TEST_F(MediaServerTest, getAllInContainer)
 
 TEST_F(MediaServerTest, getAllInContainerNoResults)
 {
-    Action expectedAction("Browse", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
@@ -180,7 +183,7 @@ TEST_F(MediaServerTest, getAllInContainerNoResults)
 
 TEST_F(MediaServerTest, getAllInContainerSortAscending)
 {
-    Action expectedAction("Browse", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
@@ -201,7 +204,7 @@ TEST_F(MediaServerTest, getAllInContainerSortAscending)
 
 TEST_F(MediaServerTest, getAllInContainerSortDescending)
 {
-    Action expectedAction("Browse", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
@@ -224,7 +227,7 @@ TEST_F(MediaServerTest, SearchRootContainer)
 {
     std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Artist, "Prince"} };
 
-    Action expectedAction("Search", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Search", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
     expectedAction.addArgument("RequestedCount", "32");
@@ -247,7 +250,7 @@ TEST_F(MediaServerTest, SearchRootContainerNoResults)
 {
     std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Artist, "Prince"} };
 
-    Action expectedAction("Search", "CDCurl", ServiceType::ContentDirectory);
+    Action expectedAction("Search", "CDCurl", m_cdSvcType);
     expectedAction.addArgument("Filter", "*");
     expectedAction.addArgument("ObjectID", MediaServer::rootId);
     expectedAction.addArgument("RequestedCount", "32");

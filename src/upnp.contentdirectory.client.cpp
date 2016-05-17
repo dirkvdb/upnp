@@ -59,6 +59,8 @@ void addPropertyToList(const std::string& propertyName, std::vector<Property>& v
 
 }
 
+ServiceType::Type ServiceTraits::SvcType = ServiceType::ContentDirectory;
+
 Action ServiceTraits::actionFromString(const std::string& action)
 {
     return ContentDirectory::actionFromString(action);

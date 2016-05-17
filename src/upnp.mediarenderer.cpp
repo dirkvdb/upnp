@@ -155,7 +155,7 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
                 return;
             }
 
-            if (m_device->implementsService(ServiceType::AVTransport))
+            if (m_device->implementsService({ ServiceType::AVTransport, 1 }))
             {
                 if (!m_avTransport)
                 {

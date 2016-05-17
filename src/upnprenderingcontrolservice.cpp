@@ -26,7 +26,7 @@ namespace RenderingControl
 {
 
 Service::Service(IRootDevice& dev, IRenderingControl& rc)
-: DeviceService(dev, ServiceType::RenderingControl)
+: DeviceService(dev, { ServiceType::RenderingControl, 1 })
 , m_renderingControl(rc)
 , m_lastChange(m_type, std::chrono::milliseconds(200))
 {
@@ -146,7 +146,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
 {
     try
     {
-        ActionResponse response(action, ServiceType::RenderingControl);
+        ActionResponse response(action, { ServiceType::RenderingControl, 1 });
         auto req = doc.getFirstChild();
         uint32_t id = static_cast<uint32_t>(std::stoul(req.getChildNodeValue("InstanceID")));
 

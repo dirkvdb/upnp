@@ -48,29 +48,28 @@ static const std::string s_subscriptionId           = "subscriptionId";
 static const uint32_t s_connectionId                = 0;
 static const std::chrono::seconds s_defaultTimeout  = 1801s;
 
-template <typename SvcType, typename StatusCbMock, typename VarType>
+template <typename SvcClientType, typename StatusCbMock, typename VarType>
 class ServiceClientTestBase : public Test
 {
 protected:
-    ServiceClientTestBase(ServiceType type, const std::string& svcXml)
-    : serviceType(type)
-    , serviceXml(svcXml)
+    ServiceClientTestBase(const std::string& svcXml)
+    : serviceXml(svcXml)
     {
     }
 
     virtual void SetUp() override
     {
         Service service;
-        service.type                  = serviceType;
+        service.type                  = serviceInstance->serviceType();
         service.controlURL            = s_controlUrl;
         service.eventSubscriptionURL  = s_subscriptionUrl;
         service.scpdUrl               = s_serviceDescriptionUrl;
 
-        serviceInstance = std::make_unique<SvcType>(client);
+        serviceInstance = std::make_unique<SvcClientType>(client);
 
         auto device = std::make_shared<Device>();
         device->type = { DeviceType::MediaRenderer, 1 };
-        device->services[service.type] = service;
+        device->services[serviceInstance->serviceType().type] = service;
 
         setDevice(device);
         subscribe();
@@ -129,15 +128,19 @@ protected:
         return [this] (Status status) { statusMock.onStatus(status); };
     }
 
+    ServiceType serviceType()
+    {
+        return serviceInstance->serviceType();
+    }
+
     template <typename T>
     std::function<void(Status, const T&)> checkStatusCallback()
     {
         return [this] (Status status, const T& arg) { statusMock.onStatus(status, arg); };
     }
 
-    ServiceType                            serviceType;
     std::string                            serviceXml;
-    std::unique_ptr<SvcType>               serviceInstance;
+    std::unique_ptr<SvcClientType>         serviceInstance;
     std::function<void(SubscriptionEvent)> eventCb;
 
     StrictMock<Client2Mock>                client;

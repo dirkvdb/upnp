@@ -36,6 +36,8 @@ using namespace std::string_literals;
 
 static const std::chrono::seconds s_subscriptionTimeout(1801);
 
+ServiceType::Type ServiceTraits::SvcType = ServiceType::ConnectionManager;
+
 Action ServiceTraits::actionFromString(const std::string& action)
 {
     return ConnectionManager::actionFromString(action);

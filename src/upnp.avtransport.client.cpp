@@ -56,6 +56,8 @@ std::function<void(upnp::Status, std::string)> stripResponse(std::function<void(
 
 }
 
+ServiceType::Type ServiceTraits::SvcType = ServiceType::AVTransport;
+
 Action ServiceTraits::actionFromString(const std::string& action)
 {
     return AVTransport::actionFromString(action);

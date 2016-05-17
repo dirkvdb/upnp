@@ -32,7 +32,8 @@ struct ServiceTraits
 {
     using ActionType = ConnectionManager::Action;
     using VariableType = ConnectionManager::Variable;
-    static const ServiceType SvcType = ServiceType::ConnectionManager;
+    static ServiceType::Type SvcType;
+    static constexpr uint8_t SvcVersion = 1;
 
     static ActionType actionFromString(const std::string& action);
     static const char* actionToString(ActionType action);

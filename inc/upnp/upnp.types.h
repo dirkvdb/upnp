@@ -95,13 +95,26 @@ private:
     std::string m_message;
 };
 
-enum class ServiceType
+struct ServiceType
 {
-    ContentDirectory,
-    RenderingControl,
-    ConnectionManager,
-    AVTransport,
-    Unknown
+    enum Type
+    {
+        ContentDirectory,
+        RenderingControl,
+        ConnectionManager,
+        AVTransport,
+        Unknown
+    };
+
+    constexpr ServiceType() = default;
+    constexpr ServiceType(Type t, uint32_t v) : type(t), version(v) {}
+
+    bool operator==(const ServiceType& other) const { return type == other.type; }
+    bool operator<(const ServiceType& other) const { return type < other.type; }
+
+
+    Type      type = Unknown;
+    uint32_t  version = 0;
 };
 
 struct DeviceType
@@ -182,13 +195,13 @@ const char* toString(Property prop) noexcept;
 const char* toString(Class c) noexcept;
 
 const char* serviceTypeToTypeString(ServiceType type);
-const char* serviceTypeToUrnTypeString(ServiceType type);
+std::string serviceTypeToUrnTypeString(ServiceType type);
 const char* serviceTypeToUrnIdString(ServiceType type);
 const char* serviceTypeToUrnMetadataString(ServiceType type);
 
-ServiceType serviceTypeFromString(const std::string& name);
+ServiceType::Type serviceTypeFromString(const std::string& name);
 ServiceType serviceTypeUrnStringToService(const std::string& type);
-ServiceType serviceIdUrnStringToService(const std::string& type);
+ServiceType::Type serviceIdUrnStringToService(const std::string& type);
 
 std::string deviceTypeToString(DeviceType type);
 DeviceType stringToDeviceType(const std::string& type);

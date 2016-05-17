@@ -48,7 +48,7 @@ struct ContentDirectoryStatusCallbackMock
 class ContentDirectoryClientTest : public ServiceClientTestBase<ContentDirectory::Client, ContentDirectoryStatusCallbackMock, ContentDirectory::Variable>
 {
 public:
-    ContentDirectoryClientTest() : ServiceClientTestBase(ServiceType::ContentDirectory, testxmls::contentDirectoryServiceDescription)
+    ContentDirectoryClientTest() : ServiceClientTestBase(testxmls::contentDirectoryServiceDescription)
     {
     }
 
@@ -94,7 +94,7 @@ public:
 
 TEST_F(ContentDirectoryClientTest, querySearchCapabilities)
 {
-    Action searchCaps("GetSearchCapabilities", s_controlUrl, ServiceType::ContentDirectory);
+    Action searchCaps("GetSearchCapabilities", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
 
     std::vector<Property> props = { Property::Artist, Property::Title };
@@ -104,7 +104,7 @@ TEST_F(ContentDirectoryClientTest, querySearchCapabilities)
 
 TEST_F(ContentDirectoryClientTest, querySortCapabilities)
 {
-    Action sortCaps("GetSortCapabilities", s_controlUrl, ServiceType::ContentDirectory);
+    Action sortCaps("GetSortCapabilities", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
 
     std::vector<Property> props = {Property::Artist, Property::Title, Property::Genre};
@@ -123,7 +123,7 @@ TEST_F(ContentDirectoryClientTest, supportedActions)
 
 TEST_F(ContentDirectoryClientTest, browseMetadataItem)
 {
-    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -145,7 +145,7 @@ TEST_F(ContentDirectoryClientTest, browseMetadataItem)
 
 TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
 {
-    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -169,7 +169,7 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
 {
     const uint32_t size = 10;
 
-    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -214,7 +214,7 @@ TEST_F(ContentDirectoryClientTest, search)
 {
     const uint32_t size = 10;
 
-    Action expectedAction("Search", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Search", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("Filter", "filt");
     expectedAction.addArgument("ObjectID", "ObjectId");
     expectedAction.addArgument("RequestedCount", "100");
@@ -259,7 +259,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 {
     const uint32_t size = 10000;
 
-    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");
@@ -285,7 +285,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
 {
     const uint32_t size = 10000;
 
-    Action expectedAction("Browse", s_controlUrl, ServiceType::ContentDirectory);
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
     expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
     expectedAction.addArgument("Filter", "filter");
     expectedAction.addArgument("ObjectID", "ObjectId");

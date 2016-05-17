@@ -162,7 +162,7 @@ TEST_F(HttpClientTest, SoapActionInvalidUrl)
 {
     bool gotCallback = false;
 
-    Action action("SetVolume", "http://192.168.1.13:9000/dev0/srv0/control", ServiceType::ContentDirectory);
+    Action action("SetVolume", "http://192.168.1.13:9000/dev0/srv0/control", { ServiceType::ContentDirectory, 1 });
 
     client.setTimeout(1s);
     client.soapAction(action.getUrl(),

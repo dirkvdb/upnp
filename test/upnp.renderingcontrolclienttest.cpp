@@ -39,7 +39,7 @@ struct RenderingControlStatusCallbackMock
 class RenderingControlClientTest : public ServiceClientTestBase<RenderingControl::Client, RenderingControlStatusCallbackMock, RenderingControl::Variable>
 {
 public:
-    RenderingControlClientTest() : ServiceClientTestBase(ServiceType::RenderingControl, testxmls::renderingServiceDescription)
+    RenderingControlClientTest() : ServiceClientTestBase(testxmls::renderingServiceDescription)
     {
     }
 
@@ -92,7 +92,7 @@ TEST_F(RenderingControlClientTest, setVolume)
 
     for (auto& value : values)
     {
-        Action expectedAction("SetVolume", s_controlUrl, ServiceType::RenderingControl);
+        Action expectedAction("SetVolume", s_controlUrl, { ServiceType::RenderingControl, 1 });
         expectedAction.addArgument("Channel", "Master");
         expectedAction.addArgument("DesiredVolume", value.second);
         expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
@@ -105,7 +105,7 @@ TEST_F(RenderingControlClientTest, setVolume)
 
 TEST_F(RenderingControlClientTest, getVolume)
 {
-    Action expectedAction("GetVolume", s_controlUrl, ServiceType::RenderingControl);
+    Action expectedAction("GetVolume", s_controlUrl, { ServiceType::RenderingControl, 1 });
     expectedAction.addArgument("Channel", "Master");
     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
 

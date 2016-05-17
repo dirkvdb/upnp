@@ -33,7 +33,7 @@ namespace ContentDirectory
 {
 
 Service::Service(IRootDevice& dev, IContentDirectory& cd)
-: DeviceService(dev, ServiceType::ContentDirectory)
+: DeviceService(dev, { ServiceType::ContentDirectory, 1 })
 , m_contentDirectory(cd)
 {
 }
@@ -63,7 +63,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
 {
     try
     {
-        ActionResponse response(action, ServiceType::ContentDirectory);
+        ActionResponse response(action, { ServiceType::ContentDirectory, 1});
         auto request = doc.getFirstChild();
 
         switch (actionFromString(action))
