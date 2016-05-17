@@ -81,7 +81,7 @@ void DeviceScanner::refresh()
     uv::asyncSend(m_upnpClient.loop(), [this] () {
         if (m_types.size() == 1)
         {
-            m_ssdpClient.search(deviceTypeToString(*m_types.begin()).c_str());
+            m_ssdpClient.search(deviceTypeToString(*m_types.begin()));
         }
         else
         {

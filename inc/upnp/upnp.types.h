@@ -24,11 +24,6 @@
 namespace upnp
 {
 
-extern const char* ContentDirectoryServiceTypeUrn;
-extern const char* RenderingControlServiceTypeUrn;
-extern const char* ConnectionManagerServiceTypeUrn;
-extern const char* AVTransportServiceTypeUrn;
-
 extern const char* RenderingControlServiceIdUrn;
 extern const char* ConnectionManagerServiceIdUrn;
 extern const char* AVTransportServiceIdUrn;
@@ -195,7 +190,7 @@ const char* toString(Property prop) noexcept;
 const char* toString(Class c) noexcept;
 
 const char* serviceTypeToTypeString(ServiceType type);
-std::string serviceTypeToUrnTypeString(ServiceType type);
+const char* serviceTypeToUrnTypeString(ServiceType type);
 const char* serviceTypeToUrnIdString(ServiceType type);
 const char* serviceTypeToUrnMetadataString(ServiceType type);
 
@@ -203,7 +198,7 @@ ServiceType::Type serviceTypeFromString(const std::string& name);
 ServiceType serviceTypeUrnStringToService(const std::string& type);
 ServiceType::Type serviceIdUrnStringToService(const std::string& type);
 
-std::string deviceTypeToString(DeviceType type);
+const char* deviceTypeToString(DeviceType type);
 DeviceType stringToDeviceType(const std::string& type);
 
 inline std::ostream& operator<<(std::ostream& os, const Status s)

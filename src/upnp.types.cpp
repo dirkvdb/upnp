@@ -22,10 +22,56 @@
 namespace upnp
 {
 
-const char* ContentDirectoryServiceTypeUrn      = "urn:schemas-upnp-org:service:ContentDirectory:";
-const char* RenderingControlServiceTypeUrn      = "urn:schemas-upnp-org:service:RenderingControl:";
-const char* ConnectionManagerServiceTypeUrn     = "urn:schemas-upnp-org:service:ConnectionManager:";
-const char* AVTransportServiceTypeUrn           = "urn:schemas-upnp-org:service:AVTransport:";
+#define ContentDirectoryServiceTypeUrnBase  "urn:schemas-upnp-org:service:ContentDirectory:"
+#define RenderingControlServiceTypeUrnBase  "urn:schemas-upnp-org:service:RenderingControl:"
+#define ConnectionManagerServiceTypeUrnBase "urn:schemas-upnp-org:service:ConnectionManager:"
+#define AVTransportServiceTypeUrnBase       "urn:schemas-upnp-org:service:AVTransport:"
+
+#define MediaServerDeviceTypeUrnBase        "urn:schemas-upnp-org:device:MediaServer:"
+#define MediaRendererDeviceTypeUrnBase      "urn:schemas-upnp-org:device:MediaRenderer:"
+#define InternetGatewayDeviceTypeUrnBase    "urn:schemas-upnp-org:device:InternetGatewayDevice:"
+
+static std::array<const char*, 3> ContentDirectoryServiceTypeUrn {{
+    ContentDirectoryServiceTypeUrnBase "1",
+    ContentDirectoryServiceTypeUrnBase "2",
+    ContentDirectoryServiceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> RenderingControlServiceTypeUrn {{
+    RenderingControlServiceTypeUrnBase "1",
+    RenderingControlServiceTypeUrnBase "2",
+    RenderingControlServiceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> ConnectionManagerServiceTypeUrn {{
+    ConnectionManagerServiceTypeUrnBase "1",
+    ConnectionManagerServiceTypeUrnBase "2",
+    ConnectionManagerServiceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> AVTransportServiceTypeUrn {{
+    AVTransportServiceTypeUrnBase "1",
+    AVTransportServiceTypeUrnBase "2",
+    AVTransportServiceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> MediaServerDeviceTypeUrn {{
+    MediaServerDeviceTypeUrnBase "1",
+    MediaServerDeviceTypeUrnBase "2",
+    MediaServerDeviceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> MediaRendererDeviceTypeUrn {{
+    MediaRendererDeviceTypeUrnBase "1",
+    MediaRendererDeviceTypeUrnBase "2",
+    MediaRendererDeviceTypeUrnBase "3"
+}};
+
+static std::array<const char*, 3> InternetGatewayDeviceTypeUrn {{
+    InternetGatewayDeviceTypeUrnBase "1",
+    InternetGatewayDeviceTypeUrnBase "2",
+    InternetGatewayDeviceTypeUrnBase "3"
+}};
 
 const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
 const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
@@ -35,10 +81,6 @@ const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:Conten
 const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
 const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
 const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
-
-static constexpr const char* MediaServerDeviceTypeUrn       = "urn:schemas-upnp-org:device:MediaServer:";
-static constexpr const char* MediaRendererDeviceTypeUrn     = "urn:schemas-upnp-org:device:MediaRenderer:";
-static constexpr const char* InternetGatewayDeviceTypeUrn   = "urn:schemas-upnp-org:device:InternetGatewayDevice:";
 
 static constexpr EnumMap<Property> s_propertyNames {{
     { "id",                         Property::Id },
@@ -87,12 +129,6 @@ static constexpr EnumMap<Class> s_classNames {{
     { "object.generic",                     Class::Generic }
 }};
 
-static constexpr EnumMap<DeviceType::Type> s_deviceTypeNames {{
-    { MediaServerDeviceTypeUrn,          DeviceType::MediaServer },
-    { MediaRendererDeviceTypeUrn,        DeviceType::MediaRenderer },
-    { InternetGatewayDeviceTypeUrn,      DeviceType::InternetGateway },
-}};
-
 static constexpr EnumMap<ErrorCode> s_errorNames {{
     { "Success",                ErrorCode::Success },
     { "Unexpected",             ErrorCode::Unexpected },
@@ -116,7 +152,6 @@ static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
 ADD_ENUM_MAP(Property, s_propertyNames)
 ADD_ENUM_MAP(ServiceType::Type, s_serviceTypeNames)
 ADD_ENUM_MAP(Class, s_classNames)
-ADD_ENUM_MAP(DeviceType::Type, s_deviceTypeNames)
 ADD_ENUM_MAP(ErrorCode, s_errorNames)
 ADD_ENUM_MAP_TYPED(ErrorCode, int32_t, s_errorValues)
 
@@ -155,32 +190,47 @@ const char* serviceTypeToTypeString(ServiceType value)
     return enum_string(value.type);
 }
 
-std::string deviceTypeToString(DeviceType value)
+const char* deviceTypeToString(DeviceType type)
 {
-    return fmt::format("{}{}", enum_string(value.type), value.version);
+         if (type.type == DeviceType::MediaServer)      return MediaServerDeviceTypeUrn.at(type.version - 1);
+    else if (type.type == DeviceType::MediaRenderer)    return MediaRendererDeviceTypeUrn.at(type.version - 1);
+    else if (type.type == DeviceType::InternetGateway)  return InternetGatewayDeviceTypeUrn.at(type.version - 1);
+    else throw std::invalid_argument("Invalid device type received for urn");
 }
 
 DeviceType stringToDeviceType(const std::string& value)
 {
-    DeviceType type;
-    type.type = enum_cast<DeviceType::Type>(gsl::cstring_span<>(value.data(), value.size() - 1));
-    type.version = value[value.size() - 1] - '0';
+    DeviceType result;
 
-    return type;
+    if (strncmp(MediaServerDeviceTypeUrnBase, value.data(), value.size() - 1) == 0)
+    {
+        result.type = DeviceType::MediaServer;
+    }
+    else if (strncmp(MediaRendererDeviceTypeUrnBase, value.data(), value.size() - 1) == 0)
+    {
+        result.type = DeviceType::MediaRenderer;
+    }
+    else if (strncmp(InternetGatewayDeviceTypeUrnBase, value.data(), value.size() - 1) == 0)
+    {
+        result.type = DeviceType::InternetGateway;
+    }
+    else
+    {
+        result.type = DeviceType::Unknown;
+        return result;
+    }
+
+    result.version = value[value.size() - 1] - '0';
+    return result;
 }
 
-std::string serviceTypeToUrnTypeString(ServiceType type)
+const char* serviceTypeToUrnTypeString(ServiceType type)
 {
-    std::string result;
-
-         if (type.type == ServiceType::RenderingControl)      result = RenderingControlServiceTypeUrn;
-    else if (type.type == ServiceType::ConnectionManager)     result = ConnectionManagerServiceTypeUrn;
-    else if (type.type == ServiceType::AVTransport)           result = AVTransportServiceTypeUrn;
-    else if (type.type == ServiceType::ContentDirectory)      result = ContentDirectoryServiceTypeUrn;
+         if (type.type == ServiceType::RenderingControl)      return RenderingControlServiceTypeUrn.at(type.version - 1);
+    else if (type.type == ServiceType::ConnectionManager)     return ConnectionManagerServiceTypeUrn.at(type.version - 1);
+    else if (type.type == ServiceType::AVTransport)           return AVTransportServiceTypeUrn.at(type.version - 1);
+    else if (type.type == ServiceType::ContentDirectory)      return ContentDirectoryServiceTypeUrn.at(type.version - 1);
     else throw std::invalid_argument("Invalid service type received for urn");
-
-    result.append(1, static_cast<char>(type.version + '0'));
-    return result;
 }
 
 const char* serviceTypeToUrnIdString(ServiceType type)
@@ -207,19 +257,19 @@ ServiceType serviceTypeUrnStringToService(const std::string& value)
 {
     ServiceType result;
 
-    if (strncmp(ContentDirectoryServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    if (strncmp(ContentDirectoryServiceTypeUrnBase, value.data(), value.size() - 1) == 0)
     {
         result.type = ServiceType::ContentDirectory;
     }
-    else if (strncmp(RenderingControlServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    else if (strncmp(RenderingControlServiceTypeUrnBase, value.data(), value.size() - 1) == 0)
     {
         result.type = ServiceType::RenderingControl;
     }
-    else if (strncmp(ConnectionManagerServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    else if (strncmp(ConnectionManagerServiceTypeUrnBase, value.data(), value.size() - 1) == 0)
     {
         result.type = ServiceType::ConnectionManager;
     }
-    else if (strncmp(AVTransportServiceTypeUrn, value.data(), value.size() - 1) == 0)
+    else if (strncmp(AVTransportServiceTypeUrnBase, value.data(), value.size() - 1) == 0)
     {
         result.type = ServiceType::AVTransport;
     }

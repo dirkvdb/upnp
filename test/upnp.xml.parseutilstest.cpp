@@ -201,7 +201,7 @@ TEST(XmlParseTest, MediaServer2Info)
     EXPECT_TRUE(dev.baseURL.empty());
     EXPECT_EQ(DeviceType::MediaServer, dev.type.type);
     EXPECT_EQ(2u, dev.type.version);
-    EXPECT_EQ("http://192.168.1.77:8080/upnpdev/devc/uuid_1774e860-1dd2-11b2-a62f-686359528055/00`"s, dev.presURL);
+    EXPECT_EQ("http://192.168.1.77:8080/upnpdev/pres/uuid_1774e860-1dd2-11b2-a62f-686359528055/00"s, dev.presURL);
 
     EXPECT_EQ(2u, dev.services.size());
 

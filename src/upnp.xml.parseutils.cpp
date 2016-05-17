@@ -109,9 +109,9 @@ bool findAndParseService(const xml_node<char>& node, const ServiceType::Type ser
         if (service.type.type == serviceType)
         {
             service.id                    = requiredChildValue(*serviceNode, "serviceId");
-            service.controlURL            = URI(base, requiredChildValue(*serviceNode, "controlURL")).toString();
-            service.eventSubscriptionURL  = URI(base, requiredChildValue(*serviceNode, "eventSubURL")).toString();
-            service.scpdUrl               = URI(base, requiredChildValue(*serviceNode, "SCPDURL")).toString();
+            service.controlURL            = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "controlURL")).toString();
+            service.eventSubscriptionURL  = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "eventSubURL")).toString();
+            service.scpdUrl               = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "SCPDURL")).toString();
 
             device.services[serviceType] = service;
             return true;
@@ -359,7 +359,8 @@ void parseDeviceInfo(const std::string& xml, Device& device)
     {
         if (presUrl.isRelative())
         {
-            device.presURL = URI(URI(device.baseURL.empty() ? device.location : device.baseURL, presUrl.toString())).toString();
+            auto base = URI(device.baseURL.empty() ? device.location : device.baseURL);
+            device.presURL = URI(base.getScheme(), base.getAuthority(), presUrl.toString()).toString();
         }
         else
         {

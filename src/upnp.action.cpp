@@ -64,7 +64,7 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
 
     auto* body = m_pimpl->doc.allocate_node(node_element, g_bodyTag);
     m_pimpl->action = m_pimpl->doc.allocate_node(node_element, m_pimpl->name.c_str());
-    m_pimpl->action->append_attribute(m_pimpl->doc.allocate_attribute(g_xmlnsuAtr, getServiceTypeUrn().c_str()));
+    m_pimpl->action->append_attribute(m_pimpl->doc.allocate_attribute(g_xmlnsuAtr, getServiceTypeUrn()));
 
     body->append_node(m_pimpl->action);
     env->append_node(body);
@@ -94,7 +94,7 @@ std::string Action::getUrl() const
     return m_pimpl->url;
 }
 
-std::string Action::getServiceTypeUrn() const
+const char* Action::getServiceTypeUrn() const
 {
     return serviceTypeToUrnTypeString(m_pimpl->serviceType);
 }

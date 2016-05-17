@@ -37,7 +37,7 @@ public:
 
     std::string getName() const;
     std::string getUrl() const;
-    std::string getServiceTypeUrn() const;
+    const char* getServiceTypeUrn() const;
     ServiceType getServiceType() const;
 
     bool operator==(const Action& other) const;
