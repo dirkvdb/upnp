@@ -63,7 +63,8 @@ std::string ProtocolInfo::getAdditionalInfo() const
 
 bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const
 {
-    return (m_protocol == info.m_protocol && m_contentFormat == info.m_contentFormat);
+    return (m_protocol == info.m_protocol) &&
+            (m_contentFormat == "*" || m_contentFormat == info.m_contentFormat);
 }
 
 std::string ProtocolInfo::toString() const
