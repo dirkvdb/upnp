@@ -32,7 +32,7 @@ public:
     virtual ~RootDevice();
 
     virtual void initialize();
-    virtual void destroy();
+    virtual void uninitialize();
 
     virtual std::string getUniqueDeviceName();
     virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response);

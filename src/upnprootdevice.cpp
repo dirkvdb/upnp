@@ -37,7 +37,7 @@ RootDevice::~RootDevice()
 {
     try
     {
-        destroy();
+        uninitialize();
     }
     catch (std::exception&) {}
 }
@@ -48,7 +48,7 @@ void RootDevice::initialize()
     handleUPnPResult(UpnpSendAdvertisement(m_device, m_advertiseInterval));
 }
 
-void RootDevice::destroy()
+void RootDevice::uninitialize()
 {
     if (m_device != 0)
     {

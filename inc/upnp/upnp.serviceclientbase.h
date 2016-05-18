@@ -149,6 +149,7 @@ protected:
             action.addArgument(arg.first, arg.second);
         }
 
+        // TODO: if the status code is HttpError, parse the response xml, it contains the soap action error code, which is different from the http code
         m_client.sendAction(action, std::move(cb));
     }
 

@@ -29,6 +29,7 @@
 
 #include "upnp/upnp.uv.h"
 #include "upnp.http.parser.h"
+#include "upnp.enumutils.h"
 
 using namespace utils;
 using namespace std::literals::chrono_literals;
@@ -67,35 +68,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
             auto clientPtr = client.get();
             m_clients.emplace(clientPtr, std::move(client));
 
-            parser->setCompletedCallback([this, parser, client = clientPtr] () {
-                bool closeConnection = parser->getFlags().isSet(http::Parser::Flag::ConnectionClose);
-            
-                try
-                {
-                    log::info("requested file: {}", parser->getUrl());
-                    auto& file = m_serverdFiles.at(parser->getUrl());
-                    if (parser->getMethod() == Method::Head)
-                    {
-                        writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
-                    }
-                    else if (parser->getMethod() == Method::Get)
-                    {
-                        writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
-                    }
-                    else
-                    {
-                        writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), "", closeConnection);
-                    }
-                }
-                catch (std::out_of_range&)
-                {
-                    writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), "", closeConnection);
-                }
-                catch (std::exception& e)
-                {
-                    writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), "", closeConnection);
-                }
-            });
+            parser->setCompletedCallback([this, parser, clientPtr] () { onHttpParseCompleted(parser, clientPtr); });
 
             try
             {
@@ -151,13 +124,33 @@ std::string Server::getWebRootUrl() const
     return fmt::format("http://{}:{}", addr.ip(), addr.port());
 }
 
+void Server::setRequestHandler(Request req, RequestCb cb)
+{
+    m_handlers.at(enum_value(req)) = cb;
+}
+
+void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
+{
+    client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
+        if (status < 0)
+        {
+            log::error("Failed to write response: {}", status);
+        }
+        
+        if (closeConnection)
+        {
+            cleanupClient(client);
+        }
+    });
+}
+
 void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection)
 {
     client->write(uv::Buffer(header, uv::Buffer::Ownership::No), [this, client, closeConnection, &body] (int32_t status) {
-        if (status != 0)
+        if (status < 0)
         {
             log::error("Failed to write response: {}", status);
-            
+
             if (closeConnection)
             {
                 cleanupClient(client);
@@ -170,7 +163,7 @@ void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, c
                 {
                     log::error("Failed to write response: {}", status);
                 }
-            
+
                 if (closeConnection)
                 {
                     cleanupClient(client);
@@ -178,6 +171,45 @@ void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, c
             });
         }
     });
+}
+
+void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::socket::Tcp* client)
+{
+    bool closeConnection = parser->getFlags().isSet(http::Parser::Flag::ConnectionClose);
+
+    try
+    {
+        log::info("requested file: {}", parser->getUrl());
+        auto& file = m_serverdFiles.at(parser->getUrl());
+        if (parser->getMethod() == Method::Head)
+        {
+            writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
+        }
+        else if (parser->getMethod() == Method::Get)
+        {
+            writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
+        }
+        else
+        {
+            auto& func = m_handlers.at(enum_value(parser->getMethod()));
+            if (func)
+            {
+                writeResponse(client, func(*parser), closeConnection);
+            }
+            else
+            {
+                writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), "", closeConnection);
+            }
+        }
+    }
+    catch (std::out_of_range&)
+    {
+        writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), "", closeConnection);
+    }
+    catch (std::exception& e)
+    {
+        writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), "", closeConnection);
+    }
 }
 
 void Server::cleanupClient(uv::socket::Tcp* client) noexcept

@@ -77,7 +77,6 @@ TEST_F(UVTest, QueueWorkAsync)
     std::promise<void> prom;
     auto fut = prom.get_future();
 
-
     uv::queueWork(loop, [&] () {
         auto launchThread = std::async(std::launch::async, [&] {
             uv::queueWorkAsync(loop, [&] () {
@@ -94,14 +93,20 @@ TEST_F(UVTest, QueueWorkAsync)
     uv::stopLoopAndCloseRequests(loop);
 }
 
-TEST_F(UVTest, QueueWorkAsyncReturnType)
+TEST_F(UVTest, AsyncSendReturnType)
 {
-    auto fut = uv::queueWorkAsync<uint32_t>(loop, [&] () {
-        return 44;
+    std::future<uint32_t> fut;
+
+    // first launch the task in the threadpool because async send can only be callled
+    // when the loop is already running, otherwise it is not woken up
+    uv::queueWork(loop, [&] () {
+        fut = uv::asyncSend<uint32_t>(loop, [&] () {
+            return 44;
+        });
     });
 
     loop.run(uv::RunMode::Default);
-    EXPEC_EQ(44, fut.get());
+    EXPECT_EQ(44, fut.get());
     uv::stopLoopAndCloseRequests(loop);
 }
 

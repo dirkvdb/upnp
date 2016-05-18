@@ -188,6 +188,7 @@ inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
     cbPtr.release();
 }
 
+// Wakes up the loop and launches the task which has a result
 template <typename ReturnType>
 inline std::future<ReturnType> asyncSend(uv::Loop& loop, std::function<ReturnType()> cb)
 {
@@ -237,43 +238,11 @@ inline void queueWork(uv::Loop& loop, std::function<void()> cb)
     cbPtr.release();
 }
 
-template <typename ReturnType>
-inline std::future<ReturnType> queueWork(uv::Loop& loop, std::function<ReturnType()> cb)
-{
-    struct ContextData
-    {
-        uv_work_t handle;
-        std::function<ReturnType()> cb;
-        std::promise<ReturnType> prom;
-    };
-
-    auto context = std::make_unique<ContextData>();
-    context->cb = std::move(cb);
-
-    checkRc(uv_queue_work(loop.get(), &context->handle, [] (uv_work_t* asyHandle) {
-        std::unique_ptr<ContextData> contextPtr(reinterpret_cast<ContextData*>(asyHandle->data));
-        contextPtr->prom.set_value(contextPtr->cb());
-    }));
-
-    auto fut = context->prom.get_future();
-    context.release();
-
-    return fut;
-}
-
 // Call this when queueing work from outside the loop thread
 inline void queueWorkAsync(uv::Loop& loop, std::function<void()> cb)
 {
     asyncSend(loop, [cb, &loop] () {
         queueWork(loop, cb);
-    });
-}
-
-template <typename ReturnType>
-inline std::future<ReturnType> queueWorkAsync(uv::Loop& loop, std::function<ReturnType()> cb)
-{
-    asyncSend(loop, [cb, &loop] () {
-        queueWork<ReturnType>(loop, cb);
     });
 }
 

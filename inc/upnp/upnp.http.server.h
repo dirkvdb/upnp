@@ -15,6 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #pragma once
 
+#include <array>
 #include <string>
 #include <unordered_map>
 
@@ -25,6 +26,22 @@ namespace upnp
 namespace http
 {
 
+class Parser;
+
+enum class Request
+{
+    Notify,
+    Search,
+    Subscribe,
+    Unsubscribe,
+    Get,
+    Head,
+    Post,
+    EnumCount
+};
+
+using RequestCb = std::function<std::string(http::Parser&)>;
+
 class Server
 {
 public:
@@ -33,20 +50,27 @@ public:
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
     std::string getWebRootUrl() const;
 
+    void setRequestHandler(Request req, RequestCb cb);
+
 private:
     struct HostedFile
     {
         std::string contentType;
         std::string data;
     };
-    
+
+    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection);
     void writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection);
     void cleanupClient(uv::socket::Tcp* client) noexcept;
+
+    void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::socket::Tcp* client);
 
     uv::Loop& m_loop;
     uv::socket::Tcp m_socket;
     std::unordered_map<std::string, HostedFile> m_serverdFiles;
     std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
+
+    std::array<RequestCb, std::underlying_type_t<Request>(Request::EnumCount)> m_handlers;
 };
 
 }

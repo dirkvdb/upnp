@@ -14,14 +14,12 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ACTION_RESPONSE_H
-#define UPNP_ACTION_RESPONSE_H
+#pragma once
 
 #include <string>
-#include <vector>
+#include <memory>
 
-#include "upnp/upnptypes.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnp.types.h"
 
 namespace upnp
 {
@@ -31,30 +29,27 @@ class ActionResponse
 public:
     ActionResponse(const std::string& name, ServiceType serviceType);
     ActionResponse(const ActionResponse&) = delete;
-    ActionResponse(ActionResponse&& other) = default;
+    ActionResponse(ActionResponse&& other);
+    ~ActionResponse();
 
     void addArgument(const std::string& name, const std::string& value);
 
-    const xml::Document& getActionDocument() const;
+    std::string toString() const;
 
     std::string getName() const;
-    std::string getServiceTypeUrn() const;
+    const char* getServiceTypeUrn() const;
     ServiceType getServiceType() const;
 
     bool operator==(const ActionResponse& other) const;
 
 private:
-    std::string                 m_name;
-    ServiceType                 m_serviceType;
-
-    xml::Document               m_actionDoc;
+    struct Pimpl;
+    std::unique_ptr<Pimpl> m_pimpl;
 };
 
 inline std::ostream& operator<< (std::ostream& os, const ActionResponse& response)
 {
-    return os << response.getActionDocument().toString();
+    return os << response.toString();
 }
 
 }
-
-#endif

@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_ROOT_DEVICE_INTERFACE_H
-#define UPNP_ROOT_DEVICE_INTERFACE_H
+#pragma once
 
 #include <string>
 #include <upnp.h>
@@ -33,7 +32,7 @@ public:
     virtual ~IRootDevice() = default;
 
     virtual void initialize() = 0;
-    virtual void destroy() = 0;
+    virtual void uninitialize() = 0;
 
     virtual std::string getUniqueDeviceName() = 0;
     virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response) = 0;
@@ -44,6 +43,3 @@ public:
 };
 
 }
-
-#endif
-
