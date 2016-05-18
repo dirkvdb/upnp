@@ -94,6 +94,17 @@ TEST_F(UVTest, QueueWorkAsync)
     uv::stopLoopAndCloseRequests(loop);
 }
 
+TEST_F(UVTest, QueueWorkAsyncReturnType)
+{
+    auto fut = uv::queueWorkAsync<uint32_t>(loop, [&] () {
+        return 44;
+    });
+
+    loop.run(uv::RunMode::Default);
+    EXPEC_EQ(44, fut.get());
+    uv::stopLoopAndCloseRequests(loop);
+}
+
 TEST_F(UVTest, TcpTest)
 {
     uv::socket::Tcp server(loop);

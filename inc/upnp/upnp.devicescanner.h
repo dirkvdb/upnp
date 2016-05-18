@@ -63,7 +63,6 @@ private:
     uv::Timer                                       m_timer;
     const std::set<DeviceType>                      m_types;
     std::map<std::string, std::shared_ptr<Device>>  m_devices;
-    mutable std::mutex                              m_dataMutex;
 };
 
 }
