@@ -24,6 +24,7 @@
 
 #include "upnp/upnp.uv.h"
 #include "upnp/upnp.types.h"
+#include "upnp/upnp.http.server.h"
 
 namespace upnp
 {
@@ -35,21 +36,14 @@ class Server
 {
 public:
     Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb);
-    ~Server() noexcept;
 
     void stop(std::function<void()> cb);
-
     uv::Address getAddress() const;
 
 private:
-    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection);
-    void cleanupClient(uv::socket::Tcp* client) noexcept;
-
-    uv::Loop& m_loop;
-    uv::socket::Tcp m_socket;
+    http::Server m_httpServer;
     std::function<void(const SubscriptionEvent&)> m_eventCb;
     SubscriptionEvent m_currentEvent;
-    std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
 };
 
 }

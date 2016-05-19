@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_DEVICE_SERVICE_H
-#define UPNP_DEVICE_SERVICE_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -26,7 +25,7 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"
-#include "upnp/upnpactionresponse.h"
+#include "upnp/upnp.actionresponse.h"
 #include "upnp/upnprootdeviceinterface.h"
 #include "upnp/upnpdeviceserviceexceptions.h"
 #include "upnp/upnpservicevariable.h"
@@ -188,7 +187,7 @@ protected:
     }
 
     template <typename T>
-    std::string vectorToCSV(const std::vector<T>& items, std::function<std::string(T)> toStringFunc)
+    static std::string vectorToCSV(const std::vector<T>& items, std::function<std::string(T)> toStringFunc)
     {
         std::stringstream ss;
         for (auto& item : items)
@@ -211,5 +210,3 @@ protected:
 };
 
 }
-
-#endif

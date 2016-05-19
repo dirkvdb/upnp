@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef AUDIO_HTTP_READER_H
-#define AUDIO_HTTP_READER_H
+#pragma once
 
 #include <string>
 
@@ -23,12 +22,14 @@
 
 namespace upnp
 {
+namespace http
+{
 
-class HttpReader : public utils::IReader
+class Reader : public utils::IReader
 {
 public:
-    HttpReader();
-    
+    Reader();
+
     void open(const std::string& url) override;
     void close() override;
 
@@ -36,13 +37,13 @@ public:
     uint64_t currentPosition() override;
     bool eof() override;
     std::string uri() override;
-    
+
     void seekAbsolute(uint64_t position) override;
     void seekRelative(uint64_t offset) override;
     uint64_t read(uint8_t* pData, uint64_t size) override;
     std::vector<uint8_t> readAllData() override;
     void clearErrors() override;
-    
+
 private:
     void throwOnEmptyUrl();
 
@@ -51,14 +52,12 @@ private:
     uint64_t    m_currentPosition;
 };
 
-class HttpReaderBuilder : public utils::IReaderBuilder
+class ReaderBuilder : public utils::IReaderBuilder
 {
 public:
     virtual bool supportsUri(const std::string& uri);
     virtual utils::IReader* build(const std::string& uri);
 };
 
-
 }
-
-#endif
+}

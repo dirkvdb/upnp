@@ -5,8 +5,8 @@
 
 #include "utils/log.h"
 #include "upnp/upnp.ssdp.client.h"
+#include "upnp/upnp.http.parser.h"
 #include "upnp.ssdp.parseutils.h"
-#include "upnp.http.parser.h"
 
 namespace upnp
 {
@@ -93,7 +93,7 @@ TEST_F(SsdpTest, ParseNotify)
         EXPECT_EQ(60u, info.expirationTime);
         EXPECT_EQ(ssdp::NotificationType::Alive, info.type);
     }));
-    
+
     EXPECT_EQ(notification.size(), parser.parse(notification));
 }
 
@@ -112,9 +112,9 @@ TEST_F(SsdpTest, ParseNotifyChunked)
         "01-NLS:1\r\n"
         "BOOTID.UPNP.ORG:1\r\n"
         "CONFIGID.UPNP.ORG:1337\r\n\r\n"s;
-    
+
     EXPECT_EQ(notification.size() / 2, parser.parse(notification.substr(0, notification.size() / 2)));
-    
+
     EXPECT_CALL(devMock, onDevice(_)).WillOnce(Invoke([] (const ssdp::DeviceNotificationInfo& info) {
         EXPECT_EQ("http://192.168.1.1:5000/rootDesc.xml"s, info.location);
         EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, info.deviceId);
@@ -141,7 +141,7 @@ TEST_F(SsdpTest, ParseNotifyNoSpaces)
         "01-NLS:1\r\n"
         "BOOTID.UPNP.ORG:1\r\n"
         "CONFIGID.UPNP.ORG:1337\r\n\r\n"s;
-    
+
     EXPECT_CALL(devMock, onDevice(_)).WillOnce(Invoke([] (const ssdp::DeviceNotificationInfo& info) {
         EXPECT_EQ("http://192.168.1.1:5000/rootDesc.xml"s, info.location);
         EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, info.deviceId);
@@ -168,7 +168,7 @@ TEST_F(SsdpTest, ParseNotifyLowercaseFields)
         "01-nls: 1\r\n"
         "bootid.upnp.org: 1\r\n"
         "configid.upnp.org: 1337\r\n\r\n"s;
-    
+
     EXPECT_CALL(devMock, onDevice(_)).WillOnce(Invoke([] (const ssdp::DeviceNotificationInfo& info) {
         EXPECT_EQ("http://192.168.1.1:5000/rootDesc.xml"s, info.location);
         EXPECT_EQ("uuid:A37351C5-8521-4c24-A43E-5C353B9982A9"s, info.deviceId);

@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnphttpreader.h"
-#include "utils/log.h"
+#include "upnp/upnp.http.reader.h"
 #include "upnp/upnptypes.h"
 #include "utils/format.h"
 
@@ -25,6 +24,8 @@
 using namespace utils;
 
 namespace upnp
+{
+namespace http
 {
 
 static const long s_timeout = 10;
@@ -40,88 +41,88 @@ public:
             throw std::runtime_error("Failed to initialize curl handle");
         }
     }
-    
+
     ~CurlHandle()
     {
         curl_easy_cleanup(m_curl);
     }
-    
+
     operator CURL*()
     {
         return m_curl;
     }
-    
+
 private:
     CURL* m_curl;
 };
 
-HttpReader::HttpReader()
+Reader::Reader()
 : m_contentLength(0)
 , m_currentPosition(0)
 {
 }
 
-void HttpReader::open(const std::string& url)
+void Reader::open(const std::string& url)
 {
     m_url = url;
-    
+
     CurlHandle curl;
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, s_timeout);
-    
+
     auto res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
         throw std::runtime_error("Failed to open url: " + std::string(curl_easy_strerror(res)));
     }
-    
+
     double contentLength;
     curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
     m_contentLength = static_cast<uint64_t>(contentLength);
 }
 
-void HttpReader::close()
+void Reader::close()
 {
 }
 
-uint64_t HttpReader::getContentLength()
+uint64_t Reader::getContentLength()
 {
     throwOnEmptyUrl();
 
     return m_contentLength;
 }
 
-uint64_t HttpReader::currentPosition()
+uint64_t Reader::currentPosition()
 {
     throwOnEmptyUrl();
 
     return m_currentPosition;
 }
 
-void HttpReader::seekAbsolute(uint64_t position)
+void Reader::seekAbsolute(uint64_t position)
 {
     throwOnEmptyUrl();
 
     m_currentPosition = position;
 }
 
-void HttpReader::seekRelative(uint64_t offset)
+void Reader::seekRelative(uint64_t offset)
 {
     throwOnEmptyUrl();
-    
+
     m_currentPosition += offset;
 }
 
-bool HttpReader::eof()
+bool Reader::eof()
 {
     throwOnEmptyUrl();
 
     return m_currentPosition >= m_contentLength;
 }
 
-std::string HttpReader::uri()
+std::string Reader::uri()
 {
     return m_url;
 }
@@ -141,22 +142,22 @@ static size_t writeFunc(char* ptr, size_t size, size_t nmemb, void* userdata)
     return dataSize;
 }
 
-uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
+uint64_t Reader::read(uint8_t* pData, uint64_t size)
 {
     throwOnEmptyUrl();
-    
+
     uint64_t upperLimit = m_currentPosition + size - 1;
     if (upperLimit >= m_contentLength)
     {
         upperLimit = m_contentLength - 1;
         size = eof() ? 0 : m_contentLength - m_currentPosition;
     }
-    
+
     if (size > 0) // avoid requests when eof reached
     {
         auto range = fmt::format("{}-{}", m_currentPosition, upperLimit);
         WriteData writeData{ pData, 0 };
-        
+
         CurlHandle curl;
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
         curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
@@ -164,39 +165,39 @@ uint64_t HttpReader::read(uint8_t* pData, uint64_t size)
         curl_easy_setopt(curl, CURLOPT_RANGE, range.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeData);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunc);
-        
+
         auto res = curl_easy_perform(curl);
         if (res != CURLE_OK)
         {
             throw std::runtime_error("Failed to open url: " + std::string(curl_easy_strerror(res)));
         }
-    
+
         m_currentPosition += size;
         m_currentPosition = std::min(m_contentLength, m_currentPosition);
     }
-    
+
     return size;
 }
 
-std::vector<uint8_t> HttpReader::readAllData()
+std::vector<uint8_t> Reader::readAllData()
 {
     std::vector<uint8_t> data;
     data.resize(getContentLength());
-    
+
     seekAbsolute(0);
     if (data.size() != read(data.data(), data.size()))
     {
         throw Exception("Failed to read all file data for url: {}", m_url);
     }
-    
+
     return data;
 }
 
-void HttpReader::clearErrors()
+void Reader::clearErrors()
 {
 }
 
-void HttpReader::throwOnEmptyUrl()
+void Reader::throwOnEmptyUrl()
 {
     if (m_url.empty())
     {
@@ -204,21 +205,22 @@ void HttpReader::throwOnEmptyUrl()
     }
 }
 
-bool HttpReaderBuilder::supportsUri(const std::string& uri)
+bool ReaderBuilder::supportsUri(const std::string& uri)
 {
     static const std::string http("http://");
 
     return uri.compare(0, http.length(), http) == 0;
 }
 
-utils::IReader* HttpReaderBuilder::build(const std::string& uri)
+utils::IReader* ReaderBuilder::build(const std::string& uri)
 {
     if (!supportsUri(uri))
     {
         throw Exception("Uri is not supported by Http reader: " + uri);
     }
-    
-    return new upnp::HttpReader();
+
+    return new Reader();
 }
 
+}
 }

@@ -86,7 +86,6 @@ INCLUDE_DIRECTORIES(SYSTEM
 )
 
 ADD_LIBRARY(upnpframework STATIC
-    inc/upnp/upnpactionresponse.h                       src/upnpactionresponse.cpp
     inc/upnp/upnp.serviceclientbase.h
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp
@@ -109,7 +108,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
     inc/upnp/upnphttpclient.h                           src/upnphttpclient.cpp
-    inc/upnp/upnphttpreader.h                           src/upnphttpreader.cpp
+    inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
     inc/upnp/upnp.item.h                                src/upnp.item.cpp
     inc/upnp/upnplastchangevariable.h                   src/upnplastchangevariable.cpp
     inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
@@ -130,9 +129,11 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnpxml.h                                  src/upnpxml.cpp
     inc/upnp/upnpxmlutils.h                             src/upnpxmlutils.cpp
     inc/upnp/upnp.action.h                              src/upnp.action.cpp
+    inc/upnp/upnp.actionresponse.h                      src/upnp.actionresponse.cpp
     inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
     inc/upnp/upnp.http.client.h                         src/upnp.http.client.cpp
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
+    inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.uv.h
 
@@ -144,7 +145,6 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.client.h                                   src/upnp.client.cpp
     src/upnp.gena.server.h                              src/upnp.gena.server.cpp
     src/upnpclient.h                                    src/upnpclient.cpp
-    src/upnp.http.parser.h                              src/upnp.http.parser.cpp
     src/upnp.ssdp.parseutils.h
     src/http_parser.h                                   src/http_parser.cpp
     src/URI.h                                           src/URI.cpp

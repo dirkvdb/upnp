@@ -6,7 +6,7 @@
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnp.http.parser.h"
+#include "upnp/upnp.http.parser.h"
 
 namespace upnp
 {
@@ -85,19 +85,19 @@ public:
     {
         m_parser.setHeadersCompletedCallback([this] () { parseData(); });
     }
-    
+
     void setHeaderParsedCallback(std::function<void(const DeviceNotificationInfo&)> cb) noexcept
     {
         m_cb = std::move(cb);
     }
-    
+
     size_t parse(const std::string& data) noexcept
     {
         if (data.empty())
         {
             return 0;
         }
-    
+
         return m_parser.parse(data);
     }
 
@@ -108,14 +108,14 @@ private:
         {
             return;
         }
-        
+
         try
         {
             DeviceNotificationInfo info;
             parseUSN(m_parser.headerValue("USN"), info);
             info.location = m_parser.headerValue("LOCATION");
             info.expirationTime = parseCacheControl(m_parser.headerValue("CACHE-CONTROL"));
-            
+
             if (m_parser.getMethod() == http::Method::Notify)
             {
                 // spontaneous notify message
@@ -125,18 +125,18 @@ private:
             else
             {
                 // response to a search
-                
+
                 if (m_parser.getStatus() != 200)
                 {
                     utils::log::warn("Error status in search response: {}", m_parser.getStatus());
                     return;
                 }
-                
+
                 // direct responses do not fill in the NTS, mark them as alive
                 info.type = NotificationType::Alive;
                 info.deviceType = m_parser.headerValue("ST");
             }
-            
+
             m_cb(info);
         }
         catch (std::exception& e)

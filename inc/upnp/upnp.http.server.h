@@ -20,25 +20,12 @@
 #include <unordered_map>
 
 #include "upnp/upnp.uv.h"
+#include "upnp/upnp.http.parser.h"
 
 namespace upnp
 {
 namespace http
 {
-
-class Parser;
-
-enum class Request
-{
-    Notify,
-    Search,
-    Subscribe,
-    Unsubscribe,
-    Get,
-    Head,
-    Post,
-    EnumCount
-};
 
 using RequestCb = std::function<std::string(http::Parser&)>;
 
@@ -47,10 +34,13 @@ class Server
 public:
     Server(uv::Loop& loop, const uv::Address& address);
 
+    void stop(std::function<void()> cb);
+
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
     std::string getWebRootUrl() const;
+    uv::Address getAddress() const;
 
-    void setRequestHandler(Request req, RequestCb cb);
+    void setRequestHandler(Method method, RequestCb cb);
 
 private:
     struct HostedFile
@@ -70,7 +60,7 @@ private:
     std::unordered_map<std::string, HostedFile> m_serverdFiles;
     std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
 
-    std::array<RequestCb, std::underlying_type_t<Request>(Request::EnumCount)> m_handlers;
+    std::array<RequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_handlers;
 };
 
 }

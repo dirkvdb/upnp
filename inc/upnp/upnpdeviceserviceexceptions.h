@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_DEVICE_SERVICE_EXPCEPTIONS_H
-#define UPNP_DEVICE_SERVICE_EXPCEPTIONS_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -23,7 +22,6 @@
 #include <cinttypes>
 
 #include "upnp/upnptypes.h"
-#include "upnp/upnpactionresponse.h"
 
 namespace upnp
 {
@@ -41,5 +39,3 @@ DEFINE_UPNP_SERVICE_EXCEPTION(InvalidSubscriptionIdException,       401, "Invali
 DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                501, "Action failed")
 
 }
-
-#endif

@@ -28,7 +28,6 @@
 #include "utils/fileoperations.h"
 
 #include "upnp/upnp.uv.h"
-#include "upnp.http.parser.h"
 #include "upnp.enumutils.h"
 
 using namespace utils;
@@ -113,6 +112,11 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
     });
 }
 
+void Server::stop(std::function<void()> cb)
+{
+    m_socket.close(cb);
+}
+
 void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents)
 {
     m_serverdFiles.emplace(urlPath, HostedFile{contentType, contents});
@@ -124,9 +128,14 @@ std::string Server::getWebRootUrl() const
     return fmt::format("http://{}:{}", addr.ip(), addr.port());
 }
 
-void Server::setRequestHandler(Request req, RequestCb cb)
+uv::Address Server::getAddress() const
 {
-    m_handlers.at(enum_value(req)) = cb;
+    return m_socket.getSocketName();
+}
+
+void Server::setRequestHandler(Method method, RequestCb cb)
+{
+    m_handlers.at(enum_value(method)) = cb;
 }
 
 void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
@@ -136,7 +145,7 @@ void Server::writeResponse(uv::socket::Tcp* client, const std::string& response,
         {
             log::error("Failed to write response: {}", status);
         }
-        
+
         if (closeConnection)
         {
             cleanupClient(client);
@@ -179,14 +188,16 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
 
     try
     {
-        log::info("requested file: {}", parser->getUrl());
-        auto& file = m_serverdFiles.at(parser->getUrl());
         if (parser->getMethod() == Method::Head)
         {
+            log::info("requested file: {}", parser->getUrl());
+            auto& file = m_serverdFiles.at(parser->getUrl());
             writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
         }
         else if (parser->getMethod() == Method::Get)
         {
+            log::info("requested file size: {}", parser->getUrl());
+            auto& file = m_serverdFiles.at(parser->getUrl());
             writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
         }
         else

@@ -2,7 +2,7 @@
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnp.http.parser.h"
+#include "upnp/upnp.http.parser.h"
 
 namespace upnp
 {

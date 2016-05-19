@@ -17,9 +17,8 @@
 #include "upnp.gena.server.h"
 
 #include "utils/log.h"
-#include "upnp/upnptypes.h"
-#include "upnp.http.parser.h"
 #include "upnp.ssdp.parseutils.h"
+#include "upnp/upnp.types.h"
 
 namespace upnp
 {
@@ -61,144 +60,54 @@ namespace
 }
 
 Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb)
-: m_loop(loop)
-, m_socket(loop)
+: m_httpServer(loop, address)
 , m_eventCb(std::move(cb))
 {
     assert(m_eventCb);
     log::info("GENA: Start server on http://{}:{}", address.ip(), address.port());
 
-    m_socket.bind(address);
-    m_socket.listen(128, [this] (int32_t status) {
-        if (status == 0)
+    m_httpServer.setRequestHandler(http::Method::Notify, [this] (auto& parser) {
+        try
         {
-            log::info("GENA: Connection attempt");
-            auto client = std::make_unique<uv::socket::Tcp>(m_loop);
-            auto parser = std::make_shared<http::Parser>(http::Type::Request);
-
-            auto clientPtr = client.get();
-            m_clients.emplace(clientPtr, std::move(client));
-
-            parser->setCompletedCallback([this, parser, client = clientPtr] () {
-                try
-                {
-                    if (parser->getMethod() == http::Method::Notify)
-                    {
-                        m_currentEvent.sid = required(parser->headerValue("SID"));
-                        m_currentEvent.sequence = std::stoi(required(parser->headerValue("SEQ")));
-                        m_currentEvent.data = parser->stealBody();
-                        if (parser->headerValue("NT") != "upnp:event")
-                        {
-                            throw Exception(ErrorCode::BadRequest);
-                        }
-
-                        if (parser->headerValue("NTS") != "upnp:propchange")
-                        {
-                            throw Exception(ErrorCode::BadRequest);
-                        }
-
-                        m_eventCb(m_currentEvent);
-
-                        writeResponse(client, okResponse, parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
-                    }
-                    else
-                    {
-                        log::warn("GENA: Unexpected method type recieved: {}", http::Parser::methodToString(parser->getMethod()));
-                    }
-                }
-                catch (Exception& e)
-                {
-                    auto ec = errorCodeToInt(ErrorCode(e.getErrorCode()));
-                    auto body = fmt::format(g_body, ec, e.what());
-                    writeResponse(client, fmt::format(errorResponse, ec, e.what(), body.size(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
-                }
-                catch (std::exception& e)
-                {
-                    auto ec = errorCodeToInt(ErrorCode::BadRequest);
-                    auto body = fmt::format(g_body, ec, e.what());
-                    writeResponse(client, fmt::format(errorResponse, ec, e.what(), body), parser->getFlags().isSet(http::Parser::Flag::ConnectionClose));
-                }
-            });
-
-            try
+            m_currentEvent.sid = required(parser.headerValue("SID"));
+            m_currentEvent.sequence = std::stoi(required(parser.headerValue("SEQ")));
+            m_currentEvent.data = parser.stealBody();
+            if (parser.headerValue("NT") != "upnp:event")
             {
-                m_socket.accept(*clientPtr);
-                clientPtr->read([this, clientPtr, parser] (ssize_t nread, const uv::Buffer& data) {
-                    if (nread < 0)
-                    {
-                        if (nread != UV_EOF)
-                        {
-                            log::error("Failed to read from socket {}", uv::getErrorString(static_cast<int32_t>(nread)));
-                        }
-                        else
-                        {
-                            log::debug("Conection closed by client");
-                            cleanupClient(clientPtr);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            parser->parse(data.data(), nread);
-                        }
-                        catch (std::exception& e)
-                        {
-                            log::error("Failed to parse request: {}", e.what());
-                            cleanupClient(clientPtr);
-                        }
-                    }
-                });
+                throw Status(ErrorCode::BadRequest);
             }
-            catch (std::exception& e)
+
+            if (parser.headerValue("NTS") != "upnp:propchange")
             {
-                log::error("GENA: Failed to accept connection: {}", e.what());
-                cleanupClient(clientPtr);
+                throw Status(ErrorCode::BadRequest);
             }
+
+            m_eventCb(m_currentEvent);
+            return okResponse;
         }
-        else
+        catch (Status& e)
         {
-            log::error("GENA: Failed to listen on socket: {}", status);
+            auto ec = errorCodeToInt(ErrorCode(e.getErrorCode()));
+            auto body = fmt::format(g_body, ec, e.what());
+            return fmt::format(errorResponse, ec, e.what(), body.size(), body);
+        }
+        catch (std::exception& e)
+        {
+            auto ec = errorCodeToInt(ErrorCode::BadRequest);
+            auto body = fmt::format(g_body, ec, e.what());
+            return fmt::format(errorResponse, ec, e.what(), body);
         }
     });
-}
-
-Server::~Server() noexcept
-{
-    // Stop has to be called before destruction
-    assert(m_socket.isClosing());
 }
 
 void Server::stop(std::function<void()> cb)
 {
-    m_socket.close(cb);
+    m_httpServer.stop(cb);
 }
 
 uv::Address Server::getAddress() const
 {
-    return m_socket.getSocketName();
-}
-
-void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
-{
-    client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
-        if (status != 0)
-        {
-            log::error("Failed to write response: {}", status);
-        }
-
-        if (closeConnection)
-        {
-            cleanupClient(client);
-        }
-    });
-}
-
-void Server::cleanupClient(uv::socket::Tcp* client) noexcept
-{
-    client->close([=] () {
-        m_clients.erase(client);
-    });
+    return m_httpServer.getAddress();
 }
 
 }
