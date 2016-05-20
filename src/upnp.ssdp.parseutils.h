@@ -149,5 +149,61 @@ private:
     std::function<void(const DeviceNotificationInfo&)> m_cb;
 };
 
+class SearchParser
+{
+public:
+    SearchParser()
+    : m_parser(http::Type::Request)
+    {
+        m_parser.setHeadersCompletedCallback([this] () { parseData(); });
+    }
+
+    void setSearchRequestCallback(std::function<void(const std::string& searchTarget, std::chrono::seconds)> cb) noexcept
+    {
+        m_cb = std::move(cb);
+    }
+
+    size_t parse(const std::string& data) noexcept
+    {
+        if (data.empty())
+        {
+            return 0;
+        }
+
+        return m_parser.parse(data);
+    }
+
+private:
+    void parseData() noexcept
+    {
+        if (!m_cb)
+        {
+            return;
+        }
+
+        try
+        {
+            if (m_parser.getMethod() == http::Method::Search)
+            {
+                if (m_parser.headerValue("MAN") == "ssdp:discover")
+                {
+                    // mx value is only present for multicast search
+                    // unicast search response should be sent as fast as possible
+                    auto mx = m_parser.headerValue("MX");
+                    auto delay = std::chrono::seconds(mx.empty() ? 0 : std::stoi(mx));
+                    m_cb(m_parser.headerValue("ST"), delay);
+                }
+            }
+        }
+        catch (std::exception& e)
+        {
+            utils::log::warn("Failed to parse http notification data: {}", e.what());
+        }
+    }
+
+    http::Parser m_parser;
+    std::function<void(const std::string&, std::chrono::seconds)> m_cb;
+};
+
 }
 }

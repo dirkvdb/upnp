@@ -131,6 +131,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.action.h                              src/upnp.action.cpp
     inc/upnp/upnp.actionresponse.h                      src/upnp.actionresponse.cpp
     inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
+    inc/upnp/upnp.ssdp.server.h                         src/upnp.ssdp.server.cpp
     inc/upnp/upnp.http.client.h                         src/upnp.http.client.cpp
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp

@@ -1,7 +1,5 @@
 #include "upnp/upnp.ssdp.client.h"
 
-#include <regex>
-
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 
