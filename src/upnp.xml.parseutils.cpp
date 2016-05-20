@@ -464,7 +464,7 @@ Item parseContainer(xml_node<char>& containerElem)
         Property prop = propertyFromString(elem->name(), elem->name_size());
         if (prop == Property::Unknown)
         {
-            item.addMetaData(elem->name_string(), elem->value_string());
+            item.addMetaData(elem->name_string(), decode(elem->value(), elem->value_size()));
             continue;
         }
 
@@ -479,13 +479,13 @@ Item parseContainer(xml_node<char>& containerElem)
             catch (std::exception&)
             {
                 // no profile id present, add it as regular metadata
-                item.addMetaData(prop, elem->value_string());
+                item.addMetaData(prop, decode(elem->value(), elem->value_size()));
             }
 
             continue;
         }
 
-        item.addMetaData(prop, elem->value_string());
+        item.addMetaData(prop, decode(elem->value(), elem->value_size()));
     }
 
     // check required properties
