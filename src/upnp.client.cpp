@@ -105,12 +105,11 @@ void Client2::uninitialize()
     uv::asyncSend(*m_loop, [&] () {
         m_eventServer->stop([this] () {
             m_eventServer.reset();
+            stopLoopAndCloseRequests(*m_loop);
         });
     });
 
     m_thread->join();
-
-    stopLoopAndCloseRequests(*m_loop);
 
     m_thread.reset();
 }

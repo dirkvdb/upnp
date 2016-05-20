@@ -135,7 +135,8 @@ void MediaRenderer::setDevice(const std::shared_ptr<Device>& device, std::functi
     assert(!m_active);
     if (m_active)
     {
-        throw std::runtime_error("Deactivate events before setting a new renderer device");
+        cb(Status(ErrorCode::Unexpected, "Deactivate events before setting a new renderer device"));
+        return;
     }
 
     m_device = device;
