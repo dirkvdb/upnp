@@ -519,7 +519,7 @@ enum class PollEvent : int32_t
 {
     Readable = UV_READABLE,
     Writable = UV_WRITABLE,
-    Disconnect = UV_DISCONNECT
+    //Disconnect = UV_DISCONNECT >=v1.9.0
 };
 
 struct OsSocket
