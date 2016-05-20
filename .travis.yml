@@ -27,7 +27,7 @@ install:
   - cd ..
   - wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
   - tar xf v1.9.1.tar.gz
-  - cd libuv-1.9.1 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared && make -j4 && sudo make install
+  - cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared && make -j4 && sudo make install
   - cd ..
 
 before_script:
