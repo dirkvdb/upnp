@@ -173,7 +173,7 @@ private:
 inline void asyncSend(uv::Loop& loop, std::function<void()> cb)
 {
     auto handle = std::make_unique<uv_async_t>();
-    checkRc(uv_async_init(loop.get(), handle.get(), [] (auto* asyHandle) {
+    checkRc(uv_async_init(loop.get(), handle.get(), [] (uv_async_t* asyHandle) {
         std::unique_ptr<uv_async_t> handlePtr(asyHandle);
         std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
         (*cbPtr)();
@@ -351,7 +351,7 @@ public:
             uv_write_t handle;
             std::function<void(int32_t)> cb;
         };
-    
+
         auto context = std::make_unique<Context>();
         context->cb = std::move(cb);
         checkRc(uv_write(&context->handle, reinterpret_cast<uv_stream_t*>(this->get()), buf.get(), 1, [] (uv_write_t* req, int status) {
@@ -361,7 +361,7 @@ public:
                 context->cb(status);
             }
         }));
-        
+
         context.release();
     }
 
