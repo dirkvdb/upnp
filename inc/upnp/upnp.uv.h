@@ -201,7 +201,7 @@ inline std::future<ReturnType> asyncSend(uv::Loop& loop, std::function<ReturnTyp
 
     auto context = std::make_unique<ContextData>();
 
-    checkRc(uv_async_init(loop.get(), &context->handle, [] (auto* asyHandle) {
+    checkRc(uv_async_init(loop.get(), &context->handle, [] (uv_async_t* asyHandle) {
         std::unique_ptr<ContextData> contextPtr(reinterpret_cast<ContextData*>(asyHandle));
         contextPtr->prom.set_value(contextPtr->cb());
         uv_close(reinterpret_cast<uv_handle_t*>(&contextPtr->handle), [] (uv_handle_t* closeHandle) {
@@ -272,7 +272,7 @@ public:
         assert(m_handle);
 
         m_handle->data = new std::function<void()>(std::move(cb));
-        uv_close(reinterpret_cast<uv_handle_t*>(m_handle.release()), [] (auto* handle) {
+        uv_close(reinterpret_cast<uv_handle_t*>(m_handle.release()), [] (uv_handle_t* handle) {
             std::unique_ptr<HandleType> handlePtr(reinterpret_cast<HandleType*>(handle));
             std::unique_ptr<std::function<void()>> cbPtr(reinterpret_cast<std::function<void()>*>(handlePtr->data));
             if (cbPtr && *cbPtr)
@@ -408,7 +408,7 @@ public:
 
     void start()
     {
-        checkRc(uv_idle_start(get(), [] (auto* handle) {
+        checkRc(uv_idle_start(get(), [] (uv_idle_t* handle) {
             reinterpret_cast<Idler*>(handle->data)->m_callback();
         }));
     }
@@ -511,7 +511,7 @@ public:
     void start(std::function<void()> cb, int32_t signalNumber)
     {
         m_callback = std::move(cb);
-        checkRc(uv_signal_start(get(), [] (auto* handle, int /*signum*/) {
+        checkRc(uv_signal_start(get(), [] (uv_signal_t* handle, int /*signum*/) {
             reinterpret_cast<Signal*>(handle->data)->m_callback();
         }, signalNumber));
     }
@@ -564,7 +564,7 @@ public:
     void start(Flags<PollEvent> pollEvents, std::function<void(int32_t, Flags<PollEvent>)> cb)
     {
         m_callback = std::move(cb);
-        checkRc(uv_poll_start(get(), pollEvents, [] (auto* handle, int status, int events) {
+        checkRc(uv_poll_start(get(), pollEvents, [] (uv_poll_t* handle, int status, int events) {
             reinterpret_cast<Poll*>(handle->data)->m_callback(status, events);
         }));
     }
@@ -594,7 +594,7 @@ public:
     void start(std::chrono::milliseconds timeout, std::chrono::milliseconds repeat, std::function<void()> cb)
     {
         m_callback = std::move(cb);
-        checkRc(uv_timer_start(get(), [] (auto* handle) {
+        checkRc(uv_timer_start(get(), [] (uv_timer_t* handle) {
             reinterpret_cast<Timer*>(handle->data)->m_callback();
         }, timeout.count(), repeat.count()));
     }
