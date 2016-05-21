@@ -109,7 +109,7 @@ TEST_F(HttpClientTest, GetInvalidUrlAsString)
 
 TEST_F(HttpClientTest, InvalidUrl)
 {
-    EXPECT_CALL(mock, onResponse(-28, size_t(0)));
+    EXPECT_CALL(mock, onResponse(-28, Matcher<size_t>(_)));
     client.setTimeout(5ms);
     client.getContentLength("http://192.168.55.245/index.html", handleResponse<size_t>());
 
