@@ -273,7 +273,7 @@ void Parser::reset()
     m_pimpl->body = std::string();
     m_pimpl->url.clear();
     m_pimpl->state = State::Initial;
-};
+}
 
 }
 }

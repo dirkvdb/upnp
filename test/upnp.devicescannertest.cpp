@@ -13,7 +13,7 @@ namespace test
 using namespace utils;
 using namespace std::chrono_literals;
 
-TEST(DeviceScannerTest, DiscoverClient)
+TEST(DeviceScannerTest, DISABLED_DiscoverClient)
 {
     Client2 client;
 
