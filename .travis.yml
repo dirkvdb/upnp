@@ -29,12 +29,23 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
+            - llvm-toolchain-precise-3.7
           packages:
-            - clang-3.8
+            - clang-3.7
             - libcurl4-gnutls-dev
       env:
-        - COMPILER=clang++-3.8 BUILD_TYPE=Debug
+        - COMPILER=3.7 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+            - libcurl4-gnutls-dev
+      env:
+        - COMPILER=3.7 BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -45,7 +56,18 @@ matrix:
             - clang-3.8
             - libcurl4-gnutls-dev
       env:
-        - COMPILER=clang++-3.8 BUILD_TYPE=Release
+        - COMPILER=3.8 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+            - libcurl4-gnutls-dev
+      env:
+        - COMPILER=3.8 BUILD_TYPE=Release
 
 before_install:
   ############################################################################
@@ -63,10 +85,10 @@ before_install:
   ############################################################################
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
-      if   [[ "${COMPILER}" == "clang++-3.5" ]]; then LLVM_VERSION="3.5.2"
-      elif [[ "${COMPILER}" == "clang++-3.6" ]]; then LLVM_VERSION="3.6.2";
-      elif [[ "${COMPILER}" == "clang++-3.7" ]]; then LLVM_VERSION="3.7.1";
-      elif [[ "${COMPILER}" == "clang++-3.8" ]]; then LLVM_VERSION="3.8.0";
+      if   [[ "${COMPILER}" == "3.5" ]]; then LLVM_VERSION="3.5.2"
+      elif [[ "${COMPILER}" == "3.6" ]]; then LLVM_VERSION="3.6.2";
+      elif [[ "${COMPILER}" == "3.7" ]]; then LLVM_VERSION="3.7.1";
+      elif [[ "${COMPILER}" == "3.8" ]]; then LLVM_VERSION="3.8.0";
       else                                            LLVM_VERSION="trunk"; fi
       if [[ "${LLVM_VERSION}" != "trunk" ]]; then
         LLVM_URL="http://llvm.org/releases/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
@@ -90,7 +112,7 @@ before_install:
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
     fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"; fi
 
 install:
   - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
