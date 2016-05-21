@@ -11,7 +11,10 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-      env: CXX=g++-5
+      env:
+        - CXX=g++-5
+        - BUILD_TYPE=Debug
+        - BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -20,11 +23,10 @@ matrix:
             - llvm-toolchain-trusty-3.7
           packages:
             - clang-3.7
-      env: CXX=clang++-3.7
-
-env:
-  - BUILD_TYPE=Debug
-  - BUILD_TYPE=Release
+      env:
+        - CXX=clang++-3.7
+        - BUILD_TYPE=Debug
+        - BUILD_TYPE=Release
 
 before_install:
   - sudo apt-get update -qq
