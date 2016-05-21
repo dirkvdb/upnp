@@ -105,7 +105,7 @@ before_script:
 
 script:
   - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_FLAGS=${CXXFLAGS} -DCMAKE_EXE_LINKER_FLAGS=${LDFLAGS} -DSTANDALONE=ON .
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
   - make -j4
   - CTEST_OUTPUT_ON_FAILURE=1 make test
 
