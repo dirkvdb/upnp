@@ -105,7 +105,6 @@ before_script:
   - git clone -b develop --single-branch --recursive https://github.com/dirkvdb/utils.git ../utils
 
 script:
-  - ls /home/travis/build/dirkvdb/upnp/deps/llvm/install/include/c++/v1
   - git submodule update --init --recursive
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
   - make -j4 VERBOSE=1
