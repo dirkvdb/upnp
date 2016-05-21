@@ -13,7 +13,6 @@ matrix:
             - g++-5
       env:
         - CXX=g++-5 BUILD_TYPE=Debug
-        - CXX=g++-5 BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -24,7 +23,6 @@ matrix:
             - clang-3.7
       env:
         - CXX=clang++-3.7 BUILD_TYPE=Debug
-        - CXX=clang++-3.7 BUILD_TYPE=Release
 
 before_install:
   - sudo apt-get update -qq
