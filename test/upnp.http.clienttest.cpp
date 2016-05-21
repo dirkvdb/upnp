@@ -107,11 +107,11 @@ TEST_F(HttpClientTest, GetInvalidUrlAsString)
     loop.run(uv::RunMode::Default);
 }
 
-TEST_F(HttpClientTest, Timeout)
+TEST_F(HttpClientTest, CouldNotConnect)
 {
-    EXPECT_CALL(mock, onResponse(-28, Matcher<size_t>(_)));
+    EXPECT_CALL(mock, onResponse(-7, Matcher<size_t>(_)));
     client.setTimeout(5ms);
-    client.getContentLength("http://127.0.0.2/index.html", handleResponse<size_t>());
+    client.getContentLength("http://127.0.0.1:81/index.html", handleResponse<size_t>());
 
     loop.run(uv::RunMode::Default);
 }
