@@ -92,11 +92,11 @@ before_install:
 install:
   - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
   - tar xf libupnp-1.6.19.tar.bz2
-  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && make install
+  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && sudo make install
   - cd ..
   - wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
   - tar xf v1.9.1.tar.gz
-  - cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+  - cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared && make -j4 && sudo make install
   - cd ${TRAVIS_BUILD_DIR}
 
 before_script:
