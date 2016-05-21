@@ -12,9 +12,8 @@ matrix:
           packages:
             - g++-5
       env:
-        - CXX=g++-5
-        - BUILD_TYPE=Debug
-        - BUILD_TYPE=Release
+        - CXX=g++-5 BUILD_TYPE=Debug
+        - CXX=g++-5 BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -24,9 +23,8 @@ matrix:
           packages:
             - clang-3.7
       env:
-        - CXX=clang++-3.7
-        - BUILD_TYPE=Debug
-        - BUILD_TYPE=Release
+        - CXX=clang++-3.7 BUILD_TYPE=Debug
+        - CXX=clang++-3.7 BUILD_TYPE=Release
 
 before_install:
   - sudo apt-get update -qq
@@ -47,7 +45,7 @@ before_script:
 
 script:
   - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=$CXX -DSTANDALONE=ON .
   - make -j4
   - CTEST_OUTPUT_ON_FAILURE=1 make test
 
