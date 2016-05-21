@@ -54,12 +54,13 @@ before_install:
   - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
   - export CXXFLAGS="-isystem ${DEPS_DIR}/local/include"
   - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${DEPS_DIR}/local/lib"
+  - export LDFLAGS="-L${DEPS_DIR}/local/lib"
 
   ############################################################################
   # Install libc++ and libc++abi (on Linux only; Xcode uses libc++ by default)
   ############################################################################
   - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" != "clang++" ]]; then
+    if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
       if   [[ "${COMPILER}" == "clang++-3.5" ]]; then LLVM_VERSION="3.5.2"
       elif [[ "${COMPILER}" == "clang++-3.6" ]]; then LLVM_VERSION="3.6.2";
       elif [[ "${COMPILER}" == "clang++-3.7" ]]; then LLVM_VERSION="3.7.1";
@@ -83,16 +84,15 @@ before_install:
       (cd llvm/build && cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/local -DCMAKE_CXX_COMPILER=clang++)
       (cd llvm/build/projects/libcxx && make install -j2)
       (cd llvm/build/projects/libcxxabi && make install -j2)
-      export LDFLAGS="-L ${DEPS_DIR}/local/lib -l c++ -l c++abi"
+      export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
     fi
-
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
   - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
 
 install:
   - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
   - tar xf libupnp-1.6.19.tar.bz2
-  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && sudo make install
+  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && make install
   - cd ..
   - wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
   - tar xf v1.9.1.tar.gz
