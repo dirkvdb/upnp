@@ -10,10 +10,20 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-6
+            - g++-5
             - libcurl4-gnutls-dev
       env:
-        - BUILD_TYPE=Debug
+        - COMPILER=5 BUILD_TYPE=Debug
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libcurl4-gnutls-dev
+      env:
+        - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
       addons:
         apt:
@@ -23,7 +33,17 @@ matrix:
             - g++-6
             - libcurl4-gnutls-dev
       env:
-        - BUILD_TYPE=Release
+        - COMPILER=6 BUILD_TYPE=Debug
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libcurl4-gnutls-dev
+      env:
+        - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -111,7 +131,7 @@ before_install:
       export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
     fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
   - if [ "$CXX" = "clang++" ]; then export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"; fi
 
 install:
