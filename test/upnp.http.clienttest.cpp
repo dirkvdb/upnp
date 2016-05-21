@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "utils/log.h"
 #include "upnp/upnp.action.h"
@@ -15,22 +16,46 @@ using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
+static const std::string s_hostedFile = "Very small file";
+
+struct ResponseMock
+{
+    MOCK_METHOD2(onResponse, void(int32_t, size_t));
+    MOCK_METHOD2(onResponse, void(int32_t, std::string));
+    MOCK_METHOD2(onResponse, void(int32_t, std::vector<uint8_t>));
+    MOCK_METHOD2(onResponse, void(int32_t, uint8_t*));
+};
+
 class HttpClientTest : public Test
 {
 public:
     HttpClientTest()
-    : client(loop)
+    : server(loop, uv::Address::createIp4("127.0.0.1", 0))
+    , client(loop)
     {
+        server.addFile("/test.txt", "plain/text", s_hostedFile);
+    }
+    
+    template <typename Data>
+    std::function<void(int32_t, Data)> handleResponse()
+    {
+        return [this] (int32_t status, Data data) {
+            mock.onResponse(status, data);
+            
+            server.stop(nullptr);
+        };
     }
 
     uv::Loop loop;
+    http::Server server;
     http::Client client;
+    ResponseMock mock;
 };
 
-TEST_F(HttpClientTest, ContentLengthNotProvided)
+TEST_F(HttpClientTest, DISABLED_ContentLengthNotProvided)
 {
     bool gotCallback = false;
-    client.getContentLength("http://www.google.be", [&] (int32_t status, size_t /*size*/) {
+    client.getContentLength(server.getWebRootUrl() + "/test.txt", [&] (int32_t status, size_t /*size*/) {
         EXPECT_TRUE(status < 0);
         gotCallback = true;
     });
@@ -39,144 +64,72 @@ TEST_F(HttpClientTest, ContentLengthNotProvided)
     EXPECT_TRUE(gotCallback);
 }
 
-TEST_F(HttpClientTest, DISABLED_ContentLength)
+TEST_F(HttpClientTest, ContentLength)
 {
-    bool gotCallback = false;
-    client.getContentLength("http://192.168.1.13:9000/disk/DLNA-PNMP3-OP11-FLAGS01700000/O0$1$8I2291468.mp3", [&] (int32_t status, size_t size) {
-        EXPECT_EQ(9, status) << "GET Failed: " << http::Client::errorToString(status);
-        EXPECT_TRUE(size > 0);
-        gotCallback = true;
-    });
-
+    EXPECT_CALL(mock, onResponse(200, s_hostedFile.size()));
+    client.getContentLength(server.getWebRootUrl() + "/test.txt", handleResponse<size_t>());
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 TEST_F(HttpClientTest, GetAsString)
 {
-    bool gotCallback = false;
-    client.get("http://www.google.be", [&] (int32_t status, std::string contents) {
-        EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
-        EXPECT_FALSE(contents.empty());
-        gotCallback = true;
-    });
-
+    EXPECT_CALL(mock, onResponse(200, s_hostedFile));
+    client.get(server.getWebRootUrl() + "/test.txt", handleResponse<std::string>());
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 TEST_F(HttpClientTest, GetAsVector)
 {
-    bool gotCallback = false;
-    client.get("http://www.google.be", [&] (int32_t status, std::vector<uint8_t> data) {
-        EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
-        EXPECT_FALSE(data.empty());
-        gotCallback = true;
-    });
-
+    EXPECT_CALL(mock, onResponse(200, Matcher<std::vector<uint8_t>>(_))).WillOnce(WithArg<1>(Invoke([] (const std::vector<uint8_t>& data) {
+        EXPECT_TRUE(std::equal(data.begin(), data.end(), s_hostedFile.begin(), s_hostedFile.end()));
+    })));
+    
+    client.get(server.getWebRootUrl() + "/test.txt", handleResponse<std::vector<uint8_t>>());
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 TEST_F(HttpClientTest, GetAsArray)
 {
-    bool gotCallback = false;
-    std::array<uint8_t, 1024 * 128> array;
+    std::array<uint8_t, 15> array;
     array.fill(0);
-    uint8_t* originalDataPtr = array.data();
 
-    client.get("http://www.google.be", originalDataPtr, [&, data = std::move(array)] (int32_t status, uint8_t* dataPtr) {
-        EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
-        EXPECT_NE(0, dataPtr[0]);
-        EXPECT_EQ(originalDataPtr, dataPtr);
-        gotCallback = true;
-    });
-
+    EXPECT_CALL(mock, onResponse(200, array.data()));
+    client.get(server.getWebRootUrl() + "/test.txt", array.data(), handleResponse<uint8_t*>());
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
+    
+    EXPECT_TRUE(std::equal(array.begin(), array.end(), s_hostedFile.begin(), s_hostedFile.end()));
 }
 
 TEST_F(HttpClientTest, GetInvalidUrlAsString)
 {
-    bool gotCallback = false;
-    client.get("http://www.googlegooglegooglegooglegooglegoogle.be", [&] (int32_t status, std::string contents) {
-        EXPECT_TRUE(status < 0);
-        EXPECT_TRUE(contents.empty());
-        gotCallback = true;
-    });
-
+    EXPECT_CALL(mock, onResponse(404, ""));
+    client.get(server.getWebRootUrl() + "/bad.txt", handleResponse<std::string>());
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
-}
-
-TEST_F(HttpClientTest, GetServerUrl)
-{
-    bool gotCallback = false;
-    client.get("http://localhost:8080/test.txt", [&] (int32_t status, std::string contents) {
-        EXPECT_TRUE(status < 0);
-        EXPECT_TRUE(contents.empty());
-        gotCallback = true;
-    });
-
-    loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 TEST_F(HttpClientTest, InvalidUrl)
 {
-    bool gotCallback = false;
+    EXPECT_CALL(mock, onResponse(-28, size_t(0)));
     client.setTimeout(5ms);
-    client.getContentLength("http://192.168.55.245/index.html", [&] (int32_t status, size_t /*size*/) {
-        EXPECT_TRUE(status < 0);
-        EXPECT_EQ("Timeout was reached"s, http::Client::errorToString(status));
-        gotCallback = true;
-    });
+    client.getContentLength("http://192.168.55.245/index.html", handleResponse<size_t>());
 
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
-}
-
-TEST_F(HttpClientTest, ClientServer)
-{
-    uv::Loop        loop;
-    http::Client    client(loop);
-    http::Server    server(loop, uv::Address::createIp4("127.0.0.1", 0));
-    bool gotCallback = false;
-
-    auto servedFile = "This is my amazing file"s;
-    server.addFile("/test.txt", "text/plain", servedFile);
-
-    client.get(server.getWebRootUrl() + "/test.txt", [&] (int32_t status, std::string contents) {
-        EXPECT_EQ(200, status) << "GET Failed: " << http::Client::errorToString(status);
-        EXPECT_EQ(servedFile, contents);
-        gotCallback = true;
-
-        loop.stop();
-    });
-
-    loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 TEST_F(HttpClientTest, SoapActionInvalidUrl)
 {
-    bool gotCallback = false;
-
     Action action("SetVolume", "http://192.168.1.13:9000/dev0/srv0/control", { ServiceType::ContentDirectory, 1 });
+    
+    EXPECT_CALL(mock, onResponse(500, Matcher<std::string>(_)));
 
     client.setTimeout(1s);
     client.soapAction(action.getUrl(),
                       action.getName(),
                       action.getServiceTypeUrn(),
                       action.toString(),
-                      [&] (int32_t status, std::string /*res*/) {
-        EXPECT_EQ(500, status) << "Unexpected status code: " << http::Client::errorToString(status);
-
-        gotCallback = true;
-    });
+                      handleResponse<std::string>());
 
     loop.run(uv::RunMode::Default);
-    EXPECT_TRUE(gotCallback);
 }
 
 }

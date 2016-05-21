@@ -346,13 +346,23 @@ public:
 
     void write(const Buffer& buf, std::function<void(int32_t)> cb)
     {
-        auto write = std::make_unique<uv_write_t>();
-        write->data = new std::function<void(int32_t)>(cb);
-        checkRc(uv_write(write.release(), reinterpret_cast<uv_stream_t*>(this->get()), buf.get(), 1, [] (uv_write_t* req, int status) {
-            std::unique_ptr<uv_write_t> writePtr(req);
-            std::unique_ptr<std::function<void(int32_t)>> cbPtr(reinterpret_cast<std::function<void(int32_t)>*>(writePtr->data));
-            (*cbPtr)(status);
+        struct Context
+        {
+            uv_write_t handle;
+            std::function<void(int32_t)> cb;
+        };
+    
+        auto context = std::make_unique<Context>();
+        context->cb = std::move(cb);
+        checkRc(uv_write(&context->handle, reinterpret_cast<uv_stream_t*>(this->get()), buf.get(), 1, [] (uv_write_t* req, int status) {
+            std::unique_ptr<Context> context(reinterpret_cast<Context*>(req));
+            if (context->cb)
+            {
+                context->cb(status);
+            }
         }));
+        
+        context.release();
     }
 
     void listen(int32_t backlog, std::function<void(int32_t)> cb)

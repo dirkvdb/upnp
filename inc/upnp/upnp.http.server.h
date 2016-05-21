@@ -51,6 +51,7 @@ private:
 
     void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection);
     void writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection);
+    void cleanupClients() noexcept;
     void cleanupClient(uv::socket::Tcp* client) noexcept;
 
     void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::socket::Tcp* client);

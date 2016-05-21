@@ -41,6 +41,7 @@ namespace http
 static const std::string s_errorResponse =
     "HTTP/1.1 {} {}\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "Content-Length: 0\r\n"
     "\r\n";
 
 static const std::string s_response =
@@ -114,6 +115,7 @@ Server::Server(uv::Loop& loop, const uv::Address& address)
 
 void Server::stop(std::function<void()> cb)
 {
+    cleanupClients();
     m_socket.close(cb);
 }
 
@@ -190,13 +192,13 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
     {
         if (parser->getMethod() == Method::Head)
         {
-            log::info("requested file: {}", parser->getUrl());
+            log::info("requested file size: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
             writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
         }
         else if (parser->getMethod() == Method::Get)
         {
-            log::info("requested file size: {}", parser->getUrl());
+            log::info("requested file: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
             writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
         }
@@ -215,12 +217,22 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
     }
     catch (std::out_of_range&)
     {
-        writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), "", closeConnection);
+        writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), closeConnection);
     }
     catch (std::exception& e)
     {
-        writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), "", closeConnection);
+        writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), closeConnection);
     }
+}
+
+void Server::cleanupClients() noexcept
+{
+    for (auto& client : m_clients)
+    {
+        client.second->close(nullptr);
+    }
+    
+    m_clients.clear();
 }
 
 void Server::cleanupClient(uv::socket::Tcp* client) noexcept

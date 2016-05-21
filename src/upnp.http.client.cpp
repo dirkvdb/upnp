@@ -160,7 +160,7 @@ void checkMultiInfo(CURLM* curlHandle)
                     curl_easy_getinfo(message->easy_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
                     if (cbData->callback)
                     {
-                        cbData->callback(contentLength < 0 ? -1 : 0, static_cast<int32_t>(contentLength));
+                        cbData->callback(contentLength < 0 ? -1 : statusCode, static_cast<int32_t>(contentLength));
                     }
                 }
                 else
@@ -311,7 +311,7 @@ size_t getSubscribeHeaders(char* buffer, size_t size, size_t nitems, void* userd
         return dataSize;
     }
 
-    gsl::span<char> header(buffer, dataSize);
+    gsl::cstring_span<> header(buffer, dataSize);
     auto iter = std::find(header.begin(), header.end(), ':');
     if (iter == header.end())
     {
