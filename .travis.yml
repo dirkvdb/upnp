@@ -13,16 +13,18 @@ matrix:
             - g++-5
       env:
         - BUILD_TYPE=Debug
+        - BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.7
+            - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
       env:
         - BUILD_TYPE=Debug
+        - BUILD_TYPE=Release
 
 before_install:
   - sudo apt-get update -qq
