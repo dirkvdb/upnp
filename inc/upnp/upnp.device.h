@@ -19,7 +19,7 @@
 #include <string>
 #include <chrono>
 #include <cinttypes>
-#include <unordered_map>
+#include <map>
 
 #include "upnp/upnp.types.h"
 
@@ -52,7 +52,7 @@ struct Device
     std::string     containerId;
 
     std::chrono::system_clock::time_point timeoutTime;
-    std::unordered_map<ServiceType::Type, Service> services;
+    std::map<ServiceType::Type, Service> services;
 };
 
 }
