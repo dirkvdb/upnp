@@ -107,27 +107,11 @@ TEST_F(HttpClientTest, GetInvalidUrlAsString)
     loop.run(uv::RunMode::Default);
 }
 
-TEST_F(HttpClientTest, InvalidUrl)
+TEST_F(HttpClientTest, Timeout)
 {
     EXPECT_CALL(mock, onResponse(-28, Matcher<size_t>(_)));
     client.setTimeout(5ms);
-    client.getContentLength("http://192.168.55.245/index.html", handleResponse<size_t>());
-
-    loop.run(uv::RunMode::Default);
-}
-
-TEST_F(HttpClientTest, SoapActionInvalidUrl)
-{
-    Action action("SetVolume", "http://192.168.1.13:9000/dev0/srv0/control", { ServiceType::ContentDirectory, 1 });
-    
-    EXPECT_CALL(mock, onResponse(500, Matcher<std::string>(_)));
-
-    client.setTimeout(1s);
-    client.soapAction(action.getUrl(),
-                      action.getName(),
-                      action.getServiceTypeUrn(),
-                      action.toString(),
-                      handleResponse<std::string>());
+    client.getContentLength("http://127.0.0.2/index.html", handleResponse<size_t>());
 
     loop.run(uv::RunMode::Default);
 }

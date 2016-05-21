@@ -11,7 +11,7 @@ namespace test
 
 using namespace std::chrono_literals;
 
-TEST(SSDPClientTest, Client)
+TEST(SSDPClientTest, DISABLED_Client)
 {
     uv::Loop        loop;
     ssdp::Client    client(loop);
