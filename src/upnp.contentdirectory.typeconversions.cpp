@@ -23,33 +23,33 @@ namespace upnp
 using namespace ContentDirectory;
 
 static constexpr EnumMap<Action> s_actionNames  {{
-    { "GetSearchCapabilities",  Action::GetSearchCapabilities },
-    { "GetSortCapabilities",    Action::GetSortCapabilities },
-    { "GetSystemUpdateID",      Action::GetSystemUpdateID },
-    { "Browse",                 Action::Browse },
-    { "Search",                 Action::Search }
+    std::make_tuple("GetSearchCapabilities",  Action::GetSearchCapabilities),
+    std::make_tuple("GetSortCapabilities",    Action::GetSortCapabilities),
+    std::make_tuple("GetSystemUpdateID",      Action::GetSystemUpdateID),
+    std::make_tuple("Browse",                 Action::Browse),
+    std::make_tuple("Search",                 Action::Search),
 }};
 
 static constexpr EnumMap<Variable> s_variableNames  {{
-    { "ContainerUpdateIDs",         Variable::ContainerUpdateIDs },
-    { "TransferIDs",                Variable::TransferIDs },
-    { "SystemUpdateID",             Variable::SystemUpdateID },
-    { "A_ARG_TYPE_ObjectID",        Variable::ArgumentTypeObjectID },
-    { "A_ARG_TYPE_Result",          Variable::ArgumentTypeResult },
-    { "A_ARG_TYPE_SearchCriteria",  Variable::ArgumentTypeSearchCriteria },
-    { "A_ARG_TYPE_Flag",            Variable::ArgumentTypeBrowseFlag },
-    { "A_ARG_TYPE_Filter",          Variable::ArgumentTypeFilter },
-    { "A_ARG_TYPE_SortCriteria",    Variable::ArgumentTypeSortCriteria },
-    { "A_ARG_TYPE_Index",           Variable::ArgumentTypeIndex },
-    { "A_ARG_TYPE_Count",           Variable::ArgumentTypeCount },
-    { "A_ARG_TYPE_UpdateID",        Variable::ArgumentTypeUpdateID },
-    { "SearchCapabilities",         Variable::SearchCapabilities },
-    { "SortCapabilities",           Variable::SortCapabilities }
+    std::make_tuple("ContainerUpdateIDs",         Variable::ContainerUpdateIDs),
+    std::make_tuple("TransferIDs",                Variable::TransferIDs),
+    std::make_tuple("SystemUpdateID",             Variable::SystemUpdateID),
+    std::make_tuple("A_ARG_TYPE_ObjectID",        Variable::ArgumentTypeObjectID),
+    std::make_tuple("A_ARG_TYPE_Result",          Variable::ArgumentTypeResult),
+    std::make_tuple("A_ARG_TYPE_SearchCriteria",  Variable::ArgumentTypeSearchCriteria),
+    std::make_tuple("A_ARG_TYPE_Flag",            Variable::ArgumentTypeBrowseFlag),
+    std::make_tuple("A_ARG_TYPE_Filter",          Variable::ArgumentTypeFilter),
+    std::make_tuple("A_ARG_TYPE_SortCriteria",    Variable::ArgumentTypeSortCriteria),
+    std::make_tuple("A_ARG_TYPE_Index",           Variable::ArgumentTypeIndex),
+    std::make_tuple("A_ARG_TYPE_Count",           Variable::ArgumentTypeCount),
+    std::make_tuple("A_ARG_TYPE_UpdateID",        Variable::ArgumentTypeUpdateID),
+    std::make_tuple("SearchCapabilities",         Variable::SearchCapabilities),
+    std::make_tuple("SortCapabilities",           Variable::SortCapabilities),
 }};
 
 static constexpr EnumMap<BrowseFlag> s_browseFlagNames  {{
-    { "BrowseMetadata", BrowseFlag::Metadata },
-    { "BrowseDirectChildren", BrowseFlag::DirectChildren }
+    std::make_tuple("BrowseMetadata", BrowseFlag::Metadata),
+    std::make_tuple("BrowseDirectChildren", BrowseFlag::DirectChildren),
 }};
 
 ADD_ENUM_MAP(Action, s_actionNames)

@@ -23,41 +23,41 @@ namespace upnp
 using namespace ConnectionManager;
 
 static constexpr EnumMap<Action> s_actionNames {{
-    { "GetProtocolInfo",             Action::GetProtocolInfo },
-    { "PrepareForConnection",        Action::PrepareForConnection },
-    { "ConnectionComplete",          Action::ConnectionComplete },
-    { "GetCurrentConnectionIDs",     Action::GetCurrentConnectionIDs },
-    { "GetCurrentConnectionInfo",    Action::GetCurrentConnectionInfo },
-    { "GetRendererItemInfo",         Action::GetRendererItemInfo },
-    { "GetFeatureList",              Action::GetFeatureList },
+    std::make_tuple("GetProtocolInfo",             Action::GetProtocolInfo),
+    std::make_tuple("PrepareForConnection",        Action::PrepareForConnection),
+    std::make_tuple("ConnectionComplete",          Action::ConnectionComplete),
+    std::make_tuple("GetCurrentConnectionIDs",     Action::GetCurrentConnectionIDs),
+    std::make_tuple("GetCurrentConnectionInfo",    Action::GetCurrentConnectionInfo),
+    std::make_tuple("GetRendererItemInfo",         Action::GetRendererItemInfo),
+    std::make_tuple("GetFeatureList",              Action::GetFeatureList),
 }};
 
 static constexpr EnumMap<Variable> s_variableNames {{
-    { "SourceProtocolInfo",            Variable::SourceProtocolInfo },
-    { "SinkProtocolInfo",              Variable::SinkProtocolInfo },
-    { "CurrentConnectionIDs",          Variable::CurrentConnectionIds },
-    { "A_ARG_TYPE_ConnectionStatus",   Variable::ArgumentTypeConnectionStatus },
-    { "A_ARG_TYPE_ConnectionManager",  Variable::ArgumentTypeConnectionManager },
-    { "A_ARG_TYPE_Direction",          Variable::ArgumentTypeDirection },
-    { "A_ARG_TYPE_ProtocolInfo",       Variable::ArgumentTypeProtocolInfo },
-    { "A_ARG_TYPE_ConnectionID",       Variable::ArgumentTypeConnectionId },
-    { "A_ARG_TYPE_AVTransportID",      Variable::ArgumentTypeAVTransportId },
-    { "A_ARG_TYPE_RcsID",              Variable::ArgumentTypeRecourceId },
-    { "A_ARG_TYPE_ItemInfoFilter",     Variable::ArgumentTypeItemInfoFilter },
-    { "A_ARG_TYPE_Result",             Variable::ArgumentTypeResult },
-    { "A_ARG_TYPE_RenderingInfoList",  Variable::ArgumentTypeRenderingInfoList }
+    std::make_tuple("SourceProtocolInfo",            Variable::SourceProtocolInfo),
+    std::make_tuple("SinkProtocolInfo",              Variable::SinkProtocolInfo),
+    std::make_tuple("CurrentConnectionIDs",          Variable::CurrentConnectionIds),
+    std::make_tuple("A_ARG_TYPE_ConnectionStatus",   Variable::ArgumentTypeConnectionStatus),
+    std::make_tuple("A_ARG_TYPE_ConnectionManager",  Variable::ArgumentTypeConnectionManager),
+    std::make_tuple("A_ARG_TYPE_Direction",          Variable::ArgumentTypeDirection),
+    std::make_tuple("A_ARG_TYPE_ProtocolInfo",       Variable::ArgumentTypeProtocolInfo),
+    std::make_tuple("A_ARG_TYPE_ConnectionID",       Variable::ArgumentTypeConnectionId),
+    std::make_tuple("A_ARG_TYPE_AVTransportID",      Variable::ArgumentTypeAVTransportId),
+    std::make_tuple("A_ARG_TYPE_RcsID",              Variable::ArgumentTypeRecourceId),
+    std::make_tuple("A_ARG_TYPE_ItemInfoFilter",     Variable::ArgumentTypeItemInfoFilter),
+    std::make_tuple("A_ARG_TYPE_Result",             Variable::ArgumentTypeResult),
+    std::make_tuple("A_ARG_TYPE_RenderingInfoList",  Variable::ArgumentTypeRenderingInfoList),
 }};
 
 static constexpr EnumMap<ConnectionStatus> s_connStatusNames {{
-    { "OK",                     ConnectionStatus::Ok },
-    { "ContentFormatMismatch",  ConnectionStatus::ContentFormatMismatch },
-    { "InsufficientBandwith",   ConnectionStatus::InsufficientBandwith },
-    { "UnreliableChannel",      ConnectionStatus::UnreliableChannel }
+    std::make_tuple("OK",                     ConnectionStatus::Ok),
+    std::make_tuple("ContentFormatMismatch",  ConnectionStatus::ContentFormatMismatch),
+    std::make_tuple("InsufficientBandwith",   ConnectionStatus::InsufficientBandwith),
+    std::make_tuple("UnreliableChannel",      ConnectionStatus::UnreliableChannel),
 }};
 
 static constexpr EnumMap<Direction> s_directionNames {{
-    { "Input",  Direction::Input},
-    { "Output", Direction::Output}
+    std::make_tuple("Input",  Direction::Input),
+    std::make_tuple("Output", Direction::Output),
 }};
 
 ADD_ENUM_MAP(Action, s_actionNames)
