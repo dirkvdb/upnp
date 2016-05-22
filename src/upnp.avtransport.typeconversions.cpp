@@ -122,9 +122,9 @@ static constexpr EnumMap<State> s_stateNames {{
 }};
 
 static constexpr EnumMap<PlaylistType> s_playlistTypeNames {{
-    {"Static",               PlaylistType::Static },
-    {"StaticPIContents",     PlaylistType::StaticPIContents },
-    {"Streaming",            PlaylistType::Streaming },
+    std::make_tuple("Static",               PlaylistType::Static),
+    std::make_tuple("StaticPIContents",     PlaylistType::StaticPIContents),
+    std::make_tuple("Streaming",            PlaylistType::Streaming),
 }};
 
 static constexpr EnumMap<PlaylistState> s_playlistStateNames {{
