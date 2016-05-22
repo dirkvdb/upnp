@@ -28,52 +28,52 @@ namespace upnp
 static const std::string g_emptyString;
 
 static constexpr EnumMap<http::Type, http_parser_type> s_typeValues {{
-    { HTTP_REQUEST,    http::Type::Request },
-    { HTTP_RESPONSE,   http::Type::Response },
-    { HTTP_BOTH,       http::Type::Both }
+    std::make_tuple(HTTP_REQUEST,    http::Type::Request),
+    std::make_tuple(HTTP_RESPONSE,   http::Type::Response),
+    std::make_tuple(HTTP_BOTH,       http::Type::Both),
 }};
 
 static constexpr EnumMapEndsWith<http_method, HTTP_UNLINK, http::Method> s_methodValues {{
-    { http::Method::Unknown,        HTTP_DELETE },
-    { http::Method::Get,            HTTP_GET },
-    { http::Method::Head,           HTTP_HEAD },
-    { http::Method::Post,           HTTP_POST },
-    { http::Method::Unknown,        HTTP_PUT },
+    std::make_tuple(http::Method::Unknown,        HTTP_DELETE),
+    std::make_tuple(http::Method::Get,            HTTP_GET),
+    std::make_tuple(http::Method::Head,           HTTP_HEAD),
+    std::make_tuple(http::Method::Post,           HTTP_POST),
+    std::make_tuple(http::Method::Unknown,        HTTP_PUT),
 
-    { http::Method::Unknown,        HTTP_CONNECT },
-    { http::Method::Unknown,        HTTP_OPTIONS },
-    { http::Method::Unknown,        HTTP_TRACE },
+    std::make_tuple(http::Method::Unknown,        HTTP_CONNECT),
+    std::make_tuple(http::Method::Unknown,        HTTP_OPTIONS),
+    std::make_tuple(http::Method::Unknown,        HTTP_TRACE),
 
-    { http::Method::Unknown,        HTTP_COPY },
-    { http::Method::Unknown,        HTTP_LOCK },
-    { http::Method::Unknown,        HTTP_MKCOL },
-    { http::Method::Unknown,        HTTP_MOVE },
-    { http::Method::Unknown,        HTTP_PROPFIND },
-    { http::Method::Unknown,        HTTP_PROPPATCH },
-    { http::Method::Unknown,        HTTP_SEARCH },
-    { http::Method::Unknown,        HTTP_UNLOCK },
-    { http::Method::Unknown,        HTTP_BIND },
-    { http::Method::Unknown,        HTTP_REBIND },
-    { http::Method::Unknown,        HTTP_UNBIND },
-    { http::Method::Unknown,        HTTP_ACL },
+    std::make_tuple(http::Method::Unknown,        HTTP_COPY),
+    std::make_tuple(http::Method::Unknown,        HTTP_LOCK),
+    std::make_tuple(http::Method::Unknown,        HTTP_MKCOL),
+    std::make_tuple(http::Method::Unknown,        HTTP_MOVE),
+    std::make_tuple(http::Method::Unknown,        HTTP_PROPFIND),
+    std::make_tuple(http::Method::Unknown,        HTTP_PROPPATCH),
+    std::make_tuple(http::Method::Unknown,        HTTP_SEARCH),
+    std::make_tuple(http::Method::Unknown,        HTTP_UNLOCK),
+    std::make_tuple(http::Method::Unknown,        HTTP_BIND),
+    std::make_tuple(http::Method::Unknown,        HTTP_REBIND),
+    std::make_tuple(http::Method::Unknown,        HTTP_UNBIND),
+    std::make_tuple(http::Method::Unknown,        HTTP_ACL),
 
-    { http::Method::Unknown,        HTTP_REPORT },
-    { http::Method::Unknown,        HTTP_MKACTIVITY },
-    { http::Method::Unknown,        HTTP_CHECKOUT },
-    { http::Method::Unknown,        HTTP_MERGE },
+    std::make_tuple(http::Method::Unknown,        HTTP_REPORT),
+    std::make_tuple(http::Method::Unknown,        HTTP_MKACTIVITY),
+    std::make_tuple(http::Method::Unknown,        HTTP_CHECKOUT),
+    std::make_tuple(http::Method::Unknown,        HTTP_MERGE),
 
-    { http::Method::Search,         HTTP_MSEARCH },
-    { http::Method::Notify,         HTTP_NOTIFY },
-    { http::Method::Subscribe,      HTTP_SUBSCRIBE },
-    { http::Method::Unsubscribe,    HTTP_UNSUBSCRIBE },
+    std::make_tuple(http::Method::Search,         HTTP_MSEARCH),
+    std::make_tuple(http::Method::Notify,         HTTP_NOTIFY),
+    std::make_tuple(http::Method::Subscribe,      HTTP_SUBSCRIBE),
+    std::make_tuple(http::Method::Unsubscribe,    HTTP_UNSUBSCRIBE),
 
-    { http::Method::Unknown,        HTTP_PATCH },
-    { http::Method::Unknown,        HTTP_PURGE },
+    std::make_tuple(http::Method::Unknown,        HTTP_PATCH),
+    std::make_tuple(http::Method::Unknown,        HTTP_PURGE),
 
-    { http::Method::Unknown,        HTTP_MKCALENDAR },
+    std::make_tuple(http::Method::Unknown,        HTTP_MKCALENDAR),
 
-    { http::Method::Unknown,        HTTP_LINK },
-    { http::Method::Unknown,        HTTP_UNLINK }
+    std::make_tuple(http::Method::Unknown,        HTTP_LINK),
+    std::make_tuple(http::Method::Unknown,        HTTP_UNLINK),
 }};
 
 
