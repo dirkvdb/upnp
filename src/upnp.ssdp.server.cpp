@@ -50,7 +50,7 @@ Server::Server(uv::Loop& loop)
 , m_socket(loop)
 , m_parser(std::make_unique<SearchParser>())
 {
-    m_parser->setSearchRequestCallback([this] (auto& st, auto delay) { respondToSearch(st, delay); });
+    m_parser->setSearchRequestCallback([this] (auto& st, auto delay) { this->respondToSearch(st, delay); });
 }
 
 Server::~Server() noexcept = default;
