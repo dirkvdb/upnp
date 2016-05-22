@@ -231,7 +231,7 @@ void Server::cleanupClients() noexcept
     {
         client.second->close(nullptr);
     }
-    
+
     m_clients.clear();
 }
 

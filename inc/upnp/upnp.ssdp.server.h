@@ -26,8 +26,10 @@ public:
     void stop(std::function<void()> cb);
 
 private:
-    void sendAnnounceMessage(std::shared_ptr<std::string> msg, std::shared_ptr<uv::Timer> timer, int32_t count);
-    void announceDevice(const Device& info);
+    void sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<uv::Timer> timer, int32_t count);
+
+    void announceDevice();
+    void announceDeviceStop(std::function<void(int32_t)> cb);
 
     void respondToSearch(const std::string& searchTarget, std::chrono::seconds delay);
 
@@ -35,6 +37,9 @@ private:
     uv::Timer m_timer;
     uv::socket::Udp m_socket;
     std::unique_ptr<SearchParser> m_parser;
+
+    std::vector<std::string> m_announceMessages;
+    std::vector<std::string> m_byebyeMessages;
 };
 
 }

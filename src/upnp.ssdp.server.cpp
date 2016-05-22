@@ -27,7 +27,7 @@ static const std::string s_aliveNotification =
 "CACHE-CONTROL:max-age=1800\r\n"
 "LOCATION:{}\r\n"
 "SERVER: UPnP/1.1 1.0\r\n"
-"NT:upnp:rootdevice\r\n"
+"NT:{}\r\n"
 "NTS:ssdp:alive\r\n"
 "USN:{}\r\n"
 "BOOTID.UPNP.ORG: 1\r\n"
@@ -37,11 +37,11 @@ static const std::string s_aliveNotification =
 static const std::string s_byebyeNotification =
 "NOTIFY * HTTP/1.1\r\n"
 "HOST:239.255.255.250:1900\r\n"
-"NT:upnp:rootdevice\r\n"
+"NT:{}\r\n"
 "NTS:ssdp:byebye\r\n"
 "USN:{}\r\n"
 "BOOTID.UPNP.ORG: 1\r\n"
-"CONFIGID.UPNP.ORG: number used for caching description information\r\n"
+"CONFIGID.UPNP.ORG: 1\r\n"
 "\r\n";
 
 Server::Server(uv::Loop& loop)
@@ -50,7 +50,7 @@ Server::Server(uv::Loop& loop)
 , m_socket(loop)
 , m_parser(std::make_unique<SearchParser>())
 {
-    //m_parser->setSearchRequestCallback([this] (auto& st, auto& delay) { respondToSearch(st, delay); });
+    m_parser->setSearchRequestCallback([this] (auto& st, auto delay) { respondToSearch(st, delay); });
 }
 
 Server::~Server() noexcept = default;
@@ -74,17 +74,37 @@ void Server::run(const Device& info)
         }
     });
 
-    announceDevice(info);
+    m_announceMessages.clear();
+    m_announceMessages.emplace_back(fmt::format(s_aliveNotification, info.location, "upnp:rootdevice", info.udn));
+    m_announceMessages.emplace_back(fmt::format(s_aliveNotification, info.location, deviceTypeToString(info.type), info.udn));
+
+    for (auto& svc : info.services)
+    {
+        m_announceMessages.emplace_back(fmt::format(s_aliveNotification, info.location, serviceTypeToUrnTypeString(svc.second.type), info.udn));
+    }
+
+    m_byebyeMessages.clear();
+    m_byebyeMessages.emplace_back(fmt::format(s_byebyeNotification, "upnp:rootdevice", info.udn));
+    m_byebyeMessages.emplace_back(fmt::format(s_byebyeNotification, deviceTypeToString(info.type), info.udn));
+
+    for (auto& svc : info.services)
+    {
+        m_byebyeMessages.emplace_back(fmt::format(s_byebyeNotification, serviceTypeToUrnTypeString(svc.second.type), info.udn));
+    }
+
+    announceDevice();
 }
 
 void Server::stop(std::function<void()> cb)
 {
-    m_socket.close(std::move(cb));
+    announceDeviceStop([this, cb] (int32_t) {
+        m_socket.close(cb);
+    });
 }
 
-void Server::sendAnnounceMessage(std::shared_ptr<std::string> msg, std::shared_ptr<uv::Timer> timer, int32_t count)
+void Server::sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<uv::Timer> timer, int32_t count)
 {
-    m_socket.send(s_ssdpAddressIpv4, *msg, [this, msg, timer, count] (int32_t status) {
+    m_socket.send(s_ssdpAddressIpv4, msgs.front(), [this, timer, count, &msgs] (int32_t status) {
         if (status < 0)
         {
             log::warn("Failed to send broadcast message");
@@ -95,19 +115,31 @@ void Server::sendAnnounceMessage(std::shared_ptr<std::string> msg, std::shared_p
             static std::default_random_engine re;
             static std::uniform_int_distribution<> dis(50, 200);
 
-            m_timer.start(std::chrono::milliseconds(dis(re)), [this, msg, timer, count] () {
-                sendAnnounceMessage(msg, timer, count - 1);
+            m_timer.start(std::chrono::milliseconds(dis(re)), [this, timer, count, &msgs] () {
+                sendMessages(msgs, timer, count - 1);
             });
         }
     });
+
+    for (size_t i = 1; i < msgs.size(); ++i)
+    {
+        m_socket.send(s_ssdpAddressIpv4, msgs[i], nullptr);
+    }
 }
 
-void Server::announceDevice(const Device& info)
+void Server::announceDevice()
 {
-    auto msg = std::make_shared<std::string>(fmt::format(s_aliveNotification, info.location, info.udn));
-    auto timer = std::make_shared<uv::Timer>(m_loop);
+    sendMessages(m_announceMessages, std::make_shared<uv::Timer>(m_loop), s_broadcastRepeatCount);
+}
 
-    sendAnnounceMessage(msg, timer, s_broadcastRepeatCount);
+void Server::announceDeviceStop(std::function<void(int32_t)> cb)
+{
+    for (size_t i = 1; i < m_byebyeMessages.size() - 1; ++i)
+    {
+        m_socket.send(s_ssdpAddressIpv4, m_byebyeMessages[i], nullptr);
+    }
+
+    m_socket.send(s_ssdpAddressIpv4, m_byebyeMessages.back(), cb);
 }
 
 void Server::respondToSearch(const std::string& searchTarget, std::chrono::seconds delay)
