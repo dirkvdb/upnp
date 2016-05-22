@@ -40,17 +40,27 @@ void Client::run(const std::string& address)
     // join the multicast channel
     m_socket.setBroadcast(true);
     m_socket.setMemberShip(s_ssdpIp, uv::socket::Udp::MemberShip::JoinGroup);
-    m_socket.setTtl(4);
+    m_socket.setMulticastTtl(4);
+    m_socket.setMulticastLoop(true);
 
     m_socket.recv([=] (const std::string& msg) {
         try
         {
-            auto parsed = m_parser->parse(msg);
-            assert(parsed == msg.size());
+            if (!msg.empty())
+            {
+                auto parsed = m_parser->parse(msg);
+                assert(parsed == msg.size());
+            }
+            else
+            {
+                m_parser->reset();
+            }
         }
         catch (std::exception& e)
         {
-            log::warn("Failed to parse http notification: {}", e.what());
+            log::warn("Error parsing http notification: {}", e.what());
+            log::info(msg);
+            m_parser->reset();
         }
     });
 }
@@ -72,22 +82,37 @@ void Client::search()
 
 void Client::search(const char* serviceType)
 {
-    search(serviceType, s_ssdpIp);
-}
-
-void Client::search(const char* serviceType, const char* deviceIp)
-{
     auto req = std::make_shared<std::string>(fmt::format("M-SEARCH * HTTP/1.1\r\n"
                                                          "HOST:{}:{}\r\n"
                                                          "MAN:\"ssdp:discover\"\r\n"
                                                          "MX:{}\r\n"
                                                          "ST:{}\r\n"
-                                                         "\r\n", deviceIp, s_ssdpPort, m_searchTimeout, serviceType));
+                                                         "\r\n", s_ssdpIp, s_ssdpPort, m_searchTimeout, serviceType));
 
+    sendMessages(s_ssdpAddressIpv4, req);
+}
+
+void Client::search(const char* serviceType, const char* deviceIp)
+{
+    auto addr = m_socket.getSocketName();
+    auto req = std::make_shared<std::string>(fmt::format("M-SEARCH * HTTP/1.1\r\n"
+                                                         "HOST:{}:{}\r\n"
+                                                         "MAN:\"ssdp:discover\"\r\n"
+                                                         "ST:{}\r\n"
+                                                         "\r\n", addr.ip(), addr.port(), serviceType));
+
+    sendMessages(uv::Address::createIp4(deviceIp, s_ssdpPort), req);
+}
+
+void Client::sendMessages(const uv::Address& addr, std::shared_ptr<std::string> content)
+{
     for (uint32_t i = 0; i < s_broadcastRepeatCount; ++i)
     {
-        m_socket.send(s_ssdpAddressIpv4, *req, [req] (int32_t status) {
-            log::info("Send completed {}", status);
+        m_socket.send(addr, *content, [content] (int32_t status) {
+            if (status < 0)
+            {
+                log::warn("Ssdp search failed: {}", uv::getErrorString(status));
+            }
         });
     }
 }

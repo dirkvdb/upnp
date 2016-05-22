@@ -76,6 +76,8 @@ public:
 
     Parser(Type type);
     ~Parser();
+    
+    void reset();
 
     void setHeadersCompletedCallback(std::function<void()> cb);
     void setCompletedCallback(std::function<void()> cb);
@@ -94,7 +96,7 @@ public:
     static const char* methodToString(Method m) noexcept;
 
 private:
-    void reset();
+    void clear();
 
     struct Pimpl;
     std::unique_ptr<Pimpl> m_pimpl;

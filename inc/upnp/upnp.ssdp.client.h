@@ -40,17 +40,18 @@ public:
 
     void setSearchTimeout(std::chrono::seconds timeout);
 
-    // Search for any device that provides any service type
+    // Multicast Search for any device that provides any service type
     void search();
-    // Search for any device that provides the serviceType
+    // Multicast Search for any device that provides the serviceType
     void search(const char* serviceType);
-    // Search for a specific device that provides the serviceType
+    // Unicast Search for a specific device that provides the serviceType
     void search(const char* serviceType, const char* deviceIp);
 
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
     void parseData();
+    void sendMessages(const uv::Address& addr, std::shared_ptr<std::string> content);
 
     uint32_t m_searchTimeout;
     uv::Loop& m_loop;

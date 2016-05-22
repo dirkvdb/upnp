@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "upnp/upnp.ssdp.client.h"
@@ -101,6 +102,11 @@ public:
         return m_parser.parse(data);
     }
 
+    void reset()
+    {
+        m_parser.reset();
+    }
+
 private:
     void parseData() noexcept
     {
@@ -141,7 +147,8 @@ private:
         }
         catch (std::exception& e)
         {
-            utils::log::warn("Failed to parse http notification data: {}", e.what());
+            utils::log::warn("Failed to parse ssdp client http notification data: {}", e.what());
+            reset();
         }
     }
 
@@ -153,24 +160,37 @@ class SearchParser
 {
 public:
     SearchParser()
-    : m_parser(http::Type::Request)
+    : m_parser(http::Type::Both) // We also receive response broadcasts
     {
         m_parser.setHeadersCompletedCallback([this] () { parseData(); });
     }
 
-    void setSearchRequestCallback(std::function<void(const std::string& searchTarget, std::chrono::seconds)> cb) noexcept
+    void setSearchRequestCallback(std::function<void(const std::string& host, const std::string& searchTarget, std::chrono::seconds)> cb) noexcept
     {
         m_cb = std::move(cb);
     }
 
-    size_t parse(const std::string& data) noexcept
+    size_t parse(const std::string& data)
     {
         if (data.empty())
         {
             return 0;
         }
 
-        return m_parser.parse(data);
+        auto size = m_parser.parse(data);
+        if (m_parser.getFlags().isSet(http::Parser::Flag::ConnectionClose))
+        {
+            // some of the UDP search message have the connection close flag set
+            // after that flag the parser will give errors, so reset
+            reset();
+        }
+
+        return size;
+    }
+
+    void reset()
+    {
+        m_parser.reset();
     }
 
 private:
@@ -185,24 +205,25 @@ private:
         {
             if (m_parser.getMethod() == http::Method::Search)
             {
-                if (m_parser.headerValue("MAN") == "ssdp:discover")
+                if (m_parser.headerValue("MAN") == "\"ssdp:discover\"")
                 {
                     // mx value is only present for multicast search
                     // unicast search response should be sent as fast as possible
                     auto mx = m_parser.headerValue("MX");
                     auto delay = std::chrono::seconds(mx.empty() ? 0 : std::stoi(mx));
-                    m_cb(m_parser.headerValue("ST"), delay);
+                    m_cb(m_parser.headerValue("HOST"), m_parser.headerValue("ST"), delay);
                 }
             }
         }
         catch (std::exception& e)
         {
-            utils::log::warn("Failed to parse http notification data: {}", e.what());
+            utils::log::warn("Failed to parse sddp server http notification data: {}", e.what());
+            reset();
         }
     }
 
     http::Parser m_parser;
-    std::function<void(const std::string&, std::chrono::seconds)> m_cb;
+    std::function<void(const std::string&, const std::string&, std::chrono::seconds)> m_cb;
 };
 
 }

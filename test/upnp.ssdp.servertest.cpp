@@ -25,6 +25,7 @@ public:
         Device dev;
         dev.location = "http://localhost/";
         dev.type = DeviceType(DeviceType::MediaRenderer, 1);
+        dev.udn = "uuid:55076f6e-6b79-1d65-a4eb-00089be34071";
 
         Service svc;
 
@@ -35,22 +36,36 @@ public:
         dev.services.emplace(svc.type.type, svc);
 
         server.run(dev);
+
+        for (auto& intf : uv::getNetworkInterfaces())
+        {
+            if (intf.isIpv4() && !intf.isInternal)
+            {
+                localIp = intf.ipName();
+                break;
+            }
+        }
+
+        EXPECT_FALSE(localIp.empty()) << "Failed to obtain local ip address";
     }
 
     uv::Loop loop;
     ssdp::Server server;
     ssdp::Client client;
+    std::string localIp;
 };
 
-TEST_F(SsdpServerTest, DISABLED_Server)
+TEST_F(SsdpServerTest, Server)
 {
     client.setDeviceNotificationCallback([&] (auto&& msg) {
-        utils::log::warn("@@@ DiscoverCallback ID {} TYPE {} EXP {}", msg.deviceId, msg.deviceType, msg.expirationTime);
-        //m_client.stop();
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34071")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
     });
 
     client.run();
-    client.search();
+    client.search("upnp:rootdevice", localIp.c_str());
 
     loop.run(uv::RunMode::Default);
 }

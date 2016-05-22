@@ -33,6 +33,18 @@ static constexpr EnumMap<http::Type, http_parser_type> s_typeValues {{
     std::make_tuple(HTTP_BOTH,       http::Type::Both),
 }};
 
+static constexpr EnumMap<http::Method, http_method> s_methodConv {{
+    std::make_tuple(HTTP_NOTIFY,        http::Method::Notify),
+    std::make_tuple(HTTP_MSEARCH,       http::Method::Search),
+
+    std::make_tuple(HTTP_SUBSCRIBE,     http::Method::Subscribe),
+    std::make_tuple(HTTP_UNSUBSCRIBE,   http::Method::Unsubscribe),
+    
+    std::make_tuple(HTTP_GET,           http::Method::Get),
+    std::make_tuple(HTTP_HEAD,          http::Method::Head),
+    std::make_tuple(HTTP_POST,          http::Method::Post),
+}};
+
 static constexpr EnumMapEndsWith<http_method, HTTP_UNLINK, http::Method> s_methodValues {{
     std::make_tuple(http::Method::Unknown,        HTTP_DELETE),
     std::make_tuple(http::Method::Get,            HTTP_GET),
@@ -78,6 +90,7 @@ static constexpr EnumMapEndsWith<http_method, HTTP_UNLINK, http::Method> s_metho
 
 
 ADD_ENUM_MAP_TYPED(http::Type, http_parser_type, s_typeValues)
+ADD_ENUM_MAP_TYPED(http::Method, http_method, s_methodConv)
 
 namespace http
 {
@@ -103,7 +116,8 @@ struct Parser::Pimpl
 {
     http_parser_settings settings;
     http_parser parser;
-
+    
+    Type type;
     State state = State::Initial;
     std::vector<Header> headers;
     std::string body;
@@ -115,10 +129,11 @@ struct Parser::Pimpl
 Parser::Parser(Type type)
 : m_pimpl(std::make_unique<Pimpl>())
 {
+    m_pimpl->type = type;
     m_pimpl->settings.on_headers_complete = nullptr;
     m_pimpl->settings.on_message_begin = [] (http_parser* parser) -> int {
         auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-        thisPtr->reset();
+        thisPtr->clear();
         return 0;
     };
     m_pimpl->settings.on_message_complete = nullptr;
@@ -186,6 +201,12 @@ Parser::Parser(Type type)
 }
 
 Parser::~Parser() = default;
+
+void Parser::reset()
+{
+    http_parser_init(&m_pimpl->parser, enum_typecast<http_parser_type>(m_pimpl->type));
+    clear();
+}
 
 void Parser::setHeadersCompletedCallback(std::function<void()> cb)
 {
@@ -264,10 +285,10 @@ Flags<Parser::Flag> Parser::getFlags() const noexcept
 
 const char* Parser::methodToString(Method m) noexcept
 {
-    return http_method_str(static_cast<http_method>(m));
+    return http_method_str(enum_typecast<http_method>(m));
 }
 
-void Parser::reset()
+void Parser::clear()
 {
     m_pimpl->headers.clear();
     m_pimpl->body = std::string();

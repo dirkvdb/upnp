@@ -106,7 +106,7 @@ TEST_F(UVTest, AsyncSendReturnType)
     });
 
     loop.run(uv::RunMode::Default);
-    EXPECT_EQ(44, fut.get());
+    EXPECT_EQ(44u, fut.get());
     uv::stopLoopAndCloseRequests(loop);
 }
 
@@ -192,6 +192,20 @@ TEST_F(UVTest, TcpTestModifiedPort)
     });
 
     loop.run(uv::RunMode::Default);
+}
+
+TEST_F(UVTest, AddressFromHost)
+{
+    auto addr = uv::Address::createIp4FromHost("127.0.0.1:100", 1900);
+    EXPECT_EQ(100u, addr.port());
+    EXPECT_EQ("127.0.0.1"s, addr.ip());
+    
+    addr = uv::Address::createIp4FromHost("127.0.0.1", 1900);
+    EXPECT_EQ(1900u, addr.port());
+    EXPECT_EQ("127.0.0.1"s, addr.ip());
+    
+    EXPECT_THROW(uv::Address::createIp4FromHost("127.0.0.1_100", 1900), std::exception);
+    EXPECT_THROW(uv::Address::createIp4FromHost("127.0.0.1:100000", 1900), std::exception);
 }
 
 TEST_F(UVTest, ListInterfaces)

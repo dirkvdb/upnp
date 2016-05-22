@@ -5,11 +5,10 @@
 #include <chrono>
 
 #include "upnp/upnp.uv.h"
+#include "upnp/upnp.device.h"
 
 namespace upnp
 {
-
-struct Device;
 
 namespace ssdp
 {
@@ -31,15 +30,18 @@ private:
     void announceDevice();
     void announceDeviceStop(std::function<void(int32_t)> cb);
 
-    void respondToSearch(const std::string& searchTarget, std::chrono::seconds delay);
+    void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay);
 
     uv::Loop& m_loop;
     uv::Timer m_timer;
     uv::socket::Udp m_socket;
+    uv::socket::Udp m_responseSocket; // socket for unicast responses
     std::unique_ptr<SearchParser> m_parser;
 
     std::vector<std::string> m_announceMessages;
     std::vector<std::string> m_byebyeMessages;
+
+    Device m_device;
 };
 
 }

@@ -630,6 +630,25 @@ public:
         return addr;
     }
 
+    static Address createIp4FromHost(const std::string& ipPort, int16_t defaultPort)
+    {
+        auto pos = ipPort.find(':');
+        if (pos == std::string::npos || pos == (ipPort.size() - 1))
+        {
+            return createIp4(ipPort, defaultPort);
+        }
+        else
+        {
+            auto port = std::stoul(ipPort.substr(pos + 1));
+            if (port > std::numeric_limits<uint16_t>::max())
+            {
+                throw std::invalid_argument("Invalid host name: " + ipPort);
+            }
+
+            return createIp4(ipPort.substr(0, pos), port);
+        }
+    }
+
     static Address createIp4(const std::string& ip, uint16_t port)
     {
         Address addr;
@@ -827,11 +846,22 @@ public:
         auto buf = uv_buf_init(const_cast<char*>(&message[0]), static_cast<int32_t>(message.size()));
         checkRc(uv_udp_send(&context->handle, get(), &buf, 1, reinterpret_cast<const sockaddr*>(addr.get()), [] (uv_udp_send_t* req, int status) {
             std::unique_ptr<ContextData> contextPtr(reinterpret_cast<ContextData*>(req));
-            assert(contextPtr->cb);
-            contextPtr->cb(status);
+            if (contextPtr->cb)
+            {
+                contextPtr->cb(status);
+            }
         }));
 
         context.release();
+    }
+    
+    Address getSocketName() const
+    {
+        sockaddr_storage addr;
+        int namelen = sizeof(sockaddr_storage);
+        checkRc(uv_udp_getsockname(get(), reinterpret_cast<sockaddr*>(&addr), &namelen));
+
+        return Address::create(addr, namelen);
     }
 
 private:
