@@ -29,7 +29,7 @@ class ActionResponse
 public:
     ActionResponse(const std::string& name, ServiceType serviceType);
     ActionResponse(const ActionResponse&) = delete;
-    ActionResponse(ActionResponse&& other);
+    ActionResponse(ActionResponse&&);
     ~ActionResponse();
 
     void addArgument(const std::string& name, const std::string& value);
@@ -40,7 +40,7 @@ public:
     const char* getServiceTypeUrn() const;
     ServiceType getServiceType() const;
 
-    bool operator==(const ActionResponse& other) const;
+    bool operator==(const ActionResponse&) const;
 
 private:
     struct Pimpl;

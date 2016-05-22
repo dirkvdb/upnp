@@ -30,6 +30,15 @@
 namespace upnp
 {
 
+struct EnumClassHash
+{
+    template <typename T>
+    constexpr std::size_t operator()(T t) const
+    {
+        return static_cast<std::size_t>(t);
+    }
+};
+
 class Resource
 {
 public:
@@ -82,6 +91,9 @@ inline std::ostream& operator<< (std::ostream& os, const Resource& res)
 class Item
 {
 public:
+    template <typename EnumType, typename ValueType>
+    using enummap = std::unordered_map<EnumType, ValueType, EnumClassHash>;
+
     explicit Item(const std::string& id = "", const std::string& title = "");
     Item(const Item& other) = default;
     Item(Item&& other) = default;
@@ -101,7 +113,7 @@ public:
     std::string getAlbumArtUri(dlna::ProfileId profile) const;
 
     const std::vector<Resource>& getResources() const;
-    const std::unordered_map<dlna::ProfileId, std::string>& getAlbumArtUris() const;
+    const enummap<dlna::ProfileId, std::string>& getAlbumArtUris() const;
 
     uint32_t getChildCount() const;
     Class getClass() const;
@@ -124,7 +136,7 @@ public:
 
     const std::string& getMetaData(Property prop) const;
     const std::string& getMetaData(const std::string& prop) const;
-    std::unordered_map<Property, std::string> getMetaData() const;
+    enummap<Property, std::string> getMetaData() const;
 
     friend std::ostream& operator<< (std::ostream& os, const Item& matrix);
 
@@ -135,9 +147,9 @@ private:
 
     bool                                                m_restricted;
 
-    std::unordered_map<Property, std::string>           m_metaData;
+    enummap<Property, std::string>                      m_metaData;
     std::unordered_map<std::string, std::string>        m_unknownMetaData;
-    std::unordered_map<dlna::ProfileId, std::string>    m_albumArtUris;
+    enummap<dlna::ProfileId, std::string>               m_albumArtUris;
 
     std::vector<Resource>                               m_resources;
     uint32_t                                            m_childCount;

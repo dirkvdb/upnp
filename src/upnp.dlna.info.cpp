@@ -19,11 +19,11 @@ namespace upnp
 using namespace dlna;
 
 static constexpr EnumMap<ProfileId> s_profileIdNames {{
-    { "JPEG_TN", ProfileId::JpegThumbnail },
-    { "JPEG_SM", ProfileId::JpegSmall },
-    { "JPEG_MED", ProfileId::JpegMedium },
-    { "JPEG_LRG", ProfileId::JpegLarge },
-    { "PNG_TN", ProfileId::PngThumbnail },
+    std::make_tuple("JPEG_TN",  ProfileId::JpegThumbnail),
+    std::make_tuple("JPEG_SM",  ProfileId::JpegSmall),
+    std::make_tuple("JPEG_MED", ProfileId::JpegMedium),
+    std::make_tuple("JPEG_LRG", ProfileId::JpegLarge),
+    std::make_tuple("PNG_TN",   ProfileId::PngThumbnail),
 }};
 
 ADD_ENUM_MAP(ProfileId, s_profileIdNames)

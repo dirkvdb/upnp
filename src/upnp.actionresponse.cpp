@@ -70,7 +70,7 @@ ActionResponse::ActionResponse(const std::string& name, ServiceType serviceType)
     m_pimpl->doc.append_node(env);
 }
 
-ActionResponse::ActionResponse(ActionResponse&& other) = default;
+ActionResponse::ActionResponse(ActionResponse&&) = default;
 
 ActionResponse::~ActionResponse() = default;
 

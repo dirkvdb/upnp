@@ -226,7 +226,7 @@ const std::vector<Resource>& Item::getResources() const
     return m_resources;
 }
 
-const std::unordered_map<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
+const Item::enummap<dlna::ProfileId, std::string>& Item::getAlbumArtUris() const
 {
     return m_albumArtUris;
 }
@@ -384,7 +384,7 @@ const std::string& Item::getMetaData(const std::string& prop) const
     return s_emptyString;
 }
 
-std::unordered_map<Property, std::string> Item::getMetaData() const
+Item::enummap<Property, std::string> Item::getMetaData() const
 {
     return m_metaData;
 }
