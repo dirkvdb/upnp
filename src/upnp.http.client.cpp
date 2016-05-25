@@ -26,7 +26,7 @@
 
 #include "upnp.soap.parseutils.h"
 
-#include "string_span.h"
+#include "stringview.h"
 
 using namespace utils;
 
@@ -311,7 +311,7 @@ size_t getSubscribeHeaders(char* buffer, size_t size, size_t nitems, void* userd
         return dataSize;
     }
 
-    gsl::cstring_span<> header(buffer, dataSize);
+    std::string_view header(buffer, dataSize);
     auto iter = std::find(header.begin(), header.end(), ':');
     if (iter == header.end())
     {

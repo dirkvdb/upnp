@@ -18,6 +18,7 @@
 
 #include <array>
 #include <tuple>
+#include <algorithm>
 #include <type_traits>
 
 #include "upnp/upnptypes.h"
