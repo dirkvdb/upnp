@@ -191,8 +191,7 @@ void Server::respondToSearch(const std::string& /*host*/, const std::string& sea
     {
         //log::info("Search request: {} {} {}", host, searchTarget, delay.count());
 
-        if (searchTarget == "ssdp:all" ||
-            searchTarget == "upnp:rootdevice")
+        if (isResponseNeeded(searchTarget))
         {
             auto response = std::make_shared<std::string>(fmt::format(s_searchResponse, m_device.location, searchTarget, m_device.udn));
 
@@ -229,6 +228,31 @@ void Server::sendResponse(std::shared_ptr<std::string> response, std::shared_ptr
     });
 
     timer.reset();
+}
+
+bool Server::isResponseNeeded(const std::string& searchTarget)
+{
+    if (searchTarget == "ssdp:all" ||
+        searchTarget == "upnp:rootdevice" ||
+        m_device.udn == searchTarget)
+    {
+        return true;
+    }
+
+    auto deviceType = deviceTypeFromString(searchTarget);
+    if (deviceType.type != DeviceType::Unknown)
+    {
+        return (m_device.type.type == deviceType.type && m_device.type.version >= deviceType.version);
+    }
+
+    auto serviceType = serviceTypeUrnStringToService(searchTarget);
+    auto iter = m_device.services.find(serviceType.type);
+    if (iter != m_device.services.end())
+    {
+        return (iter->second.type.type == serviceType.type && iter->second.type.version >= serviceType.version);
+    }
+
+    return false;
 }
 
 }

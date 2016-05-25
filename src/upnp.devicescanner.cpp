@@ -144,7 +144,7 @@ void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void
 
 void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 {
-    auto deviceType = stringToDeviceType(info.deviceType);
+    auto deviceType = deviceTypeFromString(info.deviceType);
     auto typeIter = m_types.find(deviceType);
     if (typeIter == m_types.end() || deviceType.version < typeIter->version)
     {

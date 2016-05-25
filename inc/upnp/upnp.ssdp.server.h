@@ -33,6 +33,8 @@ private:
     void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const uv::Address& addr);
     void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<uv::Timer> timer, const uv::Address& addr);
 
+    bool isResponseNeeded(const std::string& searchTarget);
+
     uv::Loop& m_loop;
     uv::Timer m_timer;
     uv::socket::Udp m_socket;

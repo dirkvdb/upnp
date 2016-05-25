@@ -73,14 +73,14 @@ static std::array<const char*, 3> InternetGatewayDeviceTypeUrn {{
     InternetGatewayDeviceTypeUrnBase "3"
 }};
 
-const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
-const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
-const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
-const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
+static const char* RenderingControlServiceIdUrn        = "urn:upnp-org:serviceId:RenderingControl";
+static const char* ConnectionManagerServiceIdUrn       = "urn:upnp-org:serviceId:ConnectionManager";
+static const char* AVTransportServiceIdUrn             = "urn:upnp-org:serviceId:AVTransport";
+static const char* ContentDirectoryServiceIdUrn        = "urn:upnp-org:serviceId:ContentDirectory";
 
-const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
-const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
-const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
+static const char* RenderingControlServiceMetadataUrn  = "urn:schemas-upnp-org:metadata-1-0/RCS/";
+static const char* ConnectionManagerServiceMetadataUrn = "urn:schemas-upnp-org:metadata-1-0/CMS/";
+static const char* AVTransportServiceMetadataUrn       = "urn:schemas-upnp-org:metadata-1-0/AVT/";
 
 static constexpr EnumMap<Property> s_propertyNames {{
     std::make_tuple("id",                         Property::Id),
@@ -198,7 +198,7 @@ const char* deviceTypeToString(DeviceType type)
     else throw std::invalid_argument("Invalid device type received for urn");
 }
 
-DeviceType stringToDeviceType(const std::string& value)
+DeviceType deviceTypeFromString(const std::string& value)
 {
     DeviceType result;
 

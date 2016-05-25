@@ -24,7 +24,7 @@ public:
     {
         Device dev;
         dev.location = "http://localhost/";
-        dev.type = DeviceType(DeviceType::MediaRenderer, 1);
+        dev.type = DeviceType(DeviceType::MediaRenderer, 2);
         dev.udn = "uuid:55076f6e-6b79-1d65-a4eb-00089be34072";
 
         Service svc;
@@ -32,7 +32,7 @@ public:
         svc.type = ServiceType(ServiceType::ConnectionManager, 1);
         dev.services.emplace(svc.type.type, svc);
 
-        svc.type = ServiceType(ServiceType::RenderingControl, 1);
+        svc.type = ServiceType(ServiceType::RenderingControl, 2);
         dev.services.emplace(svc.type.type, svc);
 
         server.run(dev);
@@ -55,7 +55,7 @@ public:
     std::string localIp;
 };
 
-TEST_F(SsdpServerTest, ServerSearchMulticast)
+TEST_F(SsdpServerTest, SearchRootDeviceMulticast)
 {
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
@@ -70,7 +70,7 @@ TEST_F(SsdpServerTest, ServerSearchMulticast)
     loop.run(uv::RunMode::Default);
 }
 
-TEST_F(SsdpServerTest, ServerSearchUnicast)
+TEST_F(SsdpServerTest, SearchRootDeviceUnicast)
 {
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
@@ -85,6 +85,95 @@ TEST_F(SsdpServerTest, ServerSearchUnicast)
     loop.run(uv::RunMode::Default);
 }
 
+TEST_F(SsdpServerTest, SearchAllUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("ssdp:all", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SearchDeviceTypeUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("urn:schemas-upnp-org:device:MediaRenderer:2", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SearchDeviceTypeSmallerVersionUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("urn:schemas-upnp-org:device:MediaRenderer:1", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SearchServiceUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("urn:schemas-upnp-org:service:RenderingControl:2", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SearchServiceSmallerVersionUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("urn:schemas-upnp-org:service:RenderingControl:1", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
+
+TEST_F(SsdpServerTest, SearchDeviceUuidVersionUnicast)
+{
+    client.setDeviceNotificationCallback([&] (auto&& msg) {
+        if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
+        {
+            uv::stopLoopAndCloseRequests(loop);
+        }
+    });
+
+    client.run();
+    client.search("uuid:55076f6e-6b79-1d65-a4eb-00089be34072", localIp.c_str());
+
+    loop.run(uv::RunMode::Default);
+}
 
 }
 }

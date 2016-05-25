@@ -24,15 +24,6 @@
 namespace upnp
 {
 
-extern const char* RenderingControlServiceIdUrn;
-extern const char* ConnectionManagerServiceIdUrn;
-extern const char* AVTransportServiceIdUrn;
-extern const char* ContentDirectoryServiceIdUrn;
-
-extern const char* RenderingControlServiceMetadataUrn;
-extern const char* ConnectionManagerServiceMetadataUrn;
-extern const char* AVTransportServiceMetadataUrn;
-
 enum class ErrorCode
 {
     Success,
@@ -104,8 +95,9 @@ struct ServiceType
     constexpr ServiceType() = default;
     constexpr ServiceType(Type t, uint32_t v) : type(t), version(v) {}
 
-    bool operator==(const ServiceType& other) const { return type == other.type; }
-    bool operator<(const ServiceType& other) const { return type < other.type; }
+    bool operator==(const ServiceType& other) const noexcept { return type == other.type; }
+    bool operator!=(const ServiceType& other) const noexcept { return type != other.type; }
+    bool operator<(const ServiceType& other) const noexcept { return type < other.type; }
 
 
     Type      type = Unknown;
@@ -199,7 +191,7 @@ ServiceType serviceTypeUrnStringToService(const std::string& type);
 ServiceType::Type serviceIdUrnStringToService(const std::string& type);
 
 const char* deviceTypeToString(DeviceType type);
-DeviceType stringToDeviceType(const std::string& type);
+DeviceType deviceTypeFromString(const std::string& type);
 
 inline std::ostream& operator<<(std::ostream& os, const Status s)
 {

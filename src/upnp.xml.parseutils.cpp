@@ -350,7 +350,7 @@ void parseDeviceInfo(const std::string& xml, Device& device)
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
     device.udn            = requiredChildValue(deviceNode, "UDN");
-    device.type           = stringToDeviceType(requiredChildValue(deviceNode, "deviceType"));
+    device.type           = deviceTypeFromString(requiredChildValue(deviceNode, "deviceType"));
     device.friendlyName   = requiredChildValue(deviceNode, "friendlyName");
     device.baseURL        = optionalChildValue(deviceNode, "URLBase");
 
