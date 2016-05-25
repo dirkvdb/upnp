@@ -10,9 +10,19 @@
 #include <functional>
 #include <system_error>
 
+#include <experimental/optional>
+
 #include <uv.h>
 #include "utils/log.h"
 #include "upnp/upnp.flags.h"
+
+namespace std
+{
+
+template <typename T>
+using optional = std::experimental::optional<T>;
+
+}
 
 namespace upnp
 {
@@ -623,7 +633,7 @@ public:
         return addr;
     }
 
-    static Address createIp4(sockaddr_in address)
+    static Address createIp4(const sockaddr_in& address)
     {
         Address addr;
         addr.m_address.address4 = address;
@@ -800,28 +810,40 @@ public:
         checkRc(uv_udp_set_ttl(get(), ttl));
     }
 
-    void recv(std::function<void(std::string)> cb)
+    void recv(std::function<void(int32_t status, std::string, std::optional<uv::Address>)> cb)
     {
         m_recvCb = std::move(cb);
 
-        checkRc(uv_udp_recv_start(get(), allocateBuffer, [] (uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* /*addr*/, unsigned /*flags*/){
+        checkRc(uv_udp_recv_start(get(), allocateBuffer, [] (uv_udp_t* req, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned /*flags*/){
             auto* instance = reinterpret_cast<Udp*>(req->data);
+
+            std::optional<uv::Address> ad;
 
             if (nread < 0)
             {
                 utils::log::error("Read error: {}", uv_err_name(static_cast<int>(nread)));
                 free(buf->base);
+                instance->m_recvCb(static_cast<int32_t>(nread), "", ad);
                 return;
             }
 
             if (nread == 0)
             {
                 free(buf->base);
-                instance->m_recvCb("");
+
+                if (addr != nullptr)
+                {
+                    // empty udp message received
+                    ad = uv::Address::createIp4(*reinterpret_cast<const sockaddr_in*>(addr));
+                }
+                // else notthing to read from socket
+
+                instance->m_recvCb(0, "", ad);
                 return;
             }
 
-            instance->m_recvCb(std::string(buf->base, nread));
+            ad = uv::Address::createIp4(*reinterpret_cast<const sockaddr_in*>(addr));
+            instance->m_recvCb(0, std::string(buf->base, nread), ad);
             free(buf->base);
         }));
     }
@@ -854,7 +876,7 @@ public:
 
         context.release();
     }
-    
+
     Address getSocketName() const
     {
         sockaddr_storage addr;
@@ -865,7 +887,7 @@ public:
     }
 
 private:
-    std::function<void(std::string)>    m_recvCb;
+    std::function<void(int32_t, std::string, std::optional<uv::Address>)> m_recvCb;
 };
 
 enum class TcpFlag : uint32_t

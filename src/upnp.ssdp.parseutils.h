@@ -165,17 +165,15 @@ public:
         m_parser.setHeadersCompletedCallback([this] () { parseData(); });
     }
 
-    void setSearchRequestCallback(std::function<void(const std::string& host, const std::string& searchTarget, std::chrono::seconds)> cb) noexcept
+    void setSearchRequestCallback(std::function<void(const std::string& host, const std::string& searchTarget, std::chrono::seconds, const uv::Address& addr)> cb) noexcept
     {
         m_cb = std::move(cb);
     }
 
-    size_t parse(const std::string& data)
+    size_t parse(const std::string& data, const uv::Address& addr)
     {
-        if (data.empty())
-        {
-            return 0;
-        }
+        assert(!data.empty());
+        m_address = addr;
 
         auto size = m_parser.parse(data);
         if (m_parser.getFlags().isSet(http::Parser::Flag::ConnectionClose))
@@ -210,8 +208,10 @@ private:
                     // mx value is only present for multicast search
                     // unicast search response should be sent as fast as possible
                     auto mx = m_parser.headerValue("MX");
-                    auto delay = std::chrono::seconds(mx.empty() ? 0 : std::stoi(mx));
-                    m_cb(m_parser.headerValue("HOST"), m_parser.headerValue("ST"), delay);
+
+                    // MX values bigger then 5 are reduced back to 5
+                    auto delay = std::chrono::seconds(mx.empty() ? 0 : std::min(5, std::stoi(mx)));
+                    m_cb(m_parser.headerValue("HOST"), m_parser.headerValue("ST"), delay, *m_address);
                 }
             }
         }
@@ -223,7 +223,8 @@ private:
     }
 
     http::Parser m_parser;
-    std::function<void(const std::string&, const std::string&, std::chrono::seconds)> m_cb;
+    std::optional<uv::Address> m_address;
+    std::function<void(const std::string&, const std::string&, std::chrono::seconds, const uv::Address&)> m_cb;
 };
 
 }

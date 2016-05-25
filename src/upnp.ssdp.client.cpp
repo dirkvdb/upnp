@@ -43,7 +43,12 @@ void Client::run(const std::string& address)
     m_socket.setMulticastTtl(4);
     m_socket.setMulticastLoop(true);
 
-    m_socket.recv([=] (const std::string& msg) {
+    m_socket.recv([=] (int32_t status, const std::string& msg, std::optional<uv::Address>) {
+        if (status < 0)
+        {
+            return;
+        }
+        
         try
         {
             if (!msg.empty())

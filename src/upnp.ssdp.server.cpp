@@ -67,10 +67,9 @@ Server::Server(uv::Loop& loop)
 : m_loop(loop)
 , m_timer(loop)
 , m_socket(loop)
-, m_responseSocket(loop)
 , m_parser(std::make_unique<SearchParser>())
 {
-    m_parser->setSearchRequestCallback([this] (auto& host, auto& st, auto delay) { this->respondToSearch(host, st, delay); });
+    m_parser->setSearchRequestCallback([this] (auto& host, auto& st, auto delay, auto& addr) { this->respondToSearch(host, st, delay, addr); });
 }
 
 Server::~Server() noexcept = default;
@@ -85,12 +84,17 @@ void Server::run(const Device& info)
     m_socket.setMulticastTtl(2);
     m_socket.setMemberShip(s_ssdpIp, uv::socket::Udp::MemberShip::JoinGroup);
 
-    m_socket.recv([=] (const std::string& msg) {
+    m_socket.recv([=] (int32_t status, const std::string& msg, std::optional<uv::Address> addr) {
+        if (status < 0)
+        {
+            return;
+        }
+
         try
         {
             if (!msg.empty())
             {
-                auto parsed = m_parser->parse(msg);
+                auto parsed = m_parser->parse(msg, *addr);
                 assert(parsed == msg.size());
                 if (parsed != msg.size())
                 {
@@ -136,7 +140,6 @@ void Server::run(const Device& info)
 
 void Server::stop(std::function<void()> cb)
 {
-    m_responseSocket.close(nullptr);
     announceDeviceStop([this, cb] (int32_t) {
         m_socket.close(cb);
     });
@@ -182,30 +185,50 @@ void Server::announceDeviceStop(std::function<void(int32_t)> cb)
     m_socket.send(s_ssdpAddressIpv4, m_byebyeMessages.back(), cb);
 }
 
-void Server::respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay)
+void Server::respondToSearch(const std::string& /*host*/, const std::string& searchTarget, std::chrono::seconds delay, const uv::Address& addr)
 {
     try
     {
         //log::info("Search request: {} {} {}", host, searchTarget, delay.count());
 
-        auto addr = uv::Address::createIp4FromHost(host, s_ssdpPort);
-
         if (searchTarget == "ssdp:all" ||
             searchTarget == "upnp:rootdevice")
         {
             auto response = std::make_shared<std::string>(fmt::format(s_searchResponse, m_device.location, searchTarget, m_device.udn));
-            m_socket.send(addr, *response, [response] (int32_t status) {
-                if (status < 0)
-                {
-                    log::warn("Failed to send search response: {}", uv::getErrorString(status));
-                }
-            });
+
+            if (delay.count() > 0)
+            {
+                auto timer = std::make_shared<uv::Timer>(m_loop);
+                static std::default_random_engine re;
+                std::uniform_int_distribution<> dis(0, std::chrono::duration_cast<std::chrono::milliseconds>(delay).count());
+                auto wait = std::chrono::milliseconds(dis(re));
+
+                timer->start(wait, [=] () {
+                    sendResponse(response, timer, addr);
+                });
+            }
+            else
+            {
+                sendResponse(response, nullptr, addr);
+            }
         }
     }
     catch (const std::exception& e)
     {
         log::warn("Failed to interpret ssdp search request: {}", e.what());
     }
+}
+
+void Server::sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<uv::Timer> timer, const uv::Address& addr)
+{
+    m_socket.send(addr, *response, [response] (int32_t status) {
+        if (status < 0)
+        {
+            log::warn("Failed to send search response: {}", uv::getErrorString(status));
+        }
+    });
+
+    timer.reset();
 }
 
 }

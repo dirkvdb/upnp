@@ -30,12 +30,12 @@ private:
     void announceDevice();
     void announceDeviceStop(std::function<void(int32_t)> cb);
 
-    void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay);
+    void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const uv::Address& addr);
+    void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<uv::Timer> timer, const uv::Address& addr);
 
     uv::Loop& m_loop;
     uv::Timer m_timer;
     uv::socket::Udp m_socket;
-    uv::socket::Udp m_responseSocket; // socket for unicast responses
     std::unique_ptr<SearchParser> m_parser;
 
     std::vector<std::string> m_announceMessages;
