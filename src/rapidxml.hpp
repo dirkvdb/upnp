@@ -14,7 +14,7 @@
     #include <vector>
 #endif
 
-#include "gsl/string_span.h"
+#include "stringview.h"
 
 // On MSVC, disable "conditional expression is constant" warning (level 4).
 // This warning is almost impossible to avoid with certain types of templated code
@@ -946,9 +946,9 @@ namespace rapidxml_ns
             return m_value ? std::string(m_value, m_value_size) : std::string();
         }
 
-        gsl::cstring_span<> value_span() const
+        std::string_view value_view() const
         {
-            return gsl::cstring_span<>(m_value, m_value_size);
+            return std::string_view(m_value, m_value_size);
         }
 
         //! Gets size of node value, not including terminator character.

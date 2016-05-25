@@ -185,8 +185,8 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(S
                 connInfo.protocolInfo               = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
                 connInfo.peerConnectionManager      = rootNode.first_node_ref("PeerConnectionManager").value_string();
                 connInfo.peerConnectionId           = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
-                connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_span());
-                connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_span());
+                connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_view());
+                connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
             }
             catch(std::exception& e)
             {

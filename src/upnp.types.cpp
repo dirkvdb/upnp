@@ -167,7 +167,7 @@ int32_t errorCodeToInt(ErrorCode code)
 
 Property propertyFromString(const char* data, size_t size)
 {
-    return enum_cast<Property>(gsl::cstring_span<>(data, size));
+    return enum_cast<Property>(std::string_view(data, size));
 }
 
 Property propertyFromString(const std::string& value)

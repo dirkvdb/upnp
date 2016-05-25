@@ -17,18 +17,18 @@
 #pragma once
 
 #include "upnp/upnp.renderingcontrol.types.h"
-#include "gsl/string_span.h"
+#include "stringview.h"
 
 namespace upnp
 {
 namespace RenderingControl
 {
 
-Action actionFromString(gsl::cstring_span<> value);
+Action actionFromString(std::string_view value);
 const char* toString(Action action);
-Variable variableFromString(gsl::cstring_span<> value);
+Variable variableFromString(std::string_view value);
 const char* toString(Variable var);
-Channel channelFromString(gsl::cstring_span<> value);
+Channel channelFromString(std::string_view value);
 const char* toString(Channel channel);
 
 }

@@ -17,31 +17,31 @@
 #pragma once
 
 #include "upnp/upnp.avtransport.types.h"
-#include "gsl/string_span.h"
+#include "stringview.h"
 
 namespace upnp
 {
 namespace AVTransport
 {
 
-Action actionFromString(gsl::cstring_span<> value);
+Action actionFromString(std::string_view value);
 const char* actionToString(Action action);
-Variable variableFromString(gsl::cstring_span<> value);
+Variable variableFromString(std::string_view value);
 const char* variableToString(Variable var);
-State stateFromString(gsl::cstring_span<> value);
-PlaylistType playlistTypeFromString(gsl::cstring_span<> value);
-PlaylistStep playlistStepFromString(gsl::cstring_span<> value);
+State stateFromString(std::string_view value);
+PlaylistType playlistTypeFromString(std::string_view value);
+PlaylistStep playlistStepFromString(std::string_view value);
 const char* toString(State state);
 const char* toString(CurrentMediaCategory state);
 const char* toString(DRMState state);
 const char* toString(PlaylistStep step);
 const char* toString(PlaylistType type);
 const char* toString(PlaylistState state);
-Status statusFromString(gsl::cstring_span<> value);
+Status statusFromString(std::string_view value);
 const char* toString(Status status);
-SeekMode seekModeFromString(gsl::cstring_span<> value);
+SeekMode seekModeFromString(std::string_view value);
 const char* toString(SeekMode mode);
-PlayMode playModeFromString(gsl::cstring_span<> value);
+PlayMode playModeFromString(std::string_view value);
 const char* toString(PlayMode mode);
 
 }

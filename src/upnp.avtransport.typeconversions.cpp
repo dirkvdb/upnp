@@ -203,7 +203,7 @@ ADD_ENUM_MAP(AVTransport::Status, s_statusNames)
 ADD_ENUM_MAP(PlayMode, s_playModeNames)
 ADD_ENUM_MAP(SeekMode, s_seekModeNames)
 
-Action AVTransport::actionFromString(gsl::cstring_span<> value)
+Action AVTransport::actionFromString(std::string_view value)
 {
     return enum_cast<Action>(value);
 }
@@ -213,7 +213,7 @@ const char* AVTransport::actionToString(Action value)
     return enum_string(value);
 }
 
-Variable AVTransport::variableFromString(gsl::cstring_span<> value)
+Variable AVTransport::variableFromString(std::string_view value)
 {
     return enum_cast<Variable>(value);
 }
@@ -223,17 +223,17 @@ const char* AVTransport::variableToString(Variable value)
     return enum_string(value);
 }
 
-State AVTransport::stateFromString(gsl::cstring_span<> value)
+State AVTransport::stateFromString(std::string_view value)
 {
     return enum_cast<State>(value);
 }
 
-PlaylistType AVTransport::playlistTypeFromString(gsl::cstring_span<> value)
+PlaylistType AVTransport::playlistTypeFromString(std::string_view value)
 {
     return enum_cast<PlaylistType>(value);
 }
 
-PlaylistStep AVTransport::playlistStepFromString(gsl::cstring_span<> value)
+PlaylistStep AVTransport::playlistStepFromString(std::string_view value)
 {
     return enum_cast<PlaylistStep>(value);
 }
@@ -268,7 +268,7 @@ const char* AVTransport::toString(PlaylistState value)
     return enum_string(value);
 }
 
-AVTransport::Status AVTransport::statusFromString(gsl::cstring_span<> value)
+AVTransport::Status AVTransport::statusFromString(std::string_view value)
 {
     return enum_cast<AVTransport::Status>(value);
 }
@@ -278,7 +278,7 @@ const char* AVTransport::toString(AVTransport::Status value)
     return enum_string(value);
 }
 
-SeekMode AVTransport::seekModeFromString(gsl::cstring_span<> value)
+SeekMode AVTransport::seekModeFromString(std::string_view value)
 {
     return enum_cast<SeekMode>(value);
 }
@@ -288,7 +288,7 @@ const char* AVTransport::toString(SeekMode value)
     return enum_string(value);
 }
 
-PlayMode AVTransport::playModeFromString(gsl::cstring_span<> value)
+PlayMode AVTransport::playModeFromString(std::string_view value)
 {
     return enum_cast<PlayMode>(value);
 }

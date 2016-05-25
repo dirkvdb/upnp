@@ -22,7 +22,7 @@
 
 #include "upnp/upnptypes.h"
 
-#include "gsl/string_span.h"
+#include "stringview.h"
 
 namespace upnp
 {
@@ -68,7 +68,7 @@ namespace details
 {
 
 template <typename EnumType>
-EnumType enum_cast(const gsl::cstring_span<>& span)
+EnumType enum_cast(const std::string_view& span)
 {
     auto& l = lut<EnumType>();
     auto iter = std::find_if(l.begin(), l.end(), [&] (auto& entry) {
@@ -81,19 +81,19 @@ EnumType enum_cast(const gsl::cstring_span<>& span)
 }
 
 template <typename EnumType>
-IfEndsWithCount<EnumType> enum_cast(const gsl::cstring_span<>& span)
+IfEndsWithCount<EnumType> enum_cast(const std::string_view& span)
 {
     auto value = details::enum_cast<EnumType>(span);
     if (value == EnumType::EnumCount)
     {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), gsl::to_string(span));
+        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), span.to_string());
     }
 
     return value;
 }
 
 template <typename EnumType>
-IfEndsWithUnknown<EnumType> enum_cast(const gsl::cstring_span<>& span)
+IfEndsWithUnknown<EnumType> enum_cast(const std::string_view& span)
 {
     return details::enum_cast<EnumType>(span);
 }

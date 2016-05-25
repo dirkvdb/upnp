@@ -206,13 +206,13 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Sta
                 auto* child = responseNode.first_node("CurrentTransportState");
                 if (child)
                 {
-                    info.currentTransportState = stateFromString(child->value_span());
+                    info.currentTransportState = stateFromString(child->value_view());
                 }
 
                 child = responseNode.first_node("CurrentTransportStatus");
                 if (child)
                 {
-                    info.currentTransportStatus = statusFromString(child->value_span());
+                    info.currentTransportStatus = statusFromString(child->value_view());
                 }
 
                 child = responseNode.first_node("CurrentSpeed");

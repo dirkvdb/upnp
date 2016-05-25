@@ -17,24 +17,23 @@
 #pragma once
 
 #include "upnp/upnp.connectionmanager.types.h"
-
-#include "gsl/string_span.h"
+#include "stringview.h"
 
 namespace upnp
 {
 namespace ConnectionManager
 {
 
-Action actionFromString(gsl::cstring_span<> value);
+Action actionFromString(std::string_view value);
 const char* toString(Action action) noexcept;
 
-Variable variableFromString(gsl::cstring_span<> value);
+Variable variableFromString(std::string_view value);
 const char* toString(Variable var) noexcept;
 
-ConnectionStatus connectionStatusFromString(gsl::cstring_span<> value);
+ConnectionStatus connectionStatusFromString(std::string_view value);
 const char* toString(ConnectionStatus status) noexcept;
 
-Direction directionFromString(gsl::cstring_span<> value);
+Direction directionFromString(std::string_view value);
 const char* toString(Direction direction) noexcept;
 
 
