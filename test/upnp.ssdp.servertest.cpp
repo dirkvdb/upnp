@@ -35,7 +35,7 @@ public:
         svc.type = ServiceType(ServiceType::RenderingControl, 2);
         dev.services.emplace(svc.type.type, svc);
 
-        server.run(dev);
+        server.run(dev, 1800s);
 
         for (auto& intf : uv::getNetworkInterfaces())
         {

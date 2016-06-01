@@ -21,7 +21,7 @@ public:
     Server(uv::Loop& loop);
     ~Server() noexcept;
 
-    void run(const Device& info);
+    void run(const Device& info, std::chrono::seconds announceInterval);
     void stop(std::function<void()> cb);
 
 private:
@@ -37,6 +37,7 @@ private:
 
     uv::Loop& m_loop;
     uv::Timer m_timer;
+    uv::Timer m_announceTimer;
     uv::socket::Udp m_socket;
     std::unique_ptr<SearchParser> m_parser;
 

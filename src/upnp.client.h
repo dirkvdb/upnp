@@ -67,7 +67,7 @@ private:
 
     std::unique_ptr<std::thread> m_thread;
     std::unique_ptr<uv::Loop> m_loop;
-    http::Client m_httpClient;
+    std::unique_ptr<http::Client> m_httpClient;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;
 };

@@ -13,6 +13,7 @@ namespace ssdp
 {
 
 using namespace utils;
+using namespace std::chrono_literals;
 
 static const char* s_ssdpIp = "239.255.255.250";
 static const std::string s_anyAddress = "0.0.0.0";
@@ -66,6 +67,7 @@ namespace
 Server::Server(uv::Loop& loop)
 : m_loop(loop)
 , m_timer(loop)
+, m_announceTimer(loop)
 , m_socket(loop)
 , m_parser(std::make_unique<SearchParser>())
 {
@@ -74,7 +76,7 @@ Server::Server(uv::Loop& loop)
 
 Server::~Server() noexcept = default;
 
-void Server::run(const Device& info)
+void Server::run(const Device& info, std::chrono::seconds announceInterval)
 {
     m_device = info;
 
@@ -135,11 +137,14 @@ void Server::run(const Device& info)
         m_byebyeMessages.emplace_back(fmt::format(s_byebyeNotification, serviceTypeToUrnTypeString(svc.second.type), info.udn));
     }
 
-    announceDevice();
+    m_announceTimer.start(0ms, announceInterval, [this] () {
+        announceDevice();
+    });
 }
 
 void Server::stop(std::function<void()> cb)
 {
+    m_announceTimer.stop();
     announceDeviceStop([this, cb] (int32_t) {
         m_socket.close(cb);
     });

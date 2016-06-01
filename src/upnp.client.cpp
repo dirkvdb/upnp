@@ -49,7 +49,6 @@ Status httpStatusToStatus(int32_t httpStatus)
 
 Client2::Client2()
 : m_loop(std::make_unique<uv::Loop>())
-, m_httpClient(*m_loop)
 {
 }
 
@@ -64,21 +63,14 @@ void Client2::initialize()
 void Client2::initialize(const std::string& interfaceName, uint16_t port)
 {
     log::debug("Initializing UPnP SDK");
-    for (auto& intf : uv::getNetworkInterfaces())
-    {
-        if (intf.isIpv4() && intf.name == interfaceName)
-        {
-            auto addr = uv::Address::createIp4(intf.address.address4);
-            addr.setPort(port);
-            return initialize(addr);
-        }
-    }
-
-    throw std::runtime_error("Could not find network interface with name: " + interfaceName);
+    auto addr = uv::Address::createIp4(interfaceName);
+    addr.setPort(port);
+    return initialize(addr);
 }
 
 void Client2::initialize(const uv::Address& addr)
 {
+    m_httpClient = std::make_unique<http::Client>(*m_loop);
     m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
         auto iter = m_eventCallbacks.find(ev.sid);
         if (iter != m_eventCallbacks.end())
@@ -103,6 +95,7 @@ void Client2::uninitialize()
 {
     log::debug("Uninitializing UPnP SDK");
     uv::asyncSend(*m_loop, [&] () {
+        m_httpClient.reset();
         m_eventServer->stop([this] () {
             m_eventServer.reset();
             stopLoopAndCloseRequests(*m_loop);
@@ -138,7 +131,7 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
-        m_httpClient.subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
             //log::debug("Subscribe response: {}", response);
 
             if (cb)
@@ -165,7 +158,7 @@ void Client2::renewSubscription(const std::string& publisherUrl,
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
-        m_httpClient.renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
             //log::debug("Subscription renewal response: {}", response);
 
             if (cb)
@@ -179,7 +172,7 @@ void Client2::renewSubscription(const std::string& publisherUrl,
 void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
     uv::asyncSend(*m_loop, [=] () {
-        m_httpClient.unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
+        m_httpClient->unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
 //#endif
@@ -200,7 +193,7 @@ void Client2::sendAction(const Action& action, std::function<void(Status, std::s
 #endif
 
     uv::asyncSend(*m_loop, [this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
-        m_httpClient.soapAction(url, name, urn, env, [cb] (int32_t status, std::string response) {
+        m_httpClient->soapAction(url, name, urn, env, [cb] (int32_t status, std::string response) {
             cb(httpStatusToStatus(status), std::move(response));
         });
     });
@@ -212,7 +205,7 @@ void Client2::sendAction(const Action& action, std::function<void(Status, std::s
 
 void Client2::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
-    m_httpClient.get(url, [cb] (int32_t status, std::string contents) {
+    m_httpClient->get(url, [cb] (int32_t status, std::string contents) {
         cb(httpStatusToStatus(status), std::move(contents));
     });
 }

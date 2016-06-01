@@ -39,6 +39,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.uvtest.cpp
     upnp.utilstest.cpp
     upnp.clienttest.cpp
+    upnp.rootdevicetest.cpp
     upnp.ssdp.clienttest.cpp
     upnp.ssdp.servertest.cpp
     upnp.ssdp.test.cpp

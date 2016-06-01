@@ -116,6 +116,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.protocolinfo.h                        src/upnp.protocolinfo.cpp
     inc/upnp/upnp.renderingcontrol.types.h
     inc/upnp/upnp.renderingcontrol.client.h             src/upnp.renderingcontrol.client.cpp
+    inc/upnp/upnp.rootdevice.h                          src/upnp.rootdevice.cpp
     inc/upnp/upnprenderingcontrolservice.h              src/upnprenderingcontrolservice.cpp
     inc/upnp/upnprootdevice.h                           src/upnprootdevice.cpp
     inc/upnp/upnprootdeviceinterface.h

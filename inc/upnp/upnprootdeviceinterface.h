@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 #include <upnp.h>
 
 #include "utils/signal.h"
@@ -25,6 +26,20 @@
 
 namespace upnp
 {
+
+struct SubscriptionRequest
+{
+    ServiceType serviceType;
+    std::string sid;
+    std::chrono::seconds timeout;
+};
+
+struct ActionRequest
+{
+    std::string serviceType;
+    std::string actionName;
+    std::string action;
+};
 
 class IRootDevice
 {
@@ -35,11 +50,18 @@ public:
     virtual void uninitialize() = 0;
 
     virtual std::string getUniqueDeviceName() = 0;
+
     virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response) = 0;
     virtual void notifyEvent(const std::string& serviceId, const xml::Document& event) = 0;
 
+    virtual void acceptSubscription(const std::string& /*serviceId*/, const std::string& /*subscriptionId*/, const std::string& /*response*/) {};
+    virtual void notifyEvent(const std::string& /*serviceId*/, const std::string& /*response*/) {};
+
     utils::Signal<Upnp_Action_Request*> ControlActionRequested;
     utils::Signal<Upnp_Subscription_Request*> EventSubscriptionRequested;
+
+    std::function<std::string(const SubscriptionRequest&)> EventSubscriptionRequested2;
+    std::function<std::string(const ActionRequest&)> ControlActionRequested2;
 };
 
 }

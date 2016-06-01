@@ -48,7 +48,10 @@ void allocateBuffer(uv_handle_t* /*handle*/, size_t suggestedSize, uv_buf_t* buf
 }
 
 class Loop;
+struct InterfaceInfo;
+
 void stopLoopAndCloseRequests(Loop& loop);
+std::vector<InterfaceInfo> getNetworkInterfaces();
 
 class Buffer
 {
@@ -597,6 +600,54 @@ private:
     std::function<void()>   m_callback;
 };
 
+struct InterfaceInfo
+{
+    std::string ipName() const
+    {
+        std::array<char, 512> ipName;
+        if (isIpv4())
+        {
+            checkRc(uv_ip4_name(&address.address4, ipName.data(), ipName.size()));
+        }
+        else if (isIpv6())
+        {
+            checkRc(uv_ip6_name(&address.address6, ipName.data(), ipName.size()));
+        }
+        else
+        {
+            throw std::runtime_error("Invalid address family");
+        }
+
+        return ipName.data();
+    }
+
+    bool isIpv4() const noexcept
+    {
+        return address.address4.sin_family == AF_INET;
+    }
+
+    bool isIpv6() const noexcept
+    {
+        return address.address4.sin_family == AF_INET6;
+    }
+
+    std::string         name;
+    std::array<char, 6> physicalAddress;
+    bool                isInternal;
+
+    union
+    {
+        struct sockaddr_in address4;
+        struct sockaddr_in6 address6;
+    } address;
+
+    union
+    {
+        struct sockaddr_in netmask4;
+        struct sockaddr_in6 netmask6;
+    } netmask;
+};
+
 class Address
 {
 public:
@@ -612,6 +663,19 @@ public:
         Address addr;
         addr.m_address.address4 = address;
         return addr;
+    }
+
+    static Address createIp4(const std::string& interfaceName)
+    {
+        for (auto& intf : getNetworkInterfaces())
+        {
+            if (intf.isIpv4() && intf.name == interfaceName)
+            {
+                return uv::Address::createIp4(intf.address.address4);
+            }
+        }
+        
+        throw std::runtime_error("Could not find network interface with name: " + interfaceName);
     }
 
     static Address createIp4FromHost(const std::string& ipPort, int16_t defaultPort)
@@ -935,54 +999,6 @@ inline void stopLoopAndCloseRequests(Loop& loop)
         loop.run(RunMode::Once);
     }
 }
-
-struct InterfaceInfo
-{
-    std::string ipName() const
-    {
-        std::array<char, 512> ipName;
-        if (isIpv4())
-        {
-            checkRc(uv_ip4_name(&address.address4, ipName.data(), ipName.size()));
-        }
-        else if (isIpv6())
-        {
-            checkRc(uv_ip6_name(&address.address6, ipName.data(), ipName.size()));
-        }
-        else
-        {
-            throw std::runtime_error("Invalid address family");
-        }
-
-        return ipName.data();
-    }
-
-    bool isIpv4() const noexcept
-    {
-        return address.address4.sin_family == AF_INET;
-    }
-
-    bool isIpv6() const noexcept
-    {
-        return address.address4.sin_family == AF_INET6;
-    }
-
-    std::string         name;
-    std::array<char, 6> physicalAddress;
-    bool                isInternal;
-
-    union
-    {
-        struct sockaddr_in address4;
-        struct sockaddr_in6 address6;
-    } address;
-
-    union
-    {
-        struct sockaddr_in netmask4;
-        struct sockaddr_in6 netmask6;
-    } netmask;
-};
 
 inline sockaddr_in createIp4Address(const std::string& ip, uint16_t port)
 {
