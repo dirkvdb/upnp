@@ -19,6 +19,14 @@ using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
+#ifdef __linux__
+static const std::string s_interface = "lo";
+#elif defined __APPLE__
+static const std::string s_interface = "lo0";
+#else
+static const std::string s_interface = "localhost";
+#endif
+
 static const std::string s_response =
     "HTTP/1.1 200 OK\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
@@ -26,7 +34,7 @@ static const std::string s_response =
     "CONTENT-TYPE: text/html\r\n"
     "\r\n"
     "Success";
-    
+
 static const std::string simpleRootDesc =
     "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
     "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
@@ -50,17 +58,17 @@ TEST(RootDeviceTest, ControlAction)
 {
     Client2 client;
     RootDevice2 device(1800s);
-    
+
     Device deviceInfo;
     deviceInfo.type = DeviceType(DeviceType::MediaRenderer, 1);
     deviceInfo.udn = "uuid:de5d6118-bfcb-918e-0000-00001eccef34";
-    
+
     DeviceScanner scanner(client, deviceInfo.type);
     DeviceCallbackMock mock;
-    
+
     client.initialize();
-    device.initialize("lo0");
-    
+    device.initialize(s_interface);
+
     deviceInfo.location = "/rootdesc.xml";
     device.registerDevice(fmt::format(simpleRootDesc, deviceInfo.udn, deviceInfo.location), deviceInfo);
 
@@ -80,7 +88,7 @@ TEST(RootDeviceTest, ControlAction)
 
         return s_response;
     }));
-    
+
     scanner.DeviceDiscoveredEvent.connect([&] (auto dev) {
         if (dev->udn == device.getUniqueDeviceName())
         {
@@ -91,7 +99,7 @@ TEST(RootDeviceTest, ControlAction)
             });
         }
     }, &client);
-    
+
     scanner.start();
     scanner.refresh();
 
