@@ -19,14 +19,50 @@
 #include <chrono>
 
 #include "utils/log.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnp.xml.parseutils.h"
+
+#include "rapidxml.hpp"
+#include "rapidxml_print.hpp"
 
 using namespace utils;
+using namespace rapidxml_ns;
 
 //#define DEBUG_LAST_CHANGE_VAR
 
 namespace upnp
 {
+
+namespace
+{
+
+const char* s_encAtr = "s:encodingStyle";
+const char* s_encVal = "http://schemas.xmlsoap.org/soap/encoding/";
+
+const char* s_xmlnsAtr = "xmlns:s";
+const char* s_ns = "urn:schemas-upnp-org:event-1-0";
+const char* s_propset = "e:propertyset";
+const char* s_prop = "e:property";
+const char* s_lastChange = "LastChange";
+
+const char* s_event = "Event";
+const char* s_instanceId = "InstanceID";
+const char* s_val = "val";
+
+xml_node<>* createServiceVariablesElement(xml_document<>& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars)
+{
+    auto* instance = doc.allocate_node(node_element, s_instanceId);
+    instance->append_attribute(doc.allocate_attribute(s_val, doc.allocate_string(std::to_string(instanceId).c_str())));
+    
+    for (auto& var : vars)
+    {
+        auto elem = xml::serviceVariableToElement(doc, var);
+        instance->append_node(elem);
+    }
+
+    return instance;
+}
+
+}
 
 LastChangeVariable::LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventIntervalInMilliSecs)
 : m_thread(std::bind(&LastChangeVariable::variableThread, this))
@@ -78,38 +114,37 @@ void LastChangeVariable::createLastChangeEvent()
 {
     try
     {
-        const std::string ns = "urn:schemas-upnp-org:event-1-0";
+        xml_document<> doc;
+        
+        auto* propset = doc.allocate_node(node_element, s_propset);
+        propset->append_attribute(doc.allocate_attribute(s_xmlnsAtr, s_ns));
+        propset->append_attribute(doc.allocate_attribute(s_encAtr, s_encVal));
 
-        xml::Document doc;
-        auto propertySet    = doc.createElement("e:propertyset");
-        auto property       = doc.createElement("e:property");
-        auto lastChange     = doc.createElement("LastChange");
-
-        propertySet.addAttribute("xmlns:e", ns);
-
-        auto event = doc.createElement("Event");
-        event.addAttribute("xmlns", m_eventMetaNamespace);
-
+        auto* prop = doc.allocate_node(node_element, s_prop);
+        
+        
+        auto* event = doc.allocate_node(node_element, s_event);
         for (auto& vars : m_changedVariables)
         {
-            auto instance = xml::utils::createServiceVariablesElement(doc, vars.first, vars.second);
-            event.appendChild(instance);
+            auto instance = createServiceVariablesElement(doc, vars.first, vars.second);
+            event->append_node(instance);
         }
+        
+        auto eventString = xml::encode(xml::toString(*event));
+        
+        auto* lastChange = doc.allocate_node(node_element, s_lastChange, eventString.c_str());
 
-        auto lastChangeValue = doc.createNode(event.toString());
-
-        lastChange.appendChild(lastChangeValue);
-        property.appendChild(lastChange);
-        propertySet.appendChild(property);
-        doc.appendChild(propertySet);
+        prop->append_node(lastChange);
+        propset->append_node(prop);
+        doc.append_node(propset);
 
         if (LastChangeEvent)
         {
-            LastChangeEvent(doc);
+            LastChangeEvent2(xml::toString(doc));
         }
 
 #ifdef DEBUG_LAST_CHANGE_VAR
-        utils::log::debug("LastChange event: {}", event.toString());
+        utils::log::debug("LastChange event: {}", xml::toString(doc));
 #endif
     }
     catch (std::exception& e)

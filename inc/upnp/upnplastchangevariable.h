@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_LAST_CHANGE_VARIABLE_H
-#define UPNP_LAST_CHANGE_VARIABLE_H
+#pragma once
 
 #include <string>
 #include <cinttypes>
@@ -43,6 +42,7 @@ public:
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
 
     std::function<void(const xml::Document&)> LastChangeEvent;
+    std::function<void(const std::string&)> LastChangeEvent2;
 
 private:
     void variableThread();
@@ -58,6 +58,3 @@ private:
 };
 
 }
-
-
-#endif
