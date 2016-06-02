@@ -27,14 +27,6 @@ static const std::string s_interface = "lo0";
 static const std::string s_interface = "localhost";
 #endif
 
-static const std::string s_response =
-    "HTTP/1.1 200 OK\r\n"
-    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
-    "CONTENT-LENGTH: 7\r\n"
-    "CONTENT-TYPE: text/html\r\n"
-    "\r\n"
-    "Success";
-
 static const std::string simpleRootDesc =
     "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
     "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
@@ -86,7 +78,7 @@ TEST(RootDeviceTest, ControlAction)
         EXPECT_EQ("urn:schemas-upnp-org:service:RenderingControl:1", req.serviceType);
         EXPECT_EQ("SetVolume"s, req.actionName);
 
-        return s_response;
+        return "Success";
     }));
 
     scanner.DeviceDiscoveredEvent.connect([&] (auto dev) {
@@ -103,7 +95,7 @@ TEST(RootDeviceTest, ControlAction)
     scanner.start();
     scanner.refresh();
 
-    fut.wait();
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(5s));
     client.uninitialize();
     device.uninitialize();
 }

@@ -540,6 +540,37 @@ void Client::unsubscribe(const std::string& url, const std::string& sid, std::fu
     curl_multi_add_handle(m_multiHandle, handle);
 }
 
+void Client::notify(const std::string& url, const std::string& sid, uint32_t seq, const std::string& body, std::function<void(int32_t status, std::string response)> cb)
+{
+    auto* data = new GetAsStringCallBackData();
+    data->callback = std::move(cb);
+
+    curl_slist* list = nullptr;
+    list = curl_slist_append(list, "Accept:"); // remove accept header added by curl
+    list = curl_slist_append(list, "Expect:"); // remove accept header added by curl
+    list = curl_slist_append(list, "NT: upnp:event");
+    list = curl_slist_append(list, "NTS: upnp:propchange");
+    list = curl_slist_append(list, fmt::format("SID: {}", sid).c_str());
+    list = curl_slist_append(list, fmt::format("SEQ: {}", seq).c_str());
+    list = curl_slist_append(list, "Content-Type: text/xml");
+    data->headerData = list;
+
+    CURL* handle = curl_easy_init();
+    curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1);
+    curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "NOTIFY");
+    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_timeout);
+    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, list);
+    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, getSubscribeHeaders);
+    curl_easy_setopt(handle, CURLOPT_HEADERDATA, data);
+    curl_easy_setopt(handle, CURLOPT_PRIVATE, data);
+
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDS, body.data());
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, body.size());
+
+    curl_multi_add_handle(m_multiHandle, handle);
+}
+
 void Client::soapAction(const std::string& url,
                         const std::string& actionName,
                         const std::string& serviceName,

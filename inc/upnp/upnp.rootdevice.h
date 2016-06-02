@@ -16,17 +16,22 @@
 
 #pragma once
 
+#include <chrono>
 #include <cinttypes>
 
 #include "upnp/upnp.types.h"
-#include "upnp/upnp.http.server.h"
 #include "upnp/upnp.ssdp.server.h"
 #include "upnp/upnprootdeviceinterface.h"
 
 namespace upnp
 {
 
-namespace http { class Parser; }
+namespace http
+{
+    class Parser;
+    class Server;
+    class Client;
+}
 
 struct Device;
 
@@ -47,22 +52,31 @@ public:
     void acceptSubscription(const std::string&, const std::string&, const xml::Document&) override {}
     void notifyEvent(const std::string&, const xml::Document&) override {}
 
-    void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const std::string& response) override;
-    void notifyEvent(const std::string& serviceId, const std::string& response) override;
+    void notifyEvent(const std::string& serviceId, std::string eventData) override;
 
 private:
-    std::string onSubscriptionRequest(http::Parser& parser);
-    std::string onUnsubscriptionRequest(http::Parser& parser);
+    std::string onSubscriptionRequest(http::Parser& parser) noexcept;
+    std::string onUnsubscriptionRequest(http::Parser& parser) noexcept;
     std::string onActionRequest(http::Parser& parser);
 
     uv::Loop                        m_loop;
     std::unique_ptr<http::Server>   m_httpServer;
+    std::unique_ptr<http::Client>   m_httpClient;
     std::unique_ptr<ssdp::Server>   m_ssdpServer;
 
     Device                          m_device;
     std::chrono::seconds            m_advertiseInterval;
 
     std::unique_ptr<std::thread>    m_thread;
+
+    struct SubscriptionData
+    {
+        std::string deliveryUrl;
+        std::chrono::steady_clock::time_point expirationTime;
+        uint32_t sequence = 0;
+    };
+
+    std::unordered_map<std::string, SubscriptionData> m_subscriptions;
 };
 
 }

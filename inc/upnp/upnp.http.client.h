@@ -51,6 +51,8 @@ public:
                            std::function<void(int32_t status, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
     void unsubscribe(const std::string& url, const std::string& sid, std::function<void(int32_t status, std::string response)> cb);
 
+    void notify(const std::string& url, const std::string& sid, uint32_t seq, const std::string& body, std::function<void(int32_t status, std::string response)> cb);
+
     void soapAction(const std::string& url,
                     const std::string& actionName,
                     const std::string& serviceName,

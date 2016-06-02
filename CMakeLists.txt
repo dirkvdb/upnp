@@ -150,12 +150,21 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.ssdp.parseutils.h
     src/http_parser.h                                   src/http_parser.cpp
     src/URI.h                                           src/URI.cpp
+    src/guid.h                                          src/guid.cpp
 )
 
 TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
 
 IF (MINGW)
     TARGET_LINK_LIBRARIES(upnpframework ws2_32)
+ENDIF ()
+
+IF (APPLE)
+    # uuid dependency
+    TARGET_LINK_LIBRARIES(upnpframework "-framework CoreFoundation")
+ELSEIF (UNIX)
+    # uuid dependency
+    TARGET_LINK_LIBRARIES(upnpframework "uuid")
 ENDIF ()
 
 IF (ENABLE_TESTS)
