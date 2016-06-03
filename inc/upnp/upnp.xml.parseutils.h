@@ -44,9 +44,11 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 void parseEvent(const std::string& data, std::function<void(const std::string& varable, const std::map<std::string, std::string>&)> cb);
 std::vector<StateVariable> parseServiceDescription(const std::string& contents, std::function<void(const std::string& action)> actionCb);
 
+std::string createNotificationXml(const std::vector<std::pair<std::string, std::string>>& vars);
+
 std::string optionalChildValue(rapidxml_ns::xml_node<char>& node, const char* child);
 
-rapidxml_ns::xml_node<char>* createServiceVariablesElement(rapidxml_ns::xml_document<char>& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars);
+std::string createServiceEvent(uint32_t instanceId, const std::vector<ServiceVariable>& vars);
 rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var);
 
 std::string toString(rapidxml_ns::xml_document<char>& doc);

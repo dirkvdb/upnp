@@ -18,6 +18,7 @@
 #include "upnp.connectionmanager.typeconversions.h"
 
 #include "utils/log.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 using namespace utils;
 
@@ -35,23 +36,19 @@ Service::Service(IRootDevice& dev, IConnectionManager& cm)
 
 std::string Service::getSubscriptionResponse()
 {
-    const std::string ns = "urn:schemas-upnp-org:event-1-0";
+    // TODO: avoid the copies
+    std::vector<std::pair<std::string, std::string>> vars;
+    vars.emplace_back(variableToString(Variable::SourceProtocolInfo), m_variables.at(0)[Variable::SourceProtocolInfo].getValue());
+    vars.emplace_back(variableToString(Variable::SinkProtocolInfo), m_variables.at(0)[Variable::SinkProtocolInfo].getValue());
+    vars.emplace_back(variableToString(Variable::CurrentConnectionIds), m_variables.at(0)[Variable::CurrentConnectionIds].getValue());
 
-    xml::Document doc;
-    auto propertySet    = doc.createElement("e:propertyset");
-    propertySet.addAttribute("xmlns:e", ns);
-
-    addPropertyToElement(0, Variable::SourceProtocolInfo, propertySet);
-    addPropertyToElement(0, Variable::SinkProtocolInfo, propertySet);
-    addPropertyToElement(0, Variable::CurrentConnectionIds, propertySet);
-
-    doc.appendChild(propertySet);
+    auto doc = xml::createNotificationXml(vars);
 
 #ifdef DEBUG_CONNECTION_MANAGER
-    log::debug(doc.toString());
+    log::debug(doc);
 #endif
 
-    return doc.toString();
+    return doc;
 }
 
 ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
@@ -127,7 +124,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
 }
 
-std::string Service::variableToString(Variable type) const
+const char* Service::variableToString(Variable type) const
 {
     return ConnectionManager::toString(type);
 }

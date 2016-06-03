@@ -58,6 +58,8 @@ Service::~Service()
 
 std::string Service::getSubscriptionResponse()
 {
+    // TODO: avoid duplication
+
     xml_document<> doc;
     auto* propertySet = doc.allocate_node(node_element, s_propertySet);
     propertySet->append_attribute(doc.allocate_attribute(s_xmlnsAtr, s_ns));
@@ -298,7 +300,7 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
     m_LastChange.addChangedVariable(id, ServiceVariable(variableToString(var), value));
 }
 
-std::string Service::variableToString(Variable type) const
+const char* Service::variableToString(Variable type) const
 {
     return AVTransport::variableToString(type);
 }

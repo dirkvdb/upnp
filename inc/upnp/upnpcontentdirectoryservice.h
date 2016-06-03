@@ -24,7 +24,7 @@ namespace upnp
 {
 
 class Action;
-class Device;
+struct Device;
 class IClient;
 
 typedef std::function<void(const Item&)> ItemCb;
@@ -63,7 +63,7 @@ public:
     ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
 protected:
-    std::string variableToString(Variable type) const override;
+    const char* variableToString(Variable type) const override;
 
 private:
     IContentDirectory&          m_contentDirectory;

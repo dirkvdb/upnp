@@ -23,7 +23,12 @@ using namespace utils;
 using namespace rapidxml_ns;
 
 static const char* s_valAtr         = "val";
-static const char* s_instanceIdNode = "InstanceID";
+static const char* s_xmlnsAtr = "xmlns:e";
+static const char* s_ns = "urn:schemas-upnp-org:event-1-0";
+static const char* s_propset = "e:propertyset";
+static const char* s_prop = "e:property";
+static const char* s_encAtr = "e:encodingStyle";
+static const char* s_encVal = "http://schemas.xmlsoap.org/soap/encoding/";
 
 namespace
 {
@@ -718,6 +723,26 @@ std::vector<StateVariable> parseServiceDescription(const std::string& contents, 
     return xml::getStateVariablesFromDescription(doc);
 }
 
+std::string createNotificationXml(const std::vector<std::pair<std::string, std::string>>& vars)
+{
+    xml_document<> doc;
+
+    auto* propset = doc.allocate_node(node_element, s_propset);
+    propset->append_attribute(doc.allocate_attribute(s_xmlnsAtr, s_ns));
+    propset->append_attribute(doc.allocate_attribute(s_encAtr, s_encVal));
+
+    for (auto& var : vars)
+    {
+        auto* prop = doc.allocate_node(node_element, s_prop);
+        prop->append_node(doc.allocate_node(node_element, var.first.c_str(), var.second.c_str()));
+        propset->append_node(prop);
+    }
+
+    doc.append_node(propset);
+
+    return xml::toString(doc);
+}
+
 std::string optionalChildValue(xml_node<char>& node, const char* child)
 {
     std::string result;
@@ -729,20 +754,6 @@ std::string optionalChildValue(xml_node<char>& node, const char* child)
     }
 
     return result;
-}
-
-rapidxml_ns::xml_node<char>* createServiceVariablesElement(rapidxml_ns::xml_document<char>& doc, uint32_t instanceId, const std::vector<ServiceVariable>& vars)
-{
-    auto* instance = doc.allocate_node(node_element, s_instanceIdNode);
-    auto* indexString = doc.allocate_string(std::to_string(instanceId).c_str());
-    instance->append_attribute(doc.allocate_attribute(s_valAtr, indexString));
-
-    for (auto& var : vars)
-    {
-        instance->append_node(serviceVariableToElement(doc, var));
-    }
-
-    return instance;
 }
 
 rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var)

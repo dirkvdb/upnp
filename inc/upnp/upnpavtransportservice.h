@@ -86,7 +86,7 @@ public:
     static State stateFromString(const std::string& value);
 
 protected:
-    virtual std::string variableToString(Variable type) const override;
+    virtual const char* variableToString(Variable type) const override;
     xml::Document getStateVariables(uint32_t id, const std::string& variableList) const;
 
 private:

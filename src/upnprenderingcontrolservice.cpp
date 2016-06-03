@@ -17,6 +17,7 @@
 #include "upnp/upnprenderingcontrolservice.h"
 #include "upnp.renderingcontrol.typeconversions.h"
 #include "utils/log.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 using namespace utils;
 
@@ -95,14 +96,7 @@ static void addChannelVariables(uint32_t instanceId, std::stringstream& ss, cons
 
 std::string Service::getSubscriptionResponse()
 {
-    const std::string ns = "urn:schemas-upnp-org:event-1-0";
-
-    xml::Document doc;
-    auto propertySet    = doc.createElement("e:propertyset");
-    auto property       = doc.createElement("e:property");
-    auto lastChange     = doc.createElement("LastChange");
-
-    propertySet.addAttribute("xmlns:e", ns);
+    // TODO: avoid the copies
 
     std::stringstream ss;
     ss << "<Event xmlns=\"" << serviceTypeToUrnMetadataString(m_type) << "\">" << std::endl;
@@ -127,19 +121,15 @@ std::string Service::getSubscriptionResponse()
 
     ss << "</Event>";
 
-
-    auto lastChangeValue = doc.createNode(ss.str());
-
-    lastChange.appendChild(lastChangeValue);
-    property.appendChild(lastChange);
-    propertySet.appendChild(property);
-    doc.appendChild(propertySet);
+    std::vector<std::pair<std::string, std::string>> vars;
+    vars.emplace_back("LastChange", ss.str());
+    auto doc = xml::createNotificationXml(vars);
 
 #ifdef DEBUG_RENDERING_CONTROL
-    log::debug(doc.toString());
+    log::debug(doc);
 #endif
 
-    return doc.toString();
+    return doc;
 }
 
 ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
@@ -314,7 +304,7 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
     m_lastChange.addChangedVariable(id, ServiceVariable(toString(var), value));
 }
 
-std::string Service::variableToString(Variable type) const
+const char* Service::variableToString(Variable type) const
 {
     return RenderingControl::toString(type);
 }

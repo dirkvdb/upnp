@@ -76,7 +76,7 @@ public:
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value) override;
 
 protected:
-    virtual std::string variableToString(Variable type) const override;
+    virtual const char* variableToString(Variable type) const override;
 
 private:
     void updateAudioVariable(std::map<uint32_t, std::map<Channel, ServiceVariable>>& vars, uint32_t instanceId, Channel channel, Variable var, const std::string& value);

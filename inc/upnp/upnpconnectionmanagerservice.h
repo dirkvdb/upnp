@@ -56,7 +56,7 @@ public:
     ActionResponse onAction(const std::string& action, const xml::Document& request) override;
 
 protected:
-    std::string variableToString(Variable type) const override;
+    const char* variableToString(Variable type) const override;
 
 private:
     void throwIfNoConnectionManager3Support();

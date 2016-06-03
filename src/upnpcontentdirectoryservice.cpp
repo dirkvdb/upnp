@@ -24,6 +24,7 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnp.item.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 using namespace utils;
 
@@ -40,23 +41,19 @@ Service::Service(IRootDevice& dev, IContentDirectory& cd)
 
 std::string Service::getSubscriptionResponse()
 {
-    const std::string ns = "urn:schemas-upnp-org:event-1-0";
+    // TODO: avoid the copies
+    std::vector<std::pair<std::string, std::string>> vars;
+    vars.emplace_back(variableToString(Variable::TransferIDs), m_variables.at(0)[Variable::TransferIDs].getValue());
+    vars.emplace_back(variableToString(Variable::SystemUpdateID), m_variables.at(0)[Variable::SystemUpdateID].getValue());
+    vars.emplace_back(variableToString(Variable::ContainerUpdateIDs), m_variables.at(0)[Variable::ContainerUpdateIDs].getValue());
 
-    xml::Document doc;
-    auto propertySet    = doc.createElement("e:propertyset");
-    propertySet.addAttribute("xmlns:e", ns);
-
-    addPropertyToElement(0, Variable::TransferIDs, propertySet);
-    addPropertyToElement(0, Variable::SystemUpdateID, propertySet);
-    addPropertyToElement(0, Variable::ContainerUpdateIDs, propertySet);
-
-    doc.appendChild(propertySet);
+    auto doc = xml::createNotificationXml(vars);
 
 #ifdef DEBUG_CONNECTION_MANAGER
-    log::debug(doc.toString());
+    log::debug(doc);
 #endif
 
-    return doc.toString();
+    return doc;
 }
 
 ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
@@ -153,7 +150,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
     }
 }
 
-std::string Service::variableToString(Variable type) const
+const char* Service::variableToString(Variable type) const
 {
     return ContentDirectory::variableToString(type);
 }

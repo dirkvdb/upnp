@@ -451,5 +451,26 @@ TEST(XmlParseTest, ParseBrowseResponseContainers)
     }
 }
 
+TEST(XmlParseTest, CreateNotificationXml)
+{
+    std::vector<std::pair<std::string, std::string>> vars {
+        { "VariableName1", "value1" },
+        { "VariableName2", "value2" }
+    };
+
+    static const auto expected =
+        "<?xml version=\"1.0\"?>"
+        "<e:propertyset xmlns:e=\"urn:schemas-upnp-org:event-1-0\" e:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+        "<e:property>"
+        "<VariableName1>value1</VariableName1>"
+        "</e:property>"
+        "<e:property>"
+        "<VariableName2>value2</VariableName2>"
+        "</e:property>"
+        "</e:propertyset>";
+
+    EXPECT_EQ(expected, xml::createNotificationXml(vars));
+}
+
 }
 }

@@ -130,35 +130,7 @@ public:
 //    }
 
 protected:
-    virtual std::string variableToString(VariableType type) const = 0;
-
-    void notifyVariableChange(VariableType var, uint32_t instanceId)
-    {
-        const std::string ns = "urn:schemas-upnp-org:event-1-0";
-
-        xml::Document doc;
-        auto propertySet    = doc.createElement("e:propertyset");
-
-        addPropertyToElement(instanceId, var, propertySet);
-
-        doc.appendChild(propertySet);
-
-        utils::log::debug("Variable change event: {}", doc.toString());
-
-        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
-    }
-
-    void addPropertyToElement(int32_t instanceId, VariableType variable, xml::Element& elem)
-    {
-        auto doc    = elem.getOwnerDocument();
-        auto prop   = doc.createElement("e:property");
-        auto var    = doc.createElement(variableToString(variable));
-        auto value  = doc.createNode(m_variables.at(instanceId)[variable].getValue());
-
-        var.appendChild(value);
-        prop.appendChild(var);
-        elem.appendChild(prop);
-    }
+    virtual const char* variableToString(VariableType type) const = 0;
 
     static std::vector<std::string> csvToVector(const std::string& csv)
     {
