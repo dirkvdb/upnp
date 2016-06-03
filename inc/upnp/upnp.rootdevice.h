@@ -49,8 +49,6 @@ public:
     void registerDevice(const std::string& deviceDescriptionXml, const Device& dev);
 
     std::string getUniqueDeviceName() override;
-    void acceptSubscription(const std::string&, const std::string&, const xml::Document&) override {}
-    void notifyEvent(const std::string&, const xml::Document&) override {}
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
 

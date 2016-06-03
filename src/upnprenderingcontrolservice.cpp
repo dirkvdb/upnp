@@ -132,7 +132,7 @@ std::string Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
+ActionResponse Service::onAction(const std::string& action, const std::string& doc)
 {
     try
     {

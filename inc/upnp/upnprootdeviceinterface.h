@@ -18,11 +18,8 @@
 
 #include <string>
 #include <functional>
-#include <upnp.h>
 
 #include "utils/signal.h"
-
-#include "upnp/upnpxmlutils.h"
 
 namespace upnp
 {
@@ -57,13 +54,7 @@ public:
 
     virtual std::string getUniqueDeviceName() = 0;
 
-    virtual void acceptSubscription(const std::string& serviceId, const std::string& subscriptionId, const xml::Document& response) = 0;
-    virtual void notifyEvent(const std::string& serviceId, const xml::Document& event) = 0;
-
-    virtual void notifyEvent(const std::string& /*serviceId*/, std::string /*response*/) {};
-
-    utils::Signal<Upnp_Action_Request*> ControlActionRequested;
-    utils::Signal<Upnp_Subscription_Request*> EventSubscriptionRequested;
+    virtual void notifyEvent(const std::string& serviceId, std::string response) = 0;
 
     std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested2;
     std::function<std::string(const ActionRequest&)> ControlActionRequested2;

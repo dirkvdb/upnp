@@ -46,7 +46,7 @@ public:
 
     virtual ~DeviceService() = default;
 
-    virtual ActionResponse onAction(const std::string& action, const xml::Document& request) = 0;
+    virtual ActionResponse onAction(const std::string& action, const std::string request) = 0;
     virtual std::string getSubscriptionResponse() = 0;
 
     std::map<std::string, std::string> getVariables(uint32_t id) const
