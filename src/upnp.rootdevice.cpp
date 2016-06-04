@@ -68,12 +68,12 @@ static const std::string s_notification =
     "CONTENT-LENGTH: bytes in body\r\n"
     "\r\n";
 
-RootDevice2::RootDevice2(std::chrono::seconds advertiseInterval)
+RootDevice::RootDevice(std::chrono::seconds advertiseInterval)
 : m_advertiseInterval(advertiseInterval)
 {
 }
 
-RootDevice2::~RootDevice2() noexcept
+RootDevice::~RootDevice() noexcept
 {
     // try
     // {
@@ -82,7 +82,7 @@ RootDevice2::~RootDevice2() noexcept
     // catch (std::exception&) {}
 }
 
-void RootDevice2::initialize(const std::string& interfaceName)
+void RootDevice::initialize(const std::string& interfaceName)
 {
     auto addr = uv::Address::createIp4(interfaceName);
     addr.setPort(0);
@@ -101,7 +101,7 @@ void RootDevice2::initialize(const std::string& interfaceName)
     });
 }
 
-void RootDevice2::uninitialize()
+void RootDevice::uninitialize()
 {
     log::debug("Uninitializing UPnP Root device: {}", m_device.friendlyName);
     uv::asyncSend(m_loop, [this] () {
@@ -120,12 +120,12 @@ void RootDevice2::uninitialize()
     m_thread.reset();
 }
 
-std::string RootDevice2::getWebrootUrl()
+std::string RootDevice::getWebrootUrl()
 {
     return m_httpServer->getWebRootUrl();
 }
 
-void RootDevice2::registerDevice(const std::string& deviceDescriptionXml, const Device& dev)
+void RootDevice::registerDevice(const std::string& deviceDescriptionXml, const Device& dev)
 {
     uv::asyncSend(m_loop, [=] () {
         m_httpServer->addFile(dev.location, "text/xml", deviceDescriptionXml);
@@ -136,27 +136,27 @@ void RootDevice2::registerDevice(const std::string& deviceDescriptionXml, const 
     });
 }
 
-std::string RootDevice2::getUniqueDeviceName()
+std::string RootDevice::getUniqueDeviceName()
 {
     return m_device.udn;
 }
 
-void RootDevice2::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data)
+void RootDevice::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data)
 {
     m_httpServer->addFile(path, contentType, data);
 }
 
-void RootDevice2::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data)
+void RootDevice::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data)
 {
     m_httpServer->addFile(path, contentType, data);
 }
 
-void RootDevice2::removeFileFromHttpServer(const std::string& path)
+void RootDevice::removeFileFromHttpServer(const std::string& path)
 {
     m_httpServer->removeFile(path);
 }
 
-void RootDevice2::notifyEvent(const std::string& serviceId, std::string eventData)
+void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData)
 {
     auto iter = m_subscriptions.find(serviceId);
     if (iter != m_subscriptions.end())
@@ -180,7 +180,7 @@ void RootDevice2::notifyEvent(const std::string& serviceId, std::string eventDat
     }
 }
 
-std::string RootDevice2::onSubscriptionRequest(http::Parser& parser) noexcept
+std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
 {
     try
     {
@@ -227,7 +227,7 @@ std::string RootDevice2::onSubscriptionRequest(http::Parser& parser) noexcept
     }
 }
 
-std::string RootDevice2::onUnsubscriptionRequest(http::Parser& parser) noexcept
+std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
 {
     log::info("Unsubscription request");
     if (m_subscriptions.erase(parser.headerValue("SID")) > 0)
@@ -257,7 +257,7 @@ std::string RootDevice2::onUnsubscriptionRequest(http::Parser& parser) noexcept
     }
 }
 
-std::string RootDevice2::onActionRequest(http::Parser& parser)
+std::string RootDevice::onActionRequest(http::Parser& parser)
 {
     ActionRequest request;
 
@@ -313,6 +313,11 @@ std::string RootDevice2::onActionRequest(http::Parser& parser)
 
         return fmt::format(s_errorResponse, errorBody.size(), errorBody);
     }
+}
+
+uv::Loop& RootDevice::loop() noexcept
+{
+    return m_loop;
 }
 
 }

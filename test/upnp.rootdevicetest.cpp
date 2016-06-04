@@ -49,7 +49,7 @@ struct DeviceCallbackMock
 TEST(RootDeviceTest, ControlAction)
 {
     Client client;
-    RootDevice2 device(1800s);
+    RootDevice device(1800s);
 
     Device deviceInfo;
     deviceInfo.type = DeviceType(DeviceType::MediaRenderer, 1);

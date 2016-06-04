@@ -115,7 +115,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vec
         }
     }
 
-    std::string filename = generatePlaylistFilename();
+    auto filename = generatePlaylistFilename();
     m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
     playItem(server, createPlaylistItem(filename));
 }

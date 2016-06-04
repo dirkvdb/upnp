@@ -36,11 +36,11 @@ namespace http
 
 struct Device;
 
-class RootDevice2 : public IRootDevice
+class RootDevice : public IRootDevice
 {
 public:
-    RootDevice2(std::chrono::seconds advertiseInterval);
-    ~RootDevice2() noexcept;
+    RootDevice(std::chrono::seconds advertiseInterval);
+    ~RootDevice() noexcept;
 
     void initialize() override {}
     void initialize(const std::string& interfaceName);
@@ -56,6 +56,8 @@ public:
     void removeFileFromHttpServer(const std::string& path) override;
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
+    
+    uv::Loop& loop() noexcept;
 
 private:
     std::string onSubscriptionRequest(http::Parser& parser) noexcept;

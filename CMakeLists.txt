@@ -123,7 +123,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.types.h                               src/upnp.types.cpp
     inc/upnp/upnp.flags.h
     inc/upnp/upnputils.h
-    inc/upnp/upnpwebserver.h                            src/upnpwebserver.cpp
     inc/upnp/upnp.action.h                              src/upnp.action.cpp
     inc/upnp/upnp.actionresponse.h                      src/upnp.actionresponse.cpp
     inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
