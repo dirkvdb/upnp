@@ -38,7 +38,7 @@ struct ConnectionInfo;
 }
 
 class Item;
-class IClient2;
+class IClient;
 class ProtocolInfo;
 class Resource;
 struct Device;
@@ -66,7 +66,7 @@ public:
         Recording
     };
 
-    MediaRenderer(IClient2& client);
+    MediaRenderer(IClient& client);
     MediaRenderer(const MediaRenderer&) = delete;
 
     std::shared_ptr<Device> getDevice();
@@ -127,7 +127,7 @@ private:
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);
 
     std::shared_ptr<Device>                         m_device;
-    IClient2&                                       m_client;
+    IClient&                                        m_client;
     ConnectionManager::Client                       m_connectionMgr;
     RenderingControl::Client                        m_renderingControl;
     std::unique_ptr<AVTransport::Client>            m_avTransport;

@@ -29,7 +29,7 @@ namespace upnp
 {
 
 class Item;
-class IClient2;
+class IClient;
 struct Device;
 
 class MediaServer
@@ -45,7 +45,7 @@ public:
         Descending
     };
 
-    MediaServer(IClient2& client);
+    MediaServer(IClient& client);
     ~MediaServer();
 
     void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb);
@@ -113,7 +113,7 @@ private:
 
     std::shared_ptr<Device>                 m_device;
 
-    IClient2&                               m_client;
+    IClient&                                m_client;
     ContentDirectory::Client                m_contentDirectory;
     ConnectionManager::Client               m_connectionMgr;
     std::unique_ptr<AVTransport::Client>    m_avTransport;

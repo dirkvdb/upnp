@@ -30,7 +30,7 @@ namespace upnp
 
 namespace http { class Server; }
 
-class IClient2;
+class IClient;
 class Item;
 class MediaServer;
 class ProtocolInfo;
@@ -38,7 +38,7 @@ class ProtocolInfo;
 class ControlPoint
 {
 public:
-    ControlPoint(IClient2& client);
+    ControlPoint(IClient& client);
     ControlPoint(const ControlPoint&) = delete;
 
     ControlPoint& operator=(const ControlPoint&) = delete;

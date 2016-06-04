@@ -56,7 +56,7 @@ const char* ServiceTraits::variableToString(Variable var)
     return RenderingControl::toString(var);
 }
 
-Client::Client(upnp::IClient2& client)
+Client::Client(upnp::IClient& client)
 : ServiceClientBase(client)
 , m_minVolume(0)
 , m_maxVolume(100)

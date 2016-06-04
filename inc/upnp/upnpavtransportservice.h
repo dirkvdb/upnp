@@ -77,7 +77,7 @@ public:
     ~Service();
 
     virtual std::string getSubscriptionResponse() override;
-    virtual ActionResponse onAction(const std::string& action, const xml::Document& request) override;
+    virtual ActionResponse onAction(const std::string& action, const std::string& request) override;
 
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value) override;
 
@@ -87,7 +87,7 @@ public:
 
 protected:
     virtual const char* variableToString(Variable type) const override;
-    xml::Document getStateVariables(uint32_t id, const std::string& variableList) const;
+    std::string getStateVariables(uint32_t id, const std::string& variableList) const;
 
 private:
     void throwIfNoAVTransport3Support();

@@ -32,12 +32,12 @@ using namespace std::chrono_literals;
 
 static const auto s_timeCheckInterval = 60s;
 
-DeviceScanner::DeviceScanner(IClient2& client, DeviceType type)
+DeviceScanner::DeviceScanner(IClient& client, DeviceType type)
 : DeviceScanner(client, std::set<DeviceType>{ type })
 {
 }
 
-DeviceScanner::DeviceScanner(IClient2& client, std::set<DeviceType> types)
+DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 : m_upnpClient(client)
 , m_ssdpClient(client.loop())
 , m_timer(client.loop())

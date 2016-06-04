@@ -39,7 +39,7 @@ class ServiceClientBase
 public:
     utils::Signal<typename Traits::VariableType, const std::map<typename Traits::VariableType, std::string>&> StateVariableEvent;
 
-    ServiceClientBase(IClient2& client)
+    ServiceClientBase(IClient& client)
     : m_client(client)
     , m_subTimer(client.loop())
     {
@@ -226,7 +226,7 @@ private:
         }
     }
 
-    IClient2&                               m_client;
+    IClient&                                m_client;
     Service                                 m_service;
     uv::Timer                               m_subTimer;
     std::set<typename Traits::ActionType>   m_supportedActions;

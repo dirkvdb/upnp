@@ -81,7 +81,7 @@ const char* ServiceTraits::variableToString(Variable var)
     return ContentDirectory::variableToString(var);
 }
 
-Client::Client(upnp::IClient2& client)
+Client::Client(upnp::IClient& client)
 : ServiceClientBase(client)
 , m_abort(false)
 {

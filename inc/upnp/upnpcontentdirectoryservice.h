@@ -60,7 +60,7 @@ public:
     Service(IRootDevice& dev, IContentDirectory& cd);
 
     std::string getSubscriptionResponse() override;
-    ActionResponse onAction(const std::string& action, const xml::Document& request) override;
+    ActionResponse onAction(const std::string& action, const std::string& request) override;
 
 protected:
     const char* variableToString(Variable type) const override;

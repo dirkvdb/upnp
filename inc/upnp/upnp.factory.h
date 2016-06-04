@@ -21,12 +21,12 @@
 namespace upnp
 {
 
-class IClient2;
+class IClient;
 
 namespace factory
 {
 
-std::unique_ptr<IClient2> createClient();
+std::unique_ptr<IClient> createClient();
 
 }
 }

@@ -19,7 +19,6 @@
 #include "gmock/gmock.h"
 
 #include "upnp/upnp.uv.h"
-#include "upnp/upnpclientinterface.h"
 #include "upnp/upnp.clientinterface.h"
 
 using namespace testing;
@@ -32,26 +31,7 @@ namespace test
 class ClientMock : public IClient
 {
 public:
-    MOCK_METHOD2(initialize, void(const char*, int32_t));
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(reset, void());
-
-    MOCK_CONST_METHOD0(getIpAddress, std::string());
-    MOCK_CONST_METHOD0(getPort, int32_t());
-    MOCK_CONST_METHOD2(searchDevicesOfType, void(DeviceType, int32_t));
-    MOCK_CONST_METHOD1(searchAllDevices, void(int32_t));
-
-    MOCK_CONST_METHOD2(subscribeToService, std::string(const std::string&, int32_t&));
-    MOCK_CONST_METHOD1(unsubscribeFromService, void(const std::string&));
-    MOCK_CONST_METHOD3(subscribeToService, void(const std::string&, int32_t, const std::shared_ptr<IServiceSubscriber>&));
-    MOCK_CONST_METHOD1(unsubscribeFromService, void(const std::shared_ptr<IServiceSubscriber>&));
-    MOCK_CONST_METHOD1(downloadXmlDocument, xml::Document(const std::string&));
-};
-
-class Client2Mock : public IClient2
-{
-public:
-    Client2Mock()
+    ClientMock()
     {
         EXPECT_CALL(*this, loop())
             .Times(AnyNumber())

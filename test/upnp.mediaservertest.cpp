@@ -111,7 +111,7 @@ public:
     }
 
 protected:
-    Client2Mock                 m_client;
+    ClientMock                  m_client;
     StatusMock                  m_statusMock;
 
     MediaServer                 m_server;

@@ -28,7 +28,6 @@
 #include "eventlistenermock.h"
 
 #include "upnp/upnp.action.h"
-#include "upnp/upnpxmlutils.h"
 
 namespace upnp
 {
@@ -143,7 +142,7 @@ protected:
     std::unique_ptr<SvcClientType>         serviceInstance;
     std::function<void(SubscriptionEvent)> eventCb;
 
-    StrictMock<Client2Mock>                client;
+    StrictMock<ClientMock>                 client;
     StrictMock<EventListenerMock<VarType>> eventListener;
     StrictMock<StatusCbMock>               statusMock;
 };

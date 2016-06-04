@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <unordered_map>
 
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.ssdp.server.h"
@@ -45,10 +46,14 @@ public:
     void initialize(const std::string& interfaceName);
     void uninitialize() override;
 
-    std::string getWebrootUrl();
-    void registerDevice(const std::string& deviceDescriptionXml, const Device& dev);
+    std::string getWebrootUrl() override;
+    void registerDevice(const std::string& deviceDescriptionXml, const Device& dev) override;
 
     std::string getUniqueDeviceName() override;
+
+    void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data) override;
+    void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data) override;
+    void removeFileFromHttpServer(const std::string& path) override;
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
 

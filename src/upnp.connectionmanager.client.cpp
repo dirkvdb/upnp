@@ -58,7 +58,7 @@ const char* ServiceTraits::variableToString(Variable var)
     return ConnectionManager::toString(var);
 }
 
-Client::Client(IClient2& client)
+Client::Client(IClient& client)
 : ServiceClientBase(client)
 {
 }

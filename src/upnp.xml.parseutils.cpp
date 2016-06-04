@@ -33,15 +33,27 @@ static const char* s_encVal = "http://schemas.xmlsoap.org/soap/encoding/";
 namespace
 {
 
-std::string requiredChildValue(const xml_node<char>& node, const char* childName)
+bool findAndParseService(const xml_node<char>& node, const ServiceType::Type serviceType, Device& device)
 {
-    std::string value = node.first_node_ref(childName).value_string();
-    if (value.empty())
+    auto base = URI(device.baseURL.empty() ? device.location : device.baseURL);
+
+    for (auto* serviceNode = node.first_node("service"); serviceNode != nullptr; serviceNode = serviceNode->next_sibling("service"))
     {
-        throw std::runtime_error(fmt::format("xml node ({}) child value not present: {}", node.name_string(), childName));
+        Service service;
+        service.type = serviceTypeUrnStringToService(requiredChildValue(*serviceNode, "serviceType"));
+        if (service.type.type == serviceType)
+        {
+            service.id                    = requiredChildValue(*serviceNode, "serviceId");
+            service.controlURL            = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "controlURL")).toString();
+            service.eventSubscriptionURL  = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "eventSubURL")).toString();
+            service.scpdUrl               = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "SCPDURL")).toString();
+
+            device.services[serviceType] = service;
+            return true;
+        }
     }
 
-    return value;
+    return false;
 }
 
 template <typename T>
@@ -101,29 +113,6 @@ T optionalAttributeValue(xml_node<char>& elem, const char* name, T defaultValue)
     }
 
     return stringops::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
-}
-
-bool findAndParseService(const xml_node<char>& node, const ServiceType::Type serviceType, Device& device)
-{
-    auto base = URI(device.baseURL.empty() ? device.location : device.baseURL);
-
-    for (auto* serviceNode = node.first_node("service"); serviceNode != nullptr; serviceNode = serviceNode->next_sibling("service"))
-    {
-        Service service;
-        service.type = serviceTypeUrnStringToService(requiredChildValue(*serviceNode, "serviceType"));
-        if (service.type.type == serviceType)
-        {
-            service.id                    = requiredChildValue(*serviceNode, "serviceId");
-            service.controlURL            = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "controlURL")).toString();
-            service.eventSubscriptionURL  = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "eventSubURL")).toString();
-            service.scpdUrl               = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "SCPDURL")).toString();
-
-            device.services[serviceType] = service;
-            return true;
-        }
-    }
-
-    return false;
 }
 
 std::vector<std::string> getActionsFromDescription(xml_document<char>& doc)
@@ -743,7 +732,7 @@ std::string createNotificationXml(const std::vector<std::pair<std::string, std::
     return xml::toString(doc);
 }
 
-std::string optionalChildValue(xml_node<char>& node, const char* child)
+std::string optionalChildValue(const xml_node<char>& node, const char* child)
 {
     std::string result;
 
@@ -754,6 +743,17 @@ std::string optionalChildValue(xml_node<char>& node, const char* child)
     }
 
     return result;
+}
+
+std::string requiredChildValue(const xml_node<char>& node, const char* childName)
+{
+    std::string value = node.first_node_ref(childName).value_string();
+    if (value.empty())
+    {
+        throw std::runtime_error(fmt::format("xml node ({}) child value not present: {}", node.name_string(), childName));
+    }
+
+    return value;
 }
 
 rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var)
@@ -768,6 +768,122 @@ rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<
     }
 
     return varNode;
+}
+
+namespace
+{
+
+xml_node<char>* createDidlForDocument(xml_document<char>& doc)
+{
+    auto* didl = doc.allocate_node(node_element, "DIDL-Lite");
+    didl->append_attribute(doc.allocate_attribute("xmlns", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"));
+    didl->append_attribute(doc.allocate_attribute("xmlns:dc", "http://purl.org/dc/elements/1.1/"));
+    didl->append_attribute(doc.allocate_attribute("xmlns:upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/"));
+    didl->append_attribute(doc.allocate_attribute("xmlns:dlna", "urn:schemas-dlna-org:metadata-1-0/"));
+
+    return didl;
+}
+
+void addItemToDidl(xml_document<char>& doc, xml_node<char>& didl, const Item& item)
+{
+    bool isContainer = item.isContainer();
+    auto itemElem = doc.allocate_node(node_element, isContainer ? "container" : "item");
+
+    itemElem->append_attribute(doc.allocate_attribute("id", item.getObjectId().c_str()));
+    itemElem->append_attribute(doc.allocate_attribute("parentID", item.getParentId().c_str()));
+    itemElem->append_attribute(doc.allocate_attribute("restricted", item.restricted() ? "1" : "0"));
+
+    if (isContainer)
+    {
+        itemElem->append_attribute(doc.allocate_attribute("childCount", doc.allocate_string(std::to_string(item.getChildCount()).c_str())));
+    }
+
+    for (auto& meta : item.getMetaData())
+    {
+        try
+        {
+            auto elem = doc.allocate_node(node_element, toString(meta.first));
+            auto node = doc.allocate_node(node_element, meta.second.c_str());
+            elem->append_node(node);
+            itemElem->append_node(elem);
+        }
+        catch (std::exception&) { /* Unknown metadata */ }
+    }
+
+    for (auto& uri : item.getAlbumArtUris())
+    {
+        try
+        {
+            auto elem = doc.allocate_node(node_element, toString(Property::AlbumArt));
+            auto node = doc.allocate_node(node_element, uri.second.c_str());
+            elem->append_attribute(doc.allocate_attribute("dlna:profileID", dlna::toString(uri.first)));
+            elem->append_node(node);
+            itemElem->append_node(elem);
+        }
+        catch (std::exception&) { /* Unknown profileId */ }
+    }
+
+    for (auto& res : item.getResources())
+    {
+        try
+        {
+            auto elem = doc.allocate_node(node_element, "res");
+            auto node = doc.allocate_node(node_element, res.getUrl().c_str());
+            elem->append_attribute(doc.allocate_attribute("protocolInfo", doc.allocate_string(res.getProtocolInfo().toString().c_str())));
+
+            auto size = res.getSize();
+            if (size > 0) { elem->append_attribute(doc.allocate_attribute("size", doc.allocate_string(std::to_string(size).c_str()))); }
+
+            if (item.getClass() == upnp::Class::Audio)
+            {
+                auto duration = res.getDuration();
+                if (duration.count() > 0) { elem->append_attribute(doc.allocate_attribute("duration", doc.allocate_string(durationToString(duration).c_str()))); }
+
+                auto bitrate = res.getBitRate();
+                if (bitrate > 0) { elem->append_attribute(doc.allocate_attribute("bitrate", doc.allocate_string(std::to_string(bitrate).c_str()))); }
+
+                auto sampleRate = res.getSampleRate();
+                if (sampleRate > 0) { elem->append_attribute(doc.allocate_attribute("samplefrequency", doc.allocate_string(std::to_string(sampleRate).c_str()))); }
+
+                auto nrChannels = res.getNrAudioChannels();
+                if (nrChannels > 0) { elem->append_attribute(doc.allocate_attribute("nrAudioChannels", doc.allocate_string(std::to_string(nrChannels).c_str()))); }
+
+                auto bitsPerSample = res.getBitsPerSample();
+                if (bitsPerSample > 0) { elem->append_attribute(doc.allocate_attribute("bitsPerSample", doc.allocate_string(std::to_string(bitsPerSample).c_str()))); }
+
+                elem->append_node(node);
+                itemElem->append_node(elem);
+            }
+        }
+        catch (std::exception&) {}
+    }
+
+    didl.append_node(itemElem);
+}
+
+}
+
+std::string getItemDocument(const Item& item)
+{
+    xml_document<char> doc;
+    auto* didl = createDidlForDocument(doc);
+    addItemToDidl(doc, *didl, item);
+    doc.append_node(didl);
+    return toString(doc);
+}
+
+std::string getItemsDocument(const std::vector<Item>& items)
+{
+    xml_document<char> doc;
+    auto* didl = createDidlForDocument(doc);
+
+    for (auto& item : items)
+    {
+        addItemToDidl(doc, *didl, item);
+    }
+
+    doc.append_node(didl);
+    return toString(doc);
 }
 
 std::string toString(xml_document<char>& doc)

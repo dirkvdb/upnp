@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 
 TEST(DeviceScannerTest, DISABLED_DiscoverClient)
 {
-    Client2 client;
+    Client client;
 
     DeviceScanner scanner(client, { { DeviceType::MediaServer, 1 }, { DeviceType::MediaRenderer, 1 } });
     client.initialize();

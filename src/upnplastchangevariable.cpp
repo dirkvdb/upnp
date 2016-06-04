@@ -90,7 +90,7 @@ void LastChangeVariable::createLastChangeEvent()
 {
     try
     {
-        if (LastChangeEvent2)
+        if (LastChangeEvent)
         {
             std::vector<std::pair<std::string, std::string>> vars;
 
@@ -112,7 +112,7 @@ void LastChangeVariable::createLastChangeEvent()
 
             vars.emplace_back("LastChange"s, xml::encode(xml::toString(doc)));
 
-            LastChangeEvent2(xml::createNotificationXml(vars));
+            LastChangeEvent(xml::createNotificationXml(vars));
 
 #ifdef DEBUG_LAST_CHANGE_VAR
             utils::log::debug("LastChange event: {}", xmlDoc);

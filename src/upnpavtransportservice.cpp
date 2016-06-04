@@ -46,8 +46,8 @@ Service::Service(IRootDevice& dev, IAVTransport& av)
 , m_avTransport3(dynamic_cast<IAVTransport3*>(&av))
 , m_LastChange(m_type, std::chrono::milliseconds(200))
 {
-    m_LastChange.LastChangeEvent = [this] (const xml::Document& doc) {
-        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
+    m_LastChange.LastChangeEvent = [this] (const std::string& notification) {
+        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), notification);
     };
 }
 
@@ -95,21 +95,24 @@ std::string Service::getSubscriptionResponse()
 }
 
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
+ActionResponse Service::onAction(const std::string& action, const std::string& request)
 {
     try
     {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
+        
         ActionResponse response(action, { ServiceType::AVTransport, 1 });
-        auto req = doc.getFirstChild();
-        uint32_t id = static_cast<uint32_t>(std::stoul(req.getChildNodeValue("InstanceID")));
+        auto& request = doc.first_node_ref();
+        uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "InstanceID")));
 
         switch (actionFromString(action))
         {
         case Action::SetAVTransportURI:
-            m_avTransport.setAVTransportURI(id, req.getChildNodeValue("CurrentURI"), req.getChildNodeValue("CurrentURIMetaData"));
+            m_avTransport.setAVTransportURI(id, xml::requiredChildValue(request, "CurrentURI"), xml::requiredChildValue(request, "CurrentURIMetaData"));
             break;
         case Action::SetNextAVTransportURI:
-            m_avTransport.setNextAVTransportURI(id, req.getChildNodeValue("NextURI"), req.getChildNodeValue("NextURIMetaData"));
+            m_avTransport.setNextAVTransportURI(id, xml::requiredChildValue(request, "NextURI"), xml::requiredChildValue(request, "NextURIMetaData"));
             break;
         case Action::GetMediaInfo:
             response.addArgument("NrTracks",                getInstanceVariable(id, Variable::NumberOfTracks).getValue());
@@ -153,7 +156,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             m_avTransport.stop(id);
             break;
         case Action::Play:
-            m_avTransport.play(id, req.getChildNodeValue("Speed"));
+            m_avTransport.play(id, xml::requiredChildValue(request, "Speed"));
             break;
         case Action::Pause:
             m_avTransport.pause(id);
@@ -163,8 +166,8 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         case Action::Seek:
         {
-            auto val = req.getChildNodeValue("Unit");
-            m_avTransport.seek(id, seekModeFromString(val), req.getChildNodeValue("Target"));
+            auto val = xml::requiredChildValue(request, "Unit");
+            m_avTransport.seek(id, seekModeFromString(val), xml::requiredChildValue(request, "Target"));
             break;
         }
         case Action::Next:
@@ -175,12 +178,12 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         case Action::SetPlayMode:
         {
-            auto val = req.getChildNodeValue("NewPlayMode");
+            auto val = xml::requiredChildValue(request, "NewPlayMode");
             m_avTransport.setPlayMode(id, playModeFromString(val));
             break;
         }
         case Action::SetRecordQualityMode:
-            m_avTransport.setRecordQualityMode(id, req.getChildNodeValue("￼NewRecordQualityMode"));
+            m_avTransport.setRecordQualityMode(id, xml::requiredChildValue(request, "￼NewRecordQualityMode"));
             break;
         // AVTransport:2
         case Action::GetMediaInfoExt:
@@ -199,7 +202,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             response.addArgument("CurrentType",             getInstanceVariable(id, Variable::DRMState).getValue());
             break;
         case Action::GetStateVariables:
-            response.addArgument("StateVariableList", getStateVariables(id, req.getChildNodeValue("StateVariableList")).toString());
+            response.addArgument("StateVariableList", getStateVariables(id, xml::requiredChildValue(request, "StateVariableList")));
             break;
         //case Action::SetStateVariables:
         //    break;
@@ -211,54 +214,54 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         case Action::AdjustSyncOffset:
             throwIfNoAVTransport3Support();
-            m_avTransport3->adjustSyncOffset(id, req.getChildNodeValue("Adjustment"));
+            m_avTransport3->adjustSyncOffset(id, xml::requiredChildValue(request, "Adjustment"));
             break;
         case Action::SetSyncOffset:
             throwIfNoAVTransport3Support();
-            m_avTransport3->setSyncOffset(id, req.getChildNodeValue("NewSyncOffset"));
+            m_avTransport3->setSyncOffset(id, xml::requiredChildValue(request, "NewSyncOffset"));
             break;
         case Action::SyncPlay:
         {
             throwIfNoAVTransport3Support();
-            auto val = req.getChildNodeValue("ReferencePositionUnits");
-            m_avTransport3->syncPlay(id, req.getChildNodeValue("Speed"),
+            auto val = xml::requiredChildValue(request, "ReferencePositionUnits");
+            m_avTransport3->syncPlay(id, xml::requiredChildValue(request, "Speed"),
                                          seekModeFromString(val),
-                                         req.getChildNodeValue("ReferencePosition"),
-                                         req.getChildNodeValue("ReferencePresentationTime"),
-                                         req.getChildNodeValue("ReferenceClockId"));
+                                         xml::requiredChildValue(request, "ReferencePosition"),
+                                         xml::requiredChildValue(request, "ReferencePresentationTime"),
+                                         xml::requiredChildValue(request, "ReferenceClockId"));
             break;
         }
         case Action::SyncStop:
             throwIfNoAVTransport3Support();
-            m_avTransport3->syncStop(id, req.getChildNodeValue("StopTime"), req.getChildNodeValue("ReferenceClockId"));
+            m_avTransport3->syncStop(id, xml::requiredChildValue(request, "StopTime"), xml::requiredChildValue(request, "ReferenceClockId"));
             break;
         case Action::SyncPause:
             throwIfNoAVTransport3Support();
-            m_avTransport3->syncPause(id, req.getChildNodeValue("PauseTime"), req.getChildNodeValue("ReferenceClockId"));
+            m_avTransport3->syncPause(id, xml::requiredChildValue(request, "PauseTime"), xml::requiredChildValue(request, "ReferenceClockId"));
             break;
         case Action::SetStaticPlaylist:
             throwIfNoAVTransport3Support();
-            m_avTransport3->setStaticPlaylist(id, req.getChildNodeValue("PlaylistData"),
-                                                  static_cast<uint32_t>(std::stoul(req.getChildNodeValue("PlaylistOffset"))),
-                                                  static_cast<uint32_t>(std::stoul(req.getChildNodeValue("PlaylistTotalLength"))),
-                                                  req.getChildNodeValue("PlaylistMIMEType"),
-                                                  req.getChildNodeValue("PlaylistExtendedType"),
-                                                  req.getChildNodeValue("PlaylistStartObj"),
-                                                  req.getChildNodeValue("PlaylistStartGroup"));
+            m_avTransport3->setStaticPlaylist(id, xml::requiredChildValue(request, "PlaylistData"),
+                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "PlaylistOffset"))),
+                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "PlaylistTotalLength"))),
+                                                  xml::requiredChildValue(request, "PlaylistMIMEType"),
+                                                  xml::requiredChildValue(request, "PlaylistExtendedType"),
+                                                  xml::requiredChildValue(request, "PlaylistStartObj"),
+                                                  xml::requiredChildValue(request, "PlaylistStartGroup"));
             break;
         case Action::SetStreamingPlaylist:
         {
             throwIfNoAVTransport3Support();
-            auto val = req.getChildNodeValue("PlaylistStep");
-            m_avTransport3->setStreamingPlaylist(id, req.getChildNodeValue("PlaylistData"),
-                                                     req.getChildNodeValue("PlaylistMIMEType"),
-                                                     req.getChildNodeValue("PlaylistExtendedType"),
+            auto val = xml::requiredChildValue(request, "PlaylistStep");
+            m_avTransport3->setStreamingPlaylist(id, xml::requiredChildValue(request, "PlaylistData"),
+                                                     xml::requiredChildValue(request, "PlaylistMIMEType"),
+                                                     xml::requiredChildValue(request, "PlaylistExtendedType"),
                                                      playlistStepFromString(val));
             break;
         }
         case Action::GetPlaylistInfo:
         {
-            auto val = req.getChildNodeValue("PlaylistType");
+            auto val = xml::requiredChildValue(request, "PlaylistType");
             throwIfNoAVTransport3Support();
             response.addArgument("PlaylistInfo", m_avTransport3->getPlaylistInfo(id, playlistTypeFromString(val)));
             break;
@@ -305,12 +308,12 @@ const char* Service::variableToString(Variable type) const
     return AVTransport::variableToString(type);
 }
 
-xml::Document Service::getStateVariables(uint32_t id, const std::string& variableList) const
+std::string Service::getStateVariables(uint32_t id, const std::string& variableList) const
 {
     try
     {
-        xml::Document doc;
-        auto pairs = doc.createElement("stateVariableValuePairs");
+        xml_document<> doc;
+        auto* pairs = doc.allocate_node(node_element, "stateVariableValuePairs");
 
         std::map<std::string, std::string> vars;
         if (variableList == "*")
@@ -333,14 +336,15 @@ xml::Document Service::getStateVariables(uint32_t id, const std::string& variabl
                 continue;
             }
 
-            auto var    = doc.createElement("stateVariable");
-            auto value  = doc.createNode(iter->second);
-            var.addAttribute("variableName", iter->first);
-            var.appendChild(value);
-            pairs.appendChild(var);
+            auto* var    = doc.allocate_node(node_element, "stateVariable");
+            auto* value  = doc.allocate_node(node_element, iter->second.c_str());
+            
+            var->append_attribute(doc.allocate_attribute("variableName", iter->first.c_str()));
+            var->append_node(value);
+            pairs->append_node(var);
         }
 
-        return doc;
+        return xml::toString(doc);
     }
     catch (Exception& e)
     {

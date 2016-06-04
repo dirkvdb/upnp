@@ -22,9 +22,9 @@ namespace upnp
 namespace factory
 {
 
-std::unique_ptr<IClient2> createClient()
+std::unique_ptr<IClient> createClient()
 {
-    return std::make_unique<Client2>();
+    return std::make_unique<Client>();
 }
 
 }

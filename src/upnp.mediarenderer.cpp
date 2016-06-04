@@ -117,7 +117,7 @@ MediaRenderer::PlaybackState parsePlaybackState(const std::string& state)
 
 }
 
-MediaRenderer::MediaRenderer(IClient2& client)
+MediaRenderer::MediaRenderer(IClient& client)
 : m_client(client)
 , m_connectionMgr(client)
 , m_renderingControl(client)

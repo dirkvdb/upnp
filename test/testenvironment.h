@@ -61,7 +61,7 @@ public:
         m_client->uninitialize();
     }
 
-    IClient2& getClient()
+    IClient& getClient()
     {
         return *m_client;
     }
@@ -77,7 +77,7 @@ public:
     }
 
 private:
-    std::unique_ptr<IClient2>   m_client;
+    std::unique_ptr<IClient>    m_client;
     DeviceDiscover              m_serverDiscoverer;
     DeviceDiscover              m_rendererDiscoverer;
     std::shared_ptr<Device>     m_serverDevice;

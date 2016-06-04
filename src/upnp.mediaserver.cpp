@@ -33,7 +33,7 @@ namespace upnp
 const std::string MediaServer::rootId = "0";
 static const uint32_t s_defaultRequestSize = 32;
 
-MediaServer::MediaServer(IClient2& client)
+MediaServer::MediaServer(IClient& client)
 : m_client(client)
 , m_contentDirectory(client)
 , m_connectionMgr(client)

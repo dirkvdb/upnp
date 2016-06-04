@@ -37,6 +37,8 @@ public:
     void stop(std::function<void()> cb);
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
+    void addFile(const std::string& urlPath, const std::string& contentType, const std::vector<uint8_t>& contents);
+    void removeFile(const std::string& urlPath);
     std::string getWebRootUrl() const;
     uv::Address getAddress() const;
 

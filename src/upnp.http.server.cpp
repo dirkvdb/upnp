@@ -124,6 +124,16 @@ void Server::addFile(const std::string& urlPath, const std::string& contentType,
     m_serverdFiles.emplace(urlPath, HostedFile{contentType, contents});
 }
 
+void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::vector<uint8_t>& contents)
+{
+    m_serverdFiles.emplace(urlPath, HostedFile{contentType, std::string(contents.begin(), contents.end())});
+}
+
+void Server::removeFile(const std::string& urlPath)
+{
+    m_serverdFiles.erase(urlPath);
+}
+
 std::string Server::getWebRootUrl() const
 {
     auto addr = m_socket.getSocketName();

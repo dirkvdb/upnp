@@ -30,10 +30,10 @@ namespace uv { class Loop; }
 
 class Action;
 
-class IClient2
+class IClient
 {
 public:
-    virtual ~IClient2() = default;
+    virtual ~IClient() = default;
 
     virtual void initialize() = 0;
     virtual void initialize(const std::string& interfaceName, uint16_t port) = 0;

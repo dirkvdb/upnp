@@ -44,7 +44,7 @@ struct ServiceTraits
 class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
-    Client(IClient2& client);
+    Client(IClient& client);
 
     void getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo>)> cb);
     void prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction, std::function<void(Status, ConnectionInfo)> cb);

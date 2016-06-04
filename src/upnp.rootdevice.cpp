@@ -141,6 +141,21 @@ std::string RootDevice2::getUniqueDeviceName()
     return m_device.udn;
 }
 
+void RootDevice2::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data)
+{
+    m_httpServer->addFile(path, contentType, data);
+}
+
+void RootDevice2::addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data)
+{
+    m_httpServer->addFile(path, contentType, data);
+}
+
+void RootDevice2::removeFileFromHttpServer(const std::string& path)
+{
+    m_httpServer->removeFile(path);
+}
+
 void RootDevice2::notifyEvent(const std::string& serviceId, std::string eventData)
 {
     auto iter = m_subscriptions.find(serviceId);
@@ -180,7 +195,7 @@ std::string RootDevice2::onSubscriptionRequest(http::Parser& parser) noexcept
 
             log::info("Subscription request: timeout {}s", request.timeout.count());
 
-            auto response = EventSubscriptionRequested2(request);
+            auto response = EventSubscriptionRequested(request);
 
             SubscriptionData data;
             data.deliveryUrl = parser.headerValue("CALLBACK");
@@ -272,7 +287,7 @@ std::string RootDevice2::onActionRequest(http::Parser& parser)
 
     try
     {
-        auto responseBody = ControlActionRequested2(request);
+        auto responseBody = ControlActionRequested(request);
         return fmt::format(s_response, responseBody.size(), responseBody);
     }
     catch (std::exception&)

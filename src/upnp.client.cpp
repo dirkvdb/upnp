@@ -47,20 +47,20 @@ Status httpStatusToStatus(int32_t httpStatus)
     return Status();
 }
 
-Client2::Client2()
+Client::Client()
 : m_loop(std::make_unique<uv::Loop>())
 {
 }
 
-Client2::~Client2() = default;
+Client::~Client() = default;
 
-void Client2::initialize()
+void Client::initialize()
 {
     log::debug("Initializing UPnP SDK");
     return initialize(uv::Address::createIp4("0.0.0.0", 0));
 }
 
-void Client2::initialize(const std::string& interfaceName, uint16_t port)
+void Client::initialize(const std::string& interfaceName, uint16_t port)
 {
     log::debug("Initializing UPnP SDK");
     auto addr = uv::Address::createIp4(interfaceName);
@@ -68,7 +68,7 @@ void Client2::initialize(const std::string& interfaceName, uint16_t port)
     return initialize(addr);
 }
 
-void Client2::initialize(const uv::Address& addr)
+void Client::initialize(const uv::Address& addr)
 {
     m_httpClient = std::make_unique<http::Client>(*m_loop);
     m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
@@ -91,7 +91,7 @@ void Client2::initialize(const uv::Address& addr)
     });
 }
 
-void Client2::uninitialize()
+void Client::uninitialize()
 {
     log::debug("Uninitializing UPnP SDK");
     uv::asyncSend(*m_loop, [&] () {
@@ -107,17 +107,17 @@ void Client2::uninitialize()
     m_thread.reset();
 }
 
-std::string Client2::getIpAddress() const
+std::string Client::getIpAddress() const
 {
     return m_eventServer->getAddress().ip();
 }
 
-uint16_t Client2::getPort() const
+uint16_t Client::getPort() const
 {
     return m_eventServer->getAddress().port();
 }
 
-void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(Status, std::string, std::chrono::seconds)> cb)
+void Client::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(Status, std::string, std::chrono::seconds)> cb)
 {
     if (!m_eventServer)
     {
@@ -146,7 +146,7 @@ void Client2::subscribeToService(const std::string& publisherUrl, std::chrono::s
     });
 }
 
-void Client2::renewSubscription(const std::string& publisherUrl,
+void Client::renewSubscription(const std::string& publisherUrl,
                                 const std::string& subscriptionId,
                                 std::chrono::seconds timeout,
                                 std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb)
@@ -169,7 +169,7 @@ void Client2::renewSubscription(const std::string& publisherUrl,
     });
 }
 
-void Client2::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
+void Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
     uv::asyncSend(*m_loop, [=] () {
         m_httpClient->unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
@@ -186,7 +186,7 @@ void Client2::unsubscribeFromService(const std::string& publisherUrl, const std:
     });
 }
 
-void Client2::sendAction(const Action& action, std::function<void(Status, std::string)> cb)
+void Client::sendAction(const Action& action, std::function<void(Status, std::string)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
@@ -203,19 +203,19 @@ void Client2::sendAction(const Action& action, std::function<void(Status, std::s
 #endif
 }
 
-void Client2::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
+void Client::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
     m_httpClient->get(url, [cb] (int32_t status, std::string contents) {
         cb(httpStatusToStatus(status), std::move(contents));
     });
 }
 
-uv::Loop& Client2::loop() const
+uv::Loop& Client::loop() const
 {
     return *m_loop;
 }
 
-void Client2::handlEvent(const SubscriptionEvent& event)
+void Client::handlEvent(const SubscriptionEvent& event)
 {
     auto iter = m_eventCallbacks.find(event.sid);
     if (iter != m_eventCallbacks.end())

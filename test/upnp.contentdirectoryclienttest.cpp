@@ -21,8 +21,6 @@ using namespace utils;
 using namespace testing;
 using namespace std::placeholders;
 
-#include "upnp/upnpxmlutils.h"
-
 namespace upnp
 {
 namespace test

@@ -17,7 +17,6 @@
 #ifndef UPNP_CONNECTION_MANAGER_SERVICE_H
 #define UPNP_CONNECTION_MANAGER_SERVICE_H
 
-#include "upnp/upnpxml.h"
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnp.connectionmanager.types.h"
 
@@ -40,8 +39,8 @@ class IConnectionManager3
 {
 public:
     virtual ~IConnectionManager3() {}
-    virtual xml::Document getRendererItemInfo(const std::vector<std::string>& /*itemInfoFilter*/, const xml::Document& /*itemMetadataList*/) { throw InvalidActionException(); };
-    virtual xml::Document getFeatureList() = 0;
+    virtual std::string getRendererItemInfo(const std::vector<std::string>& /*itemInfoFilter*/, const std::string& /*itemMetadataList*/) { throw InvalidActionException(); };
+    virtual std::string getFeatureList() = 0;
 };
 
 namespace ConnectionManager
@@ -53,7 +52,7 @@ public:
     Service(IRootDevice& dev, IConnectionManager& cm);
 
     std::string getSubscriptionResponse() override;
-    ActionResponse onAction(const std::string& action, const xml::Document& request) override;
+    ActionResponse onAction(const std::string& action, const std::string& request) override;
 
 protected:
     const char* variableToString(Variable type) const override;

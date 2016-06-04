@@ -20,12 +20,16 @@
 #include "utils/log.h"
 #include "upnp/upnp.xml.parseutils.h"
 
+#include "rapidxml.hpp"
+
 using namespace utils;
 
 namespace upnp
 {
 namespace ConnectionManager
 {
+
+using namespace rapidxml_ns;
 
 Service::Service(IRootDevice& dev, IConnectionManager& cm)
 : DeviceService(dev, { ServiceType::ConnectionManager, 1 })
@@ -51,12 +55,15 @@ std::string Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
+ActionResponse Service::onAction(const std::string& action, const std::string& request)
 {
     try
     {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
+
         ActionResponse response(action, { ServiceType::ConnectionManager, 1 });
-        auto request = doc.getFirstChild();
+        auto& request = doc.first_node_ref();
 
         switch (actionFromString(action))
         {
@@ -67,13 +74,11 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         case Action::PrepareForConnection:
         {
             ConnectionInfo connInfo;
-            connInfo.peerConnectionManager  = request.getChildNodeValue("PeerConnectionManager");
-            connInfo.peerConnectionId       = std::stoi(request.getChildNodeValue("PeerConnectionID"));
+            connInfo.peerConnectionManager  = xml::requiredChildValue(request, "PeerConnectionManager");
+            connInfo.peerConnectionId       = std::stoi(xml::requiredChildValue(request, "PeerConnectionID"));
+            connInfo.direction              = directionFromString(xml::requiredChildValue(request, "Direction"));
 
-            auto dir = request.getChildNodeValue("Direction");
-            connInfo.direction              = directionFromString(dir);
-
-            ProtocolInfo protoInfo(request.getChildNodeValue("RemoteProtocolInfo"));;
+            ProtocolInfo protoInfo(xml::requiredChildValue(request, "RemoteProtocolInfo"));
             m_connectionManager.prepareForConnection(protoInfo, connInfo);
 
             response.addArgument("ConnectionID",         std::to_string(connInfo.connectionId));
@@ -82,14 +87,14 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         }
         case Action::ConnectionComplete:
-            m_connectionManager.connectionComplete(std::stoi(request.getChildNodeValue("ConnectionID")));
+            m_connectionManager.connectionComplete(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
             break;
         case Action::GetCurrentConnectionIDs:
-            response.addArgument("ConnectionIDs",        getVariable(Variable::CurrentConnectionIds).getValue());
+            response.addArgument("ConnectionIDs", getVariable(Variable::CurrentConnectionIds).getValue());
             break;
         case Action::GetCurrentConnectionInfo:
         {
-            auto connInfo = m_connectionManager.getCurrentConnectionInfo(std::stoi(request.getChildNodeValue("ConnectionID")));
+            auto connInfo = m_connectionManager.getCurrentConnectionInfo(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
             response.addArgument("RcsID",                   std::to_string(connInfo.renderingControlServiceId));
             response.addArgument("AVTransportID",           std::to_string(connInfo.avTransportId));
             response.addArgument("ProtocolInfo",            connInfo.protocolInfo.toString());
@@ -101,14 +106,15 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         }
 
         case Action::GetRendererItemInfo:
+            // TODO: CHeck ItemMetadataList argument (wrap in xml doxument?)
             throwIfNoConnectionManager3Support();
             response.addArgument("ItemRenderingInfoList", m_connectionManager3->getRendererItemInfo(
-                                    csvToVector(request.getChildNodeValue("ItemInfoFilter")),
-                                    xml::Document(request.getChildNodeValue("ItemMetadataList"))).toString());
+                                    csvToVector(xml::requiredChildValue(request, "ItemInfoFilter")),
+                                    xml::requiredChildValue(request, "ItemMetadataList")));
             break;
         case Action::GetFeatureList:
             throwIfNoConnectionManager3Support();
-            response.addArgument("FeatureList", m_connectionManager3->getFeatureList().toString());
+            response.addArgument("FeatureList", m_connectionManager3->getFeatureList());
             break;
 
         default:

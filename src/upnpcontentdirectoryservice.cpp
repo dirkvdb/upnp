@@ -26,12 +26,16 @@
 #include "upnp/upnp.item.h"
 #include "upnp/upnp.xml.parseutils.h"
 
+#include "rapidxml.hpp"
+
 using namespace utils;
 
 namespace upnp
 {
 namespace ContentDirectory
 {
+
+using namespace rapidxml_ns;
 
 Service::Service(IRootDevice& dev, IContentDirectory& cd)
 : DeviceService(dev, { ServiceType::ContentDirectory, 1 })
@@ -56,12 +60,15 @@ std::string Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const xml::Document& doc)
+ActionResponse Service::onAction(const std::string& action, const std::string& requestDoc)
 {
     try
     {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(requestDoc.c_str());
+    
         ActionResponse response(action, { ServiceType::ContentDirectory, 1});
-        auto request = doc.getFirstChild();
+        auto& request = doc.first_node_ref();
 
         switch (actionFromString(action))
         {
@@ -76,13 +83,13 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             break;
         case Action::Browse:
         {
-            auto id = request.getChildNodeValue("ObjectID");
-            auto browseFlag = request.getChildNodeValue("BrowseFlag");
+            auto id = xml::requiredChildValue(request, "ObjectID");
+            auto browseFlag = xml::requiredChildValue(request, "BrowseFlag");
             auto flag = browseFlagFromString(browseFlag);
-            auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
-            auto startIndex = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("StartingIndex").c_str()));
-            auto count = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("RequestedCount").c_str()));
-            auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
+            auto filterStrings = stringops::tokenize(xml::requiredChildValue(request, "Filter"), ",");
+            auto startIndex = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
+            auto count = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
+            auto sortStrings = stringops::tokenize(xml::requiredChildValue(request, "SortCriteria"), ",");
 
             std::vector<Property> filter;
             std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
@@ -100,7 +107,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             });
 
             auto res = m_contentDirectory.Browse(id, flag, filter, startIndex, count, sort);
-            response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
+            response.addArgument("Result", xml::getItemsDocument(res.result));
             response.addArgument("NumberReturned", std::to_string(res.numberReturned));
             response.addArgument("TotalMatches", std::to_string(res.totalMatches));
             response.addArgument("UpdateID", std::to_string(res.updateId));
@@ -108,12 +115,12 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
         }
         case Action::Search:
         {
-            auto id = request.getChildNodeValue("ContainerID");
-            auto criteria = request.getChildNodeValue("SearchCriteria");
-            auto filterStrings = stringops::tokenize(request.getChildNodeValue("Filter"), ",");
-            auto startIndex = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("StartingIndex").c_str()));
-            auto count = static_cast<uint32_t>(std::stoul(request.getChildNodeValue("RequestedCount").c_str()));
-            auto sortStrings = stringops::tokenize(request.getChildNodeValue("SortCriteria"), ",");
+            auto id = xml::requiredChildValue(request, "ContainerID");
+            auto criteria = xml::requiredChildValue(request, "SearchCriteria");
+            auto filterStrings = stringops::tokenize(xml::requiredChildValue(request, "Filter"), ",");
+            auto startIndex = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
+            auto count = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
+            auto sortStrings = stringops::tokenize(xml::requiredChildValue(request, "SortCriteria"), ",");
 
             std::vector<Property> filter;
             std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
@@ -131,7 +138,7 @@ ActionResponse Service::onAction(const std::string& action, const xml::Document&
             });
 
             auto res = m_contentDirectory.Search(id, criteria, filter, startIndex, count, sort);
-            response.addArgument("Result", xml::utils::getItemsDocument(res.result).toString());
+            response.addArgument("Result", xml::getItemsDocument(res.result));
             response.addArgument("NumberReturned", std::to_string(res.numberReturned));
             response.addArgument("TotalMatches", std::to_string(res.totalMatches));
             response.addArgument("UpdateID", std::to_string(res.updateId));

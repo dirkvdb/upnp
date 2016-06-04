@@ -29,11 +29,11 @@ namespace upnp
 
 namespace gena { class Server; }
 
-class Client2 : public IClient2
+class Client : public IClient
 {
 public:
-    Client2();
-    virtual ~Client2();
+    Client();
+    virtual ~Client();
 
     void initialize() override;
     void initialize(const std::string& interfaceName, uint16_t port) override;

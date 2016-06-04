@@ -27,7 +27,7 @@ namespace test
 class DeviceDiscover
 {
 public:
-    DeviceDiscover(IClient2& client, DeviceType type, const std::string& name)
+    DeviceDiscover(IClient& client, DeviceType type, const std::string& name)
     : m_scanner(client, type)
     , m_deviceName(name)
     {

@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 
 TEST(UPnPClientTest, DISABLED_Client)
 {
-    Client2 client;
+    Client client;
 
     auto url = "http://192.168.1.184:8080/RenderingControl/evt"s;
     std::promise<void> prom;

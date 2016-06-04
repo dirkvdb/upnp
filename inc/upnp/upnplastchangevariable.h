@@ -27,7 +27,6 @@
 
 #include "utils/signal.h"
 #include "upnp/upnptypes.h"
-#include "upnp/upnpxmlutils.h"
 #include "upnp/upnpservicevariable.h"
 
 namespace upnp
@@ -41,8 +40,7 @@ public:
 
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
 
-    std::function<void(const xml::Document&)> LastChangeEvent;
-    std::function<void(const std::string&)> LastChangeEvent2;
+    std::function<void(const std::string&)> LastChangeEvent;
 
 private:
     void variableThread();

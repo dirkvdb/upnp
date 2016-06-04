@@ -32,7 +32,7 @@ using namespace utils;
 namespace upnp
 {
 
-ControlPoint::ControlPoint(IClient2& client)
+ControlPoint::ControlPoint(IClient& client)
 : m_renderer(client)
 , m_pWebServer(nullptr)
 {
@@ -50,7 +50,7 @@ void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev, std::fu
         {
             m_renderer.useDefaultConnection();
         }
-        
+
         cb(status);
     });
 }

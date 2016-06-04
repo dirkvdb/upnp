@@ -15,7 +15,6 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.avtransport.client.h"
-#include "upnp/upnpclientinterface.h"
 #include "upnp/upnputils.h"
 #include "upnp.avtransport.typeconversions.h"
 
@@ -78,7 +77,7 @@ const char* ServiceTraits::variableToString(Variable var)
     return AVTransport::variableToString(var);
 }
 
-Client::Client(IClient2& client)
+Client::Client(IClient& client)
 : ServiceClientBase(client)
 {
 }
@@ -172,7 +171,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status,
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-                info.numberOfTracks = xml::utils::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
+                info.numberOfTracks = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
                 info.mediaDuration = xml::optionalChildValue(responseNode, "MediaDuration");
                 info.currentURI = xml::optionalChildValue(responseNode, "CurrentUri");
                 info.currentURIMetaData = xml::optionalChildValue(responseNode, "CurrentUriMetaData");

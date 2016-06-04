@@ -19,20 +19,23 @@
 #include "utils/log.h"
 #include "upnp/upnp.xml.parseutils.h"
 
-using namespace utils;
+#include "rapidxml.hpp"
 
 namespace upnp
 {
 namespace RenderingControl
 {
 
+using namespace utils;
+using namespace rapidxml_ns;
+
 Service::Service(IRootDevice& dev, IRenderingControl& rc)
 : DeviceService(dev, { ServiceType::RenderingControl, 1 })
 , m_renderingControl(rc)
 , m_lastChange(m_type, std::chrono::milliseconds(200))
 {
-    m_lastChange.LastChangeEvent = [this] (const xml::Document& doc) {
-        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), doc);
+    m_lastChange.LastChangeEvent = [this] (const std::string& notification) {
+        m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), notification);
     };
 }
 
@@ -132,13 +135,16 @@ std::string Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const std::string& doc)
+ActionResponse Service::onAction(const std::string& action, const std::string& requestDoc)
 {
     try
     {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(requestDoc.c_str());
+        
         ActionResponse response(action, { ServiceType::RenderingControl, 1 });
-        auto req = doc.getFirstChild();
-        uint32_t id = static_cast<uint32_t>(std::stoul(req.getChildNodeValue("InstanceID")));
+        auto& req = doc.first_node_ref();
+        uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(req, "InstanceID")));
 
         switch (actionFromString(action))
         {
@@ -146,119 +152,119 @@ ActionResponse Service::onAction(const std::string& action, const std::string& d
             response.addArgument("CurrentPresetNameList", getInstanceVariable(id, Variable::PresetNameList).getValue());
             break;
         case Action::SelectPreset:
-            m_renderingControl.selectPreset(id, req.getChildNodeValue("PresetName"));
+            m_renderingControl.selectPreset(id, xml::requiredChildValue(req, "PresetName"));
             break;
         case Action::GetBrightness:
             response.addArgument("CurrentBrightness", getInstanceVariable(id, Variable::Brightness).getValue());
             break;
         case Action::SetBrightness:
-            m_renderingControl.setBrightness(id, std::stoi(req.getChildNodeValue("DesiredBrightness")));
+            m_renderingControl.setBrightness(id, std::stoi(xml::requiredChildValue(req, "DesiredBrightness")));
             break;
         case Action::GetContrast:
             response.addArgument("CurrentContrast", getInstanceVariable(id, Variable::Contrast).getValue());
             break;
         case Action::SetContrast:
-            m_renderingControl.setContrast(id, std::stoi(req.getChildNodeValue("DesiredContrast")));
+            m_renderingControl.setContrast(id, std::stoi(xml::requiredChildValue(req, "DesiredContrast")));
             break;
         case Action::GetSharpness:
             response.addArgument("CurrentSharpness", getInstanceVariable(id, Variable::Sharpness).getValue());
             break;
         case Action::SetSharpness:
-            m_renderingControl.setSharpness(id, std::stoi(req.getChildNodeValue("DesiredSharpness")));
+            m_renderingControl.setSharpness(id, std::stoi(xml::requiredChildValue(req, "DesiredSharpness")));
             break;
         case Action::GetRedVideoGain:
             response.addArgument("CurrentContrast", getInstanceVariable(id, Variable::RedVideoGain).getValue());
             break;
         case Action::SetRedVideoGain:
-            m_renderingControl.setRedVideoGain(id, std::stoi(req.getChildNodeValue("DesiredRedVideoGain")));
+            m_renderingControl.setRedVideoGain(id, std::stoi(xml::requiredChildValue(req, "DesiredRedVideoGain")));
             break;
         case Action::GetGreenVideoGain:
             response.addArgument("CurrentGreenVideoGain", getInstanceVariable(id, Variable::GreenVideoGain).getValue());
             break;
         case Action::SetGreenVideoGain:
-            m_renderingControl.setGreenVideoGain(id, std::stoi(req.getChildNodeValue("DesiredGreenVideoGain")));
+            m_renderingControl.setGreenVideoGain(id, std::stoi(xml::requiredChildValue(req, "DesiredGreenVideoGain")));
             break;
         case Action::GetBlueVideoGain:
             response.addArgument("CurrentBlueVideoGain", getInstanceVariable(id, Variable::BlueVideoGain).getValue());
             break;
         case Action::SetBlueVideoGain:
-            m_renderingControl.setBlueVideoGain(id, std::stoi(req.getChildNodeValue("DesiredBlueVideoGain")));
+            m_renderingControl.setBlueVideoGain(id, std::stoi(xml::requiredChildValue(req, "DesiredBlueVideoGain")));
             break;
         case Action::GetRedVideoBlackLevel:
             response.addArgument("CurrentRedVideoBlackLevel", getInstanceVariable(id, Variable::RedVideoBlackLevel).getValue());
             break;
         case Action::SetRedVideoBlackLevel:
-            m_renderingControl.setRedVideoBlackLevel(id, std::stoi(req.getChildNodeValue("DesiredRedVideoBlackLevel")));
+            m_renderingControl.setRedVideoBlackLevel(id, std::stoi(xml::requiredChildValue(req, "DesiredRedVideoBlackLevel")));
             break;
         case Action::GetGreenVideoBlackLevel:
             response.addArgument("CurrentGreenVideoBlackLevel", getInstanceVariable(id, Variable::GreenVideoBlackLevel).getValue());
             break;
         case Action::SetGreenVideoBlackLevel:
-            m_renderingControl.setGreenVideoBlackLevel(id, std::stoi(req.getChildNodeValue("DesiredGreenVideoBlackLevel")));
+            m_renderingControl.setGreenVideoBlackLevel(id, std::stoi(xml::requiredChildValue(req, "DesiredGreenVideoBlackLevel")));
             break;
         case Action::GetBlueVideoBlackLevel:
             response.addArgument("CurrentBlueVideoBlackLevel", getInstanceVariable(id, Variable::BlueVideoBlackLevel).getValue());
             break;
         case Action::SetBlueVideoBlackLevel:
-            m_renderingControl.setBlueVideoBlackLevel(id, std::stoi(req.getChildNodeValue("DesiredBlueVideoBlackLevel")));
+            m_renderingControl.setBlueVideoBlackLevel(id, std::stoi(xml::requiredChildValue(req, "DesiredBlueVideoBlackLevel")));
             break;
         case Action::GetColorTemperature:
             response.addArgument("CurrentColorTemperature", getInstanceVariable(id, Variable::ColorTemperature).getValue());
             break;
         case Action::SetColorTemperature:
-            m_renderingControl.setColorTemperature(id, std::stoi(req.getChildNodeValue("DesiredColorTemperature")));
+            m_renderingControl.setColorTemperature(id, std::stoi(xml::requiredChildValue(req, "DesiredColorTemperature")));
             break;
         case Action::GetHorizontalKeystone:
             response.addArgument("CurrentHorizontalKeystone", getInstanceVariable(id, Variable::HorizontalKeystone).getValue());
             break;
         case Action::SetHorizontalKeystone:
-            m_renderingControl.setHorizontalKeystone(id, std::stoi(req.getChildNodeValue("DesiredHorizontalKeystone")));
+            m_renderingControl.setHorizontalKeystone(id, std::stoi(xml::requiredChildValue(req, "DesiredHorizontalKeystone")));
             break;
         case Action::GetVerticalKeystone:
             response.addArgument("CurrentVerticalKeystone", getInstanceVariable(id, Variable::VerticalKeystone).getValue());
             break;
         case Action::SetVerticalKeystone:
-            m_renderingControl.setVerticalKeystone(id, std::stoi(req.getChildNodeValue("DesiredVerticalKeystone")));
+            m_renderingControl.setVerticalKeystone(id, std::stoi(xml::requiredChildValue(req, "DesiredVerticalKeystone")));
             break;
         case Action::GetMute:
         {
-            auto val = req.getChildNodeValue("Channel");
+            auto val = xml::requiredChildValue(req, "Channel");
             response.addArgument("CurrentMute", m_mute.at(id)[channelFromString(val)].getValue());
             break;
         }
         case Action::SetMute:
         {
-            auto val = req.getChildNodeValue("Channel");
-            m_renderingControl.setMute(id, channelFromString(val), req.getChildNodeValue("DesiredMute") == "1");
+            auto val = xml::requiredChildValue(req, "Channel");
+            m_renderingControl.setMute(id, channelFromString(val), xml::requiredChildValue(req, "DesiredMute") == "1");
             break;
         }
         case Action::GetVolume:
         {
-            auto val = req.getChildNodeValue("Channel");
+            auto val = xml::requiredChildValue(req, "Channel");
             response.addArgument("CurrentVolume", m_volumes.at(id)[channelFromString(val)].getValue());
             break;
         }
         case Action::SetVolume:
         {
-            auto val = req.getChildNodeValue("Channel");
-            m_renderingControl.setVolume(id, channelFromString(val), std::stoi(req.getChildNodeValue("DesiredVolume")));
+            auto val = xml::requiredChildValue(req, "Channel");
+            m_renderingControl.setVolume(id, channelFromString(val), std::stoi(xml::requiredChildValue(req, "DesiredVolume")));
             break;
         }
         case Action::GetVolumeDB:
         {
-            auto val = req.getChildNodeValue("Channel");
+            auto val = xml::requiredChildValue(req, "Channel");
             response.addArgument("CurrentVolumeDB", m_dbVolumes.at(id)[channelFromString(val)].getValue());
             break;
         }
         case Action::SetVolumeDB:
         {
-            auto val = req.getChildNodeValue("Channel");
-            m_renderingControl.setVolumeDB(id, channelFromString(val), std::stoi(req.getChildNodeValue("DesiredVolumeDB")));
+            auto val = xml::requiredChildValue(req, "Channel");
+            m_renderingControl.setVolumeDB(id, channelFromString(val), std::stoi(xml::requiredChildValue(req, "DesiredVolumeDB")));
             break;
         }
         case Action::GetVolumeDBRange:
         {
-            auto val = req.getChildNodeValue("Channel");
+            auto val = xml::requiredChildValue(req, "Channel");
             auto range = m_renderingControl.getVolumeDBRange(id, channelFromString(val));
             response.addArgument("MinValue", std::to_string(range.first));
             response.addArgument("MaxValue", std::to_string(range.second));
@@ -266,14 +272,14 @@ ActionResponse Service::onAction(const std::string& action, const std::string& d
         }
         case Action::GetLoudness:
         {
-            auto val = req.getChildNodeValue("Channel");
+            auto val = xml::requiredChildValue(req, "Channel");
             response.addArgument("CurrentLoudness", m_loudness.at(id)[channelFromString(val)].getValue());
             break;
         }
         case Action::SetLoudness:
         {
-            auto val = req.getChildNodeValue("Channel");
-            m_renderingControl.setLoudness(id, channelFromString(val), req.getChildNodeValue("DesiredLoudness") == "1");
+            auto val = xml::requiredChildValue(req, "Channel");
+            m_renderingControl.setLoudness(id, channelFromString(val), xml::requiredChildValue(req, "DesiredLoudness") == "1");
             break;
         }
 

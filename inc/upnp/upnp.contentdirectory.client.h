@@ -24,7 +24,7 @@ namespace upnp
 {
 
 struct Device;
-class IClient2;
+class IClient;
 
 namespace ContentDirectory
 {
@@ -52,7 +52,7 @@ public:
         ContainersOnly
     };
 
-    Client(upnp::IClient2& client);
+    Client(upnp::IClient& client);
 
     void abort();
 

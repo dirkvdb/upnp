@@ -48,7 +48,7 @@ struct DeviceCallbackMock
 
 TEST(RootDeviceTest, ControlAction)
 {
-    Client2 client;
+    Client client;
     RootDevice2 device(1800s);
 
     Device deviceInfo;
@@ -64,7 +64,7 @@ TEST(RootDeviceTest, ControlAction)
     deviceInfo.location = "/rootdesc.xml";
     device.registerDevice(fmt::format(simpleRootDesc, deviceInfo.udn, deviceInfo.location), deviceInfo);
 
-    device.ControlActionRequested2 = [&] (auto& arg) { return mock.onActionRequest(arg); };
+    device.ControlActionRequested = [&] (auto& arg) { return mock.onActionRequest(arg); };
 
     Action action("SetVolume", device.getWebrootUrl() + "/ctrl/rc", { ServiceType::RenderingControl, 1 });
     action.addArgument("Channel", "Master");

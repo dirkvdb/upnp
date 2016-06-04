@@ -19,7 +19,7 @@
 #include <string>
 #include <functional>
 
-#include "utils/signal.h"
+#include "upnp/upnp.device.h"
 
 namespace upnp
 {
@@ -35,6 +35,7 @@ struct SubscriptionResponse
 {
     // Actual timeout as decided by the service implementation
     std::chrono::seconds timeout;
+    std::string initialEvent;
 };
 
 struct ActionRequest
@@ -52,12 +53,19 @@ public:
     virtual void initialize() = 0;
     virtual void uninitialize() = 0;
 
+    virtual std::string getWebrootUrl() = 0;
+    virtual void registerDevice(const std::string& deviceDescriptionXml, const Device& dev) = 0;
+
     virtual std::string getUniqueDeviceName() = 0;
 
     virtual void notifyEvent(const std::string& serviceId, std::string response) = 0;
 
-    std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested2;
-    std::function<std::string(const ActionRequest&)> ControlActionRequested2;
+    virtual void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data) = 0;
+    virtual void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data) = 0;
+    virtual void removeFileFromHttpServer(const std::string& path) = 0;
+
+    std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested;
+    std::function<std::string(const ActionRequest&)> ControlActionRequested;
 };
 
 }

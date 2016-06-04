@@ -45,7 +45,7 @@ struct ServiceTraits
 class Client : public ServiceClientBase<ServiceTraits>
 {
 public:
-    Client(IClient2& client);
+    Client(IClient& client);
 
     void setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb);
     void setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb);

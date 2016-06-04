@@ -46,10 +46,14 @@ std::vector<StateVariable> parseServiceDescription(const std::string& contents, 
 
 std::string createNotificationXml(const std::vector<std::pair<std::string, std::string>>& vars);
 
-std::string optionalChildValue(rapidxml_ns::xml_node<char>& node, const char* child);
+std::string optionalChildValue(const rapidxml_ns::xml_node<char>& node, const char* child);
+std::string requiredChildValue(const rapidxml_ns::xml_node<char>& node, const char* child);
 
 std::string createServiceEvent(uint32_t instanceId, const std::vector<ServiceVariable>& vars);
 rapidxml_ns::xml_node<char>* serviceVariableToElement(rapidxml_ns::xml_document<char>& doc, const ServiceVariable& var);
+
+std::string getItemDocument(const Item& item);
+std::string getItemsDocument(const std::vector<Item>& items);
 
 std::string toString(rapidxml_ns::xml_document<char>& doc);
 std::string toString(rapidxml_ns::xml_node<char>& node);
