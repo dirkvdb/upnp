@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpcontentdirectoryservice.h"
+#include "upnp/upnp.contentdirectory.service.h"
 #include "upnp.contentdirectory.typeconversions.h"
 
 #include <cassert>
@@ -66,7 +66,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive | parse_trim_whitespace>(requestDoc.c_str());
-    
+
         ActionResponse response(action, { ServiceType::ContentDirectory, 1});
         auto& request = doc.first_node_ref();
 

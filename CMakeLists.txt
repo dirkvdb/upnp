@@ -89,17 +89,17 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.serviceclientbase.h
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp
-    inc/upnp/upnpavtransportservice.h                   src/upnpavtransportservice.cpp
+    inc/upnp/upnp.avtransport.service.h                 src/upnp.avtransport.service.cpp
     inc/upnp/upnp.clientinterface.h
     inc/upnp/upnp.connectionmanager.client.h            src/upnp.connectionmanager.client.cpp
-    inc/upnp/upnpconnectionmanagerservice.h             src/upnpconnectionmanagerservice.cpp
+    inc/upnp/upnp.connectionmanager.service.h           src/upnp.connectionmanager.service.cpp
     inc/upnp/upnp.connectionmanager.types.h
     inc/upnp/upnp.contentdirectory.client.h             src/upnp.contentdirectory.client.cpp
-    inc/upnp/upnpcontentdirectoryservice.h              src/upnpcontentdirectoryservice.cpp
+    inc/upnp/upnp.contentdirectory.service.h            src/upnp.contentdirectory.service.cpp
     inc/upnp/upnp.contentdirectory.types.h
     inc/upnp/upnp.controlpoint.h                        src/upnp.controlpoint.cpp
     inc/upnp/upnp.device.h
-    inc/upnp/upnpdeviceservice.h
+    inc/upnp/upnp.deviceservice.h
     inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnp.devicescanner.h                       src/upnp.devicescanner.cpp
     inc/upnp/upnp.dlna.info.h                           src/upnp.dlna.info.cpp
@@ -108,15 +108,15 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnphttpclient.h                           src/upnphttpclient.cpp
     inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
     inc/upnp/upnp.item.h                                src/upnp.item.cpp
-    inc/upnp/upnplastchangevariable.h                   src/upnplastchangevariable.cpp
+    inc/upnp/upnp.lastchangevariable.h                  src/upnp.lastchangevariable.cpp
     inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
     inc/upnp/upnp.mediaserver.h                         src/upnp.mediaserver.cpp
     inc/upnp/upnp.protocolinfo.h                        src/upnp.protocolinfo.cpp
     inc/upnp/upnp.renderingcontrol.types.h
     inc/upnp/upnp.renderingcontrol.client.h             src/upnp.renderingcontrol.client.cpp
     inc/upnp/upnp.rootdevice.h                          src/upnp.rootdevice.cpp
-    inc/upnp/upnprenderingcontrolservice.h              src/upnprenderingcontrolservice.cpp
-    inc/upnp/upnprootdeviceinterface.h
+    inc/upnp/upnp.renderingcontrol.service.h            src/upnp.renderingcontrol.service.cpp
+    inc/upnp/upnp.rootdeviceinterface.h
     inc/upnp/upnpservicevariable.h
     inc/upnp/upnpstatevariable.h
     inc/upnp/upnptypes.h

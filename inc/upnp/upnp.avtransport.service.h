@@ -14,12 +14,11 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_AVTRANSPORT_SERVICE_H
-#define UPNP_AVTRANSPORT_SERVICE_H
+#pragma once
 
-#include "upnp/upnpdeviceservice.h"
+#include "upnp/upnp.deviceservice.h"
 #include "upnp/upnp.avtransport.types.h"
-#include "upnp/upnplastchangevariable.h"
+#include "upnp/upnp.lastchangevariable.h"
 
 #include <string>
 #include <vector>
@@ -94,10 +93,8 @@ private:
 
     IAVTransport&                       m_avTransport;
     IAVTransport3*                      m_avTransport3;
-    LastChangeVariable                  m_LastChange;
+    LastChangeVariable                  m_lastChange;
 };
 
 }
 }
-
-#endif

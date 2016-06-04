@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnpavtransportservice.h"
+#include "upnp/upnp.avtransport.service.h"
 #include "upnp.avtransport.typeconversions.h"
 
 #include "utils/log.h"
@@ -44,16 +44,16 @@ Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, { ServiceType::AVTransport, 1 })
 , m_avTransport(av)
 , m_avTransport3(dynamic_cast<IAVTransport3*>(&av))
-, m_LastChange(m_type, std::chrono::milliseconds(200))
+, m_lastChange(m_type, std::chrono::milliseconds(200))
 {
-    m_LastChange.LastChangeEvent = [this] (const std::string& notification) {
+    m_lastChange.LastChangeEvent = [this] (const std::string& notification) {
         m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), notification);
     };
 }
 
 Service::~Service()
 {
-    m_LastChange.LastChangeEvent = nullptr;
+    m_lastChange.LastChangeEvent = nullptr;
 }
 
 std::string Service::getSubscriptionResponse()
@@ -101,7 +101,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
-        
+
         ActionResponse response(action, { ServiceType::AVTransport, 1 });
         auto& request = doc.first_node_ref();
         uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "InstanceID")));
@@ -300,7 +300,7 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
 
 
     log::debug("Add change: {} {}", variableToString(var), value);
-    m_LastChange.addChangedVariable(id, ServiceVariable(variableToString(var), value));
+    m_lastChange.addChangedVariable(id, ServiceVariable(variableToString(var), value));
 }
 
 const char* Service::variableToString(Variable type) const
@@ -338,7 +338,7 @@ std::string Service::getStateVariables(uint32_t id, const std::string& variableL
 
             auto* var    = doc.allocate_node(node_element, "stateVariable");
             auto* value  = doc.allocate_node(node_element, iter->second.c_str());
-            
+
             var->append_attribute(doc.allocate_attribute("variableName", iter->first.c_str()));
             var->append_node(value);
             pairs->append_node(var);

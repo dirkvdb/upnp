@@ -22,7 +22,7 @@
 
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.ssdp.server.h"
-#include "upnp/upnprootdeviceinterface.h"
+#include "upnp/upnp.rootdeviceinterface.h"
 
 namespace upnp
 {

@@ -26,7 +26,7 @@
 #include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnp.actionresponse.h"
-#include "upnp/upnprootdeviceinterface.h"
+#include "upnp/upnp.rootdeviceinterface.h"
 #include "upnp/upnpdeviceserviceexceptions.h"
 #include "upnp/upnpservicevariable.h"
 
