@@ -23,8 +23,6 @@ LINK_DIRECTORIES(
 #     #mediaservertest.cpp
 #     #controlpointtest.cpp
 #     testenvironment.h
-#     httpreadertest.cpp
-#     webservertest.cpp
 #     upnpservicebasetest.cpp
 # )
 
@@ -45,6 +43,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.ssdp.test.cpp
     upnp.http.clienttest.cpp
     upnp.http.parsertest.cpp
+    upnp.http.readertest.cpp
     upnp.gena.servertest.cpp
     upnp.actiontest.cpp
     upnp.devicescannertest.cpp

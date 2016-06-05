@@ -34,6 +34,7 @@
 using namespace utils;
 using namespace testing;
 using namespace std::placeholders;
+using namespace std::chrono_literals;
 
 #include "upnp/upnpxmlutils.h"
 
@@ -47,7 +48,7 @@ static const std::string g_subscriptionUrl          = "SubscriptionUrl";
 static const std::string g_serviceDescriptionUrl    = "ServiceDescriptionUrl";
 static const std::string g_eventNameSpaceId         = "RCS";
 static const std::string g_connectionId             = "0";
-static const uint32_t g_defaultTimeout              = 1801;
+static const auto g_defaultTimeout                  = 1801s;
 static const Upnp_SID g_subscriptionId              = "subscriptionId";
 
 enum class ServiceImplAction
