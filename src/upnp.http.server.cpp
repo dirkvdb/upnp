@@ -215,7 +215,7 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
             if (rangeHeader.empty())
             {
                 uv::Buffer buf(file.data, uv::Buffer::Ownership::No);
-                writeResponse(client, fmt::format(s_response, 209, file.data.size(), file.contentType), std::move(buf), closeConnection);
+                writeResponse(client, fmt::format(s_response, 200, file.data.size(), file.contentType), std::move(buf), closeConnection);
             }
             else
             {
