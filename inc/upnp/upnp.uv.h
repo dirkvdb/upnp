@@ -107,8 +107,20 @@ public:
     Buffer(Buffer&&) = default;
     Buffer& operator= (Buffer&&) = default;
 
-    Buffer(const Buffer&) = delete;
-    Buffer& operator= (const Buffer&) = delete;
+    Buffer(const Buffer& other) noexcept
+    : m_handle(other.m_handle)
+    , m_ownership(other.m_ownership)
+    {
+        assert(m_ownership == Ownership::No);
+    }
+    
+    Buffer& operator= (const Buffer& other) noexcept
+    {
+        assert(other.m_ownership == Ownership::No);
+        m_handle = other.m_handle;
+        m_ownership = other.m_ownership;
+        return *this;
+    }
 
     uv_buf_t* get()
     {

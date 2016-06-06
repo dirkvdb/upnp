@@ -45,7 +45,7 @@ static const std::string s_errorResponse =
     "\r\n";
 
 static const std::string s_response =
-    "HTTP/1.1 200 OK\r\n"
+    "HTTP/1.1 {} OK\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
     "CONTENT-LENGTH: {}\r\n"
     "CONTENT-TYPE: {}\r\n"
@@ -165,9 +165,9 @@ void Server::writeResponse(uv::socket::Tcp* client, const std::string& response,
     });
 }
 
-void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, const std::string& body, bool closeConnection)
+void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, uv::Buffer body, bool closeConnection)
 {
-    client->write(uv::Buffer(header, uv::Buffer::Ownership::No), [this, client, closeConnection, &body] (int32_t status) {
+    client->write(uv::Buffer(header, uv::Buffer::Ownership::No), [this, client, closeConnection, body] (int32_t status) {
         if (status < 0)
         {
             log::error("Failed to write response: {}", status);
@@ -204,13 +204,27 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
         {
             log::info("requested file size: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
-            writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), "", closeConnection);
+            writeResponse(client, fmt::format(s_response, 200, file.data.size(), file.contentType), closeConnection);
         }
         else if (parser->getMethod() == Method::Get)
         {
             log::info("requested file: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
-            writeResponse(client, fmt::format(s_response, file.data.size(), file.contentType), file.data, closeConnection);
+            
+            auto rangeHeader = parser->headerValue("Range");
+            if (rangeHeader.empty())
+            {
+                uv::Buffer buf(file.data, uv::Buffer::Ownership::No);
+                writeResponse(client, fmt::format(s_response, 209, file.data.size(), file.contentType), std::move(buf), closeConnection);
+            }
+            else
+            {
+                auto range = Parser::parseRange(rangeHeader);
+                auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
+                
+                uv::Buffer buf(&file.data[range.start], size, uv::Buffer::Ownership::No);
+                writeResponse(client, fmt::format(s_response, 206, size, file.contentType), std::move(buf), closeConnection);
+            }
         }
         else
         {
@@ -221,7 +235,7 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
             }
             else
             {
-                writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), "", closeConnection);
+                writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), closeConnection);
             }
         }
     }

@@ -67,7 +67,8 @@ TEST_F(HttpClientTest, DISABLED_ContentLengthNotProvided)
 TEST_F(HttpClientTest, ContentLength)
 {
     EXPECT_CALL(mock, onResponse(200, s_hostedFile.size()));
-    client.getContentLength(server.getWebRootUrl() + "/test.txt", handleResponse<size_t>());
+    auto url = server.getWebRootUrl() + "/test.txt";
+    client.getContentLength(url, handleResponse<size_t>());
     loop.run(uv::RunMode::Default);
 }
 

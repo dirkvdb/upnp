@@ -17,6 +17,7 @@
 #include "upnp/upnp.http.reader.h"
 #include "upnp/upnptypes.h"
 #include "utils/format.h"
+#include "utils/log.h"
 
 #include <curl/curl.h>
 #include <stdexcept>
@@ -130,6 +131,7 @@ std::string Reader::uri()
 struct WriteData
 {
     uint8_t* ptr = nullptr;
+    size_t size = 0;
     size_t offset = 0;
 };
 
@@ -137,6 +139,13 @@ static size_t writeFunc(char* ptr, size_t size, size_t nmemb, void* userdata)
 {
     auto* writeData = reinterpret_cast<WriteData*>(userdata);
     auto dataSize = size * nmemb;
+    
+    // server can ignore the range header and return the full request
+    if (writeData->offset + dataSize > writeData->size)
+    {
+        return 0;
+    }
+    
     memcpy(writeData->ptr + writeData->offset, ptr, dataSize);
     writeData->offset += dataSize;
     return dataSize;
@@ -156,7 +165,9 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
     if (size > 0) // avoid requests when eof reached
     {
         auto range = fmt::format("{}-{}", m_currentPosition, upperLimit);
-        WriteData writeData{ pData, 0 };
+        WriteData writeData;
+        writeData.ptr = pData;
+        writeData.size = size;
 
         CurlHandle curl;
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
@@ -170,6 +181,13 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
         if (res != CURLE_OK)
         {
             throw std::runtime_error("Failed to open url: " + std::string(curl_easy_strerror(res)));
+        }
+        
+        long httpCode = 0;
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &httpCode);
+        if (httpCode != 206)
+        {
+            throw std::runtime_error("Failed to perform ranged http get: " + std::to_string(httpCode));
         }
 
         m_currentPosition += size;

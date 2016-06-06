@@ -64,16 +64,18 @@ TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
         reader.open(url);
         EXPECT_EQ(fileSize, reader.getContentLength());
 
-        std::vector<uint8_t> result(fileSize, '\0');
+        std::vector<uint8_t> result(fileSize);
         size_t currentPos = 0;
         size_t increment = 65536;
 
+        uint64_t bytesRead = 0;
+        
         do
         {
-            auto bytesRead = reader.read(&result[currentPos], increment);
+            EXPECT_NO_THROW(bytesRead = reader.read(&result[currentPos], increment));
             currentPos += bytesRead;
         }
-        while (!reader.eof());
+        while (!reader.eof() && bytesRead > 0);
 
         EXPECT_THAT(data, ContainerEq(result));
         EXPECT_EQ(0, memcmp(data.data(), result.data(), data.size()));

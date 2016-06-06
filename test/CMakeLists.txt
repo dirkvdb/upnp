@@ -13,18 +13,10 @@ LINK_DIRECTORIES(
     ${UPNPFRAMEWORK_LIBRARY_DIRS}
 )
 
-# ADD_EXECUTABLE(upnptest
-#     testframework/gmock-gtest-all.cpp
-#     main.cpp
-
 #     devicediscover.h
-
-#     xmlutilstest.cpp
-#     #mediaservertest.cpp
-#     #controlpointtest.cpp
+#     controlpointtest.cpp
 #     testenvironment.h
 #     upnpservicebasetest.cpp
-# )
 
 ADD_EXECUTABLE(upnpframeworktest
     testframework/gmock-gtest-all.cpp
@@ -51,10 +43,10 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.soap.parseutilstest.cpp
 
     upnp.serviceclienttestbase.h
-    upnp.avtransportclienttest.cpp
-    upnp.renderingcontrolclienttest.cpp
-    upnp.connectionmanagerclienttest.cpp
-    upnp.contentdirectoryclienttest.cpp
+    upnp.avtransport.clienttest.cpp
+    upnp.renderingcontrol.clienttest.cpp
+    upnp.connectionmanager.clienttest.cpp
+    upnp.contentdirectory.clienttest.cpp
 
     upnp.mediaservertest.cpp
     #upnp.mediarenderertest.cpp

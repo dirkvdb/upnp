@@ -94,6 +94,14 @@ public:
     Flags<Flag> getFlags() const noexcept;
 
     static const char* methodToString(Method m) noexcept;
+    
+    struct Range
+    {
+        uint64_t start = 0;
+        uint64_t end = 0;
+    };
+    
+    static Range parseRange(const std::string& range);
 
 private:
     void clear();

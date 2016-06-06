@@ -17,6 +17,7 @@
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.flags.h"
 #include "http_parser.h"
+#include "utils/stringoperations.h"
 
 #include "upnp.enumutils.h"
 
@@ -24,6 +25,8 @@
 
 namespace upnp
 {
+
+using namespace utils;
 
 static const std::string g_emptyString;
 
@@ -294,6 +297,34 @@ void Parser::clear()
     m_pimpl->body = std::string();
     m_pimpl->url.clear();
     m_pimpl->state = State::Initial;
+}
+
+Parser::Range Parser::parseRange(const std::string& range)
+{
+    Range result;
+    
+    if (!stringops::startsWith(range, "bytes="))
+    {
+        throw std::invalid_argument("Invalid range header: " + range);
+    }
+
+    auto split = stringops::tokenize(&range[6], '-');
+    if (split.size() != 2)
+    {
+        throw std::invalid_argument("Invalid range header: " + range);
+    }
+    
+    if (!split[0].empty())
+    {
+        result.start = std::stoul(split[0]);
+    }
+    
+    if (!split[1].empty())
+    {
+        result.end = std::stoul(split[1]);
+    }
+    
+    return result;
 }
 
 }
