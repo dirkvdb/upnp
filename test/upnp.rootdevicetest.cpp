@@ -95,7 +95,12 @@ TEST(RootDeviceTest, ControlAction)
     scanner.start();
     scanner.refresh();
 
-    EXPECT_EQ(std::future_status::ready, fut.wait_for(5s));
+    if (fut.wait_for(3s) != std::future_status::ready)
+    {
+        scanner.refresh();
+        EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+    }
+
     client.uninitialize();
     device.uninitialize();
 }

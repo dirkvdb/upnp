@@ -48,54 +48,54 @@ matrix:
             - uuid-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-            - libcurl4-gnutls-dev
-            - uuid-dev
-      env:
-        - COMPILER=3.7 BUILD_TYPE=Debug
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-            - libcurl4-gnutls-dev
-            - uuid-dev
-      env:
-        - COMPILER=3.7 BUILD_TYPE=Release
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-          packages:
-            - clang-3.8
-            - libcurl4-gnutls-dev
-            - uuid-dev
-      env:
-        - COMPILER=3.8 BUILD_TYPE=Debug
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-          packages:
-            - clang-3.8
-            - libcurl4-gnutls-dev
-            - uuid-dev
-      env:
-        - COMPILER=3.8 BUILD_TYPE=Release
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.7
+    #       packages:
+    #         - clang-3.7
+    #         - libcurl4-gnutls-dev
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=3.7 BUILD_TYPE=Debug
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.7
+    #       packages:
+    #         - clang-3.7
+    #         - libcurl4-gnutls-dev
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=3.7 BUILD_TYPE=Release
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.8
+    #       packages:
+    #         - clang-3.8
+    #         - libcurl4-gnutls-dev
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=3.8 BUILD_TYPE=Debug
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #         - llvm-toolchain-precise-3.8
+    #       packages:
+    #         - clang-3.8
+    #         - libcurl4-gnutls-dev
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=3.8 BUILD_TYPE=Release
 
 before_install:
   ############################################################################
