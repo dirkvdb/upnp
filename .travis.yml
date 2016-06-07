@@ -49,6 +49,7 @@ matrix:
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
+      os: osx
       addons:
         apt:
           packages:
@@ -121,8 +122,11 @@ before_install:
       CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz"
       mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-    else
-      brew install cmake
+    fi
+
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew install cmake libuv libupnp
     fi
 
   ############################################################################
@@ -155,18 +159,21 @@ before_install:
       (cd llvm/build/projects/libcxxabi && make install -j2)
       export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
+      export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"
     fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"; fi
 
 install:
-  - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
-  - tar xf libupnp-1.6.19.tar.bz2
-  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && make install
-  - cd ..
-  - wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
-  - tar xf v1.9.1.tar.gz
-  - cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
+      tar xf libupnp-1.6.19.tar.bz2
+      cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && make install
+      cd ..
+      wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
+      tar xf v1.9.1.tar.gz
+      cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+    fi
   - cd ${TRAVIS_BUILD_DIR}
 
 before_script:
