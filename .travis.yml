@@ -156,7 +156,7 @@ before_install:
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
     fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"; fi
+  #- if [ "$CXX" = "clang++" ]; then export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"; fi
 
 install:
   - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
