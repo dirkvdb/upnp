@@ -50,14 +50,9 @@ matrix:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
       os: osx
-      addons:
-        apt:
-          packages:
-            - libcurl4-gnutls-dev
-            - uuid-dev
-            - clang-3.6
       env:
-        - COMPILER=3.6 BUILD_TYPE=Debug
+        - BUILD_TYPE=Debug
+      osx_image: xcode7.3
     # - compiler: clang
     #   addons:
     #     apt:
