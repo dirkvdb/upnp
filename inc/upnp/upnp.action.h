@@ -27,8 +27,8 @@ class Action
 {
 public:
     Action(const std::string& name, const std::string& url, ServiceType serviceType);
-    Action(Action&&) = default;
-    Action& operator=(Action&&) = default;
+    Action(Action&&);
+    Action& operator=(Action&&);
     ~Action();
 
     void addArgument(const std::string& name, const std::string& value);

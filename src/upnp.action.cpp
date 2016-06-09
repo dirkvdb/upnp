@@ -72,6 +72,8 @@ Action::Action(const std::string& name, const std::string& url, ServiceType serv
 }
 
 Action::~Action() = default;
+Action::Action(Action&&) = default;
+Action& Action::operator=(Action&&) = default;
 
 void Action::addArgument(const std::string& name, const std::string& value)
 {

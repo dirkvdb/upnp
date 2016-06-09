@@ -95,24 +95,25 @@ std::string Service::getSubscriptionResponse()
 }
 
 
-ActionResponse Service::onAction(const std::string& action, const std::string& request)
+ActionResponse Service::onAction(const std::string& action, const std::string& requestXml)
 {
     try
     {
         xml_document<> doc;
-        doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(requestXml.c_str());
 
         ActionResponse response(action, { ServiceType::AVTransport, 1 });
-        auto& request = doc.first_node_ref();
-        uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "InstanceID")));
+        auto& actionNode = doc.first_node_ref().first_node_ref().first_node_ref();
+        assert(action.compare(0, action.size(), actionNode.local_name(), actionNode.local_name_size()) == 0);
+        uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(actionNode, "InstanceID")));
 
         switch (actionFromString(action))
         {
         case Action::SetAVTransportURI:
-            m_avTransport.setAVTransportURI(id, xml::requiredChildValue(request, "CurrentURI"), xml::requiredChildValue(request, "CurrentURIMetaData"));
+            m_avTransport.setAVTransportURI(id, xml::requiredChildValue(actionNode, "CurrentURI"), xml::requiredChildValue(actionNode, "CurrentURIMetaData"));
             break;
         case Action::SetNextAVTransportURI:
-            m_avTransport.setNextAVTransportURI(id, xml::requiredChildValue(request, "NextURI"), xml::requiredChildValue(request, "NextURIMetaData"));
+            m_avTransport.setNextAVTransportURI(id, xml::requiredChildValue(actionNode, "NextURI"), xml::requiredChildValue(actionNode, "NextURIMetaData"));
             break;
         case Action::GetMediaInfo:
             response.addArgument("NrTracks",                getInstanceVariable(id, Variable::NumberOfTracks).getValue());
@@ -156,7 +157,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             m_avTransport.stop(id);
             break;
         case Action::Play:
-            m_avTransport.play(id, xml::requiredChildValue(request, "Speed"));
+            m_avTransport.play(id, xml::requiredChildValue(actionNode, "Speed"));
             break;
         case Action::Pause:
             m_avTransport.pause(id);
@@ -166,8 +167,8 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             break;
         case Action::Seek:
         {
-            auto val = xml::requiredChildValue(request, "Unit");
-            m_avTransport.seek(id, seekModeFromString(val), xml::requiredChildValue(request, "Target"));
+            auto val = xml::requiredChildValue(actionNode, "Unit");
+            m_avTransport.seek(id, seekModeFromString(val), xml::requiredChildValue(actionNode, "Target"));
             break;
         }
         case Action::Next:
@@ -178,12 +179,12 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             break;
         case Action::SetPlayMode:
         {
-            auto val = xml::requiredChildValue(request, "NewPlayMode");
+            auto val = xml::requiredChildValue(actionNode, "NewPlayMode");
             m_avTransport.setPlayMode(id, playModeFromString(val));
             break;
         }
         case Action::SetRecordQualityMode:
-            m_avTransport.setRecordQualityMode(id, xml::requiredChildValue(request, "￼NewRecordQualityMode"));
+            m_avTransport.setRecordQualityMode(id, xml::requiredChildValue(actionNode, "￼NewRecordQualityMode"));
             break;
         // AVTransport:2
         case Action::GetMediaInfoExt:
@@ -202,7 +203,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             response.addArgument("CurrentType",             getInstanceVariable(id, Variable::DRMState).getValue());
             break;
         case Action::GetStateVariables:
-            response.addArgument("StateVariableList", getStateVariables(id, xml::requiredChildValue(request, "StateVariableList")));
+            response.addArgument("StateVariableList", getStateVariables(id, xml::requiredChildValue(actionNode, "StateVariableList")));
             break;
         //case Action::SetStateVariables:
         //    break;
@@ -214,54 +215,54 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             break;
         case Action::AdjustSyncOffset:
             throwIfNoAVTransport3Support();
-            m_avTransport3->adjustSyncOffset(id, xml::requiredChildValue(request, "Adjustment"));
+            m_avTransport3->adjustSyncOffset(id, xml::requiredChildValue(actionNode, "Adjustment"));
             break;
         case Action::SetSyncOffset:
             throwIfNoAVTransport3Support();
-            m_avTransport3->setSyncOffset(id, xml::requiredChildValue(request, "NewSyncOffset"));
+            m_avTransport3->setSyncOffset(id, xml::requiredChildValue(actionNode, "NewSyncOffset"));
             break;
         case Action::SyncPlay:
         {
             throwIfNoAVTransport3Support();
-            auto val = xml::requiredChildValue(request, "ReferencePositionUnits");
-            m_avTransport3->syncPlay(id, xml::requiredChildValue(request, "Speed"),
+            auto val = xml::requiredChildValue(actionNode, "ReferencePositionUnits");
+            m_avTransport3->syncPlay(id, xml::requiredChildValue(actionNode, "Speed"),
                                          seekModeFromString(val),
-                                         xml::requiredChildValue(request, "ReferencePosition"),
-                                         xml::requiredChildValue(request, "ReferencePresentationTime"),
-                                         xml::requiredChildValue(request, "ReferenceClockId"));
+                                         xml::requiredChildValue(actionNode, "ReferencePosition"),
+                                         xml::requiredChildValue(actionNode, "ReferencePresentationTime"),
+                                         xml::requiredChildValue(actionNode, "ReferenceClockId"));
             break;
         }
         case Action::SyncStop:
             throwIfNoAVTransport3Support();
-            m_avTransport3->syncStop(id, xml::requiredChildValue(request, "StopTime"), xml::requiredChildValue(request, "ReferenceClockId"));
+            m_avTransport3->syncStop(id, xml::requiredChildValue(actionNode, "StopTime"), xml::requiredChildValue(actionNode, "ReferenceClockId"));
             break;
         case Action::SyncPause:
             throwIfNoAVTransport3Support();
-            m_avTransport3->syncPause(id, xml::requiredChildValue(request, "PauseTime"), xml::requiredChildValue(request, "ReferenceClockId"));
+            m_avTransport3->syncPause(id, xml::requiredChildValue(actionNode, "PauseTime"), xml::requiredChildValue(actionNode, "ReferenceClockId"));
             break;
         case Action::SetStaticPlaylist:
             throwIfNoAVTransport3Support();
-            m_avTransport3->setStaticPlaylist(id, xml::requiredChildValue(request, "PlaylistData"),
-                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "PlaylistOffset"))),
-                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "PlaylistTotalLength"))),
-                                                  xml::requiredChildValue(request, "PlaylistMIMEType"),
-                                                  xml::requiredChildValue(request, "PlaylistExtendedType"),
-                                                  xml::requiredChildValue(request, "PlaylistStartObj"),
-                                                  xml::requiredChildValue(request, "PlaylistStartGroup"));
+            m_avTransport3->setStaticPlaylist(id, xml::requiredChildValue(actionNode, "PlaylistData"),
+                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(actionNode, "PlaylistOffset"))),
+                                                  static_cast<uint32_t>(std::stoul(xml::requiredChildValue(actionNode, "PlaylistTotalLength"))),
+                                                  xml::requiredChildValue(actionNode, "PlaylistMIMEType"),
+                                                  xml::requiredChildValue(actionNode, "PlaylistExtendedType"),
+                                                  xml::requiredChildValue(actionNode, "PlaylistStartObj"),
+                                                  xml::requiredChildValue(actionNode, "PlaylistStartGroup"));
             break;
         case Action::SetStreamingPlaylist:
         {
             throwIfNoAVTransport3Support();
-            auto val = xml::requiredChildValue(request, "PlaylistStep");
-            m_avTransport3->setStreamingPlaylist(id, xml::requiredChildValue(request, "PlaylistData"),
-                                                     xml::requiredChildValue(request, "PlaylistMIMEType"),
-                                                     xml::requiredChildValue(request, "PlaylistExtendedType"),
+            auto val = xml::requiredChildValue(actionNode, "PlaylistStep");
+            m_avTransport3->setStreamingPlaylist(id, xml::requiredChildValue(actionNode, "PlaylistData"),
+                                                     xml::requiredChildValue(actionNode, "PlaylistMIMEType"),
+                                                     xml::requiredChildValue(actionNode, "PlaylistExtendedType"),
                                                      playlistStepFromString(val));
             break;
         }
         case Action::GetPlaylistInfo:
         {
-            auto val = xml::requiredChildValue(request, "PlaylistType");
+            auto val = xml::requiredChildValue(actionNode, "PlaylistType");
             throwIfNoAVTransport3Support();
             response.addArgument("PlaylistInfo", m_avTransport3->getPlaylistInfo(id, playlistTypeFromString(val)));
             break;

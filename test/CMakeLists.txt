@@ -16,7 +16,6 @@ LINK_DIRECTORIES(
 #     devicediscover.h
 #     controlpointtest.cpp
 #     testenvironment.h
-#     upnpservicebasetest.cpp
 
 ADD_EXECUTABLE(upnpframeworktest
     testframework/gmock-gtest-all.cpp
@@ -47,6 +46,8 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.renderingcontrol.clienttest.cpp
     upnp.connectionmanager.clienttest.cpp
     upnp.contentdirectory.clienttest.cpp
+
+    upnp.avtransport.servicetest.cpp
 
     upnp.mediaservertest.cpp
     #upnp.mediarenderertest.cpp
