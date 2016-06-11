@@ -17,6 +17,7 @@
 #include "upnp/upnp.lastchangevariable.h"
 
 #include <chrono>
+#include <algorithm>
 
 #include "utils/log.h"
 #include "upnp/upnp.xml.parseutils.h"
