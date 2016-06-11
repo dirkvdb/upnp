@@ -63,7 +63,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
         doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
 
         ActionResponse response(action, { ServiceType::ConnectionManager, 1 });
-        auto& request = doc.first_node_ref();
+        auto& request = doc.first_node_ref().first_node_ref().first_node_ref();
 
         switch (actionFromString(action))
         {

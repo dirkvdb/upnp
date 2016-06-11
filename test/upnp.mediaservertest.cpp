@@ -30,7 +30,7 @@ using namespace testing;
 
 #include "testxmls.h"
 #include "testutils.h"
-#include "upnpclientmock.h"
+#include "upnp.clientmock.h"
 
 namespace upnp
 {

@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp.serviceclienttestbase.h"
+#include "upnp.clienttestbase.h"
 #include "upnp/upnp.connectionmanager.client.h"
 
 using namespace utils;
@@ -39,11 +39,6 @@ bool operator==(const ConnectionInfo& lhs, const ConnectionInfo& rhs)
            && lhs.connectionStatus == rhs.connectionStatus;
 }
 
-}
-
-bool operator==(const ProtocolInfo& lhs, const ProtocolInfo& rhs)
-{
-    return lhs.toString() == rhs.toString();
 }
 
 std::ostream& operator<<(std::ostream& os, const ProtocolInfo& lhs)

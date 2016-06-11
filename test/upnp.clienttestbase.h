@@ -21,7 +21,7 @@
 
 #include <memory>
 
-#include "upnpclientmock.h"
+#include "upnp.clientmock.h"
 #include "testxmls.h"
 #include "testutils.h"
 #include "upnpobjectprinter.h"

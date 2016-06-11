@@ -27,14 +27,15 @@ public:
     ProtocolInfo();
     ProtocolInfo(const std::string& protocolString);
 
-    std::string getProtocol() const;
-    std::string getNetwork() const;
-    std::string getContentFormat() const;
-    std::string getAdditionalInfo() const;
+    std::string getProtocol() const noexcept;
+    std::string getNetwork() const noexcept;
+    std::string getContentFormat() const noexcept;
+    std::string getAdditionalInfo() const noexcept;
 
-    bool isCompatibleWith(const ProtocolInfo& info) const;
+    bool isCompatibleWith(const ProtocolInfo& info) const noexcept;
+    bool operator==(const ProtocolInfo& info) const noexcept;
 
-    std::string toString() const;
+    std::string toString() const noexcept;
 
 private:
     std::string m_protocol;

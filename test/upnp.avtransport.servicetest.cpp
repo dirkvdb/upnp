@@ -19,6 +19,7 @@
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.avtransport.service.h"
 #include "upnp.avtransport.typeconversions.h"
+#include "upnp.rootdevicemock.h"
 
 namespace upnp
 {
@@ -31,22 +32,6 @@ using namespace std::string_literals;
 static const std::string s_controlUrl = "http://controlurl:80";
 static const std::string s_eventNameSpaceId = "AVS";
 static const uint32_t s_connectionId = 5;
-
-struct RootDeviceMock : public IRootDevice
-{
-    MOCK_METHOD0(initialize, void());
-    MOCK_METHOD0(uninitialize, void());
-
-    MOCK_METHOD0(getWebrootUrl, std::string());
-    MOCK_METHOD2(registerDevice, void(const std::string& deviceDescriptionXml, const Device& dev));
-
-    MOCK_METHOD0(getUniqueDeviceName, std::string());
-
-    MOCK_METHOD2(notifyEvent, void(const std::string& serviceId, std::string response));
-    MOCK_METHOD3(addFileToHttpServer, void(const std::string& path, const std::string& contentType, const std::string& data));
-    MOCK_METHOD3(addFileToHttpServer, void(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data));
-    MOCK_METHOD1(removeFileFromHttpServer, void(const std::string& path));
-};
 
 struct AVTransportMock : public IAVTransport
 {
@@ -65,23 +50,14 @@ struct AVTransportMock : public IAVTransport
     MOCK_METHOD1(getCurrentTransportActions, std::vector<AVTransport::Action>(uint32_t instanceId));
 };
 
-template <typename ServiceType, typename VariableType, typename MockType>
-class ServiceTestBase : public Test
+class AVTransportServiceTest : public Test
 {
-protected:
-    ServiceTestBase()
+public:
+    AVTransportServiceTest()
     : service(rootDeviceMock, serviceImplMock)
     {
     }
 
-    RootDeviceMock rootDeviceMock;
-    MockType serviceImplMock;
-    ServiceType service;
-};
-
-class AVTransportServiceTest : public ServiceTestBase<AVTransport::Service, AVTransport::Variable, AVTransportMock>
-{
-public:
     Action createAction(AVTransport::Action type)
     {
         Action a(AVTransport::actionToString(type), s_controlUrl, serviceType);
@@ -99,6 +75,9 @@ public:
     }
 
     ServiceType serviceType = ServiceType{ServiceType::AVTransport, 1};
+    RootDeviceMock rootDeviceMock;
+    AVTransportMock serviceImplMock;
+    AVTransport::Service service;
 };
 
 TEST_F(AVTransportServiceTest, Play)

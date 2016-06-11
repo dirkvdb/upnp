@@ -22,7 +22,8 @@ ADD_EXECUTABLE(upnpframeworktest
     main.cpp
 
     testenvironment.h
-    upnpclientmock.h
+    upnp.clientmock.h
+    upnp.rootdevicemock.h
 
     testxmls.h
     upnp.uvtest.cpp
@@ -41,13 +42,14 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.xml.parseutilstest.cpp
     upnp.soap.parseutilstest.cpp
 
-    upnp.serviceclienttestbase.h
+    upnp.clienttestbase.h
     upnp.avtransport.clienttest.cpp
     upnp.renderingcontrol.clienttest.cpp
     upnp.connectionmanager.clienttest.cpp
     upnp.contentdirectory.clienttest.cpp
 
     upnp.avtransport.servicetest.cpp
+    upnp.connectionmanager.servicetest.cpp
 
     upnp.mediaservertest.cpp
     #upnp.mediarenderertest.cpp

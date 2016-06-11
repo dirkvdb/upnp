@@ -41,33 +41,38 @@ ProtocolInfo::ProtocolInfo(const std::string& protocolString)
     m_additionalInfo    = items[3];
 }
 
-std::string ProtocolInfo::getProtocol() const
+std::string ProtocolInfo::getProtocol() const noexcept
 {
     return m_protocol;
 }
 
-std::string ProtocolInfo::getNetwork() const
+std::string ProtocolInfo::getNetwork() const noexcept
 {
     return m_network;
 }
 
-std::string ProtocolInfo::getContentFormat() const
+std::string ProtocolInfo::getContentFormat() const noexcept
 {
     return m_contentFormat;
 }
 
-std::string ProtocolInfo::getAdditionalInfo() const
+std::string ProtocolInfo::getAdditionalInfo() const noexcept
 {
     return m_additionalInfo;
 }
 
-bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const
+bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const noexcept
 {
     return (m_protocol == info.m_protocol) &&
             (m_contentFormat == "*" || m_contentFormat == info.m_contentFormat);
 }
 
-std::string ProtocolInfo::toString() const
+bool ProtocolInfo::operator==(const ProtocolInfo& other) const noexcept
+{
+    return toString() == other.toString();
+}
+
+std::string ProtocolInfo::toString() const noexcept
 {
     if (m_protocol.empty())
     {
