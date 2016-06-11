@@ -157,78 +157,77 @@ TEST_F(AVTransportServiceTest, GetTransportInfo)
     expected.addArgument("CurrentTransportState", toString(AVTransport::State::Playing));
     expected.addArgument("CurrentTransportStatus", toString(AVTransport::Status::Ok));
     expected.addArgument("CurrentSpeed", "2");
-    EXPECT_EQ(response, expected.toString());
+    EXPECT_EQ(expected.toString(), response);
 }
 
-// TEST_F(AVTransportServiceTest, getPositionInfo)
-// {
-//     Action expectedAction("GetPositionInfo", s_controlUrl, serviceType());
-//     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
+TEST_F(AVTransportServiceTest, GetPositionInfo)
+{
+    EXPECT_CALL(rootDeviceMock, notifyEvent(_, _)).Times(AnyNumber());
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrack, "Track");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrackDuration, "00:01:00");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrackMetaData, "Meta");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrackURI, "http://track");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::RelativeTimePosition, "1");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::AbsoluteTimePosition, "2");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::RelativeCounterPosition, "3");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::AbsoluteCounterPosition, "4");
 
-//     expectAction(expectedAction, { { "AbsCount",      "1" },
-//                                    { "AbsTime",       "AbsTime" },
-//                                    { "RelTime",       "RelTime" },
-//                                    { "RelCount",      "2" },
-//                                    { "Track",         "3" },
-//                                    { "TrackDuration", "Duration" },
-//                                    { "TrackMetaData", "Meta" },
-//                                    { "TrackURI",      "URI"} } );
+    auto a = createAction(AVTransport::Action::GetPositionInfo);
+    auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetPositionInfo, a));
+    
+    ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetPositionInfo), serviceType);
+    expected.addArgument("Track", "Track");
+    expected.addArgument("TrackDuration", "00:01:00");
+    expected.addArgument("TrackMetaData", "Meta");
+    expected.addArgument("TrackURI", "http://track");
+    expected.addArgument("RelTime", "1");
+    expected.addArgument("AbsTime", "2");
+    expected.addArgument("RelCount", "3");
+    expected.addArgument("AbsCount", "4");
+    EXPECT_EQ(expected.toString(), response);
+}
 
-//     AVTransport::PositionInfo expectedInfoResponse;
-//     expectedInfoResponse.absoluteCount = 1;
-//     expectedInfoResponse.relativeCount = 2;
-//     expectedInfoResponse.track = 3;
-//     expectedInfoResponse.absoluteTime = "AbsTime";
-//     expectedInfoResponse.relativeTime = "RelTime";
-//     expectedInfoResponse.trackDuration = "Duration";
-//     expectedInfoResponse.trackMetaData = "Meta";
-//     expectedInfoResponse.trackURI = "URI";
+TEST_F(AVTransportServiceTest, GetMediaInfo)
+{
+    EXPECT_CALL(rootDeviceMock, notifyEvent(_, _)).Times(AnyNumber());
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::NumberOfTracks, "5");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentMediaDuration, "00:01:00");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrackURI, "Uri");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTrackMetaData, "UriMeta");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::NextAVTransportURI, "NextUri");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::NextAVTransportURIMetaData, "NextUriMeta");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::PlaybackStorageMedium, "Medium");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::RecordStorageMedium, "MediumRec");
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::RecordMediumWriteStatus, "Status");
 
-//     EXPECT_CALL(statusMock, onStatus(Status(), expectedInfoResponse));
-//     serviceInstance->getPositionInfo(s_connectionId, checkStatusCallback<AVTransport::PositionInfo>());
-// }
+    auto a = createAction(AVTransport::Action::GetMediaInfo);
+    auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetMediaInfo, a));
+    
+    ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetMediaInfo), serviceType);
+    expected.addArgument("NrTracks", "5");
+    expected.addArgument("MediaDuration", "00:01:00");
+    expected.addArgument("CurrentURI", "Uri");
+    expected.addArgument("CurrentURIMetaData", "UriMeta");
+    expected.addArgument("NextURI", "NextUri");
+    expected.addArgument("NextURIMetaData", "NextUriMeta");
+    expected.addArgument("PlayMedium", "Medium");
+    expected.addArgument("RecordMedium", "MediumRec");
+    expected.addArgument("WriteStatus", "Status");
+    EXPECT_EQ(expected.toString(), response);
+}
 
-// TEST_F(AVTransportServiceTest, getMediaInfo)
-// {
-//     Action expectedAction("GetMediaInfo", s_controlUrl, serviceType());
-//     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
-
-//     expectAction(expectedAction, { { "NrTracks",            "5" },
-//                                    { "MediaDuration",       "Duration" },
-//                                    { "CurrentUri",          "Uri" },
-//                                    { "CurrentUriMetaData",  "UriMeta" },
-//                                    { "NextURI",             "NextUri" },
-//                                    { "NextURIMetaData",     "NextUriMeta" },
-//                                    { "PlayMedium",          "Medium" },
-//                                    { "RecordMedium",        "MediumRec"},
-//                                    { "WriteStatus",         "Status"} } );
-
-//     AVTransport::MediaInfo expectedInfoResponse;
-//     expectedInfoResponse.numberOfTracks = 5;
-//     expectedInfoResponse.mediaDuration = "Duration";
-//     expectedInfoResponse.currentURI = "Uri";
-//     expectedInfoResponse.currentURIMetaData = "UriMeta";
-//     expectedInfoResponse.nextURI = "NextUri";
-//     expectedInfoResponse.nextURIMetaData = "NextUriMeta";
-//     expectedInfoResponse.playMedium = "Medium";
-//     expectedInfoResponse.recordMedium = "MediumRec";
-//     expectedInfoResponse.writeStatus = "Status";
-
-//     EXPECT_CALL(statusMock, onStatus(Status(), expectedInfoResponse));
-//     serviceInstance->getMediaInfo(s_connectionId, checkStatusCallback<AVTransport::MediaInfo>());
-// }
-
-// TEST_F(AVTransportServiceTest, getCurrentTransportActions)
-// {
-//     Action expectedAction("GetCurrentTransportActions", s_controlUrl, serviceType());
-//     expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
-
-//     expectAction(expectedAction, { { "Actions", "Pause,Stop,Play" } } );
-
-//     std::set<AVTransport::Action> expected = { AVTransport::Action::Play, AVTransport::Action::Pause, AVTransport::Action::Stop };
-//     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<std::set<AVTransport::Action>>(ContainerEq(expected))));
-//     serviceInstance->getCurrentTransportActions(s_connectionId, checkStatusCallback<std::set<AVTransport::Action>>());
-// }
+TEST_F(AVTransportServiceTest, GetCurrentTransportActions)
+{
+    EXPECT_CALL(rootDeviceMock, notifyEvent(_, _)).Times(AnyNumber());
+    service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTransportActions, "Pause,Stop,Play");
+    
+    auto a = createAction(AVTransport::Action::GetCurrentTransportActions);
+    auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetCurrentTransportActions, a));
+    
+    ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetCurrentTransportActions), serviceType);
+    expected.addArgument("Actions", "Pause,Stop,Play");
+    EXPECT_EQ(expected.toString(), response);
+}
 
 }
 }
