@@ -18,6 +18,7 @@
 
 #include "gmock/gmock.h"
 
+#include "upnp/upnp.uv.h"
 #include "upnp/upnp.rootdeviceinterface.h"
 
 using namespace testing;
@@ -41,6 +42,14 @@ struct RootDeviceMock : public IRootDevice
     MOCK_METHOD3(addFileToHttpServer, void(const std::string& path, const std::string& contentType, const std::string& data));
     MOCK_METHOD3(addFileToHttpServer, void(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data));
     MOCK_METHOD1(removeFileFromHttpServer, void(const std::string& path));
+    
+    uv::Loop& loop() noexcept override
+    {
+        return m_loop;
+    }
+        
+private:
+    uv::Loop m_loop;
 };
 
 }

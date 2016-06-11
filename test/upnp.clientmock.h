@@ -31,13 +31,6 @@ namespace test
 class ClientMock : public IClient
 {
 public:
-    ClientMock()
-    {
-        EXPECT_CALL(*this, loop())
-            .Times(AnyNumber())
-            .WillRepeatedly(ReturnRef(m_loop));
-    }
-
     MOCK_METHOD0(initialize, void());
     MOCK_METHOD2(initialize, void(const std::string&, uint16_t));
     MOCK_METHOD0(uninitialize, void());
@@ -51,7 +44,10 @@ public:
     MOCK_METHOD2(sendAction, void(const Action&, std::function<void(Status status, std::string actionResult)>));
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(Status, std::string contents)>));
 
-    MOCK_CONST_METHOD0(loop, uv::Loop&());
+    uv::Loop& loop() noexcept override
+    {
+        return m_loop;
+    }
 
 private:
     uv::Loop m_loop;

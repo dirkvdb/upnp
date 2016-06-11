@@ -58,7 +58,7 @@ public:
     void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
-    uv::Loop& loop() const override;
+    uv::Loop& loop() noexcept override;
 
 private:
     void initialize(const uv::Address& addr);

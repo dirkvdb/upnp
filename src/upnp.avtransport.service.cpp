@@ -44,7 +44,7 @@ Service::Service(IRootDevice& dev, IAVTransport& av)
 : DeviceService(dev, { ServiceType::AVTransport, 1 })
 , m_avTransport(av)
 , m_avTransport3(dynamic_cast<IAVTransport3*>(&av))
-, m_lastChange(m_type, std::chrono::milliseconds(200))
+, m_lastChange(dev.loop(), m_type, std::chrono::milliseconds(200))
 {
     m_lastChange.LastChangeEvent = [this] (const std::string& notification) {
         m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), notification);

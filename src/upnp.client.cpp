@@ -210,7 +210,7 @@ void Client::getFile(const std::string& url, std::function<void(Status, std::str
     });
 }
 
-uv::Loop& Client::loop() const
+uv::Loop& Client::loop() noexcept
 {
     return *m_loop;
 }

@@ -57,7 +57,7 @@ public:
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
     
-    uv::Loop& loop() noexcept;
+    uv::Loop& loop() noexcept override;
 
 private:
     std::string onSubscriptionRequest(http::Parser& parser) noexcept;

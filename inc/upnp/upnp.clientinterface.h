@@ -49,7 +49,7 @@ public:
     virtual void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
 
-    virtual uv::Loop& loop() const = 0;
+    virtual uv::Loop& loop() noexcept = 0;
 };
 
 }

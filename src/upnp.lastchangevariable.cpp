@@ -40,32 +40,20 @@ static const char* s_instanceIdNode = "InstanceID";
 static const char* s_event = "Event";
 static const char* s_valAtr         = "val";
 
-LastChangeVariable::LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventIntervalInMilliSecs)
-: m_thread(std::bind(&LastChangeVariable::variableThread, this))
-, m_minInterval(minEventIntervalInMilliSecs)
-, m_stop(false)
+LastChangeVariable::LastChangeVariable(uv::Loop& loop, ServiceType type, std::chrono::milliseconds minEventInterval)
+: m_timerScheduled(false)
+, m_minInterval(minEventInterval)
 , m_eventMetaNamespace(serviceTypeToUrnMetadataString(type))
+, m_timer(loop)
 {
 }
 
 LastChangeVariable::~LastChangeVariable()
 {
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_stop = true;
-        m_condition.notify_all();
-    }
-
-    if (m_thread.joinable())
-    {
-        m_thread.join();
-    }
 }
 
 void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVariable& var)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
     if (var.getName().empty())
     {
         log::error("Empty var added {}", var.toString());
@@ -82,8 +70,22 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
     {
         *iter = var;
     }
-
-    m_condition.notify_all();
+    
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastUpdate = now - m_lastUpdate;
+    if (timeSinceLastUpdate > m_minInterval)
+    {
+        createLastChangeEvent();
+    }
+    else if (!m_timerScheduled)
+    {
+        auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(m_minInterval - timeSinceLastUpdate);
+        m_timerScheduled = true;
+        m_timer.start(waitTime, [this] () {
+            createLastChangeEvent();
+            m_timerScheduled = false;
+        });
+    }
 }
 
 void LastChangeVariable::createLastChangeEvent()
@@ -113,6 +115,8 @@ void LastChangeVariable::createLastChangeEvent()
             vars.emplace_back("LastChange"s, xml::encode(xml::toString(doc)));
 
             LastChangeEvent(xml::createNotificationXml(vars));
+            m_changedVariables.clear();
+            m_lastUpdate = std::chrono::steady_clock::now();
 
 #ifdef DEBUG_LAST_CHANGE_VAR
             utils::log::debug("LastChange event: {}", xmlDoc);
@@ -122,25 +126,6 @@ void LastChangeVariable::createLastChangeEvent()
     catch (std::exception& e)
     {
         log::error("Failed to create LastChange notification: {}", e.what());
-    }
-}
-
-void LastChangeVariable::variableThread()
-{
-    while (!m_stop)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_condition.wait(lock, [this] { return (!m_changedVariables.empty()) || m_stop; });
-        if (m_stop)
-        {
-            continue;
-        }
-
-        createLastChangeEvent();
-        m_changedVariables.clear();
-
-        // Wait at least MinInterval before a new update is sent or until a stop is requested
-        m_condition.wait_for(lock, m_minInterval, [this] { return m_stop; });
     }
 }
 

@@ -18,16 +18,12 @@
 
 #include <string>
 #include <cinttypes>
-#include <map>
+#include <unordered_map>
 #include <chrono>
-#include <thread>
-#include <memory>
-#include <iostream>
-#include <condition_variable>
 
-#include "utils/signal.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpservicevariable.h"
+#include "upnp/upnp.uv.h"
 
 namespace upnp
 {
@@ -35,7 +31,7 @@ namespace upnp
 class LastChangeVariable
 {
 public:
-    LastChangeVariable(ServiceType type, std::chrono::milliseconds minEventInterval);
+    LastChangeVariable(uv::Loop& loop, ServiceType type, std::chrono::milliseconds minEventInterval);
     ~LastChangeVariable();
 
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
@@ -46,13 +42,12 @@ private:
     void variableThread();
     void createLastChangeEvent();
 
-    std::mutex                                          m_mutex;
-    std::condition_variable                             m_condition;
-    std::thread                                         m_thread;
-    std::map<uint32_t, std::vector<ServiceVariable>>    m_changedVariables;
-    std::chrono::milliseconds                           m_minInterval;
-    bool                                                m_stop;
-    std::string                                         m_eventMetaNamespace;
+    bool                                                        m_timerScheduled;
+    std::unordered_map<uint32_t, std::vector<ServiceVariable>>  m_changedVariables;
+    std::chrono::milliseconds                                   m_minInterval;
+    std::chrono::steady_clock::time_point                       m_lastUpdate;
+    std::string                                                 m_eventMetaNamespace;
+    uv::Timer                                                   m_timer;
 };
 
 }
