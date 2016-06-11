@@ -143,7 +143,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
         doc.parse<parse_non_destructive | parse_trim_whitespace>(requestDoc.c_str());
 
         ActionResponse response(action, { ServiceType::RenderingControl, 1 });
-        auto& req = doc.first_node_ref();
+        auto& req = doc.first_node_ref().first_node_ref().first_node_ref();
         uint32_t id = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(req, "InstanceID")));
 
         switch (actionFromString(action))

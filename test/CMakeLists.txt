@@ -50,6 +50,7 @@ ADD_EXECUTABLE(upnpframeworktest
 
     upnp.avtransport.servicetest.cpp
     upnp.connectionmanager.servicetest.cpp
+    upnp.renderingcontrol.servicetest.cpp
 
     upnp.mediaservertest.cpp
     #upnp.mediarenderertest.cpp
