@@ -4,6 +4,45 @@ language: cpp
 
 matrix:
   include:
+    - compiler: clang
+      addons:
+        apt:
+          packages:
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.7
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
     - compiler: gcc
       addons:
         apt:
@@ -58,54 +97,14 @@ matrix:
       env:
         - BUILD_TYPE=Release
       osx_image: xcode7.3
-    - compiler: clang
-      addons:
-        apt:
-          packages:
-            - libcurl4-gnutls-dev
-            - uuid-dev
-      env:
-        - COMPILER=3.7 BUILD_TYPE=Debug
-    # - compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #       packages:
-    #         - clang-3.7
-    #         - libcurl4-gnutls-dev
-    #         - uuid-dev
-    #   env:
-    #     - COMPILER=3.7 BUILD_TYPE=Release
-    # - compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #       packages:
-    #         - clang-3.8
-    #         - libcurl4-gnutls-dev
-    #         - uuid-dev
-    #   env:
-    #     - COMPILER=3.8 BUILD_TYPE=Debug
-    # - compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #       packages:
-    #         - clang-3.8
-    #         - libcurl4-gnutls-dev
-    #         - uuid-dev
-    #   env:
-    #     - COMPILER=3.8 BUILD_TYPE=Release
 
 before_install:
   ############################################################################
   # All the dependencies are installed in ${TRAVIS_BUILD_DIR}/deps/
   ############################################################################
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+  - mkdir -p ${DEPS_DIR}/local
+  - cd ${DEPS_DIR}
   - export CXXFLAGS="-isystem ${DEPS_DIR}/local/include"
   - export PKG_CONFIG_PATH=${DEPS_DIR}/local/lib/pkgconfig
   - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${DEPS_DIR}/local/lib"
@@ -131,12 +130,6 @@ before_install:
   ############################################################################
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
-      if   [[ "${COMPILER}" == "3.5" ]]; then LLVM_VERSION="3.5.2"
-      elif [[ "${COMPILER}" == "3.6" ]]; then LLVM_VERSION="3.6.2";
-      elif [[ "${COMPILER}" == "3.7" ]]; then LLVM_VERSION="3.7.1";
-      elif [[ "${COMPILER}" == "3.8" ]]; then LLVM_VERSION="3.8.0";
-      else                                    LLVM_VERSION="trunk"; fi
-
       travis_retry wget --quiet -O - http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
 
       export PATH=${DEPS_DIR}/local/bin:${PATH}
