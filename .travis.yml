@@ -136,6 +136,8 @@ before_install:
       export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
       export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"
+      ls ${DEPS_DIR}/local/bin
+      clang++-${COMPILER} -v
       ${CXX} -v
     fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
