@@ -8,26 +8,6 @@ PKG_CHECK_MODULES(UPNP_PKG libupnp REQUIRED)
 PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
 PKG_CHECK_MODULES(CURL_PKG libcurl REQUIRED)
 
-FIND_PATH(UPNP_INCLUDE_DIR
-    NAMES upnp.h
-    PATHS ${UPNP_PKG_INCLUDE_DIRS}
-)
-
-FIND_LIBRARY(UPNP_LIBRARY
-    NAMES upnp
-    PATHS ${UPNP_PKG_LIBRARY_DIRS}
-)
-
-FIND_LIBRARY(IXML_LIBRARY
-    NAMES ixml
-    PATHS ${UPNP_PKG_LIBRARY_DIRS}
-)
-
-FIND_LIBRARY(THREADUTIL_LIBRARY
-    NAMES threadutil
-    PATHS ${UPNP_PKG_LIBRARY_DIRS}
-)
-
 FIND_PATH(LIBUV_INCLUDE_DIR
     NAMES uv.h
     PATHS ${LIBUV_PKG_INCLUDE_DIRS}
@@ -71,7 +51,6 @@ SET (UPNPFRAMEWORK_SYS_INCLUDE_DIRS
 SET (UPNPFRAMEWORK_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
     ${UTILS_INCLUDE_DIRS}
-    ${UPNP_INCLUDE_DIR}
 )
 
 SET (UPNPFRAMEWORK_LIBRARY_DIRS
@@ -105,7 +84,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.dlna.info.h                           src/upnp.dlna.info.cpp
     inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
-    inc/upnp/upnphttpclient.h                           src/upnphttpclient.cpp
     inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
     inc/upnp/upnp.item.h                                src/upnp.item.cpp
     inc/upnp/upnp.lastchangevariable.h                  src/upnp.lastchangevariable.cpp
@@ -146,7 +124,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/guid.h                                          src/guid.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY} ${UPNP_LIBRARY} ${IXML_LIBRARY} ${THREADUTIL_LIBRARY})
+TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY})
 
 IF (MINGW)
     TARGET_LINK_LIBRARIES(upnpframework ws2_32)

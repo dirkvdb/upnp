@@ -22,9 +22,6 @@
 #include <iomanip>
 #include <chrono>
 
-#include <upnp.h>
-#include <upnptools.h>
-
 #include "utils/stringoperations.h"
 #include "upnp/upnptypes.h"
 
@@ -36,51 +33,6 @@ inline void throwOnNull(const void* pPtr, const char* pMsg)
     if (!pPtr)
     {
         throw Exception(pMsg);
-    }
-}
-
-template <typename... T>
-inline void handleUPnPResult(int rc, T&&... args)
-{
-    if (UPNP_E_SUCCESS != rc)
-    {
-        throw Exception(rc, std::forward<T&&>(args)...);
-    }
-}
-
-inline void handleUPnPResult(int errorCode)
-{
-    if (UPNP_E_SUCCESS == errorCode)
-    {
-        return;
-    }
-    else if (UPNP_E_SOCKET_CONNECT == errorCode)
-    {
-        throw Exception(errorCode, "Could not connect to the device");
-    }
-    else if (UPNP_E_BAD_RESPONSE == errorCode)
-    {
-        throw Exception(errorCode, "Bad response from the server");
-    }
-    else if (401 == errorCode)
-    {
-        throw Exception(errorCode, "Failed to connect");
-    }
-    else if (500 == errorCode)
-    {
-        throw Exception(errorCode, "UPnP device error");
-    }
-    else if (501 == errorCode)
-    {
-        throw Exception(errorCode, "Request not supported");
-    }
-    else if (801 == errorCode)
-    {
-        throw Exception(errorCode, "Access denied");
-    }
-    else
-    {
-        throw Exception(errorCode, "{} ({})", UpnpGetErrorMessage(errorCode), errorCode);
     }
 }
 
