@@ -10,7 +10,6 @@ matrix:
           packages:
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Debug
     - compiler: clang
@@ -21,7 +20,6 @@ matrix:
           packages:
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
     - compiler: clang
@@ -32,7 +30,6 @@ matrix:
           packages:
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
     - compiler: clang
@@ -43,7 +40,6 @@ matrix:
           packages:
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
     - compiler: gcc
@@ -55,7 +51,6 @@ matrix:
             - g++-5
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
@@ -67,7 +62,6 @@ matrix:
             - g++-5
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
@@ -79,7 +73,6 @@ matrix:
             - g++-6
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
@@ -91,7 +84,6 @@ matrix:
             - g++-6
             - libcurl4-gnutls-dev
             - uuid-dev
-            - libuv1-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
@@ -148,6 +140,12 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
 install:
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
+      tar xf v1.9.1.tar.gz
+      cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+    fi
   - cd ${TRAVIS_BUILD_DIR}
 
 before_script:
