@@ -136,7 +136,7 @@ before_install:
       export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
       export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
       export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"
-      clang-${COMPILER} -v
+      ${CXX} -v
     fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
@@ -155,6 +155,7 @@ before_script:
 script:
   - git submodule update --init --recursive
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSTANDALONE=ON .
+  - cat ./CMakeFiles/CMakeOutput.log
   - make -j4
   - CTEST_OUTPUT_ON_FAILURE=1 make test
 
