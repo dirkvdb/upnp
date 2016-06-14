@@ -92,6 +92,16 @@ public:
         m_cb = std::move(cb);
     }
 
+    size_t parse(const char* data, size_t size) noexcept
+    {
+        if (size == 0)
+        {
+            return 0;
+        }
+
+        return m_parser.parse(data, size);
+    }
+
     size_t parse(const std::string& data) noexcept
     {
         if (data.empty())
@@ -165,12 +175,12 @@ public:
         m_parser.setHeadersCompletedCallback([this] () { parseData(); });
     }
 
-    void setSearchRequestCallback(std::function<void(const std::string& host, const std::string& searchTarget, std::chrono::seconds, const uv::Address& addr)> cb) noexcept
+    void setSearchRequestCallback(std::function<void(const std::string& host, const std::string& searchTarget, std::chrono::seconds, const asio::ip::udp::endpoint& addr)> cb) noexcept
     {
         m_cb = std::move(cb);
     }
 
-    size_t parse(const std::string& data, const uv::Address& addr)
+    size_t parse(const std::string& data, const asio::ip::udp::endpoint& addr)
     {
         assert(!data.empty());
         m_address = addr;
@@ -211,7 +221,7 @@ private:
 
                     // MX values bigger then 5 are reduced back to 5
                     auto delay = std::chrono::seconds(mx.empty() ? 0 : std::min(5, std::stoi(mx)));
-                    m_cb(m_parser.headerValue("HOST"), m_parser.headerValue("ST"), delay, *m_address);
+                    m_cb(m_parser.headerValue("HOST"), m_parser.headerValue("ST"), delay, m_address);
                 }
             }
         }
@@ -223,8 +233,8 @@ private:
     }
 
     http::Parser m_parser;
-    std::optional<uv::Address> m_address;
-    std::function<void(const std::string&, const std::string&, std::chrono::seconds, const uv::Address&)> m_cb;
+    asio::ip::udp::endpoint m_address;
+    std::function<void(const std::string&, const std::string&, std::chrono::seconds, const asio::ip::udp::endpoint&)> m_cb;
 };
 
 }

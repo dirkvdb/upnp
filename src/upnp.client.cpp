@@ -215,6 +215,11 @@ uv::Loop& Client::loop() noexcept
     return *m_loop;
 }
 
+asio::io_service& Client::service() noexcept
+{
+    return *m_service;
+}
+
 void Client::handlEvent(const SubscriptionEvent& event)
 {
     auto iter = m_eventCallbacks.find(event.sid);

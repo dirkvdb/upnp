@@ -39,8 +39,8 @@ DeviceScanner::DeviceScanner(IClient& client, DeviceType type)
 
 DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 : m_upnpClient(client)
-, m_ssdpClient(client.loop())
-, m_timer(client.loop())
+, m_ssdpClient(client.service())
+, m_timer(client.service())
 , m_types(types)
 {
     m_ssdpClient.setDeviceNotificationCallback([=] (const ssdp::DeviceNotificationInfo& info) {
@@ -59,21 +59,21 @@ void DeviceScanner::start()
 {
     log::debug("Start device scanner, known devices ({})", m_devices.size());
 
-    uv::asyncSend(m_upnpClient.loop(), [this] () {
-        m_ssdpClient.run();
-        m_timer.start(s_timeCheckInterval, s_timeCheckInterval, [this] () {
+    m_ssdpClient.run();
+    m_timer.expires_from_now(s_timeCheckInterval);
+    m_timer.async_wait([this] (const std::error_code& e) {
+        if (e != asio::error::operation_aborted)
+        {
             checkForDeviceTimeouts();
-        });
+        }
     });
 }
 
-void DeviceScanner::stop(std::function<void()> cb)
+void DeviceScanner::stop()
 {
-    uv::asyncSend(m_upnpClient.loop(), [this, cb] () {
-        log::debug("Stop device scanner, known devices ({})", m_devices.size());
-        m_timer.stop();
-        m_ssdpClient.stop(cb);
-    });
+    log::debug("Stop device scanner, known devices ({})", m_devices.size());
+    m_timer.cancel();
+    m_ssdpClient.stop();
 }
 
 void DeviceScanner::refresh()

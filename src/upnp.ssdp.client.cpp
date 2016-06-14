@@ -11,17 +11,17 @@ namespace ssdp
 {
 
 using namespace utils;
+using namespace asio;
 
-static const char* s_ssdpIp = "239.255.255.250";
-static const std::string s_anyAddress = "0.0.0.0";
-static const int32_t s_ssdpPort = 1900;
+static const auto s_ssdpIp = ip::address_v4::from_string("239.255.255.250");
+static const int16_t s_ssdpPort = 1900;
 static const uint32_t s_broadcastRepeatCount = 5;
-static const uv::Address s_ssdpAddressIpv4 = uv::Address::createIp4(s_ssdpIp, s_ssdpPort);
+static const auto s_ssdpAddressIpv4 = ip::udp::endpoint(s_ssdpIp, s_ssdpPort);
 
-Client::Client(uv::Loop& loop)
+Client::Client(io_service& svc)
 : m_searchTimeout(3)
-, m_loop(loop)
-, m_socket(loop)
+, m_service(svc)
+, m_socket(svc)
 , m_parser(std::make_unique<Parser>())
 {
 }
@@ -30,31 +30,38 @@ Client::~Client() noexcept = default;
 
 void Client::run()
 {
-    run(s_anyAddress);
+    run(ip::udp::endpoint(ip::udp::v4(), 0));
 }
 
 void Client::run(const std::string& address)
 {
-    m_socket.bind(uv::Address::createIp4(address, 0), uv::socket::UdpFlag::ReuseAddress);
+    run(ip::udp::endpoint(ip::address_v4::from_string(address), 0));
+}
+
+void Client::run(const asio::ip::udp::endpoint& addr)
+{
+    m_socket.set_option(ip::udp::socket::reuse_address(true));
+    m_socket.set_option(ip::udp::socket::broadcast(true));
+    m_socket.open(addr.protocol());
+    m_socket.bind(addr);
 
     // join the multicast channel
-    m_socket.setBroadcast(true);
-    m_socket.setMemberShip(s_ssdpIp, uv::socket::Udp::MemberShip::JoinGroup);
-    m_socket.setMulticastTtl(4);
-    m_socket.setMulticastLoop(true);
+    m_socket.set_option(ip::multicast::join_group(s_ssdpIp));
+    m_socket.set_option(ip::multicast::hops(4));
 
-    m_socket.recv([=] (int32_t status, const std::string& msg, std::optional<uv::Address>) {
-        if (status < 0)
+    m_socket.async_receive_from(buffer(m_buffer), m_sender, [=] (const std::error_code& error, size_t bytesReceived) {
+        if (error)
         {
+            m_parser->reset();
             return;
         }
-        
+
         try
         {
-            if (!msg.empty())
+            if (bytesReceived > 0)
             {
-                auto parsed = m_parser->parse(msg);
-                assert(parsed == msg.size());
+                auto parsed = m_parser->parse(m_buffer.data(), bytesReceived);
+                assert(parsed == bytesReceived);
             }
             else
             {
@@ -64,15 +71,15 @@ void Client::run(const std::string& address)
         catch (std::exception& e)
         {
             log::warn("Error parsing http notification: {}", e.what());
-            log::info(msg);
+            log::info(std::string(m_buffer.data(), bytesReceived));
             m_parser->reset();
         }
     });
 }
 
-void Client::stop(std::function<void()> cb)
+void Client::stop()
 {
-    m_socket.close(std::move(cb));
+    m_socket.close();
 }
 
 void Client::setSearchTimeout(std::chrono::seconds timeout)
@@ -99,24 +106,24 @@ void Client::search(const char* serviceType)
 
 void Client::search(const char* serviceType, const char* deviceIp)
 {
-    auto addr = m_socket.getSocketName();
+    auto addr = m_socket.local_endpoint();
     auto req = std::make_shared<std::string>(fmt::format("M-SEARCH * HTTP/1.1\r\n"
                                                          "HOST:{}:{}\r\n"
                                                          "MAN:\"ssdp:discover\"\r\n"
                                                          "ST:{}\r\n"
-                                                         "\r\n", addr.ip(), addr.port(), serviceType));
+                                                         "\r\n", addr.address(), addr.port(), serviceType));
 
-    sendMessages(uv::Address::createIp4(deviceIp, s_ssdpPort), req);
+    sendMessages(ip::udp::endpoint(ip::address_v4::from_string(deviceIp), s_ssdpPort), req);
 }
 
-void Client::sendMessages(const uv::Address& addr, std::shared_ptr<std::string> content)
+void Client::sendMessages(const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content)
 {
     for (uint32_t i = 0; i < s_broadcastRepeatCount; ++i)
     {
-        m_socket.send(addr, *content, [content] (int32_t status) {
-            if (status < 0)
+        m_socket.async_send_to(buffer(*content), addr, [content] (const std::error_code& error, size_t) {
+            if (!error)
             {
-                log::warn("Ssdp search failed: {}", uv::getErrorString(status));
+                log::warn("Ssdp search failed: {}", error.message());
             }
         });
     }

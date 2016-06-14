@@ -1,8 +1,9 @@
 #pragma once
 
+#include <array>
 #include <string>
 
-#include "upnp/upnp.uv.h"
+#include <asio.hpp>
 
 namespace upnp
 {
@@ -31,12 +32,12 @@ struct DeviceNotificationInfo
 class Client
 {
 public:
-    Client(uv::Loop& loop);
+    Client(asio::io_service& svc);
     ~Client() noexcept;
 
     void run();
     void run(const std::string& address);
-    void stop(std::function<void()> cb);
+    void stop();
 
     void setSearchTimeout(std::chrono::seconds timeout);
 
@@ -50,13 +51,17 @@ public:
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
+    void run(const asio::ip::udp::endpoint& addr);
+
     void parseData();
-    void sendMessages(const uv::Address& addr, std::shared_ptr<std::string> content);
+    void sendMessages(const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
 
     uint32_t m_searchTimeout;
-    uv::Loop& m_loop;
-    uv::socket::Udp m_socket;
+    asio::io_service& m_service;
+    asio::ip::udp::socket m_socket;
+    asio::ip::udp::endpoint m_sender;
     std::unique_ptr<Parser> m_parser;
+    std::array<char, 1024> m_buffer;
 };
 
 }

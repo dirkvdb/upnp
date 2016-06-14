@@ -13,6 +13,8 @@
 #include <experimental/optional>
 
 #include <uv.h>
+#include <asio.hpp>
+
 #include "utils/log.h"
 #include "upnp/upnp.flags.h"
 

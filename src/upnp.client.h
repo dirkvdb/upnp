@@ -23,6 +23,7 @@
 #include "upnp/upnp.http.client.h"
 
 namespace uv { class Loop; }
+namespace asio { class io_service; }
 
 namespace upnp
 {
@@ -59,6 +60,7 @@ public:
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
     uv::Loop& loop() noexcept override;
+    asio::io_service& service() noexcept override;
 
 private:
     void initialize(const uv::Address& addr);
@@ -67,6 +69,7 @@ private:
 
     std::unique_ptr<std::thread> m_thread;
     std::unique_ptr<uv::Loop> m_loop;
+    std::unique_ptr<asio::io_service> m_service;
     std::unique_ptr<http::Client> m_httpClient;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;

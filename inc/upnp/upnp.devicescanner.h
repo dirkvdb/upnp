@@ -24,6 +24,9 @@
 #include <future>
 #include <thread>
 
+#include <asio.hpp>
+#include <asio/steady_timer.hpp>
+
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.http.client.h"
@@ -42,7 +45,7 @@ public:
     DeviceScanner(IClient& client, std::set<DeviceType> types);
 
     void start();
-    void stop(std::function<void()> cb);
+    void stop();
     void refresh();
 
     uint32_t getDeviceCount() const;
@@ -60,7 +63,7 @@ private:
 
     IClient&                                        m_upnpClient;
     ssdp::Client                                    m_ssdpClient;
-    uv::Timer                                       m_timer;
+    asio::steady_timer                              m_timer;
     const std::set<DeviceType>                      m_types;
     std::map<std::string, std::shared_ptr<Device>>  m_devices;
 };
