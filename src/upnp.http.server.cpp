@@ -51,9 +51,13 @@ static const std::string s_response =
     "CONTENT-TYPE: {}\r\n"
     "\r\n";
 
-Server::Server(uv::Loop& loop, const uv::Address& address)
+Server::Server(uv::Loop& loop)
 : m_loop(loop)
 , m_socket(loop)
+{
+}
+
+void Server::start(const uv::Address& address)
 {
     log::info("Start HTTP server on http://{}:{}", address.ip(), address.port());
 
@@ -210,7 +214,7 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
         {
             log::info("requested file: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
-            
+
             auto rangeHeader = parser->headerValue("Range");
             if (rangeHeader.empty())
             {
@@ -221,7 +225,7 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
             {
                 auto range = Parser::parseRange(rangeHeader);
                 auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
-                
+
                 uv::Buffer buf(&file.data[range.start], size, uv::Buffer::Ownership::No);
                 writeResponse(client, fmt::format(s_response, 206, size, file.contentType), std::move(buf), closeConnection);
             }

@@ -17,73 +17,87 @@
 #include "utils/signal.h"
 
 #include <gtest/gtest.h>
-#include <iostream>
-
 
 using namespace utils;
 using namespace testing;
 
-#include "upnp/upnpcontrolpoint.h"
-#include "upnp/upnpmediarenderer.h"
-#include "upnp/upnpitem.h"
-#include "upnp/upnptypes.h"
-
-#include "testenvironment.h"
-
-extern upnp::test::TestEnvironment* g_Env;
+#include "upnp/upnp.mediarenderer.h"
+#include "upnp/upnp.item.h"
+#include "upnp/upnp.types.h"
+#include "upnp.clientmock.h"
+#include "testutils.h"
+#include "testxmls.h"
 
 namespace upnp
 {
 namespace test
 {
 
+namespace
+{
+
+void addServiceToDevice(Device& dev, ServiceType type, const std::string& scpUrl, const std::string& controlUrl)
+{
+    Service svc;
+    svc.type = type;
+    svc.scpdUrl = scpUrl;
+    svc.controlURL = controlUrl;
+
+    dev.services.emplace(type.type, svc);
+}
+
+}
+
 class MediaRendererTest : public Test
 {
-public:
-    MediaRendererTest()
-    : m_renderer(g_Env->getClient())
-    {
-    }
-
 protected:
-    void SetUp() override
+    MediaRendererTest()
+    : m_renderer(m_client)
+    , m_device(std::make_shared<Device>())
     {
-        m_device = g_Env->getRenderer();
-        ASSERT_TRUE(m_device);
+        std::promise<ErrorCode> promise;
+        auto fut = promise.get_future();
 
-        m_renderer.setDevice(m_device);
+        addServiceToDevice(*m_device, { ServiceType::ConnectionManager, 1 }, "CMSCPUrl", "CMCurl");
+        addServiceToDevice(*m_device, { ServiceType::RenderingControl, 1 }, "RCCPUrl", "RCCurl");
+        addServiceToDevice(*m_device, { ServiceType::AVTransport, 1 }, "AVTCPUrl", "AVTCurl");
+
+        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::connectionManagerServiceDescription));
+        EXPECT_CALL(m_client, getFile("RCCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::renderingServiceDescription));
+        EXPECT_CALL(m_client, getFile("AVTCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::avtransportServiceDescription));
+
+        Action getProtoInfo("GetProtocolInfo", "CMCurl", { ServiceType::ConnectionManager, 1 });
+        expectAction(getProtoInfo, { { "Source", "http-get:*:*:*" },
+                                     { "Sink", "http-get:*:audio/mpeg:*,http-get:*:audio/mp4:*" } });
+
+        m_renderer.setDevice(m_device, [&] (Status status) {
+            auto p = std::move(promise);
+            p.set_value(status.getErrorCode());
+        });
+
+        EXPECT_EQ(ErrorCode::Success, fut.get());
     }
 
+    void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
+    {
+        using namespace ContentDirectory;
+        EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
+            EXPECT_EQ(expected.toString(), action.toString());
+            cb(Status(), wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
+        }));
+    }
+
+    ClientMock                  m_client;
     MediaRenderer               m_renderer;
     std::shared_ptr<Device>     m_device;
 };
-
-TEST_F(MediaRendererTest, DiscoveredServices)
-{
-    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::RenderingControl));
-    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::ConnectionManager));
-    EXPECT_FALSE(m_device->m_services.end() == m_device->m_services.find(ServiceType::AVTransport));
-}
 
 TEST_F(MediaRendererTest, SupportedProtocols)
 {
     std::vector<std::string> supportedProtocols
     {
-        "http-get:*:audio/L16;rate=44100;channels=1:*",
-        "http-get:*:audio/L16;rate=44100;channels=2:*",
-        "http-get:*:audio/L16;rate=48000;channels=1:*",
-        "http-get:*:audio/L16;rate=48000;channels=2:*",
         "http-get:*:audio/mpeg:*",
-        "http-get:*:audio/x-ms-wma:*",
-        "http-get:*:audio/mp4:*",
-        "http-get:*:audio/3gpp:*",
-        "http-get:*:audio/vnd.dlna.adts:*",
-        "http-get:*:audio/wav:*",
-        "http-get:*:audio/x-wav:*",
-        "http-get:*:audio/flac:*",
-        "http-get:*:audio/x-flac:*",
-        "http-get:*:image/jpeg:*",
-        "http-wavetunes:*:audio/x-ms-wma:*"
+        "http-get:*:audio/mp4:*"
     };
 
     for (auto& protocol : supportedProtocols)

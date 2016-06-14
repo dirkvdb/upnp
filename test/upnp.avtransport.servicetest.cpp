@@ -56,6 +56,9 @@ public:
     AVTransportServiceTest()
     : service(rootDeviceMock, serviceImplMock)
     {
+        rootDeviceMock.ControlActionRequested = [this] (auto& request) {
+            return service.onAction(request.actionName, request.action).toString();
+        };
     }
 
     Action createAction(AVTransport::Action type)
@@ -64,7 +67,7 @@ public:
         a.addArgument("InstanceID", std::to_string(s_connectionId));
         return a;
     }
-    
+
     ActionRequest createActionRequest(AVTransport::Action type, const Action& a)
     {
         ActionRequest req;
@@ -131,7 +134,7 @@ TEST_F(AVTransportServiceTest, GetTransportInfo)
     auto a = createAction(AVTransport::Action::GetTransportInfo);
 
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetTransportInfo, a));
-    
+
     ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetTransportInfo), serviceType);
     expected.addArgument("CurrentTransportState", toString(AVTransport::State::Playing));
     expected.addArgument("CurrentTransportStatus", toString(AVTransport::Status::Ok));
@@ -153,7 +156,7 @@ TEST_F(AVTransportServiceTest, GetPositionInfo)
 
     auto a = createAction(AVTransport::Action::GetPositionInfo);
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetPositionInfo, a));
-    
+
     ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetPositionInfo), serviceType);
     expected.addArgument("Track", "Track");
     expected.addArgument("TrackDuration", "00:01:00");
@@ -181,7 +184,7 @@ TEST_F(AVTransportServiceTest, GetMediaInfo)
 
     auto a = createAction(AVTransport::Action::GetMediaInfo);
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetMediaInfo, a));
-    
+
     ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetMediaInfo), serviceType);
     expected.addArgument("NrTracks", "5");
     expected.addArgument("MediaDuration", "00:01:00");
@@ -199,10 +202,10 @@ TEST_F(AVTransportServiceTest, GetCurrentTransportActions)
 {
     EXPECT_CALL(rootDeviceMock, notifyEvent(_, _)).Times(AnyNumber());
     service.setInstanceVariable(s_connectionId, AVTransport::Variable::CurrentTransportActions, "Pause,Stop,Play");
-    
+
     auto a = createAction(AVTransport::Action::GetCurrentTransportActions);
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(AVTransport::Action::GetCurrentTransportActions, a));
-    
+
     ActionResponse expected(AVTransport::actionToString(AVTransport::Action::GetCurrentTransportActions), serviceType);
     expected.addArgument("Actions", "Pause,Stop,Play");
     EXPECT_EQ(expected.toString(), response);

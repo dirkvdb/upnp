@@ -41,8 +41,9 @@ class HttpReaderTest : public Test
 {
 public:
     HttpReaderTest()
-    : webserver(loop, uv::Address::createIp4("127.0.0.1", 0))
+    : webserver(loop)
     {
+        webserver.start(uv::Address::createIp4("127.0.0.1", 0));
     }
 
 protected:
@@ -69,7 +70,7 @@ TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
         size_t increment = 65536;
 
         uint64_t bytesRead = 0;
-        
+
         do
         {
             EXPECT_NO_THROW(bytesRead = reader.read(&result[currentPos], increment));

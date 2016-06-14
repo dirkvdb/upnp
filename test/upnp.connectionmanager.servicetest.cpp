@@ -46,6 +46,9 @@ public:
     ConnectionManagerServiceTest()
     : service(rootDeviceMock, serviceImplMock)
     {
+        rootDeviceMock.ControlActionRequested = [this] (auto& request) {
+            return service.onAction(request.actionName, request.action).toString();
+        };
     }
 
     Action createAction(ConnectionManager::Action type)
@@ -54,7 +57,7 @@ public:
         a.addArgument("InstanceID", std::to_string(s_connectionId));
         return a;
     }
-    
+
     ActionRequest createActionRequest(ConnectionManager::Action type, const Action& a)
     {
         ActionRequest req;
@@ -81,7 +84,7 @@ TEST_F(ConnectionManagerServiceTest, GetProtocolInfo)
 
     auto a = createAction(ConnectionManager::Action::GetProtocolInfo);
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(ConnectionManager::Action::GetProtocolInfo, a));
-    
+
     ActionResponse expected(ConnectionManager::toString(ConnectionManager::Action::GetProtocolInfo), serviceType);
     expected.addArgument("Source", sourceProtocolInfo.toString());
     expected.addArgument("Sink", sinkProtocolInfo.toString());
@@ -91,7 +94,7 @@ TEST_F(ConnectionManagerServiceTest, GetProtocolInfo)
 TEST_F(ConnectionManagerServiceTest, PrepareForConnection)
 {
     ProtocolInfo protocolInfo("http-get:*:audio/mpeg:*");
-    
+
     auto a = createAction(ConnectionManager::Action::PrepareForConnection);
     a.addArgument("PeerConnectionManager", "1");
     a.addArgument("PeerConnectionID", "2");
@@ -102,14 +105,14 @@ TEST_F(ConnectionManagerServiceTest, PrepareForConnection)
         EXPECT_EQ("1"s, connInfo.peerConnectionManager);
         EXPECT_EQ(2, connInfo.peerConnectionId);
         EXPECT_EQ(ConnectionManager::Direction::Input, connInfo.direction);
-        
+
         connInfo.connectionId = 3;
         connInfo.avTransportId = 4;
         connInfo.renderingControlServiceId = 5;
     })));
-    
+
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(ConnectionManager::Action::PrepareForConnection, a));
-    
+
     ActionResponse expected(ConnectionManager::toString(ConnectionManager::Action::PrepareForConnection), serviceType);
     expected.addArgument("ConnectionID", "3");
     expected.addArgument("AVTransportID", "4");
@@ -133,7 +136,7 @@ TEST_F(ConnectionManagerServiceTest, GetCurrentConnectionIDs)
 
     auto a = createAction(ConnectionManager::Action::GetCurrentConnectionIDs);
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(ConnectionManager::Action::GetCurrentConnectionIDs, a));
-    
+
     ActionResponse expected(ConnectionManager::toString(ConnectionManager::Action::GetCurrentConnectionIDs), serviceType);
     expected.addArgument("ConnectionIDs", "1,3,5");
     EXPECT_EQ(expected.toString(), response);
@@ -143,7 +146,7 @@ TEST_F(ConnectionManagerServiceTest, GetCurrentConnectionInfo)
 {
     auto a = createAction(ConnectionManager::Action::GetCurrentConnectionInfo);
     a.addArgument("ConnectionID", std::to_string(s_connectionId));
-    
+
     ConnectionManager::ConnectionInfo connInfo;
     connInfo.renderingControlServiceId = 5;
     connInfo.avTransportId = 6;
@@ -155,7 +158,7 @@ TEST_F(ConnectionManagerServiceTest, GetCurrentConnectionInfo)
 
     EXPECT_CALL(serviceImplMock, getCurrentConnectionInfo(s_connectionId)).WillOnce(Return(connInfo));
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(ConnectionManager::Action::GetCurrentConnectionInfo, a));
-    
+
     ActionResponse expected(ConnectionManager::toString(ConnectionManager::Action::GetCurrentConnectionInfo), serviceType);
     expected.addArgument("RcsID", "5");
     expected.addArgument("AVTransportID", "6");

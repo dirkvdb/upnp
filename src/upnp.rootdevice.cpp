@@ -87,13 +87,14 @@ void RootDevice::initialize(const std::string& interfaceName)
     auto addr = uv::Address::createIp4(interfaceName);
     addr.setPort(0);
 
-    m_httpServer = std::make_unique<http::Server>(m_loop, addr);
+    m_httpServer = std::make_unique<http::Server>(m_loop);
+
+    m_httpServer->start(addr);
     m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (http::Parser& parser) { return onSubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
 
     m_httpClient = std::make_unique<http::Client>(m_loop);
-
     m_ssdpServer = std::make_unique<ssdp::Server>(m_loop);
 
     m_thread = std::make_unique<std::thread>([this] () {

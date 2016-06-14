@@ -32,8 +32,9 @@ using RequestCb = std::function<std::string(http::Parser&)>;
 class Server
 {
 public:
-    Server(uv::Loop& loop, const uv::Address& address);
+    Server(uv::Loop& loop);
 
+    void start(const uv::Address& address);
     void stop(std::function<void()> cb);
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);

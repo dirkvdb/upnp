@@ -30,18 +30,19 @@ class HttpClientTest : public Test
 {
 public:
     HttpClientTest()
-    : server(loop, uv::Address::createIp4("127.0.0.1", 0))
+    : server(loop)
     , client(loop)
     {
         server.addFile("/test.txt", "plain/text", s_hostedFile);
+        server.start(uv::Address::createIp4("127.0.0.1", 0));
     }
-    
+
     template <typename Data>
     std::function<void(int32_t, Data)> handleResponse()
     {
         return [this] (int32_t status, Data data) {
             mock.onResponse(status, data);
-            
+
             server.stop(nullptr);
         };
     }
@@ -84,7 +85,7 @@ TEST_F(HttpClientTest, GetAsVector)
     EXPECT_CALL(mock, onResponse(200, Matcher<std::vector<uint8_t>>(_))).WillOnce(WithArg<1>(Invoke([] (const std::vector<uint8_t>& data) {
         EXPECT_TRUE(std::equal(data.begin(), data.end(), s_hostedFile.begin(), s_hostedFile.end()));
     })));
-    
+
     client.get(server.getWebRootUrl() + "/test.txt", handleResponse<std::vector<uint8_t>>());
     loop.run(uv::RunMode::Default);
 }
@@ -97,7 +98,7 @@ TEST_F(HttpClientTest, GetAsArray)
     EXPECT_CALL(mock, onResponse(200, array.data()));
     client.get(server.getWebRootUrl() + "/test.txt", array.data(), handleResponse<uint8_t*>());
     loop.run(uv::RunMode::Default);
-    
+
     EXPECT_TRUE(std::equal(array.begin(), array.end(), s_hostedFile.begin(), s_hostedFile.end()));
 }
 

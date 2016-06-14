@@ -42,10 +42,6 @@ public:
     , m_type(type)
     {
         m_variables.insert(std::make_pair(0, std::map<VariableType, ServiceVariable>()));
-
-        dev.ControlActionRequested = [this] (const ActionRequest& request) {
-            return onAction(request.actionName, request.action).toString();
-        };
     }
 
     virtual ~DeviceService() = default;

@@ -44,6 +44,9 @@ public:
     RenderingControlServiceTest()
     : service(rootDeviceMock, serviceImplMock)
     {
+        rootDeviceMock.ControlActionRequested = [this] (auto& request) {
+            return service.onAction(request.actionName, request.action).toString();
+        };
     }
 
     Action createAction(RenderingControl::Action type)
@@ -52,7 +55,7 @@ public:
         a.addArgument("InstanceID", std::to_string(s_connectionId));
         return a;
     }
-    
+
     ActionRequest createActionRequest(RenderingControl::Action type, const Action& a)
     {
         ActionRequest req;
@@ -87,7 +90,7 @@ TEST_F(RenderingControlServiceTest, GetVolume)
     a.addArgument("Channel", "Master");
 
     auto response = rootDeviceMock.ControlActionRequested(createActionRequest(RenderingControl::Action::GetVolume, a));
-    
+
     ActionResponse expected(RenderingControl::toString(RenderingControl::Action::GetVolume), serviceType);
     expected.addArgument("CurrentVolume", "54");
     EXPECT_EQ(expected.toString(), response);

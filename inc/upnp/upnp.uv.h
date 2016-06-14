@@ -113,7 +113,7 @@ public:
     {
         assert(m_ownership == Ownership::No);
     }
-    
+
     Buffer& operator= (const Buffer& other) noexcept
     {
         assert(other.m_ownership == Ownership::No);
@@ -309,13 +309,13 @@ public:
 
     HandleType* get() noexcept
     {
-        assert(m_handle); // if this fires yout called a member method after closing
+        assert(m_handle); // if this fires you called a member method after closing
         return m_handle.get();
     }
 
     const HandleType* get() const noexcept
     {
-        assert(m_handle); // if this fires yout called a member method after closing
+        assert(m_handle); // if this fires you called a member method after closing
         return m_handle.get();
     }
 
@@ -686,7 +686,7 @@ public:
                 return uv::Address::createIp4(intf.address.address4);
             }
         }
-        
+
         throw std::runtime_error("Could not find network interface with name: " + interfaceName);
     }
 

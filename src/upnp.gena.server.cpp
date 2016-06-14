@@ -60,7 +60,7 @@ namespace
 }
 
 Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb)
-: m_httpServer(loop, address)
+: m_httpServer(loop)
 , m_eventCb(std::move(cb))
 {
     assert(m_eventCb);
@@ -98,6 +98,8 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
             return fmt::format(errorResponse, ec, e.what(), body);
         }
     });
+
+    m_httpServer.start(address);
 }
 
 void Server::stop(std::function<void()> cb)

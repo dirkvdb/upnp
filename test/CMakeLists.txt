@@ -53,7 +53,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.renderingcontrol.servicetest.cpp
 
     upnp.mediaservertest.cpp
-    #upnp.mediarenderertest.cpp
+    upnp.mediarenderertest.cpp
 )
 
 FIND_PATH(BENCHMARK_INCLUDE_DIR
