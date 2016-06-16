@@ -13,21 +13,21 @@ using namespace std::chrono_literals;
 
 TEST(SSDPClientTest, DISABLED_Client)
 {
-    uv::Loop        loop;
-    ssdp::Client    client(loop);
+    asio::io_service io;
+    ssdp::Client client(io);
 
     utils::log::info("SsdpServer");
 
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         utils::log::warn("@@@ DiscoverCallback ID {} TYPE {} EXP {}", msg.deviceId, msg.deviceType, msg.expirationTime);
-        loop.stop();
+        io.stop();
     });
 
     client.run();
     client.search();
 
     auto t = std::thread([&] () {
-        loop.run(uv::RunMode::Default);
+        io.run();
     });
 
     t.join();

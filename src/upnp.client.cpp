@@ -49,6 +49,7 @@ Status httpStatusToStatus(int32_t httpStatus)
 
 Client::Client()
 : m_loop(std::make_unique<uv::Loop>())
+, m_io(std::make_unique<asio::io_service>())
 {
 }
 
@@ -89,6 +90,10 @@ void Client::initialize(const uv::Address& addr)
         m_loop->run(upnp::uv::RunMode::Default);
         curl_global_cleanup();
     });
+
+    m_asioThread = std::make_unique<std::thread>([this] () {
+        m_io->run();
+    });
 }
 
 void Client::uninitialize()
@@ -102,9 +107,13 @@ void Client::uninitialize()
         });
     });
 
+    m_io->stop();
+
     m_thread->join();
+    m_asioThread->join();
 
     m_thread.reset();
+    m_asioThread.reset();
 }
 
 std::string Client::getIpAddress() const
@@ -215,9 +224,9 @@ uv::Loop& Client::loop() noexcept
     return *m_loop;
 }
 
-asio::io_service& Client::service() noexcept
+asio::io_service& Client::ioService() noexcept
 {
-    return *m_service;
+    return *m_io;
 }
 
 void Client::handlEvent(const SubscriptionEvent& event)

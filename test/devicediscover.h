@@ -45,7 +45,7 @@ public:
         auto fut = m_promise.get_future();
         fut.wait_for(timeout);
         fut.get();
-        m_scanner.stop([](){});
+        m_scanner.stop();
     }
 
     void deviceDiscovered(std::shared_ptr<upnp::Device> dev)

@@ -49,8 +49,14 @@ public:
         return m_loop;
     }
 
+    asio::io_service& ioService() noexcept override
+    {
+        return m_io;
+    }
+
 private:
     uv::Loop m_loop;
+    asio::io_service m_io;
 };
 
 }

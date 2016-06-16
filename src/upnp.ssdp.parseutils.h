@@ -8,6 +8,7 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp/upnp.http.parser.h"
+#include "stringview.h"
 
 namespace upnp
 {
@@ -180,12 +181,12 @@ public:
         m_cb = std::move(cb);
     }
 
-    size_t parse(const std::string& data, const asio::ip::udp::endpoint& addr)
+    size_t parse(std::string_view data, const asio::ip::udp::endpoint& addr)
     {
         assert(!data.empty());
         m_address = addr;
 
-        auto size = m_parser.parse(data);
+        auto size = m_parser.parse(data.data(), data.size());
         if (m_parser.getFlags().isSet(http::Parser::Flag::ConnectionClose))
         {
             // some of the UDP search message have the connection close flag set

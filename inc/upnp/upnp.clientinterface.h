@@ -52,7 +52,7 @@ public:
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
 
     virtual uv::Loop& loop() noexcept = 0;
-    virtual asio::io_service& service() noexcept = 0;
+    virtual asio::io_service& ioService() noexcept = 0;
 };
 
 }

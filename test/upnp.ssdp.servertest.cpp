@@ -5,6 +5,7 @@
 #include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.ssdp.server.h"
 
+#include "upnp/upnp.uv.h"
 #include "upnp/upnp.device.h"
 
 namespace upnp
@@ -19,8 +20,8 @@ class SsdpServerTest : public Test
 {
 public:
     SsdpServerTest()
-    : server(loop)
-    , client(loop)
+    : server(io)
+    , client(io)
     {
         Device dev;
         dev.location = "http://localhost/";
@@ -49,7 +50,7 @@ public:
         EXPECT_FALSE(localIp.empty()) << "Failed to obtain local ip address";
     }
 
-    uv::Loop loop;
+    asio::io_service io;
     ssdp::Server server;
     ssdp::Client client;
     std::string localIp;
@@ -60,14 +61,14 @@ TEST_F(SsdpServerTest, SearchRootDeviceMulticast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("upnp:rootdevice");
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchRootDeviceUnicast)
@@ -75,14 +76,14 @@ TEST_F(SsdpServerTest, SearchRootDeviceUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("upnp:rootdevice", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchAllUnicast)
@@ -90,14 +91,14 @@ TEST_F(SsdpServerTest, SearchAllUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("ssdp:all", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchDeviceTypeUnicast)
@@ -105,14 +106,14 @@ TEST_F(SsdpServerTest, SearchDeviceTypeUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("urn:schemas-upnp-org:device:MediaRenderer:2", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchDeviceTypeSmallerVersionUnicast)
@@ -120,14 +121,14 @@ TEST_F(SsdpServerTest, SearchDeviceTypeSmallerVersionUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("urn:schemas-upnp-org:device:MediaRenderer:1", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchServiceUnicast)
@@ -135,14 +136,14 @@ TEST_F(SsdpServerTest, SearchServiceUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("urn:schemas-upnp-org:service:RenderingControl:2", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchServiceSmallerVersionUnicast)
@@ -150,14 +151,14 @@ TEST_F(SsdpServerTest, SearchServiceSmallerVersionUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("urn:schemas-upnp-org:service:RenderingControl:1", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(SsdpServerTest, SearchDeviceUuidVersionUnicast)
@@ -165,14 +166,14 @@ TEST_F(SsdpServerTest, SearchDeviceUuidVersionUnicast)
     client.setDeviceNotificationCallback([&] (auto&& msg) {
         if (msg.deviceId == "uuid:55076f6e-6b79-1d65-a4eb-00089be34072")
         {
-            uv::stopLoopAndCloseRequests(loop);
+            io.stop();
         }
     });
 
     client.run();
     client.search("uuid:55076f6e-6b79-1d65-a4eb-00089be34072", localIp.c_str());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 }

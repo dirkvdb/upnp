@@ -54,11 +54,13 @@ private:
     void run(const asio::ip::udp::endpoint& addr);
 
     void parseData();
-    void sendMessages(const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
+    void onDataReceived(const std::error_code& error, size_t bytesReceived);
+    static void sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
 
     uint32_t m_searchTimeout;
     asio::io_service& m_service;
     asio::ip::udp::socket m_socket;
+    asio::ip::udp::socket m_unicastSocket;
     asio::ip::udp::endpoint m_sender;
     std::unique_ptr<Parser> m_parser;
     std::array<char, 1024> m_buffer;

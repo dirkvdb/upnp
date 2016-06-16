@@ -31,6 +31,12 @@ FIND_PATH(ASIO_INCLUDE_DIR
     NAMES asio.hpp
 )
 
+IF (NOT ASIO_INCLUDE_DIR)
+    MESSAGE(FATAL "Could not find the asio headers")
+ENDIF ()
+
+ADD_DEFINITIONS("-DASIO_STANDALONE")
+
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
 

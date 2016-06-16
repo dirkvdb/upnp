@@ -29,9 +29,8 @@ TEST(DeviceScannerTest, DISABLED_DiscoverClient)
         {
             discovered = true;
             log::info("Discovered: {}", dev->udn);
-            scanner.stop([&] () {
-                prom.set_value();
-            });
+            scanner.stop();
+            prom.set_value();
         }
     }, &client);
 

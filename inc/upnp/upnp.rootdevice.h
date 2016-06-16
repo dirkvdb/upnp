@@ -19,7 +19,9 @@
 #include <chrono>
 #include <cinttypes>
 #include <unordered_map>
+#include <asio.hpp>
 
+#include "upnp/upnp.uv.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.ssdp.server.h"
 #include "upnp/upnp.rootdeviceinterface.h"
@@ -56,7 +58,7 @@ public:
     void removeFileFromHttpServer(const std::string& path) override;
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
-    
+
     uv::Loop& loop() noexcept override;
 
 private:
@@ -65,6 +67,7 @@ private:
     std::string onActionRequest(http::Parser& parser);
 
     uv::Loop                        m_loop;
+    asio::io_service                m_io;
     std::unique_ptr<http::Server>   m_httpServer;
     std::unique_ptr<http::Client>   m_httpClient;
     std::unique_ptr<ssdp::Server>   m_ssdpServer;
@@ -73,6 +76,7 @@ private:
     std::chrono::seconds            m_advertiseInterval;
 
     std::unique_ptr<std::thread>    m_thread;
+    std::unique_ptr<std::thread>    m_asioThread;
 
     struct SubscriptionData
     {

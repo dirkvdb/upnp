@@ -95,10 +95,14 @@ void RootDevice::initialize(const std::string& interfaceName)
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
 
     m_httpClient = std::make_unique<http::Client>(m_loop);
-    m_ssdpServer = std::make_unique<ssdp::Server>(m_loop);
+    m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
     m_thread = std::make_unique<std::thread>([this] () {
         m_loop.run(upnp::uv::RunMode::Default);
+    });
+
+    m_asioThread = std::make_unique<std::thread>([this] () {
+        m_io.run();
     });
 }
 
@@ -107,13 +111,16 @@ void RootDevice::uninitialize()
     log::debug("Uninitializing UPnP Root device: {}", m_device.friendlyName);
     uv::asyncSend(m_loop, [this] () {
         m_httpServer->stop([this] () {
-            m_ssdpServer->stop([this] () {
-                stopLoopAndCloseRequests(m_loop);
-            });
+            stopLoopAndCloseRequests(m_loop);
         });
     });
 
+    m_ssdpServer->stop([this] () {
+        m_io.stop();
+    });
+
     m_thread->join();
+    m_asioThread->join();
 
     m_httpClient.reset();
     m_httpServer.reset();

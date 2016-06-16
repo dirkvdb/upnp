@@ -4,7 +4,8 @@
 #include <memory>
 #include <chrono>
 
-#include "upnp/upnp.uv.h"
+#include <asio.hpp>
+
 #include "upnp/upnp.device.h"
 
 namespace upnp
@@ -18,31 +19,38 @@ class SearchParser;
 class Server
 {
 public:
-    Server(uv::Loop& loop);
+    Server(asio::io_service& io);
     ~Server() noexcept;
 
     void run(const Device& info, std::chrono::seconds announceInterval);
     void stop(std::function<void()> cb);
 
 private:
-    void sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<uv::Timer> timer, int32_t count);
+    void sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<asio::steady_timer> timer, int32_t count);
 
     void announceDevice();
-    void announceDeviceStop(std::function<void(int32_t)> cb);
+    void announceDeviceStop(std::function<void(const asio::error_code&, size_t)> cb);
 
-    void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const uv::Address& addr);
-    void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<uv::Timer> timer, const uv::Address& addr);
+    void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const asio::ip::udp::endpoint& addr);
+    void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<asio::steady_timer> timer, const asio::ip::udp::endpoint& addr);
 
     bool isResponseNeeded(const std::string& searchTarget);
+    
+    void receiveData();
+    void onDataReceived(const std::error_code& error, size_t bytesReceived);
 
-    uv::Loop& m_loop;
-    uv::Timer m_timer;
-    uv::Timer m_announceTimer;
-    uv::socket::Udp m_socket;
+    asio::io_service& m_io;
+    asio::steady_timer m_timer;
+    asio::steady_timer m_announceTimer;
+    asio::ip::udp::socket m_socket;
+    asio::ip::udp::socket m_unicastSocket;
+    asio::ip::udp::endpoint m_sender;
     std::unique_ptr<SearchParser> m_parser;
 
     std::vector<std::string> m_announceMessages;
     std::vector<std::string> m_byebyeMessages;
+    std::array<char, 1024> m_buffer;
+    std::chrono::seconds m_announceInterval;
 
     Device m_device;
 };

@@ -39,8 +39,8 @@ DeviceScanner::DeviceScanner(IClient& client, DeviceType type)
 
 DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 : m_upnpClient(client)
-, m_ssdpClient(client.service())
-, m_timer(client.service())
+, m_ssdpClient(client.ioService())
+, m_timer(client.ioService())
 , m_types(types)
 {
     m_ssdpClient.setDeviceNotificationCallback([=] (const ssdp::DeviceNotificationInfo& info) {
