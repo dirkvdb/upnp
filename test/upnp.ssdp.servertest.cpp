@@ -79,6 +79,8 @@ TEST_F(SsdpServerTest, SearchRootDeviceUnicast)
             io.stop();
         }
     });
+    
+    utils::log::info("Local ip: {}", localIp);
 
     client.run();
     client.search("upnp:rootdevice", localIp.c_str());

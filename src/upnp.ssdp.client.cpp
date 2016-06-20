@@ -32,12 +32,12 @@ Client::~Client() noexcept = default;
 
 void Client::run()
 {
-    run(ip::udp::endpoint(ip::udp::v4(), 0));
+    run(ip::udp::endpoint(ip::udp::v4(), s_ssdpPort));
 }
 
 void Client::run(const std::string& address)
 {
-    run(ip::udp::endpoint(ip::address_v4::from_string(address), 0));
+    run(ip::udp::endpoint(ip::address_v4::from_string(address), s_ssdpPort));
 }
 
 void Client::run(const asio::ip::udp::endpoint& addr)
@@ -79,9 +79,12 @@ void Client::onDataReceived(const std::error_code& error, size_t bytesReceived)
     {
         if (bytesReceived > 0)
         {
-            log::info("SSDP client msg received: {}", std::string_view(m_buffer.data(), bytesReceived));
+            //log::info("SSDP client msg received: {}", std::string_view(m_buffer.data(), bytesReceived));
             auto parsed = m_parser->parse(m_buffer.data(), bytesReceived);
-            assert(parsed == bytesReceived);
+            if (parsed == 0)
+            {
+                m_parser->reset();
+            }
         }
         else
         {

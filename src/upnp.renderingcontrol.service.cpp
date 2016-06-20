@@ -32,7 +32,7 @@ using namespace rapidxml_ns;
 Service::Service(IRootDevice& dev, IRenderingControl& rc)
 : DeviceService(dev, { ServiceType::RenderingControl, 1 })
 , m_renderingControl(rc)
-, m_lastChange(dev.loop(), m_type, std::chrono::milliseconds(200))
+, m_lastChange(dev.ioService(), m_type, std::chrono::milliseconds(200))
 {
     m_lastChange.LastChangeEvent = [this] (const std::string& notification) {
         m_rootDevice.notifyEvent(serviceTypeToUrnIdString(m_type), notification);

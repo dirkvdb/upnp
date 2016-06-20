@@ -9,6 +9,7 @@ namespace upnp
 namespace test
 {
 
+using namespace asio;
 using namespace testing;
 using namespace std::placeholders;
 using namespace std::string_literals;
@@ -39,33 +40,34 @@ class GenaServerTest : public Test
 {
 public:
     GenaServerTest()
-    : client(loop)
-    , server(loop, uv::Address::createIp4("127.0.0.1", 0), std::bind(&SubscriptionCallbackMock::onEvent, &cbMock, _1))
+    : client(io)
+    , server(io, asio::ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 0), std::bind(&SubscriptionCallbackMock::onEvent, &cbMock, _1))
     {
     }
     
     void sendDataAndExpectResponse(const std::string& data, const std::string& expectedResponse)
     {
-        client.connect(server.getAddress(), [&] (int32_t status) {
-            EXPECT_EQ(0, status);
-            client.write(uv::Buffer(data, uv::Buffer::Ownership::No), [&] (int32_t stat) {
-                EXPECT_EQ(0, stat);
-                client.read([&] (ssize_t size, const uv::Buffer& buf) {
-                    EXPECT_TRUE(size > 0);
+        client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
+            EXPECT_FALSE(error);
+            client.async_send(buffer(data), [&] (const std::error_code& error, size_t) {
+                EXPECT_FALSE(error);
+                client.async_receive(buffer(buf), [&] (const std::error_code& error, size_t size) {
+                    EXPECT_FALSE(error);
+                    EXPECT_GT(size, 0);
                     EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
 
-                    client.close([this] () {
-                        server.stop(nullptr);
-                    });
+                    client.close();
                 });
             });
         });
     }
 
     SubscriptionCallbackMock cbMock;
-    uv::Loop loop;
-    uv::socket::Tcp client;
+    io_service io;
+    ip::tcp::socket client;
     gena::Server server;
+    
+    std::array<char, 1024> buf;
 };
 
 TEST_F(GenaServerTest, Event)
@@ -89,7 +91,7 @@ TEST_F(GenaServerTest, Event)
     }));
 
     sendDataAndExpectResponse(notification, okResponse);
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(GenaServerTest, EventBadRequest)
@@ -108,7 +110,7 @@ TEST_F(GenaServerTest, EventBadRequest)
         "<?xml version=\"1.0\"?>"s;
 
     sendDataAndExpectResponse(notification, errorResponse);
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(GenaServerTest, ExptectConnectionClose)
@@ -133,25 +135,25 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
     }));
 
     uint32_t readCount = 0;
-    client.connect(server.getAddress(), [&] (int32_t status) {
-        EXPECT_EQ(0, status);
-        client.write(uv::Buffer(notification, uv::Buffer::Ownership::No), [&] (int32_t stat) {
-            EXPECT_EQ(0, stat);
-            client.read([&] (ssize_t size, const uv::Buffer& buf) {
+    client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
+        EXPECT_FALSE(error);
+        client.async_send(buffer(notification), [&] (const std::error_code& error, size_t) {
+            EXPECT_FALSE(error);
+            client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
+                EXPECT_FALSE(error);
                 if (readCount == 0)
                 {
                     // First read contains the response
-                    EXPECT_TRUE(size > 0);
+                    EXPECT_GT(size, 0);
                     EXPECT_EQ(okResponse, std::string(buf.data(), size));
                 }
                 else
                 {
                     // Second read should be the connection close
-                    EXPECT_EQ(UV_EOF, size);
+                    EXPECT_EQ(0, size);
                     // So also close our connection
-                    client.close([this] () {
-                        server.stop(nullptr);
-                    });
+                    client.close();
+                    server.stop();
                 }
 
                 ++readCount;
@@ -159,7 +161,7 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
         });
     });
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 }

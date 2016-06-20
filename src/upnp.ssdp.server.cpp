@@ -145,12 +145,13 @@ void Server::receiveData()
             receiveData();
             return;
         }
+        
+        log::info("Ssdp recv: {}", std::string_view(m_buffer.data(), bytesReceived));
 
         try
         {
             if (bytesReceived > 0)
             {
-                //log::info("SSDP msg received: {}", std::string_view(m_buffer.data(), bytesReceived));
                 auto parsed = m_parser->parse(std::string_view(m_buffer.data(), bytesReceived), m_sender);
                 assert(parsed == bytesReceived);
                 if (parsed != bytesReceived)
@@ -217,11 +218,11 @@ void Server::announceDeviceStop(std::function<void(const asio::error_code&, size
     m_socket.async_send_to(buffer(m_byebyeMessages.back()), s_ssdpAddressIpv4, cb);
 }
 
-void Server::respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const ip::udp::endpoint& addr)
+void Server::respondToSearch(const std::string& /*host*/, const std::string& searchTarget, std::chrono::seconds delay, const ip::udp::endpoint& addr)
 {
     try
     {
-        log::info("Search request: {} {} {}", host, searchTarget, delay.count());
+        //log::info("Search request: {} {} {}", host, searchTarget, delay.count());
 
         if (isResponseNeeded(searchTarget))
         {

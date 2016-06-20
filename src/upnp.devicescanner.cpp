@@ -78,16 +78,14 @@ void DeviceScanner::stop()
 
 void DeviceScanner::refresh()
 {
-    uv::asyncSend(m_upnpClient.loop(), [this] () {
-        if (m_types.size() == 1)
-        {
-            m_ssdpClient.search(deviceTypeToString(*m_types.begin()));
-        }
-        else
-        {
-            m_ssdpClient.search();
-        }
-    });
+    if (m_types.size() == 1)
+    {
+        m_ssdpClient.search(deviceTypeToString(*m_types.begin()));
+    }
+    else
+    {
+        m_ssdpClient.search();
+    }
 }
 
 uint32_t DeviceScanner::getDeviceCount() const
@@ -97,16 +95,26 @@ uint32_t DeviceScanner::getDeviceCount() const
 
 std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
 {
-    return uv::asyncSend<std::shared_ptr<Device>>(m_upnpClient.loop(), [this, &udn] () {
-        return m_devices.at(udn);
-    }).get();
+    std::promise<std::shared_ptr<Device>> p;
+    auto fut = p.get_future();
+    
+    m_upnpClient.ioService().post([this, &udn, &p] {
+        p.set_value(m_devices.at(udn));
+    });
+    
+    return fut.get();
 }
 
 std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
 {
-    return uv::asyncSend<decltype(m_devices)>(m_upnpClient.loop(), [this] () {
-        return m_devices;
-    }).get();
+    std::promise<std::map<std::string, std::shared_ptr<Device>>> p;
+    auto fut = p.get_future();
+    
+    m_upnpClient.ioService().post([this, &p] () {
+        p.set_value(m_devices);
+    });
+    
+    return fut.get();
 }
 
 void DeviceScanner::checkForDeviceTimeouts()

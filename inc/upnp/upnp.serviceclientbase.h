@@ -41,7 +41,7 @@ public:
 
     ServiceClientBase(IClient& client)
     : m_client(client)
-    , m_subTimer(client.loop())
+    , m_subTimer(client.ioService())
     {
     }
 
@@ -74,8 +74,12 @@ public:
 
             if (subTimeout.count() > 0) // 0 timeout is infinite subscription, no need to renew
             {
-                m_subTimer.start(subTimeout * 3 / 4, [this, subTimeout] () {
-                    renewSubscription(subTimeout);
+                m_subTimer.expires_from_now(subTimeout * 3 / 4);
+                m_subTimer.async_wait([this, subTimeout] (const std::error_code& e) {
+                    if (e != asio::error::operation_aborted)
+                    {
+                        renewSubscription(subTimeout);
+                    }
                 });
             }
 
@@ -86,8 +90,8 @@ public:
 
     void unsubscribe(std::function<void(Status)> cb)
     {
-        uv::asyncSend(m_client.loop(), [this] () {
-            m_subTimer.stop();
+        m_client.ioService().post([this] () {
+            m_subTimer.cancel();
         });
 
         m_client.unsubscribeFromService(m_service.eventSubscriptionURL, m_subscriptionId, cb);
@@ -188,8 +192,9 @@ private:
             }
             else
             {
-                m_subTimer.start(timeout * 3 / 4, [this, timeout] () {
-                    if (timeout.count() > 0)
+                m_subTimer.expires_from_now(timeout * 3 / 4);
+                m_subTimer.async_wait([this, timeout] (const std::error_code& e) {
+                    if (e !=  asio::error::operation_aborted && timeout.count() > 0)
                     {
                         this->renewSubscription(timeout);
                     }
@@ -228,7 +233,7 @@ private:
 
     IClient&                                m_client;
     Service                                 m_service;
-    uv::Timer                               m_subTimer;
+    asio::steady_timer                      m_subTimer;
     std::set<typename Traits::ActionType>   m_supportedActions;
     std::string                             m_subscriptionId;
 };

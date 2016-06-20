@@ -41,15 +41,11 @@ static const char* s_instanceIdNode = "InstanceID";
 static const char* s_event = "Event";
 static const char* s_valAtr         = "val";
 
-LastChangeVariable::LastChangeVariable(uv::Loop& loop, ServiceType type, std::chrono::milliseconds minEventInterval)
+LastChangeVariable::LastChangeVariable(asio::io_service& io, ServiceType type, std::chrono::milliseconds minEventInterval)
 : m_timerScheduled(false)
 , m_minInterval(minEventInterval)
 , m_eventMetaNamespace(serviceTypeToUrnMetadataString(type))
-, m_timer(loop)
-{
-}
-
-LastChangeVariable::~LastChangeVariable()
+, m_timer(io)
 {
 }
 
@@ -82,9 +78,13 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
     {
         auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(m_minInterval - timeSinceLastUpdate);
         m_timerScheduled = true;
-        m_timer.start(waitTime, [this] () {
-            createLastChangeEvent();
-            m_timerScheduled = false;
+        m_timer.expires_from_now(waitTime);
+        m_timer.async_wait([this] (const std::error_code& e) {
+            if (e != asio::error::operation_aborted)
+            {
+                createLastChangeEvent();
+                m_timerScheduled = false;
+            }
         });
     }
 }

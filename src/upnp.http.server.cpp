@@ -31,6 +31,7 @@
 #include "upnp.enumutils.h"
 
 using namespace utils;
+using namespace asio;
 using namespace std::literals::chrono_literals;
 
 namespace upnp
@@ -51,76 +52,69 @@ static const std::string s_response =
     "CONTENT-TYPE: {}\r\n"
     "\r\n";
 
-Server::Server(uv::Loop& loop)
-: m_loop(loop)
-, m_socket(loop)
+Server::Server(asio::io_service& io)
+: m_io(io)
+, m_acceptor(io)
 {
 }
 
-void Server::start(const uv::Address& address)
+void Server::start(const ip::tcp::endpoint& address)
 {
-    log::info("Start HTTP server on http://{}:{}", address.ip(), address.port());
+    log::info("Start HTTP server on http://{}:{}", address.address(), address.port());
 
-    m_socket.bind(address);
-    m_socket.listen(128, [this] (int32_t status) {
-        if (status == 0)
+    m_acceptor.bind(address);
+    accept();
+}
+
+void Server::stop()
+{
+    m_acceptor.close();
+}
+
+void Server::newConnection(std::shared_ptr<asio::ip::tcp::socket> socket)
+{
+    auto parser = std::make_shared<http::Parser>(http::Type::Request);
+    
+    parser->setCompletedCallback([this, parser, socket] () { onHttpParseCompleted(parser, socket); });
+
+    auto buf = std::make_shared<std::array<char, 1024*10>>();
+    socket->async_receive(buffer(*buf), [this, buf, socket, parser] (const std::error_code& error, size_t bytesReceived) {
+        if (error)
         {
-            log::info("Http server: Connection attempt");
-            auto client = std::make_unique<uv::socket::Tcp>(m_loop);
-            auto parser = std::make_shared<http::Parser>(http::Type::Request);
-
-            auto clientPtr = client.get();
-            m_clients.emplace(clientPtr, std::move(client));
-
-            parser->setCompletedCallback([this, parser, clientPtr] () { onHttpParseCompleted(parser, clientPtr); });
-
-            try
-            {
-                m_socket.accept(*clientPtr);
-                clientPtr->read([this, clientPtr, parser] (ssize_t nread, const uv::Buffer& data) {
-                    if (nread < 0)
-                    {
-                        if (nread != UV_EOF)
-                        {
-                            log::error("Failed to read from socket {}", uv::getErrorString(static_cast<int32_t>(nread)));
-                        }
-                        else
-                        {
-                            log::debug("Conection closed by client");
-                            cleanupClient(clientPtr);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            parser->parse(data.data(), nread);
-                        }
-                        catch (std::exception& e)
-                        {
-                            log::error("Failed to parse request: {}", e.what());
-                            cleanupClient(clientPtr);
-                        }
-                    }
-                });
-            }
-            catch (std::exception& e)
-            {
-                log::error("HTTP server: Failed to accept connection: {}", e.what());
-                cleanupClient(clientPtr);
-            }
+            log::error("Failed to read from socket {}", error.message());
+            //log::debug("Conection closed by client");
+            socket->close();
+            return;
         }
-        else
+        
+        try
         {
-            log::error("HTTP server: Failed to listen on socket: {}", status);
+            parser->parse(buf->data(), bytesReceived);
+        }
+        catch (std::exception& e)
+        {
+            log::error("Failed to parse request: {}", e.what());
+            socket->close();
         }
     });
 }
 
-void Server::stop(std::function<void()> cb)
+void Server::accept()
 {
-    cleanupClients();
-    m_socket.close(cb);
+    auto socket = std::make_shared<asio::ip::tcp::socket>(m_io);
+    m_acceptor.async_accept(*socket, [this, socket] (const std::error_code& error) {
+        if (error)
+        {
+            log::error("HTTP server: Failed to accept on socket: {}", error.message());
+        }
+        else
+        {
+            log::info("Http server: Connection attempt");
+            newConnection(socket);
+        }
+        
+        accept();
+    });
 }
 
 void Server::addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents)
@@ -140,13 +134,13 @@ void Server::removeFile(const std::string& urlPath)
 
 std::string Server::getWebRootUrl() const
 {
-    auto addr = m_socket.getSocketName();
-    return fmt::format("http://{}:{}", addr.ip(), addr.port());
+    auto addr = m_acceptor.local_endpoint();
+    return fmt::format("http://{}:{}", addr.address(), addr.port());
 }
 
-uv::Address Server::getAddress() const
+asio::ip::tcp::endpoint Server::getAddress() const
 {
-    return m_socket.getSocketName();
+    return m_acceptor.local_endpoint();
 }
 
 void Server::setRequestHandler(Method method, RequestCb cb)
@@ -154,51 +148,39 @@ void Server::setRequestHandler(Method method, RequestCb cb)
     m_handlers.at(enum_value(method)) = cb;
 }
 
-void Server::writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection)
+void Server::writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& response, bool closeConnection)
 {
-    client->write(uv::Buffer(response, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
-        if (status < 0)
+    socket->async_send(buffer(response), [this, socket, closeConnection] (const std::error_code& error, size_t) {
+        if (error)
         {
-            log::error("Failed to write response: {}", status);
+            log::error("Failed to write response: {}", error.message());
         }
 
-        if (closeConnection)
+        if (error || closeConnection)
         {
-            cleanupClient(client);
+            socket->close();
         }
     });
 }
 
-void Server::writeResponse(uv::socket::Tcp* client, const std::string& header, uv::Buffer body, bool closeConnection)
+void Server::writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& header, asio::const_buffer body, bool closeConnection)
 {
-    client->write(uv::Buffer(header, uv::Buffer::Ownership::No), [this, client, closeConnection, body] (int32_t status) {
-        if (status < 0)
+    std::vector<asio::const_buffer> data { buffer(header), body };
+    
+    socket->async_send(data, [this, socket, closeConnection] (const std::error_code& error, size_t) {
+        if (error)
         {
-            log::error("Failed to write response: {}", status);
-
-            if (closeConnection)
-            {
-                cleanupClient(client);
-            }
+            log::error("Failed to write response: {}", error.message());
         }
-        else
+        
+        if (error || closeConnection)
         {
-            client->write(uv::Buffer(body, uv::Buffer::Ownership::No), [this, client, closeConnection] (int32_t status) {
-                if (status != 0)
-                {
-                    log::error("Failed to write response: {}", status);
-                }
-
-                if (closeConnection)
-                {
-                    cleanupClient(client);
-                }
-            });
+            socket->close();
         }
     });
 }
 
-void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::socket::Tcp* client)
+void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, std::shared_ptr<asio::ip::tcp::socket> socket)
 {
     bool closeConnection = parser->getFlags().isSet(http::Parser::Flag::ConnectionClose);
 
@@ -208,7 +190,7 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
         {
             log::info("requested file size: {}", parser->getUrl());
             auto& file = m_serverdFiles.at(parser->getUrl());
-            writeResponse(client, fmt::format(s_response, 200, file.data.size(), file.contentType), closeConnection);
+            writeResponse(socket, fmt::format(s_response, 200, file.data.size(), file.contentType), closeConnection);
         }
         else if (parser->getMethod() == Method::Get)
         {
@@ -218,16 +200,13 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
             auto rangeHeader = parser->headerValue("Range");
             if (rangeHeader.empty())
             {
-                uv::Buffer buf(file.data, uv::Buffer::Ownership::No);
-                writeResponse(client, fmt::format(s_response, 200, file.data.size(), file.contentType), std::move(buf), closeConnection);
+                writeResponse(socket, fmt::format(s_response, 200, file.data.size(), file.contentType), buffer(file.data), closeConnection);
             }
             else
             {
                 auto range = Parser::parseRange(rangeHeader);
                 auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
-
-                uv::Buffer buf(&file.data[range.start], size, uv::Buffer::Ownership::No);
-                writeResponse(client, fmt::format(s_response, 206, size, file.contentType), std::move(buf), closeConnection);
+                writeResponse(socket, fmt::format(s_response, 206, size, file.contentType), buffer(&file.data[range.start], size), closeConnection);
             }
         }
         else
@@ -235,39 +214,22 @@ void Server::onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::sock
             auto& func = m_handlers.at(enum_value(parser->getMethod()));
             if (func)
             {
-                writeResponse(client, func(*parser), closeConnection);
+                writeResponse(socket, func(*parser), closeConnection);
             }
             else
             {
-                writeResponse(client, fmt::format(s_errorResponse, 501, "Not Implemented"), closeConnection);
+                writeResponse(socket, fmt::format(s_errorResponse, 501, "Not Implemented"), closeConnection);
             }
         }
     }
     catch (std::out_of_range&)
     {
-        writeResponse(client, fmt::format(s_errorResponse, 404, "Not Found"), closeConnection);
+        writeResponse(socket, fmt::format(s_errorResponse, 404, "Not Found"), closeConnection);
     }
     catch (std::exception& e)
     {
-        writeResponse(client, fmt::format(s_errorResponse, 500, "Internal Server Error"), closeConnection);
+        writeResponse(socket, fmt::format(s_errorResponse, 500, "Internal Server Error"), closeConnection);
     }
-}
-
-void Server::cleanupClients() noexcept
-{
-    for (auto& client : m_clients)
-    {
-        client.second->close(nullptr);
-    }
-
-    m_clients.clear();
-}
-
-void Server::cleanupClient(uv::socket::Tcp* client) noexcept
-{
-    client->close([=] () {
-        m_clients.erase(client);
-    });
 }
 
 }

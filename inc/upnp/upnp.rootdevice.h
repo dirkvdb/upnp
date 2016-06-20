@@ -58,15 +58,13 @@ public:
     void removeFileFromHttpServer(const std::string& path) override;
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
-
-    uv::Loop& loop() noexcept override;
+    asio::io_service& ioService() noexcept override;
 
 private:
     std::string onSubscriptionRequest(http::Parser& parser) noexcept;
     std::string onUnsubscriptionRequest(http::Parser& parser) noexcept;
     std::string onActionRequest(http::Parser& parser);
 
-    uv::Loop                        m_loop;
     asio::io_service                m_io;
     std::unique_ptr<http::Server>   m_httpServer;
     std::unique_ptr<http::Client>   m_httpClient;
@@ -75,7 +73,6 @@ private:
     Device                          m_device;
     std::chrono::seconds            m_advertiseInterval;
 
-    std::unique_ptr<std::thread>    m_thread;
     std::unique_ptr<std::thread>    m_asioThread;
 
     struct SubscriptionData

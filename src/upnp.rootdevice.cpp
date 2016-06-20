@@ -28,10 +28,11 @@
 
 #include <regex>
 
-using namespace utils;
-
 namespace upnp
 {
+
+using namespace asio;
+using namespace utils;
 
 static const std::string s_response =
     "HTTP/1.1 200 OK\r\n"
@@ -85,23 +86,19 @@ RootDevice::~RootDevice() noexcept
 void RootDevice::initialize(const std::string& interfaceName)
 {
     auto addr = uv::Address::createIp4(interfaceName);
-    addr.setPort(0);
 
-    m_httpServer = std::make_unique<http::Server>(m_loop);
+    m_httpServer = std::make_unique<http::Server>(m_io);
 
-    m_httpServer->start(addr);
+    m_httpServer->start(ip::tcp::endpoint(ip::address::from_string(addr.ip()), 0));
     m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (http::Parser& parser) { return onSubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
 
-    m_httpClient = std::make_unique<http::Client>(m_loop);
+    m_httpClient = std::make_unique<http::Client>(m_io);
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
-    m_thread = std::make_unique<std::thread>([this] () {
-        m_loop.run(upnp::uv::RunMode::Default);
-    });
-
     m_asioThread = std::make_unique<std::thread>([this] () {
+        asio::io_service::work work(m_io);
         m_io.run();
     });
 }
@@ -109,23 +106,17 @@ void RootDevice::initialize(const std::string& interfaceName)
 void RootDevice::uninitialize()
 {
     log::debug("Uninitializing UPnP Root device: {}", m_device.friendlyName);
-    uv::asyncSend(m_loop, [this] () {
-        m_httpServer->stop([this] () {
-            stopLoopAndCloseRequests(m_loop);
-        });
-    });
 
+    m_httpServer->stop();
     m_ssdpServer->stop([this] () {
         m_io.stop();
     });
 
-    m_thread->join();
     m_asioThread->join();
 
     m_httpClient.reset();
     m_httpServer.reset();
     m_ssdpServer.reset();
-    m_thread.reset();
 }
 
 std::string RootDevice::getWebrootUrl()
@@ -135,7 +126,7 @@ std::string RootDevice::getWebrootUrl()
 
 void RootDevice::registerDevice(const std::string& deviceDescriptionXml, const Device& dev)
 {
-    uv::asyncSend(m_loop, [=] () {
+    m_io.post([=] () {
         m_httpServer->addFile(dev.location, "text/xml", deviceDescriptionXml);
 
         m_device = dev;
@@ -323,9 +314,9 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
     }
 }
 
-uv::Loop& RootDevice::loop() noexcept
+asio::io_service& RootDevice::ioService() noexcept
 {
-    return m_loop;
+    return m_io;
 }
 
 }

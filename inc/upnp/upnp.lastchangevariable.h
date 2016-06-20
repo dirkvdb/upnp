@@ -21,9 +21,10 @@
 #include <unordered_map>
 #include <chrono>
 
+#include <asio.hpp>
+
 #include "upnp/upnptypes.h"
 #include "upnp/upnpservicevariable.h"
-#include "upnp/upnp.uv.h"
 
 namespace upnp
 {
@@ -31,8 +32,7 @@ namespace upnp
 class LastChangeVariable
 {
 public:
-    LastChangeVariable(uv::Loop& loop, ServiceType type, std::chrono::milliseconds minEventInterval);
-    ~LastChangeVariable();
+    LastChangeVariable(asio::io_service& io, ServiceType type, std::chrono::milliseconds minEventInterval);
 
     void addChangedVariable(uint32_t instanceId, const ServiceVariable& var);
 
@@ -47,7 +47,7 @@ private:
     std::chrono::milliseconds                                   m_minInterval;
     std::chrono::steady_clock::time_point                       m_lastUpdate;
     std::string                                                 m_eventMetaNamespace;
-    uv::Timer                                                   m_timer;
+    asio::steady_timer                                          m_timer;
 };
 
 }

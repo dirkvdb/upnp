@@ -18,8 +18,8 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <asio.hpp>
 
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.http.parser.h"
 
 namespace upnp
@@ -32,16 +32,16 @@ using RequestCb = std::function<std::string(http::Parser&)>;
 class Server
 {
 public:
-    Server(uv::Loop& loop);
+    Server(asio::io_service& io);
 
-    void start(const uv::Address& address);
-    void stop(std::function<void()> cb);
+    void start(const asio::ip::tcp::endpoint& address);
+    void stop();
 
     void addFile(const std::string& urlPath, const std::string& contentType, const std::string& contents);
     void addFile(const std::string& urlPath, const std::string& contentType, const std::vector<uint8_t>& contents);
     void removeFile(const std::string& urlPath);
     std::string getWebRootUrl() const;
-    uv::Address getAddress() const;
+    asio::ip::tcp::endpoint getAddress() const;
 
     void setRequestHandler(Method method, RequestCb cb);
 
@@ -52,17 +52,16 @@ private:
         std::string data;
     };
 
-    void writeResponse(uv::socket::Tcp* client, const std::string& response, bool closeConnection);
-    void writeResponse(uv::socket::Tcp* client, const std::string& header, uv::Buffer body, bool closeConnection);
-    void cleanupClients() noexcept;
-    void cleanupClient(uv::socket::Tcp* client) noexcept;
+    void newConnection(std::shared_ptr<asio::ip::tcp::socket> socket);
+    void accept();
+    void writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& response, bool closeConnection);
+    void writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& header, asio::const_buffer body, bool closeConnection);
 
-    void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, uv::socket::Tcp* client);
+    void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, std::shared_ptr<asio::ip::tcp::socket> socket);
 
-    uv::Loop& m_loop;
-    uv::socket::Tcp m_socket;
+    asio::io_service& m_io;
+    asio::ip::tcp::acceptor m_acceptor;
     std::unordered_map<std::string, HostedFile> m_serverdFiles;
-    std::unordered_map<void*, std::unique_ptr<uv::socket::Tcp>> m_clients;
 
     std::array<RequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_handlers;
 };

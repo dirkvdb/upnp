@@ -21,8 +21,8 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <asio.hpp>
 
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.http.server.h"
 
@@ -35,10 +35,10 @@ namespace gena
 class Server
 {
 public:
-    Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb);
+    Server(asio::io_service& io, const asio::ip::tcp::endpoint& address, std::function<void(const SubscriptionEvent&)> cb);
 
-    void stop(std::function<void()> cb);
-    uv::Address getAddress() const;
+    void stop();
+    asio::ip::tcp::endpoint getAddress() const;
 
 private:
     http::Server m_httpServer;

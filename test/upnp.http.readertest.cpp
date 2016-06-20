@@ -41,14 +41,14 @@ class HttpReaderTest : public Test
 {
 public:
     HttpReaderTest()
-    : webserver(loop)
+    : webserver(io)
     {
-        webserver.start(uv::Address::createIp4("127.0.0.1", 0));
+        webserver.start(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 0));
     }
 
 protected:
-    uv::Loop       loop;
-    http::Server   webserver;
+    asio::io_service io;
+    http::Server webserver;
 };
 
 TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
@@ -81,12 +81,12 @@ TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
         EXPECT_THAT(data, ContainerEq(result));
         EXPECT_EQ(0, memcmp(data.data(), result.data(), data.size()));
 
-        uv::asyncSend(loop, [=] () {
-            webserver.stop(nullptr);
+        io.post([this] () {
+            webserver.stop();
         });
     });
 
-    loop.run(uv::RunMode::Default);
+    io.run();
     fut.wait();
 }
 

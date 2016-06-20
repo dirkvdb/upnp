@@ -25,13 +25,15 @@
 #include <algorithm>
 #include <cstring>
 
-using namespace utils;
-using namespace std::placeholders;
-
 //#define DEBUG_UPNP_CLIENT
 
 namespace upnp
 {
+
+using namespace asio;
+using namespace utils;
+using namespace std::placeholders;
+
 
 Status httpStatusToStatus(int32_t httpStatus)
 {
@@ -48,8 +50,7 @@ Status httpStatusToStatus(int32_t httpStatus)
 }
 
 Client::Client()
-: m_loop(std::make_unique<uv::Loop>())
-, m_io(std::make_unique<asio::io_service>())
+: m_io(std::make_unique<asio::io_service>())
 {
 }
 
@@ -58,21 +59,20 @@ Client::~Client() = default;
 void Client::initialize()
 {
     log::debug("Initializing UPnP SDK");
-    return initialize(uv::Address::createIp4("0.0.0.0", 0));
+    return initialize(ip::tcp::endpoint(ip::address::address(), 0));
 }
 
 void Client::initialize(const std::string& interfaceName, uint16_t port)
 {
     log::debug("Initializing UPnP SDK");
     auto addr = uv::Address::createIp4(interfaceName);
-    addr.setPort(port);
-    return initialize(addr);
+    return initialize(ip::tcp::endpoint(ip::address::from_string(addr.ip()), port));
 }
 
-void Client::initialize(const uv::Address& addr)
+void Client::initialize(const asio::ip::tcp::endpoint& addr)
 {
-    m_httpClient = std::make_unique<http::Client>(*m_loop);
-    m_eventServer = std::make_unique<gena::Server>(*m_loop, addr, [&] (const SubscriptionEvent& ev) {
+    m_httpClient = std::make_unique<http::Client>(*m_io);
+    m_eventServer = std::make_unique<gena::Server>(*m_io, addr, [&] (const SubscriptionEvent& ev) {
         auto iter = m_eventCallbacks.find(ev.sid);
         if (iter != m_eventCallbacks.end())
         {
@@ -80,45 +80,37 @@ void Client::initialize(const uv::Address& addr)
         }
     });
 
-    m_thread = std::make_unique<std::thread>([this] () {
+    m_asioThread = std::make_unique<std::thread>([this] () {
         auto curlInit = curl_global_init(CURL_GLOBAL_WIN32);
         if (curlInit)
         {
             throw std::runtime_error("Failed to init curl library");
         }
 
-        m_loop->run(upnp::uv::RunMode::Default);
-        curl_global_cleanup();
-    });
-
-    m_asioThread = std::make_unique<std::thread>([this] () {
+        asio::io_service::work work(*m_io);
         m_io->run();
+        
+        curl_global_cleanup();
     });
 }
 
 void Client::uninitialize()
 {
     log::debug("Uninitializing UPnP SDK");
-    uv::asyncSend(*m_loop, [&] () {
-        m_httpClient.reset();
-        m_eventServer->stop([this] () {
-            m_eventServer.reset();
-            stopLoopAndCloseRequests(*m_loop);
-        });
-    });
 
+    m_eventServer->stop();
     m_io->stop();
+    
+    m_httpClient.reset();
+    m_eventServer.reset();
 
-    m_thread->join();
     m_asioThread->join();
-
-    m_thread.reset();
     m_asioThread.reset();
 }
 
 std::string Client::getIpAddress() const
 {
-    return m_eventServer->getAddress().ip();
+    return m_eventServer->getAddress().address().to_string();
 }
 
 uint16_t Client::getPort() const
@@ -134,9 +126,9 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
     }
 
     auto addr = m_eventServer->getAddress();
-    auto eventServerUrl = fmt::format("http://{}:{}/", addr.ip(), addr.port());
+    auto eventServerUrl = fmt::format("http://{}:{}/", addr.address(), addr.port());
 
-    uv::asyncSend(*m_loop, [=] () {
+    m_io->post([=] () {
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
@@ -163,7 +155,7 @@ void Client::renewSubscription(const std::string& publisherUrl,
     assert(m_eventServer);
     assert(timeout.count() > 0);
 
-    uv::asyncSend(*m_loop, [=] () {
+    m_io->post([=] () {
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
@@ -180,7 +172,7 @@ void Client::renewSubscription(const std::string& publisherUrl,
 
 void Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
-    uv::asyncSend(*m_loop, [=] () {
+    m_io->post([=] () {
         m_httpClient->unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
@@ -201,7 +193,7 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    uv::asyncSend(*m_loop, [this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
+    m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
         m_httpClient->soapAction(url, name, urn, env, [cb] (int32_t status, std::string response) {
             cb(httpStatusToStatus(status), std::move(response));
         });
@@ -217,11 +209,6 @@ void Client::getFile(const std::string& url, std::function<void(Status, std::str
     m_httpClient->get(url, [cb] (int32_t status, std::string contents) {
         cb(httpStatusToStatus(status), std::move(contents));
     });
-}
-
-uv::Loop& Client::loop() noexcept
-{
-    return *m_loop;
 }
 
 asio::io_service& Client::ioService() noexcept

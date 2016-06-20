@@ -28,8 +28,6 @@ namespace asio { class io_service; }
 namespace upnp
 {
 
-namespace uv { class Loop; }
-
 class Action;
 
 class IClient
@@ -51,7 +49,6 @@ public:
     virtual void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
 
-    virtual uv::Loop& loop() noexcept = 0;
     virtual asio::io_service& ioService() noexcept = 0;
 };
 

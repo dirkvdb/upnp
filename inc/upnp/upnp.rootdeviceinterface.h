@@ -21,13 +21,10 @@
 
 #include "upnp/upnp.device.h"
 
+namespace asio { class io_service; }
+
 namespace upnp
 {
-
-namespace uv
-{
-    class Loop;
-}
 
 struct SubscriptionRequest
 {
@@ -69,8 +66,8 @@ public:
     virtual void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data) = 0;
     virtual void removeFileFromHttpServer(const std::string& path) = 0;
     
-    virtual uv::Loop& loop() noexcept = 0;
-
+    virtual asio::io_service& ioService() noexcept = 0;
+    
     std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested;
     std::function<std::string(const ActionRequest&)> ControlActionRequested;
 };

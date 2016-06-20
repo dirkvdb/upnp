@@ -59,12 +59,12 @@ namespace
     }
 }
 
-Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(const SubscriptionEvent&)> cb)
-: m_httpServer(loop)
+Server::Server(asio::io_service& io, const asio::ip::tcp::endpoint& address, std::function<void(const SubscriptionEvent&)> cb)
+: m_httpServer(io)
 , m_eventCb(std::move(cb))
 {
     assert(m_eventCb);
-    log::info("GENA: Start server on http://{}:{}", address.ip(), address.port());
+    log::info("GENA: Start server on http://{}:{}", address.address(), address.port());
 
     m_httpServer.setRequestHandler(http::Method::Notify, [this] (auto& parser) {
         try
@@ -102,12 +102,12 @@ Server::Server(uv::Loop& loop, const uv::Address& address, std::function<void(co
     m_httpServer.start(address);
 }
 
-void Server::stop(std::function<void()> cb)
+void Server::stop()
 {
-    m_httpServer.stop(cb);
+    m_httpServer.stop();
 }
 
-uv::Address Server::getAddress() const
+asio::ip::tcp::endpoint Server::getAddress() const
 {
     return m_httpServer.getAddress();
 }

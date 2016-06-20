@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include <thread>
 #include <unordered_map>
 
 #include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.http.client.h"
 
-namespace uv { class Loop; }
 namespace asio { class io_service; }
 
 namespace upnp
@@ -59,17 +59,14 @@ public:
     void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
-    uv::Loop& loop() noexcept override;
     asio::io_service& ioService() noexcept override;
 
 private:
-    void initialize(const uv::Address& addr);
+    void initialize(const asio::ip::tcp::endpoint& address);
 
     void handlEvent(const SubscriptionEvent& event);
 
-    std::unique_ptr<std::thread> m_thread;
     std::unique_ptr<std::thread> m_asioThread;
-    std::unique_ptr<uv::Loop> m_loop;
     std::unique_ptr<asio::io_service> m_io;
     std::unique_ptr<http::Client> m_httpClient;
     std::unique_ptr<gena::Server> m_eventServer;

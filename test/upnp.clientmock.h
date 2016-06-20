@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "gmock/gmock.h"
+#include <asio.hpp>
 
-#include "upnp/upnp.uv.h"
+#include "gmock/gmock.h"
 #include "upnp/upnp.clientinterface.h"
 
 using namespace testing;
@@ -44,18 +44,12 @@ public:
     MOCK_METHOD2(sendAction, void(const Action&, std::function<void(Status status, std::string actionResult)>));
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(Status, std::string contents)>));
 
-    uv::Loop& loop() noexcept override
-    {
-        return m_loop;
-    }
-
     asio::io_service& ioService() noexcept override
     {
         return m_io;
     }
 
 private:
-    uv::Loop m_loop;
     asio::io_service m_io;
 };
 

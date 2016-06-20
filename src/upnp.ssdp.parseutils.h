@@ -93,7 +93,7 @@ public:
         m_cb = std::move(cb);
     }
 
-    size_t parse(const char* data, size_t size) noexcept
+    size_t parse(const char* data, size_t size)
     {
         if (size == 0)
         {
@@ -128,6 +128,12 @@ private:
 
         try
         {
+            if (m_parser.getMethod() == http::Method::Search)
+            {
+                // ignore search requests
+                return;
+            }
+            
             DeviceNotificationInfo info;
             parseUSN(m_parser.headerValue("USN"), info);
             info.location = m_parser.headerValue("LOCATION");
@@ -142,7 +148,6 @@ private:
             else
             {
                 // response to a search
-
                 if (m_parser.getStatus() != 200)
                 {
                     utils::log::warn("Error status in search response: {}", m_parser.getStatus());

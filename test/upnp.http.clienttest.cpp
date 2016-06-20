@@ -11,6 +11,7 @@ namespace upnp
 namespace test
 {
 
+using namespace asio;
 using namespace utils;
 using namespace testing;
 using namespace std::string_literals;
@@ -30,11 +31,11 @@ class HttpClientTest : public Test
 {
 public:
     HttpClientTest()
-    : server(loop)
-    , client(loop)
+    : server(io)
+    , client(io)
     {
         server.addFile("/test.txt", "plain/text", s_hostedFile);
-        server.start(uv::Address::createIp4("127.0.0.1", 0));
+        server.start(ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 0));
     }
 
     template <typename Data>
@@ -42,15 +43,15 @@ public:
     {
         return [this] (int32_t status, Data data) {
             mock.onResponse(status, data);
-
-            server.stop(nullptr);
+            server.stop();
         };
     }
 
-    uv::Loop loop;
+    io_service io;
     http::Server server;
     http::Client client;
     ResponseMock mock;
+    std::thread ioThread;
 };
 
 TEST_F(HttpClientTest, DISABLED_ContentLengthNotProvided)
@@ -61,7 +62,7 @@ TEST_F(HttpClientTest, DISABLED_ContentLengthNotProvided)
         gotCallback = true;
     });
 
-    loop.run(uv::RunMode::Default);
+    io.run();
     EXPECT_TRUE(gotCallback);
 }
 
@@ -70,14 +71,14 @@ TEST_F(HttpClientTest, ContentLength)
     EXPECT_CALL(mock, onResponse(200, s_hostedFile.size()));
     auto url = server.getWebRootUrl() + "/test.txt";
     client.getContentLength(url, handleResponse<size_t>());
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(HttpClientTest, GetAsString)
 {
     EXPECT_CALL(mock, onResponse(200, s_hostedFile));
     client.get(server.getWebRootUrl() + "/test.txt", handleResponse<std::string>());
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(HttpClientTest, GetAsVector)
@@ -87,7 +88,7 @@ TEST_F(HttpClientTest, GetAsVector)
     })));
 
     client.get(server.getWebRootUrl() + "/test.txt", handleResponse<std::vector<uint8_t>>());
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(HttpClientTest, GetAsArray)
@@ -97,7 +98,7 @@ TEST_F(HttpClientTest, GetAsArray)
 
     EXPECT_CALL(mock, onResponse(200, array.data()));
     client.get(server.getWebRootUrl() + "/test.txt", array.data(), handleResponse<uint8_t*>());
-    loop.run(uv::RunMode::Default);
+    io.run();
 
     EXPECT_TRUE(std::equal(array.begin(), array.end(), s_hostedFile.begin(), s_hostedFile.end()));
 }
@@ -106,7 +107,7 @@ TEST_F(HttpClientTest, GetInvalidUrlAsString)
 {
     EXPECT_CALL(mock, onResponse(404, ""));
     client.get(server.getWebRootUrl() + "/bad.txt", handleResponse<std::string>());
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 TEST_F(HttpClientTest, CouldNotConnect)
@@ -115,7 +116,7 @@ TEST_F(HttpClientTest, CouldNotConnect)
     client.setTimeout(5ms);
     client.getContentLength("http://127.0.0.1:81/index.html", handleResponse<size_t>());
 
-    loop.run(uv::RunMode::Default);
+    io.run();
 }
 
 }

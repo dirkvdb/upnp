@@ -34,13 +34,12 @@ TEST(DeviceScannerTest, DISABLED_DiscoverClient)
         }
     }, &client);
 
-    uv::asyncSend(client.loop(), [&] () {
+    client.ioService().post([&] () {
         scanner.start();
         scanner.refresh();
     });
 
     fut.wait();
-
     client.uninitialize();
 }
 

@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "gmock/gmock.h"
+#include <asio.hpp>
 
-#include "upnp/upnp.uv.h"
+#include "gmock/gmock.h"
 #include "upnp/upnp.rootdeviceinterface.h"
 
 using namespace testing;
@@ -43,13 +43,13 @@ struct RootDeviceMock : public IRootDevice
     MOCK_METHOD3(addFileToHttpServer, void(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data));
     MOCK_METHOD1(removeFileFromHttpServer, void(const std::string& path));
     
-    uv::Loop& loop() noexcept override
+    asio::io_service& ioService() noexcept override
     {
-        return m_loop;
+        return m_io;
     }
         
 private:
-    uv::Loop m_loop;
+    asio::io_service m_io;
 };
 
 }

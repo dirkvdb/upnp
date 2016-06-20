@@ -38,16 +38,12 @@ namespace http
 namespace
 {
 
-struct CurlContext
+struct ConnInfo
 {
-    CurlContext(uv::Loop& loop, curl_socket_t fd)
-    : poll(loop, uv::OsSocket(fd))
-    , sockfd(fd)
-    {
-    }
-
-    uv::Poll poll;
-    curl_socket_t sockfd;
+  CURL *easy;
+  char *url;
+  Client* client;
+  char error[CURL_ERROR_SIZE];
 };
 
 enum class RequestType
@@ -216,41 +212,6 @@ void checkMultiInfo(CURLM* curlHandle)
     }
 }
 
-void startTimeout(CURLM* curlHandle, long timeoutMs, void* userp)
-{
-    if (timeoutMs <= 0)
-    {
-        timeoutMs = 1; // 0 means directly call socket_action, but we'll do it in a bit
-    }
-
-    auto* timer = reinterpret_cast<uv::Timer*>(userp);
-    timer->start(std::chrono::milliseconds(timeoutMs), std::chrono::milliseconds(0), [curlHandle, timeoutMs] () {
-        int running_handles;
-        curl_multi_socket_action(curlHandle, CURL_SOCKET_TIMEOUT, 0, &running_handles);
-        checkMultiInfo(curlHandle);
-    });
-}
-
-int createCurlFlags(const Flags<uv::PollEvent>& events, int status)
-{
-    int flags = 0;
-
-    if (status < 0)
-    {
-        flags = CURL_CSELECT_ERR;
-    }
-    else if (!status && events & UV_READABLE)
-    {
-        flags |= CURL_CSELECT_IN;
-    }
-    else if (!status && events & UV_WRITABLE)
-    {
-        flags |= CURL_CSELECT_OUT;
-    }
-
-    return flags;
-}
-
 size_t writeToString(char* ptr, size_t size, size_t nmemb, void* userdata)
 {
     auto dataSize = size * nmemb;
@@ -345,23 +306,22 @@ size_t getSubscribeHeaders(char* buffer, size_t size, size_t nitems, void* userd
 
 }
 
-Client::Client(uv::Loop& loop)
-: m_loop(loop)
-, m_timer(loop)
+Client::Client(asio::io_service& io)
+: m_io(io)
+, m_timer(io)
 , m_timeout(5000)
 , m_multiHandle(curl_multi_init())
 {
     curl_multi_setopt(m_multiHandle, CURLMOPT_SOCKETFUNCTION, handleSocket);
     curl_multi_setopt(m_multiHandle, CURLMOPT_SOCKETDATA, this);
 
-    curl_multi_setopt(m_multiHandle, CURLMOPT_TIMERFUNCTION, startTimeout);
-    curl_multi_setopt(m_multiHandle, CURLMOPT_TIMERDATA, &m_timer);
+    curl_multi_setopt(m_multiHandle, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
+    curl_multi_setopt(m_multiHandle, CURLMOPT_TIMERDATA, this);
 }
 
 Client::~Client() noexcept
 {
-    m_timer.stop();
-
+    m_timer.cancel();
     curl_multi_cleanup(m_multiHandle);
 }
 
@@ -614,58 +574,132 @@ std::string Client::errorToString(int32_t errorCode)
     }
 }
 
-int Client::handleSocket(CURL* /*easy*/, curl_socket_t s, int action, void* userp, void* socketp)
+int Client::handleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp)
 {
     auto client = reinterpret_cast<Client*>(userp);
-
-    CurlContext* context;
-    if (socketp)
+    
+    if (action == CURL_POLL_REMOVE)
     {
-        context = reinterpret_cast<CurlContext*>(socketp);
+        if (socketp)
+        {
+            int* p = reinterpret_cast<int*>(socketp);
+            free(p);
+        }
     }
     else
     {
-        context = new CurlContext(client->m_loop, s);
-        curl_multi_assign(client->m_multiHandle, s, context);
-    }
-
-    switch (action)
-    {
-    case CURL_POLL_IN:
-        context->poll.start(uv::PollEvent::Readable, [client, context] (int32_t status, Flags<uv::PollEvent> events) {
-            client->m_timer.stop();
-            int runningHandles;
-            curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);
-            checkMultiInfo(client->m_multiHandle);
-        });
-        break;
-    case CURL_POLL_OUT:
-        context->poll.start(uv::PollEvent::Writable, [client, context] (int32_t status, Flags<uv::PollEvent> events) {
-            client->m_timer.stop();
-            int runningHandles;
-            curl_multi_socket_action(client->m_multiHandle, context->sockfd, createCurlFlags(events, status), &runningHandles);
-            checkMultiInfo(client->m_multiHandle);
-        });
-        break;
-    case CURL_POLL_REMOVE:
-        if (socketp)
+        if (!socketp)
         {
-            context->poll.stop();
-            context->poll.close([context] () {
-                delete context;
-            });
-            curl_multi_assign(client->m_multiHandle, s, nullptr);
+            addsock(s, easy, action, client);
         }
-        break;
-    default:
-        log::error("CURL action default");
-        assert(false);
-        break;
+        else
+        {
+            setsock((int*)socketp, s, easy, action, client);
+        }
     }
 
     return 0;
 }
 
+void Client::setsock(int* fdp, curl_socket_t s, CURL* e, int act, Client* client)
+{
+    auto it = client->m_sockets.find(s);
+    if (it == client->m_sockets.end())
+    {
+        return;
+    }
+ 
+    auto* socket = it->second;
+    *fdp = act;
+ 
+    if (act == CURL_POLL_IN)
+    {
+        socket->async_read_some(asio::null_buffers(), std::bind(&Client::event_cb, client, socket, act));
+    }
+    else if (act == CURL_POLL_OUT)
+    {
+        socket->async_write_some(asio::null_buffers(), std::bind(&Client::event_cb, client, socket, act));
+    }
+    else if(act == CURL_POLL_INOUT)
+    {
+        socket->async_read_some(asio::null_buffers(), std::bind(&Client::event_cb, client, socket, act));
+        socket->async_write_some(asio::null_buffers(), std::bind(&Client::event_cb, client, socket, act));
+    }
+}
+ 
+void Client::addsock(curl_socket_t s, CURL *easy, int action, Client* client)
+{
+    /* fdp is used to store current action */
+    int* fdp = (int*) calloc(sizeof(int), 1);
+    setsock(fdp, s, easy, action, client);
+    curl_multi_assign(client->m_multiHandle, s, fdp);
+}
+
+void Client::check_multi_info(Client* client)
+{
+    CURLMsg* msg;
+    int msgs_left;
+
+    while ((msg = curl_multi_info_read(client->m_multiHandle, &msgs_left)))
+    {
+        if(msg->msg == CURLMSG_DONE)
+        {
+            auto easy = msg->easy_handle;
+            auto res = msg->data.result;
+            
+            ConnInfo* conn;
+            curl_easy_getinfo(easy, CURLINFO_PRIVATE, &conn);
+            curl_multi_remove_handle(client->m_multiHandle, easy);
+            free(conn->url);
+            curl_easy_cleanup(easy);
+            free(conn);
+        }
+    }
+}
+
+/* Called by asio when there is an action on a socket */ 
+void Client::event_cb(Client* client, asio::ip::tcp::socket* socket, int action)
+{
+    curl_multi_socket_action(client->m_multiHandle, socket->native_handle(), action, &client->m_stillRunning);
+    check_multi_info(client);
+ 
+    if (client->m_stillRunning <= 0)
+    {
+        client->m_timer.cancel();
+    }
+}
+ 
+/* Called by asio when our timeout expires */ 
+void Client::timer_cb(const std::error_code& error, Client* client)
+{
+    if (!error)
+    {
+        curl_multi_socket_action(client->m_multiHandle, CURL_SOCKET_TIMEOUT, 0, &client->m_stillRunning);
+        check_multi_info(client);
+    }
+}
+
+/* Update the event timer after curl_multi library calls */ 
+int Client::multi_timer_cb(CURLM *multi, long timeout_ms, Client* client)
+{
+    /* cancel running timer */
+    client->m_timer.cancel();
+ 
+    if (timeout_ms > 0)
+    {
+        /* update timer */
+        client->m_timer.expires_from_now(std::chrono::milliseconds(timeout_ms));
+        client->m_timer.async_wait(std::bind(&timer_cb, std::placeholders::_1, client));
+    }
+    else
+    {
+        /* call timeout function immediately */
+        std::error_code error; /*success*/
+        timer_cb(error, client);
+    }
+ 
+  return 0;
+}
 
 }
 }

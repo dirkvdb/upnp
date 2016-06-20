@@ -16,12 +16,13 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <cinttypes>
 #include <curl/curl.h>
 
-#include "upnp/upnp.uv.h"
+#include <asio.hpp>
 
 namespace upnp
 {
@@ -31,7 +32,7 @@ namespace http
 class Client
 {
 public:
-    Client(uv::Loop& loop);
+    Client(asio::io_service& io);
     Client(const Client&) = delete;
     ~Client() noexcept;
 
@@ -64,9 +65,17 @@ public:
 
 private:
     static int handleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp);
+    static void addsock(curl_socket_t s, CURL *easy, int action, Client* client);
+    static void setsock(int* fdp, curl_socket_t s, CURL* e, int act, Client* client);
+    static void check_multi_info(Client* client);
+    static void timer_cb(const std::error_code& error, Client* client);
+    static int multi_timer_cb(CURLM *multi, long timeout_ms, Client* client);
+    static void event_cb(Client* client, asio::ip::tcp::socket* socket, int action);
 
-    uv::Loop& m_loop;
-    uv::Timer m_timer;
+    asio::io_service& m_io;
+    asio::steady_timer m_timer;
+    std::unordered_map<curl_socket_t, asio::ip::tcp::socket*> m_sockets;
+    int m_stillRunning;
     uint32_t m_timeout;
     CURLM* m_multiHandle;
 };
