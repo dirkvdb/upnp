@@ -18,10 +18,10 @@
 
 #include <thread>
 #include <unordered_map>
+#include <asio.hpp>
 
 #include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.types.h"
-#include "upnp/upnp.http.client.h"
 
 namespace asio { class io_service; }
 
@@ -29,6 +29,7 @@ namespace upnp
 {
 
 namespace gena { class Server; }
+namespace http { class Client; }
 
 class Client : public IClient
 {

@@ -61,7 +61,7 @@ Server::Server(asio::io_service& io)
 void Server::start(const ip::tcp::endpoint& address)
 {
     log::info("Start HTTP server on http://{}:{}", address.address(), address.port());
-
+    m_acceptor.open(address.protocol());
     m_acceptor.bind(address);
     accept();
 }

@@ -19,6 +19,7 @@
 #include "utils/log.h"
 #include "upnp/upnp.uv.h"
 #include "upnp/upnp.action.h"
+#include "upnp/upnp.http.client.h"
 #include "upnp.gena.server.h"
 
 #include <stdexcept>
@@ -34,19 +35,23 @@ using namespace asio;
 using namespace utils;
 using namespace std::placeholders;
 
-
-Status httpStatusToStatus(int32_t httpStatus)
+namespace
 {
-    if (httpStatus < 0)
+
+Status httpStatusToStatus(const std::error_code& error)
+{
+    if (error.value() < 0)
     {
-        return Status(ErrorCode::NetworkError, uv::getErrorString(httpStatus));
+        return Status(ErrorCode::NetworkError, error.message());
     }
-    else if (httpStatus != 200)
+    else if (error.value() != 200)
     {
-        return Status(ErrorCode::HttpError, http::Client::errorToString(httpStatus));
+        return Status(ErrorCode::HttpError, error.message());
     }
 
     return Status();
+}
+
 }
 
 Client::Client()
@@ -81,16 +86,8 @@ void Client::initialize(const asio::ip::tcp::endpoint& addr)
     });
 
     m_asioThread = std::make_unique<std::thread>([this] () {
-        auto curlInit = curl_global_init(CURL_GLOBAL_WIN32);
-        if (curlInit)
-        {
-            throw std::runtime_error("Failed to init curl library");
-        }
-
         asio::io_service::work work(*m_io);
         m_io->run();
-        
-        curl_global_cleanup();
     });
 }
 
@@ -100,7 +97,7 @@ void Client::uninitialize()
 
     m_eventServer->stop();
     m_io->stop();
-    
+
     m_httpClient.reset();
     m_eventServer.reset();
 
@@ -132,12 +129,12 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
-        m_httpClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string response) {
             //log::debug("Subscribe response: {}", response);
 
             if (cb)
             {
-                auto subCb = cb(httpStatusToStatus(status), subId, subTimeout);
+                auto subCb = cb(httpStatusToStatus(error), subId, subTimeout);
                 if (subCb)
                 {
                     m_eventCallbacks.emplace(subId, subCb);
@@ -148,9 +145,9 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
 }
 
 void Client::renewSubscription(const std::string& publisherUrl,
-                                const std::string& subscriptionId,
-                                std::chrono::seconds timeout,
-                                std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb)
+                               const std::string& subscriptionId,
+                               std::chrono::seconds timeout,
+                               std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb)
 {
     assert(m_eventServer);
     assert(timeout.count() > 0);
@@ -159,12 +156,12 @@ void Client::renewSubscription(const std::string& publisherUrl,
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
-        m_httpClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (int32_t status, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string response) {
             //log::debug("Subscription renewal response: {}", response);
 
             if (cb)
             {
-                cb(httpStatusToStatus(status), subId, subTimeout);
+                cb(httpStatusToStatus(error), subId, subTimeout);
             }
         });
     });
@@ -173,13 +170,13 @@ void Client::renewSubscription(const std::string& publisherUrl,
 void Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
     m_io->post([=] () {
-        m_httpClient->unsubscribe(publisherUrl, subscriptionId, [=] (int32_t status, std::string response) {
+        m_httpClient->unsubscribe(publisherUrl, subscriptionId, [=] (const std::error_code& error, std::string response) {
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
 //#endif
             if (cb)
             {
-                cb(httpStatusToStatus(status));
+                cb(httpStatusToStatus(error));
             }
 
             m_eventCallbacks.erase(subscriptionId);
@@ -194,8 +191,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
 #endif
 
     m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
-        m_httpClient->soapAction(url, name, urn, env, [cb] (int32_t status, std::string response) {
-            cb(httpStatusToStatus(status), std::move(response));
+        m_httpClient->soapAction(url, name, urn, env, [cb] (const std::error_code& error, std::string response) {
+            cb(httpStatusToStatus(error), std::move(response));
         });
     });
 
@@ -206,8 +203,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
 
 void Client::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
-    m_httpClient->get(url, [cb] (int32_t status, std::string contents) {
-        cb(httpStatusToStatus(status), std::move(contents));
+    m_httpClient->get(url, [cb] (const std::error_code& error, std::string contents) {
+        cb(httpStatusToStatus(error), std::move(contents));
     });
 }
 

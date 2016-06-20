@@ -170,10 +170,10 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
         }
 
         auto data = std::make_shared<std::string>(std::move(eventData));
-        m_httpClient->notify(iter->second.deliveryUrl, iter->first, iter->second.sequence, *data, [this, data] (uint32_t status, std::string) {
-            if (status != 200)
+        m_httpClient->notify(iter->second.deliveryUrl, iter->first, iter->second.sequence, *data, [this, data] (const std::error_code& error, std::string) {
+            if (error.value() != http::errc::Ok)
             {
-                log::warn("Failed to send notification: HTTP {}", status);
+                log::warn("Failed to send notification: HTTP {}", error.message());
             }
         });
     }

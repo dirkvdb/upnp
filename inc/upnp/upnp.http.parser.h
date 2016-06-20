@@ -81,6 +81,7 @@ public:
 
     void setHeadersCompletedCallback(std::function<void()> cb);
     void setCompletedCallback(std::function<void()> cb);
+    void setBodyDataCallback(std::function<void(const char*, size_t)> cb);
 
     size_t parse(const char* data, size_t dataSize);
     size_t parse(const std::string& data);

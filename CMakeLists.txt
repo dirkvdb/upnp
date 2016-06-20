@@ -67,7 +67,7 @@ SET (UPNPFRAMEWORK_LIBRARY_DIRS
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES(SYSTEM
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gsl
@@ -129,6 +129,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.client.h                                   src/upnp.client.cpp
     src/upnp.gena.server.h                              src/upnp.gena.server.cpp
     src/upnp.ssdp.parseutils.h
+    src/stringview.h
     src/http_parser.h                                   src/http_parser.cpp
     src/URI.h                                           src/URI.cpp
     src/guid.h                                          src/guid.cpp

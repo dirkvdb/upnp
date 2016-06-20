@@ -127,6 +127,7 @@ struct Parser::Pimpl
     std::string url;
     std::function<void()> completedCb;
     std::function<void()> headersCompletedCb;
+    std::function<void(const char*, size_t)> bodyCb;
 };
 
 Parser::Parser(Type type)
@@ -167,16 +168,24 @@ Parser::Parser(Type type)
         if (length > 0)
         {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            if (thisPtr->m_pimpl->state == State::ParsingField)
+            
+            if (thisPtr->m_pimpl->bodyCb)
             {
-                thisPtr->m_pimpl->headers.back().field.append(str, length);
+                thisPtr->m_pimpl->bodyCb(str, length);
             }
             else
             {
-                thisPtr->m_pimpl->headers.emplace_back(std::string(str, length));
-            }
+                if (thisPtr->m_pimpl->state == State::ParsingField)
+                {
+                    thisPtr->m_pimpl->headers.back().field.append(str, length);
+                }
+                else
+                {
+                    thisPtr->m_pimpl->headers.emplace_back(std::string(str, length));
+                }
 
-            thisPtr->m_pimpl->state = State::ParsingField;
+                thisPtr->m_pimpl->state = State::ParsingField;
+            }
         }
         return 0;
     };
@@ -229,6 +238,11 @@ void Parser::setCompletedCallback(std::function<void()> cb)
         thisPtr->m_pimpl->completedCb();
         return 0;
     };
+}
+
+void Parser::setBodyDataCallback(std::function<void(const char*, size_t)> cb)
+{
+    m_pimpl->bodyCb = cb;
 }
 
 size_t Parser::parse(const char* data, size_t dataSize)
