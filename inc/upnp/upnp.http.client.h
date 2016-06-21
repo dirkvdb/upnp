@@ -126,7 +126,7 @@ inline const char* error_message(int ec)
     case ServiceUnavailable: return "Service Unavailable";
     case GatewayTimeout: return "Gateway Timeout";
     case HTTPVersionNotSupported: return "HTTP Version Not Supported";
-    
+
     case Reserved: return "<reserved>";
     default: return "<unknown-status>";
     }
@@ -136,10 +136,10 @@ class HttpErrorCategory : public std::error_category
 {
 public:
     HttpErrorCategory() = default;
-    
+
     std::string message(int c) const override
-    { 
-        return error_message(c); 
+    {
+        return error_message(c);
     }
 
     const char* name() const noexcept override
@@ -188,9 +188,12 @@ public:
                     std::function<void(const std::error_code&, std::string data)> cb);
 
 private:
+    void reset();
+
     void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb);
     void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb);
     void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const std::error_code&)> cb);
+    void receiveData(std::function<void(const std::error_code&)> cb);
 
     asio::steady_timer m_timer;
     asio::ip::tcp::socket m_socket;
@@ -205,7 +208,7 @@ private:
 
 namespace std
 {
- 
+
 error_code make_error_code(upnp::http::errc::HttpError e) noexcept;
 
 }

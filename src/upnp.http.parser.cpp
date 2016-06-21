@@ -42,7 +42,7 @@ static constexpr EnumMap<http::Method, http_method> s_methodConv {{
 
     std::make_tuple(HTTP_SUBSCRIBE,     http::Method::Subscribe),
     std::make_tuple(HTTP_UNSUBSCRIBE,   http::Method::Unsubscribe),
-    
+
     std::make_tuple(HTTP_GET,           http::Method::Get),
     std::make_tuple(HTTP_HEAD,          http::Method::Head),
     std::make_tuple(HTTP_POST,          http::Method::Post),
@@ -112,14 +112,15 @@ enum class State
     Initial,
     ParsingField,
     ParsingFieldValue,
-    ParsingBody
+    ParsingBody,
+    Completed
 };
 
 struct Parser::Pimpl
 {
     http_parser_settings settings;
     http_parser parser;
-    
+
     Type type;
     State state = State::Initial;
     std::vector<Header> headers;
@@ -140,7 +141,16 @@ Parser::Parser(Type type)
         thisPtr->clear();
         return 0;
     };
-    m_pimpl->settings.on_message_complete = nullptr;
+    m_pimpl->settings.on_message_complete = [] (http_parser* parser) -> int {
+        auto thisPtr = reinterpret_cast<Parser*>(parser->data);
+        thisPtr->m_pimpl->state = State::Completed;
+        if (thisPtr->m_pimpl->completedCb)
+        {
+            thisPtr->m_pimpl->completedCb();
+        }
+
+        return 0;
+    };
     m_pimpl->settings.on_status = nullptr;
 
     m_pimpl->settings.on_url = [] (http_parser* parser, const char* str, size_t length) -> int {
@@ -168,7 +178,7 @@ Parser::Parser(Type type)
         if (length > 0)
         {
             auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-            
+
             if (thisPtr->m_pimpl->bodyCb)
             {
                 thisPtr->m_pimpl->bodyCb(str, length);
@@ -220,6 +230,11 @@ void Parser::reset()
     clear();
 }
 
+bool Parser::isCompleted()
+{
+    return m_pimpl->state == State::Completed;
+}
+
 void Parser::setHeadersCompletedCallback(std::function<void()> cb)
 {
     m_pimpl->headersCompletedCb = std::move(cb);
@@ -233,11 +248,6 @@ void Parser::setHeadersCompletedCallback(std::function<void()> cb)
 void Parser::setCompletedCallback(std::function<void()> cb)
 {
     m_pimpl->completedCb = std::move(cb);
-    m_pimpl->settings.on_message_complete = [] (http_parser* parser) {
-        auto thisPtr = reinterpret_cast<Parser*>(parser->data);
-        thisPtr->m_pimpl->completedCb();
-        return 0;
-    };
 }
 
 void Parser::setBodyDataCallback(std::function<void(const char*, size_t)> cb)
@@ -316,7 +326,7 @@ void Parser::clear()
 Parser::Range Parser::parseRange(const std::string& range)
 {
     Range result;
-    
+
     if (!stringops::startsWith(range, "bytes="))
     {
         throw std::invalid_argument("Invalid range header: " + range);
@@ -327,17 +337,17 @@ Parser::Range Parser::parseRange(const std::string& range)
     {
         throw std::invalid_argument("Invalid range header: " + range);
     }
-    
+
     if (!split[0].empty())
     {
         result.start = std::stoul(split[0]);
     }
-    
+
     if (!split[1].empty())
     {
         result.end = std::stoul(split[1]);
     }
-    
+
     return result;
 }
 

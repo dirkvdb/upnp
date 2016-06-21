@@ -76,12 +76,13 @@ public:
 
     Parser(Type type);
     ~Parser();
-    
+
     void reset();
 
     void setHeadersCompletedCallback(std::function<void()> cb);
     void setCompletedCallback(std::function<void()> cb);
     void setBodyDataCallback(std::function<void(const char*, size_t)> cb);
+    bool isCompleted();
 
     size_t parse(const char* data, size_t dataSize);
     size_t parse(const std::string& data);
@@ -95,13 +96,13 @@ public:
     Flags<Flag> getFlags() const noexcept;
 
     static const char* methodToString(Method m) noexcept;
-    
+
     struct Range
     {
         uint64_t start = 0;
         uint64_t end = 0;
     };
-    
+
     static Range parseRange(const std::string& range);
 
 private:

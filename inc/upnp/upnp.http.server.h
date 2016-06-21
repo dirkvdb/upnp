@@ -46,22 +46,21 @@ public:
     void setRequestHandler(Method method, RequestCb cb);
 
 private:
+    friend class Session;
+
     struct HostedFile
     {
         std::string contentType;
         std::string data;
     };
 
-    void newConnection(std::shared_ptr<asio::ip::tcp::socket> socket);
     void accept();
-    void writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& response, bool closeConnection);
-    void writeResponse(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& header, asio::const_buffer body, bool closeConnection);
 
-    void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, std::shared_ptr<asio::ip::tcp::socket> socket);
+    static void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, std::shared_ptr<asio::ip::tcp::socket> socket);
 
     asio::io_service& m_io;
     asio::ip::tcp::acceptor m_acceptor;
-    std::unordered_map<std::string, HostedFile> m_serverdFiles;
+    std::unordered_map<std::string, HostedFile> m_servedFiles;
 
     std::array<RequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_handlers;
 };
