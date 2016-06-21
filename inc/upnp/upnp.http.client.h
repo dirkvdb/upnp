@@ -32,12 +32,14 @@ namespace upnp
 namespace http
 {
 
-namespace errc
+namespace error
 {
 
-enum HttpError
+enum ErrorCode
 {
     InvalidResponse = -1,
+    NetworkError = -2,
+    Timeout = -3,
     Continue = 100,
     SwitchingProtocols = 101,
     Ok = 200,
@@ -190,9 +192,9 @@ public:
 private:
     void reset();
 
-    void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const std::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const asio::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const asio::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const asio::error_code&)> cb);
     void receiveData(std::function<void(const std::error_code&)> cb);
 
     asio::steady_timer m_timer;
@@ -209,7 +211,7 @@ private:
 namespace std
 {
 
-error_code make_error_code(upnp::http::errc::HttpError e) noexcept;
+error_code make_error_code(upnp::http::error::ErrorCode e) noexcept;
 
 }
 

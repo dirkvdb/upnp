@@ -49,14 +49,14 @@ public:
     {
         client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
             EXPECT_FALSE(error);
-            client.async_send(buffer(data), [&] (const std::error_code& error, size_t) {
+            async_write(client, buffer(data), [&] (const std::error_code& error, size_t) {
                 EXPECT_FALSE(error);
                 client.async_receive(buffer(buf), [&] (const std::error_code& error, size_t size) {
                     EXPECT_FALSE(error);
                     EXPECT_GT(size, 0);
                     EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
-
                     client.close();
+                    server.stop();
                 });
             });
         });
@@ -134,29 +134,24 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
         EXPECT_EQ("<?xml version=\"1.0\"?>"s, ev.data);
     }));
 
-    uint32_t readCount = 0;
     client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
         EXPECT_FALSE(error);
-        client.async_send(buffer(notification), [&] (const std::error_code& error, size_t) {
+        async_write(client, buffer(notification), [&] (const std::error_code& error, size_t) {
             EXPECT_FALSE(error);
             client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
                 EXPECT_FALSE(error);
-                if (readCount == 0)
-                {
-                    // First read contains the response
-                    EXPECT_GT(size, 0);
-                    EXPECT_EQ(okResponse, std::string(buf.data(), size));
-                }
-                else
-                {
+                // First read contains the response
+                EXPECT_GT(size, 0);
+                EXPECT_EQ(okResponse, std::string(buf.data(), size));
+                
+                client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
                     // Second read should be the connection close
+                    EXPECT_EQ(asio::error::eof, error.value());
                     EXPECT_EQ(0, size);
                     // So also close our connection
                     client.close();
                     server.stop();
-                }
-
-                ++readCount;
+                });
             });
         });
     });

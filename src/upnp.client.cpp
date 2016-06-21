@@ -190,8 +190,9 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
     log::debug("Execute action: {}", action.getActionDocument().toString());
 #endif
 
-    m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env = action.toString(), cb = std::move(cb)] () {
-        m_httpClient->soapAction(url, name, urn, env, [cb] (const std::error_code& error, std::string response) {
+    auto env = std::make_shared<std::string>(action.toString());
+    m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
+        m_httpClient->soapAction(url, name, urn, *env, [cb, env] (const std::error_code& error, std::string response) {
             cb(httpStatusToStatus(error), std::move(response));
         });
     });

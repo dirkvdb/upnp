@@ -29,6 +29,7 @@
 
 #include "upnp/upnp.uv.h"
 #include "upnp.enumutils.h"
+#include "stringview.h"
 
 using namespace utils;
 using namespace asio;
@@ -60,10 +61,12 @@ Server::Server(asio::io_service& io)
 
 void Server::start(const ip::tcp::endpoint& address)
 {
-    log::info("Start HTTP server on http://{}:{}", address.address(), address.port());
     m_acceptor.open(address.protocol());
     m_acceptor.bind(address);
+    m_acceptor.listen();
     accept();
+    
+    log::info("HTTP server listening on http://{}:{}", m_acceptor.local_endpoint().address(), m_acceptor.local_endpoint().port());
 }
 
 void Server::stop()
@@ -84,21 +87,33 @@ public:
 
     void receiveData()
     {
-        socket.async_receive(buffer(buf), [this, thisPtr = shared_from_this()] (const std::error_code& error, size_t bytesReceived) {
+        socket.async_receive(buffer(buf), [this, self = shared_from_this()] (const std::error_code& error, size_t bytesReceived) {
             if (error)
             {
-                log::error("Failed to read from socket {}", error.message());
-                //log::debug("Conection closed by client");
+                if (error.value() == asio::error::eof)
+                {
+                    log::debug("Conection closed by client");
+                }
+                else
+                {
+                    log::error("Failed to read from socket {}", error.message());
+                }
+                
                 socket.close();
                 return;
             }
 
             try
             {
+                log::info(std::string_view(buf.data(), bytesReceived).data());
                 parser.parse(buf.data(), bytesReceived);
                 if (!parser.isCompleted())
                 {
                     receiveData();
+                }
+                else
+                {
+                    log::debug("Parse completed");
                 }
             }
             catch (std::exception& e)
@@ -109,9 +124,9 @@ public:
         });
     }
 
-    void writeResponse(const std::string& response, bool closeConnection)
+    void writeResponse(std::shared_ptr<std::string> response, bool closeConnection)
     {
-        socket.async_send(buffer(response), [this, closeConnection, thisPtr = shared_from_this()] (const std::error_code& error, size_t) {
+        async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const std::error_code& error, size_t) {
             if (error)
             {
                 log::error("Failed to write response: {}", error.message());
@@ -124,11 +139,11 @@ public:
         });
     }
 
-    void writeResponse(const std::string& header, asio::const_buffer body, bool closeConnection)
+    void writeResponse(std::shared_ptr<std::string> header, asio::const_buffer body, bool closeConnection)
     {
-        std::vector<asio::const_buffer> data { buffer(header), body };
+        std::vector<asio::const_buffer> data { buffer(*header), body };
 
-        socket.async_send(data, [this, closeConnection, thisPtr = shared_from_this()] (const std::error_code& error, size_t) {
+        async_write(socket, data, [this, closeConnection, header, thisPtr = shared_from_this()] (const std::error_code& error, size_t) {
             if (error)
             {
                 log::error("Failed to write response: {}", error.message());
@@ -151,7 +166,7 @@ public:
             {
                 log::info("requested file size: {}", parser.getUrl());
                 auto& file = server.m_servedFiles.at(parser.getUrl());
-                writeResponse(fmt::format(s_response, 200, file.data.size(), file.contentType), closeConnection);
+                writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
             else if (parser.getMethod() == Method::Get)
             {
@@ -161,13 +176,13 @@ public:
                 auto rangeHeader = parser.headerValue("Range");
                 if (rangeHeader.empty())
                 {
-                    writeResponse(fmt::format(s_response, 200, file.data.size(), file.contentType), buffer(file.data), closeConnection);
+                    writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), buffer(file.data), closeConnection);
                 }
                 else
                 {
                     auto range = Parser::parseRange(rangeHeader);
                     auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
-                    writeResponse(fmt::format(s_response, 206, size, file.contentType), buffer(&file.data[range.start], size), closeConnection);
+                    writeResponse(std::make_shared<std::string>(fmt::format(s_response, 206, size, file.contentType)), buffer(&file.data[range.start], size), closeConnection);
                 }
             }
             else
@@ -175,21 +190,21 @@ public:
                 auto& func = server.m_handlers.at(enum_value(parser.getMethod()));
                 if (func)
                 {
-                    writeResponse(func(parser), closeConnection);
+                    writeResponse(std::make_shared<std::string>(func(parser)), closeConnection);
                 }
                 else
                 {
-                    writeResponse(fmt::format(s_errorResponse, 501, "Not Implemented"), closeConnection);
+                    writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 501, "Not Implemented")), closeConnection);
                 }
             }
         }
         catch (std::out_of_range&)
         {
-            writeResponse(fmt::format(s_errorResponse, 404, "Not Found"), closeConnection);
+            writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 404, "Not Found")), closeConnection);
         }
         catch (std::exception& e)
         {
-            writeResponse(fmt::format(s_errorResponse, 500, "Internal Server Error"), closeConnection);
+            writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 500, "Internal Server Error")), closeConnection);
         }
     }
 
@@ -202,10 +217,13 @@ public:
 void Server::accept()
 {
     auto session = std::make_shared<Session>(m_io, *this);
-    m_acceptor.async_accept(session->socket, [this, session] (const std::error_code& error) {
+    m_acceptor.async_accept(session->socket, [this, session] (const asio::error_code& error) {
         if (error)
         {
-            log::error("HTTP server: Failed to accept on socket: {}", error.message());
+            if (error.value() != asio::error::operation_aborted)
+            {
+                log::error("HTTP server: Failed to accept on socket: {}", error.message());
+            }
         }
         else
         {
