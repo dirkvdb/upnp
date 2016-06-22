@@ -16,7 +16,6 @@
 
 #include "gmock/gmock.h"
 #include <clocale>
-#include <curl/curl.h>
 
 using namespace testing;
 
@@ -32,10 +31,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
     InitGoogleMock(&argc, argv);
     auto rc = RUN_ALL_TESTS();
-    curl_global_cleanup();
-    
+
     return rc;
 }

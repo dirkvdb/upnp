@@ -19,6 +19,7 @@
 
 #include "utils/log.h"
 
+#include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.server.h"
 #include "upnp/upnp.http.client.h"
@@ -83,13 +84,22 @@ RootDevice::~RootDevice() noexcept
     // catch (std::exception&) {}
 }
 
+void RootDevice::initialize()
+{
+    initialize(ip::tcp::endpoint(ip::address_v4::any(), 0));
+}
+
 void RootDevice::initialize(const std::string& interfaceName)
 {
-    auto addr = uv::Address::createIp4(interfaceName);
+    auto addr = getNetworkInterfaceV4(interfaceName).address;
+    initialize(ip::tcp::endpoint(addr, 0));
+}
 
+void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
+{
     m_httpServer = std::make_unique<http::Server>(m_io);
 
-    m_httpServer->start(ip::tcp::endpoint(ip::address::from_string(addr.ip()), 0));
+    m_httpServer->start(endPoint);
     m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (http::Parser& parser) { return onSubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });

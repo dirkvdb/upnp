@@ -5,8 +5,8 @@
 #include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.ssdp.server.h"
 
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.device.h"
+#include "upnp/upnp.asio.h"
 
 namespace upnp
 {
@@ -38,11 +38,11 @@ public:
 
         server.run(dev, 1800s);
 
-        for (auto& intf : uv::getNetworkInterfaces())
+        for (auto& intf : getNetworkInterfaces())
         {
-            if (intf.isIpv4() && !intf.isInternal)
+            if (intf.isLoopback && intf.address.is_v4())
             {
-                localIp = intf.ipName();
+                localIp = intf.address.to_string();
                 break;
             }
         }
@@ -79,7 +79,7 @@ TEST_F(SsdpServerTest, SearchRootDeviceUnicast)
             io.stop();
         }
     });
-    
+
     utils::log::info("Local ip: {}", localIp);
 
     client.run();

@@ -16,11 +16,6 @@
 
 #include "utils/signal.h"
 
-#include <gtest/gtest.h>
-
-using namespace utils;
-using namespace testing;
-
 #include "upnp/upnp.mediarenderer.h"
 #include "upnp/upnp.item.h"
 #include "upnp/upnp.types.h"
@@ -28,10 +23,16 @@ using namespace testing;
 #include "testutils.h"
 #include "testxmls.h"
 
+#include <future>
+#include <gtest/gtest.h>
+
 namespace upnp
 {
 namespace test
 {
+
+using namespace utils;
+using namespace testing;
 
 namespace
 {

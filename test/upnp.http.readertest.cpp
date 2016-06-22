@@ -17,14 +17,14 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include <iostream>
-#include <fstream>
 #include <vector>
+
+#include <future>
+#include <thread>
 #include <algorithm>
 
 #include "utils/bufferedreader.h"
 
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.http.reader.h"
 #include "upnp/upnp.http.server.h"
 
@@ -37,35 +37,61 @@ namespace upnp
 namespace test
 {
 
+constexpr size_t s_fileSize = 1024 * 1024 * 10; //10MB
+
 class HttpReaderTest : public Test
 {
 public:
     HttpReaderTest()
     : webserver(io)
+    , data(s_fileSize)
     {
+        webserver.addFile("/testfile.bin", "application/octet-stream", data);
         webserver.start(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 0));
     }
 
 protected:
     asio::io_service io;
     http::Server webserver;
+    std::vector<uint8_t> data;
 };
 
-TEST_F(HttpReaderTest, downloadLargeBinaryFileBuffered)
+TEST_F(HttpReaderTest, ContentLength)
 {
-    constexpr size_t fileSize = 1024 * 1024 * 1; //10MB
-    std::vector<uint8_t> data(fileSize);
+    std::thread t([this] {
+        auto reader = std::make_unique<http::Reader>();
+        reader->open(webserver.getWebRootUrl() + "/testfile.bin");
+        EXPECT_EQ(s_fileSize, reader->getContentLength());
+        io.stop();
+    });
 
-    webserver.addFile("/testfile.bin", "application/octet-stream", data);
+    io.run();
+    t.join();
+}
 
+TEST_F(HttpReaderTest, GetFullFile)
+{
+    std::thread t([this] {
+        auto reader = std::make_unique<http::Reader>();
+        reader->open(webserver.getWebRootUrl() + "/testfile.bin");
+        EXPECT_THAT(data, ContainerEq(reader->readAllData()));
+        io.stop();
+    });
+
+    io.run();
+    t.join();
+}
+
+TEST_F(HttpReaderTest, DownloadLargeBinaryFileBuffered)
+{
     auto fut = std::async(std::launch::async, [=] () {
         std::string url = webserver.getWebRootUrl() + "/testfile.bin";
 
         BufferedReader reader(std::make_unique<http::Reader>(), 128 * 1024);
         reader.open(url);
-        EXPECT_EQ(fileSize, reader.getContentLength());
+        EXPECT_EQ(s_fileSize, reader.getContentLength());
 
-        std::vector<uint8_t> result(fileSize);
+        std::vector<uint8_t> result(s_fileSize);
         size_t currentPos = 0;
         size_t increment = 65536;
 

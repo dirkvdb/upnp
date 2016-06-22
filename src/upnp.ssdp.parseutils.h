@@ -133,7 +133,7 @@ private:
                 // ignore search requests
                 return;
             }
-            
+
             DeviceNotificationInfo info;
             parseUSN(m_parser.headerValue("USN"), info);
             info.location = m_parser.headerValue("LOCATION");
@@ -205,6 +205,11 @@ public:
     void reset()
     {
         m_parser.reset();
+    }
+
+    bool isCompleted()
+    {
+        return m_parser.isCompleted();
     }
 
 private:

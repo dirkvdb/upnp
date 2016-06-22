@@ -120,7 +120,7 @@ void Server::run(const Device& info, std::chrono::seconds announceInterval)
     {
         m_byebyeMessages.emplace_back(fmt::format(s_byebyeNotification, serviceTypeToUrnTypeString(svc.second.type), info.udn));
     }
-    
+
     receiveData();
     announceDevice();
 }
@@ -145,8 +145,8 @@ void Server::receiveData()
             receiveData();
             return;
         }
-        
-        log::info("Ssdp recv: {}", std::string_view(m_buffer.data(), bytesReceived));
+
+        //log::info("Ssdp recv: {}", std::string_view(m_buffer.data(), bytesReceived));
 
         try
         {
@@ -159,8 +159,11 @@ void Server::receiveData()
                     log::warn("Ssdp Server: not enough bytes parsed");
                 }
             }
-            else
+
+            if (m_parser->isCompleted())
             {
+                // always reset the parser after a completed message
+                // the broadcast are do not follow strict request response ordering
                 m_parser->reset();
             }
         }
@@ -169,7 +172,7 @@ void Server::receiveData()
             log::warn("Error parsing ssdp server http notification: {}", e.what());
             m_parser->reset();
         }
-        
+
         receiveData();
     });
 }

@@ -27,7 +27,6 @@
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 
-#include "upnp/upnp.uv.h"
 #include "upnp.enumutils.h"
 #include "stringview.h"
 
@@ -65,7 +64,7 @@ void Server::start(const ip::tcp::endpoint& address)
     m_acceptor.bind(address);
     m_acceptor.listen();
     accept();
-    
+
     log::info("HTTP server listening on http://{}:{}", m_acceptor.local_endpoint().address(), m_acceptor.local_endpoint().port());
 }
 
@@ -98,14 +97,14 @@ public:
                 {
                     log::error("Failed to read from socket {}", error.message());
                 }
-                
+
                 socket.close();
                 return;
             }
 
             try
             {
-                log::info(std::string_view(buf.data(), bytesReceived).data());
+                //log::info(std::string_view(buf.data(), bytesReceived).data());
                 parser.parse(buf.data(), bytesReceived);
                 if (!parser.isCompleted())
                 {
@@ -204,6 +203,7 @@ public:
         }
         catch (std::exception& e)
         {
+            log::error("Http server: {}", e.what());
             writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 500, "Internal Server Error")), closeConnection);
         }
     }

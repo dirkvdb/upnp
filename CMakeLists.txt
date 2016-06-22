@@ -4,29 +4,6 @@ ENABLE_TESTING()
 SET(CMAKE_MODULES_PATH modules)
 
 FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(LIBUV_PKG libuv REQUIRED)
-PKG_CHECK_MODULES(CURL_PKG libcurl REQUIRED)
-
-FIND_PATH(LIBUV_INCLUDE_DIR
-    NAMES uv.h
-    PATHS ${LIBUV_PKG_INCLUDE_DIRS}
-)
-
-FIND_LIBRARY(LIBUV_LIBRARY
-    NAMES uv
-    PATHS ${LIBUV_PKG_LIBRARY_DIRS}
-)
-
-FIND_PATH(CURL_INCLUDE_DIR
-    NAMES curl/curl.h
-    PATHS ${CURL_PKG_INCLUDE_DIRS}
-)
-
-FIND_LIBRARY(CURL_LIBRARY
-    NAMES curl
-    PATHS ${CURL_PKG_LIBRARY_DIRS}
-)
-
 FIND_PATH(ASIO_INCLUDE_DIR
     NAMES asio.hpp
 )
@@ -53,8 +30,6 @@ IF (STANDALONE)
 ENDIF ()
 
 SET (UPNPFRAMEWORK_SYS_INCLUDE_DIRS
-    ${LIBUV_INCLUDE_DIR}
-    ${CURL_INCLUDE_DIR}
     ${ASIO_INCLUDE_DIR}
 )
 
@@ -70,7 +45,6 @@ SET (UPNPFRAMEWORK_LIBRARY_DIRS
 INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES(SYSTEM
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gsl
     ${UPNPFRAMEWORK_SYS_INCLUDE_DIRS}
 )
 
@@ -119,7 +93,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
-    inc/upnp/upnp.uv.h
 
     src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
@@ -135,7 +108,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/guid.h                                          src/guid.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils ${LIBUV_LIBRARY} ${CURL_LIBRARY})
+TARGET_LINK_LIBRARIES(upnpframework utils)
 
 IF (MINGW)
     TARGET_LINK_LIBRARIES(upnpframework ws2_32)

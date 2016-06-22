@@ -15,47 +15,25 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.http.reader.h"
+#include "upnp/upnp.http.client.h"
 #include "upnp/upnptypes.h"
 #include "utils/format.h"
 #include "utils/log.h"
 
-#include <curl/curl.h>
-#include <stdexcept>
+#include <asio.hpp>
 
-using namespace utils;
+#include <future>
+#include <stdexcept>
 
 namespace upnp
 {
 namespace http
 {
 
-static const long s_timeout = 10;
+using namespace utils;
+using namespace std::chrono_literals;
 
-class CurlHandle
-{
-public:
-    CurlHandle()
-    : m_curl(curl_easy_init())
-    {
-        if (!m_curl)
-        {
-            throw std::runtime_error("Failed to initialize curl handle");
-        }
-    }
-
-    ~CurlHandle()
-    {
-        curl_easy_cleanup(m_curl);
-    }
-
-    operator CURL*()
-    {
-        return m_curl;
-    }
-
-private:
-    CURL* m_curl;
-};
+static const auto s_timeout = 10s;
 
 Reader::Reader()
 : m_contentLength(0)
@@ -67,21 +45,26 @@ void Reader::open(const std::string& url)
 {
     m_url = url;
 
-    CurlHandle curl;
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, s_timeout);
+    asio::io_service io;
+    http::Client client(io);
+    client.setTimeout(s_timeout);
 
-    auto res = curl_easy_perform(curl);
-    if (res != CURLE_OK)
-    {
-        throw std::runtime_error("Failed to open url: " + std::string(curl_easy_strerror(res)));
-    }
+    std::promise<size_t> prom;
+    auto fut = prom.get_future();
 
-    double contentLength;
-    curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
-    m_contentLength = static_cast<uint64_t>(contentLength);
+    client.getContentLength(url, [&prom] (const std::error_code& error, size_t contentLength) {
+        if (error.value() != http::error::Ok)
+        {
+            prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
+        }
+        else
+        {
+            prom.set_value(contentLength);
+        }
+    });
+
+    io.run();
+    m_contentLength = fut.get();
 }
 
 void Reader::close()
@@ -91,64 +74,36 @@ void Reader::close()
 uint64_t Reader::getContentLength()
 {
     throwOnEmptyUrl();
-
     return m_contentLength;
 }
 
 uint64_t Reader::currentPosition()
 {
     throwOnEmptyUrl();
-
     return m_currentPosition;
 }
 
 void Reader::seekAbsolute(uint64_t position)
 {
     throwOnEmptyUrl();
-
     m_currentPosition = position;
 }
 
 void Reader::seekRelative(uint64_t offset)
 {
     throwOnEmptyUrl();
-
     m_currentPosition += offset;
 }
 
 bool Reader::eof()
 {
     throwOnEmptyUrl();
-
     return m_currentPosition >= m_contentLength;
 }
 
 std::string Reader::uri()
 {
     return m_url;
-}
-
-struct WriteData
-{
-    uint8_t* ptr = nullptr;
-    size_t size = 0;
-    size_t offset = 0;
-};
-
-static size_t writeFunc(char* ptr, size_t size, size_t nmemb, void* userdata)
-{
-    auto* writeData = reinterpret_cast<WriteData*>(userdata);
-    auto dataSize = size * nmemb;
-    
-    // server can ignore the range header and return the full request
-    if (writeData->offset + dataSize > writeData->size)
-    {
-        return 0;
-    }
-    
-    memcpy(writeData->ptr + writeData->offset, ptr, dataSize);
-    writeData->offset += dataSize;
-    return dataSize;
 }
 
 uint64_t Reader::read(uint8_t* pData, uint64_t size)
@@ -162,37 +117,34 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
         size = eof() ? 0 : m_contentLength - m_currentPosition;
     }
 
-    if (size > 0) // avoid requests when eof reached
+    if (size == 0) // avoid requests when eof reached
     {
-        auto range = fmt::format("{}-{}", m_currentPosition, upperLimit);
-        WriteData writeData;
-        writeData.ptr = pData;
-        writeData.size = size;
-
-        CurlHandle curl;
-        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-        curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, s_timeout);
-        curl_easy_setopt(curl, CURLOPT_RANGE, range.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeData);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunc);
-
-        auto res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-        {
-            throw std::runtime_error("Failed to open url: " + std::string(curl_easy_strerror(res)));
-        }
-        
-        long httpCode = 0;
-        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &httpCode);
-        if (httpCode != 206)
-        {
-            throw std::runtime_error("Failed to perform ranged http get: " + std::to_string(httpCode));
-        }
-
-        m_currentPosition += size;
-        m_currentPosition = std::min(m_contentLength, m_currentPosition);
+        return size;
     }
+
+    asio::io_service io;
+    http::Client client(io);
+    client.setTimeout(s_timeout);
+
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+
+    client.getRange(m_url, m_currentPosition, size, pData, [&prom] (const std::error_code& error, uint8_t*) {
+        if (error.value() != http::error::PartialContent)
+        {
+            prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
+        }
+        else
+        {
+            prom.set_value();
+        }
+    });
+
+    io.run();
+    fut.get();
+
+    m_currentPosition += size;
+    m_currentPosition = std::min(m_contentLength, m_currentPosition);
 
     return size;
 }
@@ -226,7 +178,6 @@ void Reader::throwOnEmptyUrl()
 bool ReaderBuilder::supportsUri(const std::string& uri)
 {
     static const std::string http("http://");
-
     return uri.compare(0, http.length(), http) == 0;
 }
 

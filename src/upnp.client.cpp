@@ -17,7 +17,7 @@
 #include "upnp.client.h"
 
 #include "utils/log.h"
-#include "upnp/upnp.uv.h"
+#include "upnp/upnp.asio.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.http.client.h"
 #include "upnp.gena.server.h"
@@ -69,9 +69,8 @@ void Client::initialize()
 
 void Client::initialize(const std::string& interfaceName, uint16_t port)
 {
-    log::debug("Initializing UPnP SDK");
-    auto addr = uv::Address::createIp4(interfaceName);
-    return initialize(ip::tcp::endpoint(ip::address::from_string(addr.ip()), port));
+    auto addr = getNetworkInterfaceV4(interfaceName).address;
+    initialize(ip::tcp::endpoint(addr, port));
 }
 
 void Client::initialize(const asio::ip::tcp::endpoint& addr)

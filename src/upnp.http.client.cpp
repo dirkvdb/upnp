@@ -87,7 +87,7 @@ bool invokeCallbackOnError(const asio::error_code& error, const std::function<vo
     {
         return false;
     }
-    
+
     cb(convertError(error));
     return true;
 }
@@ -123,7 +123,7 @@ void Client::performRequest(const ip::tcp::endpoint& addr, std::function<void(co
     {
         buffers.emplace_back(buffer(h));
     }
-    
+
     performRequest(addr, buffers, cb);
 }
 
@@ -134,17 +134,15 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::string& bo
     {
         buffers.emplace_back(buffer(h));
     }
-    
+
     buffers.emplace_back(buffer(body));
-    
+
     performRequest(addr, buffers, cb);
 }
 
 void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<const_buffer>& buffers, std::function<void(const asio::error_code&)> cb)
 {
     reset();
-    
-    log::debug("Http request: {}", addr);
 
     m_socket.close();
     m_socket.open(addr.protocol());
@@ -326,7 +324,7 @@ void Client::getRange(const std::string& url, uint64_t offset, uint64_t size, ui
     m_headers.clear();
     m_headers.emplace_back(fmt::format("GET {} HTTP/1.1\r\n", uri.getPath()));
     m_headers.emplace_back(fmt::format("Host:{}\r\n", uri.getAuthority()));
-    m_headers.emplace_back(fmt::format("Range:{}-{}\r\n", offset, offset + size));
+    m_headers.emplace_back(fmt::format("Range:bytes={}-{}\r\n", offset, offset + size));
     //m_headers.emplace_back("Connection:Keep-alive\r\n");
     m_headers.emplace_back("\r\n");
 

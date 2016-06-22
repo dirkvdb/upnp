@@ -16,15 +16,15 @@
 
 #pragma once
 
-#include <chrono>
-#include <cinttypes>
-#include <unordered_map>
-#include <asio.hpp>
-
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.ssdp.server.h"
 #include "upnp/upnp.rootdeviceinterface.h"
+
+#include <chrono>
+#include <thread>
+#include <cinttypes>
+#include <unordered_map>
+#include <asio.hpp>
 
 namespace upnp
 {
@@ -44,7 +44,7 @@ public:
     RootDevice(std::chrono::seconds advertiseInterval);
     ~RootDevice() noexcept;
 
-    void initialize() override {}
+    void initialize() override;
     void initialize(const std::string& interfaceName);
     void uninitialize() override;
 
@@ -61,6 +61,8 @@ public:
     asio::io_service& ioService() noexcept override;
 
 private:
+    void initialize(const asio::ip::tcp::endpoint& endPoint);
+
     std::string onSubscriptionRequest(http::Parser& parser) noexcept;
     std::string onUnsubscriptionRequest(http::Parser& parser) noexcept;
     std::string onActionRequest(http::Parser& parser);

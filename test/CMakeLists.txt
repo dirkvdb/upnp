@@ -26,7 +26,6 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.rootdevicemock.h
 
     testxmls.h
-    upnp.uvtest.cpp
     upnp.utilstest.cpp
     upnp.clienttest.cpp
     upnp.rootdevicetest.cpp

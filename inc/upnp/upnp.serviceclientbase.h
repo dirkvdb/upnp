@@ -23,8 +23,8 @@
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.xml.parseutils.h"
-#include "upnp/upnp.uv.h"
 
+#include <asio.hpp>
 #include <set>
 #include <map>
 #include <vector>
