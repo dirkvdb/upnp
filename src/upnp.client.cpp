@@ -64,7 +64,7 @@ Client::~Client() = default;
 void Client::initialize()
 {
     log::debug("Initializing UPnP SDK");
-    return initialize(ip::tcp::endpoint(ip::address::address(), 0));
+    return initialize(ip::tcp::endpoint(ip::address_v4::any(), 0));
 }
 
 void Client::initialize(const std::string& interfaceName, uint16_t port)

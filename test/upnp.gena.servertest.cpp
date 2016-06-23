@@ -44,7 +44,7 @@ public:
     , server(io, asio::ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 0), std::bind(&SubscriptionCallbackMock::onEvent, &cbMock, _1))
     {
     }
-    
+
     void sendDataAndExpectResponse(const std::string& data, const std::string& expectedResponse)
     {
         client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
@@ -53,7 +53,7 @@ public:
                 EXPECT_FALSE(error);
                 client.async_receive(buffer(buf), [&] (const std::error_code& error, size_t size) {
                     EXPECT_FALSE(error);
-                    EXPECT_GT(size, 0);
+                    EXPECT_GT(size, 0u);
                     EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
                     client.close();
                     server.stop();
@@ -66,7 +66,7 @@ public:
     io_service io;
     ip::tcp::socket client;
     gena::Server server;
-    
+
     std::array<char, 1024> buf;
 };
 
@@ -143,7 +143,7 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
                 // First read contains the response
                 EXPECT_GT(size, 0);
                 EXPECT_EQ(okResponse, std::string(buf.data(), size));
-                
+
                 client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
                     // Second read should be the connection close
                     EXPECT_EQ(asio::error::eof, error.value());
