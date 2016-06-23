@@ -53,6 +53,7 @@ inline std::vector<NetworkInterface> getNetworkInterfaces()
             continue;
         }
 
+#ifdef __APPLE__
         /*
         * On Mac OS X getifaddrs returns information related to Mac Addresses for
         * various devices, such as firewire, etc. These are not relevant here.
@@ -61,6 +62,7 @@ inline std::vector<NetworkInterface> getNetworkInterfaces()
         {
             continue;
         }
+#endif
 
         NetworkInterface intf;
         intf.name = iter->ifa_name;
