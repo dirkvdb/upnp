@@ -138,7 +138,7 @@ install:
       wget https://raw.githubusercontent.com/dirkvdb/doozy/develop/dependencies/asio/gcc.patch
       tar xf asio-1.10.6.tar.bz2
       patch -p1 < gcc.patch
-      cd asio-1.10.6 && && patch -p1 < ../gcc.patch && autoreconf --force --install && ./configure --disable-dependency-tracking --without-boost --without-openssl --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+      cd asio-1.10.6 && patch -p1 < ../gcc.patch && autoreconf --force --install && ./configure --disable-dependency-tracking --without-boost --without-openssl --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
     fi
   - cd ${TRAVIS_BUILD_DIR}
 
