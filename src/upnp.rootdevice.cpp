@@ -82,6 +82,11 @@ RootDevice::~RootDevice() noexcept
     //     uninitialize();
     // }
     // catch (std::exception&) {}
+
+    if (m_asioThread && m_asioThread->joinable())
+    {
+        m_asioThread->join();
+    }
 }
 
 void RootDevice::initialize()

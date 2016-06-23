@@ -59,7 +59,13 @@ Client::Client()
 {
 }
 
-Client::~Client() = default;
+Client::~Client()
+{
+    if (m_asioThread && m_asioThread->joinable())
+    {
+        m_asioThread->join();
+    }
+}
 
 void Client::initialize()
 {
