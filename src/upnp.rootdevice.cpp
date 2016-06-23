@@ -77,15 +77,9 @@ RootDevice::RootDevice(std::chrono::seconds advertiseInterval)
 
 RootDevice::~RootDevice() noexcept
 {
-    // try
-    // {
-    //     uninitialize();
-    // }
-    // catch (std::exception&) {}
-
-    if (m_asioThread && m_asioThread->joinable())
+    if (m_asioThread)
     {
-        m_asioThread->join();
+        uninitialize();
     }
 }
 

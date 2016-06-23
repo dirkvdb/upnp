@@ -61,9 +61,9 @@ Client::Client()
 
 Client::~Client()
 {
-    if (m_asioThread && m_asioThread->joinable())
+    if (m_asioThread)
     {
-        m_asioThread->join();
+        uninitialize();
     }
 }
 
