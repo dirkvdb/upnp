@@ -4,6 +4,7 @@
 #include "utils/log.h"
 #include "upnp.client.h"
 #include "upnp/upnp.rootdevice.h"
+#include "upnp/upnp.asio.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.devicescanner.h"
 
@@ -18,14 +19,6 @@ using namespace utils;
 using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
-
-#ifdef __linux__
-static const std::string s_interface = "lo";
-#elif defined __APPLE__
-static const std::string s_interface = "lo0";
-#else
-static const std::string s_interface = "localhost";
-#endif
 
 static const std::string simpleRootDesc =
     "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
@@ -46,6 +39,19 @@ struct DeviceCallbackMock
     MOCK_METHOD1(onSubscriptionRequest, std::string(const SubscriptionRequest&));
 };
 
+std::string getLoopbackInterface()
+{
+    for (auto& intf : getNetworkInterfaces())
+    {
+        if (intf.address.is_v4() && intf.isLoopback)
+        {
+            return intf.name;
+        }
+    }
+
+    throw std::runtime_error("Failed to get loopback interface");
+}
+
 TEST(RootDeviceTest, ControlAction)
 {
     Client client;
@@ -59,7 +65,7 @@ TEST(RootDeviceTest, ControlAction)
     DeviceCallbackMock mock;
 
     client.initialize();
-    device.initialize(s_interface);
+    device.initialize(getLoopbackInterface());
 
     deviceInfo.location = "/rootdesc.xml";
     device.registerDevice(fmt::format(simpleRootDesc, deviceInfo.udn, deviceInfo.location), deviceInfo);

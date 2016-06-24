@@ -74,13 +74,14 @@ IF (BENCHMARK_INCLUDE_DIR AND BENCHMARK_LIBRARY)
     )
 ENDIF ()
 
-# TARGET_LINK_LIBRARIES(upnptest
-#     upnpframework
-# )
-
 TARGET_LINK_LIBRARIES(upnpframeworktest
     upnpframework
 )
 
-#ADD_TEST(NAME UPnPTests COMMAND upnptest)
+IF (MINGW)
+    TARGET_LINK_LIBRARIES(upnpframeworktest
+        -lIphlpapi -lws2_32 -lwsock32
+    )
+ENDIF()
+
 ADD_TEST(NAME UPnPFrameworkTests COMMAND upnpframeworktest)

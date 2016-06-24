@@ -122,6 +122,7 @@ void RootDevice::uninitialize()
     });
 
     m_asioThread->join();
+    m_asioThread.reset();
 
     m_httpClient.reset();
     m_httpServer.reset();

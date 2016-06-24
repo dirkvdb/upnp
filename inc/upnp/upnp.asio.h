@@ -17,9 +17,15 @@
 #pragma once
 
 #include <asio.hpp>
-
 #include <sys/types.h>
+#include "utils/stringoperations.h"
+
+#if !defined(WIN32) && !defined(__MINGW32__)
 #include <ifaddrs.h>
+#else
+#include <winsock2.h>
+#include <iphlpapi.h>
+#endif
 
 namespace upnp
 {
@@ -31,6 +37,7 @@ struct NetworkInterface
     asio::ip::address address;
 };
 
+#if !defined(WIN32) && !defined(__MINGW32__)
 inline std::vector<NetworkInterface> getNetworkInterfaces()
 {
     struct ifaddrs* addrs;
@@ -87,6 +94,88 @@ inline std::vector<NetworkInterface> getNetworkInterfaces()
     freeifaddrs(addrs);
     return interfaces;
 }
+
+#else
+
+inline std::vector<NetworkInterface> getNetworkInterfaces()
+{
+    std::vector<NetworkInterface> interfaces;
+
+    ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+
+    /* Fetch the size of the adapters reported by windows, and then get the */
+    /* list itself. */
+    std::vector<uint8_t> buffer;
+
+    /* If win_address_buf is 0, then GetAdaptersAddresses will fail with */
+    /* ERROR_BUFFER_OVERFLOW, and the required buffer size will be stored in */
+    /* addressBufferSize. */
+    ULONG addressBufferSize = 0;
+    auto r = GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, nullptr, &addressBufferSize);
+    if (r != ERROR_BUFFER_OVERFLOW)
+    {
+        throw std::runtime_error("Failed to obtain adapter information");
+    }
+
+    buffer.resize(addressBufferSize);
+    auto* addresses = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buffer.data());
+
+    r = GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, addresses, &addressBufferSize);
+
+    switch (r)
+    {
+    case ERROR_SUCCESS:
+        break;
+    case ERROR_NO_DATA:
+    case ERROR_ADDRESS_NOT_ASSOCIATED:
+        return interfaces;
+
+    case ERROR_INVALID_PARAMETER:
+    default:
+        throw std::runtime_error("Failed to obtain adapter information");
+    }
+
+    /* Fill out the output buffer. */
+    for (auto* adapter = addresses; adapter != nullptr; adapter = adapter->Next)
+    {
+        if (adapter->OperStatus != IfOperStatusUp || adapter->FirstUnicastAddress == nullptr)
+        {
+            continue;
+        }
+
+        /* Convert the interface name to UTF8. */
+        auto name = utils::stringops::wideCharToUtf8(adapter->FriendlyName);
+
+        /* Add an uv_interface_address_t element for every unicast address. */
+        for (auto* unicast_address = reinterpret_cast<IP_ADAPTER_UNICAST_ADDRESS*>(adapter->FirstUnicastAddress);
+             unicast_address != nullptr;
+             unicast_address = unicast_address->Next)
+        {
+            NetworkInterface intf;
+            intf.name = name;
+            intf.isLoopback = (adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK);
+
+            auto sa = unicast_address->Address.lpSockaddr;
+            if (sa->sa_family == AF_INET6)
+            {
+                auto* sockaddr = reinterpret_cast<sockaddr_in6*>(sa);
+                asio::ip::address_v6::bytes_type bytes;
+                memcpy(&bytes[0], sockaddr->sin6_addr.s6_addr, 16);
+                intf.address = asio::ip::address_v6(bytes, sockaddr->sin6_scope_id);
+            }
+            else
+            {
+                auto sockaddr = reinterpret_cast<sockaddr_in*>(sa)->sin_addr;
+                intf.address = asio::ip::address_v4(asio::detail::socket_ops::network_to_host_long(sockaddr.s_addr));
+            }
+
+            interfaces.push_back(intf);
+        }
+    }
+
+    return interfaces;
+}
+#endif
 
 inline NetworkInterface getNetworkInterfaceV4(const std::string& name)
 {
