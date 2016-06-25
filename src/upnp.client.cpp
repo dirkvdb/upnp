@@ -134,7 +134,7 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
-        m_httpClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
             //log::debug("Subscribe response: {}", response);
 
             if (cb)
@@ -161,7 +161,7 @@ void Client::renewSubscription(const std::string& publisherUrl,
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
-        m_httpClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string response) {
+        m_httpClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
             //log::debug("Subscription renewal response: {}", response);
 
             if (cb)
