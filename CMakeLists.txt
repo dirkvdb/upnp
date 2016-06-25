@@ -9,7 +9,7 @@ FIND_PATH(ASIO_INCLUDE_DIR
 )
 
 IF (NOT ASIO_INCLUDE_DIR)
-    MESSAGE(FATAL "Could not find the asio headers")
+    MESSAGE(FATAL_ERROR "Could not find the asio headers")
 ENDIF ()
 
 ADD_DEFINITIONS("-DASIO_STANDALONE")
