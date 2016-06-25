@@ -71,6 +71,17 @@ inline std::vector<NetworkInterface> getNetworkInterfaces()
         }
 #endif
 
+#ifdef __linux__
+        /*
+         * On Linux getifaddrs returns information related to the raw underlying
+         * devices. We're not interested in this information yet.
+         */
+        if (iter->ifa_addr->sa_family == PF_PACKET)
+        {
+            continue;
+        }
+#endif
+
         NetworkInterface intf;
         intf.name = iter->ifa_name;
 
