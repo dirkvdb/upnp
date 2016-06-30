@@ -115,7 +115,7 @@ ADD_LIBRARY(upnpframework STATIC
 TARGET_LINK_LIBRARIES(upnpframework utils)
 
 IF (MINGW)
-    TARGET_LINK_LIBRARIES(upnpframework ws2_32)
+    TARGET_LINK_LIBRARIES(upnpframework Iphlpapi ws2_32 Mswsock)
 ENDIF ()
 
 IF (APPLE)

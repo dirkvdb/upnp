@@ -69,9 +69,11 @@ IF (BENCHMARK_INCLUDE_DIR AND BENCHMARK_LIBRARY)
         benchmark.cpp
     )
 
-    TARGET_LINK_LIBRARIES(upnpbenchmark
-        ${BENCHMARK_LIBRARY} upnpframework
-    )
+    TARGET_LINK_LIBRARIES(upnpbenchmark upnpframework ${BENCHMARK_LIBRARY})
+
+    IF (MINGW OR WIN32)
+        TARGET_LINK_LIBRARIES(upnpbenchmark upnpframework Shlwapi)
+    ENDIF ()
 ENDIF ()
 
 TARGET_LINK_LIBRARIES(upnpframeworktest
