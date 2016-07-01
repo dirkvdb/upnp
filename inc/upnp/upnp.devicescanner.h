@@ -29,7 +29,6 @@
 
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.ssdp.client.h"
-#include "upnp/upnp.http.client.h"
 
 #include "utils/signal.h"
 

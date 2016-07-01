@@ -13,6 +13,9 @@ IF (NOT ASIO_INCLUDE_DIR)
 ENDIF ()
 
 ADD_DEFINITIONS("-DASIO_STANDALONE")
+if (CMAKE_GENERATOR STREQUAL Xcode)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+ENDIF ()
 
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
@@ -73,6 +76,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
     inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
+    inc/upnp/upnp.http.functions.h
     inc/upnp/upnp.item.h                                src/upnp.item.cpp
     inc/upnp/upnp.lastchangevariable.h                  src/upnp.lastchangevariable.cpp
     inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
@@ -91,9 +95,10 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnputils.h
     inc/upnp/upnp.action.h                              src/upnp.action.cpp
     inc/upnp/upnp.actionresponse.h                      src/upnp.actionresponse.cpp
+    inc/upnp/upnp.soap.client.h                         src/upnp.soap.client.cpp
     inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
     inc/upnp/upnp.ssdp.server.h                         src/upnp.ssdp.server.cpp
-    inc/upnp/upnp.http.client.h                         src/upnp.http.client.cpp
+    inc/upnp/upnp.http.functions.h                      src/upnp.http.functions.cpp
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
@@ -105,6 +110,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.avtransport.typeconversions.h              src/upnp.avtransport.typeconversions.cpp
     src/upnp.client.h                                   src/upnp.client.cpp
     src/upnp.gena.server.h                              src/upnp.gena.server.cpp
+    src/upnp.http.client.h                              src/upnp.http.client.cpp
     src/upnp.ssdp.parseutils.h
     src/stringview.h
     src/http_parser.h                                   src/http_parser.cpp

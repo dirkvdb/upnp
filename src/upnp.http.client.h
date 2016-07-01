@@ -16,16 +16,16 @@
 
 #pragma once
 
+#include "URI.h"
+#include "upnp/upnp.http.parser.h"
+
+#include <asio.hpp>
 #include <string>
 #include <vector>
 #include <chrono>
 #include <cinttypes>
 #include <unordered_map>
-
-#include <asio.hpp>
 #include <experimental/string_view>
-
-#include "upnp/upnp.http.parser.h"
 
 namespace upnp
 {
@@ -163,43 +163,35 @@ class Client
 public:
     Client(asio::io_service& io);
     Client(const Client&) = delete;
-    ~Client() noexcept;
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
+    void addHeader(std::string header);
+    void setUrl(const std::string& url);
 
-    void getContentLength(const std::string& url, std::function<void(const std::error_code&, size_t length)> cb);
-    void get(const std::string& url, std::function<void(const std::error_code&, std::string data)> cb);
-    void get(const std::string& url, std::function<void(const std::error_code&, std::vector<uint8_t> data)> cb);
-    void get(const std::string& url, uint8_t* data, std::function<void(const std::error_code&, uint8_t* data)> cb);
+    const std::string& getResponseHeaderValue(const char* heeaderValue);
+    std::string getResponseBody();
+    uint32_t getStatus();
 
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, std::function<void(const std::error_code&, std::vector<uint8_t> data)> cb);
-    void getRange(const std::string& url, uint64_t offset, uint64_t size, uint8_t* pData, std::function<void(const std::error_code&, uint8_t* data)> cb);
+    void perform(Method method, std::function<void(const std::error_code&, std::string data)> cb);
+    void perform(Method method, const std::string& body, std::function<void(const std::error_code&, std::string data)> cb);
+    void perform(Method method, uint8_t* data, std::function<void(const std::error_code&, uint8_t* data)> cb);
 
-    void subscribe(const std::string& url, const std::string& callbackUrl, std::chrono::seconds timeout,
-                   std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
-    void renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout,
-                           std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
-    void unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, std::string response)> cb);
-
-    void notify(const std::string& url, const std::string& sid, uint32_t seq, const std::string& body, std::function<void(const std::error_code&, std::string response)> cb);
-
-    void soapAction(const std::string& url,
-                    const std::string& actionName,
-                    const std::string& serviceName,
-                    const std::string& envelope,
-                    std::function<void(const std::error_code&, std::string data)> cb);
-
-private:
     void reset();
 
+private:
+    void checkTimeout(const asio::error_code& ec);
+
+    void setMethodType(Method method);
     void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const asio::error_code&)> cb);
     void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const asio::error_code&)> cb);
     void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const asio::error_code&)> cb);
     void receiveData(std::function<void(const std::error_code&)> cb);
 
+    URI m_uri;
     asio::steady_timer m_timer;
     asio::ip::tcp::socket m_socket;
     std::chrono::milliseconds m_timeout;
+    std::string m_request;
     std::vector<std::string> m_headers;
     std::array<char, 2048> m_buffer;
     Parser m_parser;

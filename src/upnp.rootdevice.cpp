@@ -22,7 +22,8 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.server.h"
-#include "upnp/upnp.http.client.h"
+#include "upnp/upnp.soap.client.h"
+#include "upnp.http.client.h"
 
 #include "upnp.soap.parseutils.h"
 #include "guid.h"
@@ -103,7 +104,7 @@ void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
     m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
 
-    m_httpClient = std::make_unique<http::Client>(m_io);
+    m_soapClient = std::make_unique<soap::Client>(m_io);
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
     m_asioThread = std::make_unique<std::thread>([this] () {
@@ -124,7 +125,7 @@ void RootDevice::uninitialize()
     m_asioThread->join();
     m_asioThread.reset();
 
-    m_httpClient.reset();
+    m_soapClient.reset();
     m_httpServer.reset();
     m_ssdpServer.reset();
 }
@@ -180,7 +181,7 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
         }
 
         auto data = std::make_shared<std::string>(std::move(eventData));
-        m_httpClient->notify(iter->second.deliveryUrl, iter->first, iter->second.sequence, *data, [this, data] (const std::error_code& error, std::string) {
+        m_soapClient->notify(iter->second.deliveryUrl, iter->first, iter->second.sequence, *data, [this, data] (const std::error_code& error, std::string) {
             if (error.value() != http::error::Ok)
             {
                 log::warn("Failed to send notification: HTTP {}", error.message());

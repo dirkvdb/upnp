@@ -33,6 +33,10 @@ namespace http
 {
     class Parser;
     class Server;
+}
+
+namespace soap
+{
     class Client;
 }
 
@@ -69,7 +73,7 @@ private:
 
     asio::io_service                m_io;
     std::unique_ptr<http::Server>   m_httpServer;
-    std::unique_ptr<http::Client>   m_httpClient;
+    std::unique_ptr<soap::Client>   m_soapClient;
     std::unique_ptr<ssdp::Server>   m_ssdpServer;
 
     Device                          m_device;

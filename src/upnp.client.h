@@ -29,7 +29,7 @@ namespace upnp
 {
 
 namespace gena { class Server; }
-namespace http { class Client; }
+namespace soap { class Client; }
 
 class Client : public IClient
 {
@@ -69,7 +69,7 @@ private:
 
     std::unique_ptr<std::thread> m_asioThread;
     std::unique_ptr<asio::io_service> m_io;
-    std::unique_ptr<http::Client> m_httpClient;
+    std::unique_ptr<soap::Client> m_soapClient;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;
 };

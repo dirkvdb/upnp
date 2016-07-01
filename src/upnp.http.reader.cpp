@@ -15,7 +15,8 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.http.reader.h"
-#include "upnp/upnp.http.client.h"
+#include "upnp/upnp.http.functions.h"
+#include "upnp.http.client.h"
 #include "upnp/upnptypes.h"
 #include "utils/format.h"
 #include "utils/log.h"
@@ -46,13 +47,11 @@ void Reader::open(const std::string& url)
     m_url = url;
 
     asio::io_service io;
-    http::Client client(io);
-    client.setTimeout(s_timeout);
 
     std::promise<size_t> prom;
     auto fut = prom.get_future();
 
-    client.getContentLength(url, [&prom] (const std::error_code& error, size_t contentLength) {
+    http::getContentLength(io, url, s_timeout, [&prom] (const std::error_code& error, size_t contentLength) {
         if (error.value() != http::error::Ok)
         {
             prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
@@ -123,13 +122,11 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
     }
 
     asio::io_service io;
-    http::Client client(io);
-    client.setTimeout(s_timeout);
 
     std::promise<void> prom;
     auto fut = prom.get_future();
 
-    client.getRange(m_url, m_currentPosition, size, pData, [&prom] (const std::error_code& error, uint8_t*) {
+    http::getRange(io, m_url, m_currentPosition, size, pData, s_timeout, [&prom] (const std::error_code& error, uint8_t*) {
         if (error.value() != http::error::PartialContent)
         {
             prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
