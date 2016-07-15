@@ -240,6 +240,52 @@
 // here, as Google Mock depends on Google Test.  Only add a utility
 // here if it's truly specific to Google Mock.
 #include "gtest/gtest.h"
+// Copyright 2015, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Injection point for custom user configurations.
+// The following macros can be defined:
+//
+//   Flag related macros:
+//     GMOCK_DECLARE_bool_(name)
+//     GMOCK_DECLARE_int32_(name)
+//     GMOCK_DECLARE_string_(name)
+//     GMOCK_DEFINE_bool_(name, default_val, doc)
+//     GMOCK_DEFINE_int32_(name, default_val, doc)
+//     GMOCK_DEFINE_string_(name, default_val, doc)
+//
+// ** Custom implementation starts here **
+
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
+
+#endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_PORT_H_
 
 // To avoid conditional compilation everywhere, we make it
 // gmock-port.h's responsibility to #include the header implementing
@@ -256,6 +302,8 @@
 // use this syntax to reference Google Mock flags.
 #define GMOCK_FLAG(name) FLAGS_gmock_##name
 
+#if !defined(GMOCK_DECLARE_bool_)
+
 // Macros for declaring flags.
 #define GMOCK_DECLARE_bool_(name) extern GTEST_API_ bool GMOCK_FLAG(name)
 #define GMOCK_DECLARE_int32_(name) \
@@ -270,6 +318,8 @@
     GTEST_API_ ::testing::internal::Int32 GMOCK_FLAG(name) = (default_val)
 #define GMOCK_DEFINE_string_(name, default_val, doc) \
     GTEST_API_ ::std::string GMOCK_FLAG(name) = (default_val)
+
+#endif  // !defined(GMOCK_DECLARE_bool_)
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
 
@@ -972,7 +1022,7 @@ struct BooleanConstant {};
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_INTERNAL_UTILS_H_
 
 
-#if GTEST_LANG_CXX11  // Defined by gtest-port.h via gmock-port.h.
+#if GTEST_HAS_STD_TYPE_TRAITS_  // Defined by gtest-port.h via gmock-port.h.
 #include <type_traits>
 #endif
 
@@ -1022,7 +1072,7 @@ struct BuiltInDefaultValueGetter<T, false> {
 template <typename T>
 class BuiltInDefaultValue {
  public:
-#if GTEST_LANG_CXX11
+#if GTEST_HAS_STD_TYPE_TRAITS_
   // This function returns true iff type T has a built-in default value.
   static bool Exists() {
     return ::std::is_default_constructible<T>::value;
@@ -1033,7 +1083,7 @@ class BuiltInDefaultValue {
         T, ::std::is_default_constructible<T>::value>::Get();
   }
 
-#else  // GTEST_LANG_CXX11
+#else  // GTEST_HAS_STD_TYPE_TRAITS_
   // This function returns true iff type T has a built-in default value.
   static bool Exists() {
     return false;
@@ -1043,7 +1093,7 @@ class BuiltInDefaultValue {
     return BuiltInDefaultValueGetter<T, false>::Get();
   }
 
-#endif  // GTEST_LANG_CXX11
+#endif  // GTEST_HAS_STD_TYPE_TRAITS_
 };
 
 // This partial specialization says that we use the same built-in
@@ -2540,107 +2590,6 @@ class InvokeHelper<R, ::testing::tuple<A1, A2, A3, A4, A5, A6, A7, A8, A9,
                get<6>(args), get<7>(args), get<8>(args), get<9>(args));
   }
 };
-
-// CallableHelper has static methods for invoking "callables",
-// i.e. function pointers and functors.  It uses overloading to
-// provide a uniform interface for invoking different kinds of
-// callables.  In particular, you can use:
-//
-//   CallableHelper<R>::Call(callable, a1, a2, ..., an)
-//
-// to invoke an n-ary callable, where R is its return type.  If an
-// argument, say a2, needs to be passed by reference, you should write
-// ByRef(a2) instead of a2 in the above expression.
-template <typename R>
-class CallableHelper {
- public:
-  // Calls a nullary callable.
-  template <typename Function>
-  static R Call(Function function) { return function(); }
-
-  // Calls a unary callable.
-
-  // We deliberately pass a1 by value instead of const reference here
-  // in case it is a C-string literal.  If we had declared the
-  // parameter as 'const A1& a1' and write Call(function, "Hi"), the
-  // compiler would've thought A1 is 'char[3]', which causes trouble
-  // when you need to copy a value of type A1.  By declaring the
-  // parameter as 'A1 a1', the compiler will correctly infer that A1
-  // is 'const char*' when it sees Call(function, "Hi").
-  //
-  // Since this function is defined inline, the compiler can get rid
-  // of the copying of the arguments.  Therefore the performance won't
-  // be hurt.
-  template <typename Function, typename A1>
-  static R Call(Function function, A1 a1) { return function(a1); }
-
-  // Calls a binary callable.
-  template <typename Function, typename A1, typename A2>
-  static R Call(Function function, A1 a1, A2 a2) {
-    return function(a1, a2);
-  }
-
-  // Calls a ternary callable.
-  template <typename Function, typename A1, typename A2, typename A3>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3) {
-    return function(a1, a2, a3);
-  }
-
-  // Calls a 4-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4) {
-    return function(a1, a2, a3, a4);
-  }
-
-  // Calls a 5-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
-    return function(a1, a2, a3, a4, a5);
-  }
-
-  // Calls a 6-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
-    return function(a1, a2, a3, a4, a5, a6);
-  }
-
-  // Calls a 7-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7) {
-    return function(a1, a2, a3, a4, a5, a6, a7);
-  }
-
-  // Calls a 8-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8);
-  }
-
-  // Calls a 9-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8,
-      typename A9>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8, A9 a9) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8, a9);
-  }
-
-  // Calls a 10-ary callable.
-  template <typename Function, typename A1, typename A2, typename A3,
-      typename A4, typename A5, typename A6, typename A7, typename A8,
-      typename A9, typename A10>
-  static R Call(Function function, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
-      A7 a7, A8 a8, A9 a9, A10 a10) {
-    return function(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  }
-};  // class CallableHelper
 
 // An INTERNAL macro for extracting the type of a tuple field.  It's
 // subject to change without notice - DO NOT USE IN USER CODE!
@@ -4455,6 +4404,7 @@ DoAll(Action1 a1, Action2 a2, Action3 a3, Action4 a4, Action5 a5, Action6 a6,
 
 namespace testing {
 
+
 // The ACTION*() macros trigger warning C4100 (unreferenced formal
 // parameter) in MSVC with -W4.  Unfortunately they cannot be fixed in
 // the macro definition, as the warnings are generated when the macro
@@ -4495,80 +4445,174 @@ namespace testing {
 //   InvokeArgument action from temporary values and have it performed
 //   later.
 
+namespace internal {
+namespace invoke_argument {
+
+// Appears in InvokeArgumentAdl's argument list to help avoid
+// accidental calls to user functions of the same name.
+struct AdlTag {};
+
+// InvokeArgumentAdl - a helper for InvokeArgument.
+// The basic overloads are provided here for generic functors.
+// Overloads for other custom-callables are provided in the
+// internal/custom/callback-actions.h header.
+
+template <typename R, typename F>
+R InvokeArgumentAdl(AdlTag, F f) {
+  return f();
+}
+template <typename R, typename F, typename A1>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1) {
+  return f(a1);
+}
+template <typename R, typename F, typename A1, typename A2>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2) {
+  return f(a1, a2);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3) {
+  return f(a1, a2, a3);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4) {
+  return f(a1, a2, a3, a4);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
+  return f(a1, a2, a3, a4, a5);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
+  return f(a1, a2, a3, a4, a5, a6);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7) {
+  return f(a1, a2, a3, a4, a5, a6, a7);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8,
+    typename A9>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8, A9 a9) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+template <typename R, typename F, typename A1, typename A2, typename A3,
+    typename A4, typename A5, typename A6, typename A7, typename A8,
+    typename A9, typename A10>
+R InvokeArgumentAdl(AdlTag, F f, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6,
+    A7 a7, A8 a8, A9 a9, A10 a10) {
+  return f(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+}
+}  // namespace invoke_argument
+}  // namespace internal
+
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_0_VALUE_PARAMS()) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args));
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_1_VALUE_PARAMS(p0)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_2_VALUE_PARAMS(p0, p1)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_3_VALUE_PARAMS(p0, p1, p2)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_4_VALUE_PARAMS(p0, p1, p2, p3)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_5_VALUE_PARAMS(p0, p1, p2, p3, p4)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_6_VALUE_PARAMS(p0, p1, p2, p3, p4, p5)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4, p5);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_7_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_8_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_9_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7, p8)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8);
 }
 
 ACTION_TEMPLATE(InvokeArgument,
                 HAS_1_TEMPLATE_PARAMS(int, k),
                 AND_10_VALUE_PARAMS(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)) {
-  return internal::CallableHelper<return_type>::Call(
+  using internal::invoke_argument::InvokeArgumentAdl;
+  return InvokeArgumentAdl<return_type>(
+      internal::invoke_argument::AdlTag(),
       ::testing::get<k>(args), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9);
 }
 
@@ -4648,6 +4692,18 @@ ACTION_TEMPLATE(ReturnNew,
 #endif
 
 }  // namespace testing
+
+// Include any custom actions added by the local installation.
+// We must include this header at the end to make sure it can use the
+// declarations from this file.
+// This file was GENERATED by command:
+//     pump.py gmock-generated-actions.h.pump
+// DO NOT EDIT BY HAND!!!
+
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
+
+#endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_GMOCK_GENERATED_ACTIONS_H_
 
 #endif  // GMOCK_INCLUDE_GMOCK_GMOCK_GENERATED_ACTIONS_H_
 // This file was GENERATED by command:
@@ -5084,7 +5140,7 @@ class Matcher : public internal::MatcherBase<T> {
   // Constructs a null matcher.  Needed for storing Matcher objects in STL
   // containers.  A default-constructed matcher is not yet initialized.  You
   // cannot use it until a valid value has been assigned to it.
-  Matcher() {}
+  explicit Matcher() {}  // NOLINT
 
   // Constructs a matcher from its implementation.
   explicit Matcher(const MatcherInterface<T>* impl)
@@ -5742,7 +5798,11 @@ class IsNullMatcher {
   template <typename Pointer>
   bool MatchAndExplain(const Pointer& p,
                        MatchResultListener* /* listener */) const {
+#if GTEST_LANG_CXX11
+    return p == nullptr;
+#else  // GTEST_LANG_CXX11
     return GetRawPointer(p) == NULL;
+#endif  // GTEST_LANG_CXX11
   }
 
   void DescribeTo(::std::ostream* os) const { *os << "is NULL"; }
@@ -5758,7 +5818,11 @@ class NotNullMatcher {
   template <typename Pointer>
   bool MatchAndExplain(const Pointer& p,
                        MatchResultListener* /* listener */) const {
+#if GTEST_LANG_CXX11
+    return p != nullptr;
+#else  // GTEST_LANG_CXX11
     return GetRawPointer(p) != NULL;
+#endif  // GTEST_LANG_CXX11
   }
 
   void DescribeTo(::std::ostream* os) const { *os << "isn't NULL"; }
@@ -6588,7 +6652,7 @@ class MatcherAsPredicate {
 template <typename M>
 class PredicateFormatterFromMatcher {
  public:
-  explicit PredicateFormatterFromMatcher(const M& m) : matcher_(m) {}
+  explicit PredicateFormatterFromMatcher(M m) : matcher_(internal::move(m)) {}
 
   // This template () operator allows a PredicateFormatterFromMatcher
   // object to act as a predicate-formatter suitable for using with
@@ -6628,10 +6692,11 @@ class PredicateFormatterFromMatcher {
 // A helper function for converting a matcher to a predicate-formatter
 // without the user needing to explicitly write the type.  This is
 // used for implementing ASSERT_THAT() and EXPECT_THAT().
+// Implementation detail: 'matcher' is received by-value to force decaying.
 template <typename M>
 inline PredicateFormatterFromMatcher<M>
-MakePredicateFormatterFromMatcher(const M& matcher) {
-  return PredicateFormatterFromMatcher<M>(matcher);
+MakePredicateFormatterFromMatcher(M matcher) {
+  return PredicateFormatterFromMatcher<M>(internal::move(matcher));
 }
 
 // Implements the polymorphic floating point equality matcher, which matches
@@ -9146,8 +9211,49 @@ inline InnerMatcher AllArgs(const InnerMatcher& matcher) { return matcher; }
 
 }  // namespace testing
 
-#endif  // GMOCK_INCLUDE_GMOCK_GMOCK_MATCHERS_H_
+// Include any custom callback matchers added by the local installation.
+// We must include this header at the end to make sure it can use the
+// declarations from this file.
+// Copyright 2015, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// ============================================================
+// An installation-specific extension point for gmock-matchers.h.
+// ============================================================
+//
+// Adds google3 callback support to CallableTraits.
+//
+#ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
+#define GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
 
+#endif  //  GMOCK_INCLUDE_GMOCK_INTERNAL_CUSTOM_CALLBACK_MATCHERS_H_
+#endif  // GMOCK_INCLUDE_GMOCK_GMOCK_MATCHERS_H_
 
 namespace testing {
 
@@ -11756,7 +11862,7 @@ class MockFunction<R()> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R()> AsStdFunction() {
-    return [this]() {
+    return [this]() -> R {
       return this->Call();
     };
   }
@@ -11775,7 +11881,7 @@ class MockFunction<R(A0)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0)> AsStdFunction() {
-    return [this](A0 a0) {
+    return [this](A0 a0) -> R {
       return this->Call(a0);
     };
   }
@@ -11794,7 +11900,7 @@ class MockFunction<R(A0, A1)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1)> AsStdFunction() {
-    return [this](A0 a0, A1 a1) {
+    return [this](A0 a0, A1 a1) -> R {
       return this->Call(a0, a1);
     };
   }
@@ -11813,7 +11919,7 @@ class MockFunction<R(A0, A1, A2)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2) {
+    return [this](A0 a0, A1 a1, A2 a2) -> R {
       return this->Call(a0, a1, a2);
     };
   }
@@ -11832,7 +11938,7 @@ class MockFunction<R(A0, A1, A2, A3)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2, A3 a3) {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3) -> R {
       return this->Call(a0, a1, a2, a3);
     };
   }
@@ -11852,7 +11958,7 @@ class MockFunction<R(A0, A1, A2, A3, A4)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4) {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4) -> R {
       return this->Call(a0, a1, a2, a3, a4);
     };
   }
@@ -11872,7 +11978,7 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4, A5)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) -> R {
       return this->Call(a0, a1, a2, a3, a4, a5);
     };
   }
@@ -11892,7 +11998,7 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4, A5, A6)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) -> R {
       return this->Call(a0, a1, a2, a3, a4, a5, a6);
     };
   }
@@ -11912,7 +12018,7 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7)> {
 
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4, A5, A6, A7)> AsStdFunction() {
-    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) {
+    return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) -> R {
       return this->Call(a0, a1, a2, a3, a4, a5, a6, a7);
     };
   }
@@ -11933,7 +12039,7 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7, A8)> {
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4, A5, A6, A7, A8)> AsStdFunction() {
     return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7,
-        A8 a8) {
+        A8 a8) -> R {
       return this->Call(a0, a1, a2, a3, a4, a5, a6, a7, a8);
     };
   }
@@ -11955,7 +12061,7 @@ class MockFunction<R(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9)> {
 #if GTEST_HAS_STD_FUNCTION_
   std::function<R(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9)> AsStdFunction() {
     return [this](A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7,
-        A8 a8, A9 a9) {
+        A8 a8, A9 a9) -> R {
       return this->Call(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
     };
   }

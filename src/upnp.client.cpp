@@ -46,7 +46,7 @@ Status httpStatusToStatus(const std::error_code& error)
     {
         return Status(ErrorCode::NetworkError, error.message());
     }
-    else if (error.value() != 200)
+    else if (error.value() != http::error::Ok)
     {
         return Status(ErrorCode::HttpError, error.message());
     }
@@ -83,7 +83,6 @@ void Client::initialize(const std::string& interfaceName, uint16_t port)
 
 void Client::initialize(const asio::ip::tcp::endpoint& addr)
 {
-    m_soapClient = std::make_unique<soap::Client>(*m_io);
     m_eventServer = std::make_unique<gena::Server>(*m_io, addr, [&] (const SubscriptionEvent& ev) {
         auto iter = m_eventCallbacks.find(ev.sid);
         if (iter != m_eventCallbacks.end())
@@ -105,7 +104,6 @@ void Client::uninitialize()
     m_eventServer->stop();
     m_io->stop();
 
-    m_soapClient.reset();
     m_eventServer.reset();
 
     m_asioThread->join();
@@ -136,7 +134,8 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
-        m_soapClient->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
+        auto soap = std::make_shared<soap::Client>(*m_io);
+        soap->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb, soap] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
             //log::debug("Subscribe response: {}", response);
 
             if (cb)
@@ -163,7 +162,8 @@ void Client::renewSubscription(const std::string& publisherUrl,
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
-        m_soapClient->renewSubscription(publisherUrl, subscriptionId, timeout, [this, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
+        auto soap = std::make_shared<soap::Client>(*m_io);
+        soap->renewSubscription(publisherUrl, subscriptionId, timeout, [this, soap, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
             //log::debug("Subscription renewal response: {}", response);
 
             if (cb)
@@ -177,7 +177,8 @@ void Client::renewSubscription(const std::string& publisherUrl,
 void Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
     m_io->post([=] () {
-        m_soapClient->unsubscribe(publisherUrl, subscriptionId, [=] (const std::error_code& error, std::string response) {
+        auto soap = std::make_shared<soap::Client>(*m_io);
+        soap->unsubscribe(publisherUrl, subscriptionId, [this, soap, cb, subscriptionId] (const std::error_code& error, std::string response) {
 //#ifdef DEBUG_UPNP_CLIENT
             log::debug("Unsubscribe response: {}", response);
 //#endif
@@ -199,7 +200,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
 
     auto env = std::make_shared<std::string>(action.toString());
     m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
-        m_soapClient->action(url, name, urn, *env, [cb, env] (const std::error_code& error, std::string response) {
+        auto soap = std::make_shared<soap::Client>(*m_io);
+        soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, std::string response) {
             cb(httpStatusToStatus(error), std::move(response));
         });
     });
