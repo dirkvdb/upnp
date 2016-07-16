@@ -54,6 +54,11 @@
 		433AE2161CD6788A00BD3819 /* upnp.utilstest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 433AE2041CD6788A00BD3819 /* upnp.utilstest.cpp */; };
 		433AE2171CD6788A00BD3819 /* upnp.uvtest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 433AE2051CD6788A00BD3819 /* upnp.uvtest.cpp */; };
 		433AE2191CD6788A00BD3819 /* upnp.xml.parseutilstest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 433AE2071CD6788A00BD3819 /* upnp.xml.parseutilstest.cpp */; };
+		434E085F1D3A1A77006E6563 /* upnp.http.client.h in Headers */ = {isa = PBXBuildFile; fileRef = 434E085C1D3A1A77006E6563 /* upnp.http.client.h */; };
+		434E08601D3A1A77006E6563 /* upnp.http.functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434E085D1D3A1A77006E6563 /* upnp.http.functions.cpp */; };
+		434E08611D3A1A77006E6563 /* upnp.soap.client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 434E085E1D3A1A77006E6563 /* upnp.soap.client.cpp */; };
+		434E08641D3A1A80006E6563 /* upnp.http.functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 434E08621D3A1A80006E6563 /* upnp.http.functions.h */; };
+		434E08651D3A1A80006E6563 /* upnp.soap.client.h in Headers */ = {isa = PBXBuildFile; fileRef = 434E08631D3A1A80006E6563 /* upnp.soap.client.h */; };
 		4354A8CF16FF400700F7A88F /* upnp.actionresponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8BC16FF400400F7A88F /* upnp.actionresponse.h */; };
 		4354A8D016FF400700F7A88F /* upnp.actionresponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8BC16FF400400F7A88F /* upnp.actionresponse.h */; };
 		4354A8E316FF400700F7A88F /* upnpdeviceserviceexceptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */; };
@@ -93,7 +98,6 @@
 		43AECDBA1CC2B0AF00C47341 /* upnp.action.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDAF1CC2B0AF00C47341 /* upnp.action.h */; };
 		43AECDBC1CC2B0AF00C47341 /* upnp.devicescanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB11CC2B0AF00C47341 /* upnp.devicescanner.h */; };
 		43AECDBD1CC2B0AF00C47341 /* upnp.flags.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB21CC2B0AF00C47341 /* upnp.flags.h */; };
-		43AECDBE1CC2B0AF00C47341 /* upnp.http.client.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB31CC2B0AF00C47341 /* upnp.http.client.h */; };
 		43AECDBF1CC2B0AF00C47341 /* upnp.http.server.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB41CC2B0AF00C47341 /* upnp.http.server.h */; };
 		43AECDC01CC2B0AF00C47341 /* upnp.ssdp.client.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB51CC2B0AF00C47341 /* upnp.ssdp.client.h */; };
 		43AECDC11CC2B0AF00C47341 /* upnp.types.h in Headers */ = {isa = PBXBuildFile; fileRef = 43AECDB61CC2B0AF00C47341 /* upnp.types.h */; };
@@ -226,6 +230,11 @@
 		434203B81633E5490058A49A /* eventlistenermock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventlistenermock.h; path = test/eventlistenermock.h; sourceTree = SOURCE_ROOT; };
 		434203B91633E55F0058A49A /* testxmls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testxmls.h; path = test/testxmls.h; sourceTree = "<group>"; };
 		434203BD1633E55F0058A49A /* upnpobjectprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnpobjectprinter.h; path = test/upnpobjectprinter.h; sourceTree = "<group>"; };
+		434E085C1D3A1A77006E6563 /* upnp.http.client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = upnp.http.client.h; path = src/upnp.http.client.h; sourceTree = "<group>"; };
+		434E085D1D3A1A77006E6563 /* upnp.http.functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnp.http.functions.cpp; path = src/upnp.http.functions.cpp; sourceTree = "<group>"; };
+		434E085E1D3A1A77006E6563 /* upnp.soap.client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = upnp.soap.client.cpp; path = src/upnp.soap.client.cpp; sourceTree = "<group>"; };
+		434E08621D3A1A80006E6563 /* upnp.http.functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.http.functions.h; sourceTree = "<group>"; };
+		434E08631D3A1A80006E6563 /* upnp.soap.client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.soap.client.h; sourceTree = "<group>"; };
 		4354A8BC16FF400400F7A88F /* upnp.actionresponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.actionresponse.h; sourceTree = "<group>"; };
 		4354A8C616FF400500F7A88F /* upnpdeviceserviceexceptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnpdeviceserviceexceptions.h; sourceTree = "<group>"; };
 		4357AEF8154C07540021F9BE /* upnputils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = upnputils.h; sourceTree = "<group>"; };
@@ -267,7 +276,6 @@
 		43AECDAF1CC2B0AF00C47341 /* upnp.action.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.action.h; sourceTree = "<group>"; };
 		43AECDB11CC2B0AF00C47341 /* upnp.devicescanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.devicescanner.h; sourceTree = "<group>"; };
 		43AECDB21CC2B0AF00C47341 /* upnp.flags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.flags.h; sourceTree = "<group>"; };
-		43AECDB31CC2B0AF00C47341 /* upnp.http.client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.http.client.h; sourceTree = "<group>"; };
 		43AECDB41CC2B0AF00C47341 /* upnp.http.server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.http.server.h; sourceTree = "<group>"; };
 		43AECDB51CC2B0AF00C47341 /* upnp.ssdp.client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.ssdp.client.h; sourceTree = "<group>"; };
 		43AECDB61CC2B0AF00C47341 /* upnp.types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = upnp.types.h; sourceTree = "<group>"; };
@@ -332,6 +340,9 @@
 		4341AB2B1387B66600297297 = {
 			isa = PBXGroup;
 			children = (
+				434E085C1D3A1A77006E6563 /* upnp.http.client.h */,
+				434E085D1D3A1A77006E6563 /* upnp.http.functions.cpp */,
+				434E085E1D3A1A77006E6563 /* upnp.soap.client.cpp */,
 				4322F6EE1D2134B000F246CF /* guid.cpp */,
 				4322F6EF1D2134B000F246CF /* guid.h */,
 				43AECDC51CC2B0CB00C47341 /* http_parser.cpp */,
@@ -448,6 +459,8 @@
 		438A7A4C150E9B300093A521 /* upnp */ = {
 			isa = PBXGroup;
 			children = (
+				434E08621D3A1A80006E6563 /* upnp.http.functions.h */,
+				434E08631D3A1A80006E6563 /* upnp.soap.client.h */,
 				4322F6D81D21349800F246CF /* upnp.asio.h */,
 				4322F6D91D21349800F246CF /* upnp.avtransport.service.h */,
 				4322F6DA1D21349800F246CF /* upnp.connectionmanager.service.h */,
@@ -478,7 +491,6 @@
 				43A615661CD4AB8C00FE1F8B /* upnp.dlna.info.h */,
 				43A615671CD4AB8C00FE1F8B /* upnp.factory.h */,
 				43AECDB21CC2B0AF00C47341 /* upnp.flags.h */,
-				43AECDB31CC2B0AF00C47341 /* upnp.http.client.h */,
 				43AECDB41CC2B0AF00C47341 /* upnp.http.server.h */,
 				43A615681CD4AB8C00FE1F8B /* upnp.renderingcontrol.client.h */,
 				43A615691CD4AB8C00FE1F8B /* upnp.renderingcontrol.types.h */,
@@ -524,6 +536,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				434E08651D3A1A80006E6563 /* upnp.soap.client.h in Headers */,
 				4322F6EC1D21349800F246CF /* upnp.ssdp.server.h in Headers */,
 				43A6158D1CD4ABA800FE1F8B /* upnp.avtransport.typeconversions.h in Headers */,
 				43A6156B1CD4AB8C00FE1F8B /* upnp.avtransport.types.h in Headers */,
@@ -531,10 +544,10 @@
 				43A6156C1CD4AB8C00FE1F8B /* upnp.clientinterface.h in Headers */,
 				438A7A57150E9B300093A521 /* upnp.device.h in Headers */,
 				43AECDC01CC2B0AF00C47341 /* upnp.ssdp.client.h in Headers */,
+				434E08641D3A1A80006E6563 /* upnp.http.functions.h in Headers */,
 				43A615941CD4ABA800FE1F8B /* upnp.contentdirectory.typeconversions.h in Headers */,
 				4322F6FA1D2134B000F246CF /* guid.h in Headers */,
 				43AECDC31CC2B0AF00C47341 /* upnp.xml.parseutils.h in Headers */,
-				43AECDBE1CC2B0AF00C47341 /* upnp.http.client.h in Headers */,
 				4322F6E81D21349800F246CF /* upnp.lastchangevariable.h in Headers */,
 				43A6156F1CD4AB8C00FE1F8B /* upnp.contentdirectory.client.h in Headers */,
 				43888C8A1A75A3EA00778222 /* upnpclientmock.h in Headers */,
@@ -565,6 +578,7 @@
 				4354A8E316FF400700F7A88F /* upnpdeviceserviceexceptions.h in Headers */,
 				43FE3DD31CE3CA530048C6EB /* upnp.controlpoint.h in Headers */,
 				43AECDBA1CC2B0AF00C47341 /* upnp.action.h in Headers */,
+				434E085F1D3A1A77006E6563 /* upnp.http.client.h in Headers */,
 				4322F6E51D21349800F246CF /* upnp.connectionmanager.service.h in Headers */,
 				43A6156A1CD4AB8C00FE1F8B /* upnp.avtransport.client.h in Headers */,
 				43A615911CD4ABA800FE1F8B /* upnp.connectionmanager.typeconversions.h in Headers */,
@@ -717,6 +731,7 @@
 				43AECDE51CC2B0CB00C47341 /* URI.cpp in Sources */,
 				4322F7001D2134B000F246CF /* upnp.lastchangevariable.cpp in Sources */,
 				43AECDD91CC2B0CB00C47341 /* upnp.client.cpp in Sources */,
+				434E08601D3A1A77006E6563 /* upnp.http.functions.cpp in Sources */,
 				43AECDD81CC2B0CB00C47341 /* upnp.action.cpp in Sources */,
 				43A615901CD4ABA800FE1F8B /* upnp.connectionmanager.typeconversions.cpp in Sources */,
 				4322F6FE1D2134B000F246CF /* upnp.connectionmanager.service.cpp in Sources */,
@@ -739,6 +754,7 @@
 				43FE3DE01CE3CA640048C6EB /* upnp.mediaserver.cpp in Sources */,
 				43A615931CD4ABA800FE1F8B /* upnp.contentdirectory.typeconversions.cpp in Sources */,
 				43AECDDB1CC2B0CB00C47341 /* upnp.gena.server.cpp in Sources */,
+				434E08611D3A1A77006E6563 /* upnp.soap.client.cpp in Sources */,
 				43A615981CD4ABA800FE1F8B /* upnp.renderingcontrol.client.cpp in Sources */,
 				4322F6FF1D2134B000F246CF /* upnp.contentdirectory.service.cpp in Sources */,
 				43A6159C1CD4ABA800FE1F8B /* upnp.types.cpp in Sources */,

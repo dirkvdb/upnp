@@ -246,6 +246,7 @@ void Client::setMethodType(Method method)
 void Client::perform(Method method, std::function<void(const std::error_code&, std::string data)> cb)
 {
     setMethodType(method);
+    
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
@@ -270,10 +271,20 @@ void Client::perform(Method method, std::function<void(const std::error_code&, s
 void Client::perform(Method method, const std::string& body, std::function<void(const std::error_code&, std::string data)> cb)
 {
     setMethodType(method);
-    m_parser.setCompletedCallback([this, cb] () {
-        cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), m_parser.stealBody());
-    });
-
+    
+    if (method == Method::Head)
+    {
+        m_parser.setHeadersCompletedCallback([this, cb] () {
+            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), std::string());
+        });
+    }
+    else
+    {
+        m_parser.setCompletedCallback([this, cb] () {
+            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), m_parser.stealBody());
+        });
+    }
+    
     performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const asio::error_code& error) {
         if (error)
         {
@@ -285,6 +296,22 @@ void Client::perform(Method method, const std::string& body, std::function<void(
 void Client::perform(Method method, uint8_t* data, std::function<void(const std::error_code&, uint8_t*)> cb)
 {
     setMethodType(method);
+    
+    if (method == Method::Head)
+    {
+        m_parser.setHeadersCompletedCallback([this, cb, data] () {
+            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
+        });
+    }
+    else
+    {
+        m_parser.setCompletedCallback([this, cb, data] () {
+            auto body = m_parser.stealBody();
+            memcpy(data, body.data(), body.size());
+            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
+        });
+    }
+    
     m_parser.setCompletedCallback([this, cb, data] () {
         auto body = m_parser.stealBody();
         memcpy(data, body.data(), body.size());

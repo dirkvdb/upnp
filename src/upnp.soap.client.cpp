@@ -76,20 +76,27 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader(fmt::format("CALLBACK:{}\r\n", callbackUrl));
+    m_httpClient->addHeader(fmt::format("CALLBACK:<{}>\r\n", callbackUrl));
     m_httpClient->addHeader(fmt::format("NT:upnp:event\r\n"));
     m_httpClient->addHeader(createTimeoutHeader(timeout));
 
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, std::string response) {
         try
         {
+            if (ec.value() != http::error::Ok)
+            {
+                cb(ec, "", 0s, "");
+                return;
+            }
+            
             cb(ec,
                m_httpClient->getResponseHeaderValue("sid"),
                soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
                std::move(response));
         }
-        catch (const std::exception&)
+        catch (const std::exception& e)
         {
+            log::error("Subscribe error: {}", e.what());
             cb(std::make_error_code(http::error::InvalidResponse), "", 0s, "");
         }
     });
@@ -107,13 +114,20 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, std::string response) {
         try
         {
+            if (ec.value() != http::error::Ok)
+            {
+                cb(ec, "", 0s, "");
+                return;
+            }
+        
             cb(ec,
                m_httpClient->getResponseHeaderValue("sid"),
                soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
                std::move(response));
         }
-        catch (const std::exception&)
+        catch (const std::exception& e)
         {
+            log::error("Renew Subscription error: {}", e.what());
             cb(std::make_error_code(http::error::InvalidResponse), "", 0s, "");
         }
     });
