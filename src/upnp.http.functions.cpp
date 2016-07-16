@@ -30,6 +30,21 @@ using namespace std::chrono_literals;
 
 static const auto s_defaultTimeout = 30s;
 
+namespace
+{
+
+std::string createRangeHeader(size_t offset, size_t size)
+{
+    if (size == 0)
+    {
+        return fmt::format("Range:bytes={}-\r\n", offset);
+    }
+    
+    return fmt::format("Range:bytes={}-{}\r\n", offset, offset + size - 1);
+}
+
+}
+
 void get(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, std::string)> cb)
 {
     get(io, url, s_defaultTimeout, cb);
@@ -70,7 +85,7 @@ void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uin
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    client->addHeader(fmt::format("Range:bytes={}-{}\r\n", offset, offset + size));
+    client->addHeader(fmt::format(createRangeHeader(offset, size)));
     client->perform(Method::Get, [client, cb] (const std::error_code& error, std::string data) {
         cb(error, std::move(data));
     });
@@ -86,7 +101,7 @@ void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uin
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    client->addHeader(fmt::format("Range:bytes={}-{}\r\n", offset, offset + size));
+    client->addHeader(fmt::format(createRangeHeader(offset, size)));
     client->perform(Method::Get, data, [client, cb] (const std::error_code& error, uint8_t* dataPtr) {
         cb(error, dataPtr);
     });

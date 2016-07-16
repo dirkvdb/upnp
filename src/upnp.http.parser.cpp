@@ -333,19 +333,26 @@ Parser::Range Parser::parseRange(const std::string& range)
     }
 
     auto split = stringops::tokenize(&range[6], '-');
-    if (split.size() != 2)
+    if (split.size() > 2)
     {
         throw std::invalid_argument("Invalid range header: " + range);
+    }
+    
+    if (split.size() == 1)
+    {
+        if (range[range.size() - 1] != '-')
+        {
+            throw std::invalid_argument("Invalid range header: " + range);
+        }
+    }
+    else if (!split[1].empty())
+    {
+        result.end = std::stoul(split[1]);
     }
 
     if (!split[0].empty())
     {
         result.start = std::stoul(split[0]);
-    }
-
-    if (!split[1].empty())
-    {
-        result.end = std::stoul(split[1]);
     }
 
     return result;

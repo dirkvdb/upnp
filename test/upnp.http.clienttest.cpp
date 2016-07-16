@@ -100,6 +100,21 @@ TEST_F(HttpClientTest, GetInvalidUrlAsString)
     io.run();
 }
 
+TEST_F(HttpClientTest, GetRange)
+{
+    EXPECT_CALL(mock, onResponse(http::error::PartialContent, "small fil"));
+    http::getRange(io, server.getWebRootUrl() + "/test.txt", 5, 9, handleResponse<std::string>());
+    io.run();
+}
+
+TEST_F(HttpClientTest, GetRangeTillEnd)
+{
+    EXPECT_CALL(mock, onResponse(http::error::PartialContent, "small file"));
+    http::getRange(io, server.getWebRootUrl() + "/test.txt", 5, 0, handleResponse<std::string>());
+    io.run();
+}
+
+
 TEST_F(HttpClientTest, CouldNotConnect)
 {
     EXPECT_CALL(mock, onResponse(http::error::NetworkError, Matcher<size_t>(_)));
