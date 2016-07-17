@@ -164,7 +164,6 @@ private:
         catch (std::exception& e)
         {
             utils::log::warn("Failed to parse ssdp client http notification data: {}", e.what());
-            reset();
         }
     }
 

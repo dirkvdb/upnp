@@ -19,16 +19,29 @@ static const int16_t s_ssdpPort = 1900;
 static const uint32_t s_broadcastRepeatCount = 5;
 static const auto s_ssdpAddressIpv4 = ip::udp::endpoint(s_ssdpIp, s_ssdpPort);
 
+struct Client::Pimpl
+{
+    Pimpl(asio::io_service& io)
+    : searchTimeout(3)
+    , service(io)
+    , socket(io)
+    , unicastSocket(io)
+    {
+    }
+
+    uint32_t searchTimeout;
+    asio::io_service& service;
+    asio::ip::udp::socket socket;
+    asio::ip::udp::socket unicastSocket;
+    asio::ip::udp::endpoint sender;
+    Parser parser;
+    std::array<char, 1024> buffer;
+};
+
 Client::Client(io_service& io)
-: m_searchTimeout(3)
-, m_service(io)
-, m_socket(io)
-, m_unicastSocket(io)
-, m_parser(std::make_unique<Parser>())
+: m_pimpl(std::make_shared<Pimpl>(io))
 {
 }
-
-Client::~Client() noexcept = default;
 
 void Client::run()
 {
@@ -42,68 +55,66 @@ void Client::run(const std::string& address)
 
 void Client::run(const asio::ip::udp::endpoint& addr)
 {
-    m_unicastSocket.open(addr.protocol());
-    m_unicastSocket.set_option(ip::multicast::enable_loopback(true));
-    m_unicastSocket.set_option(ip::multicast::hops(4));
+    m_pimpl->unicastSocket.open(addr.protocol());
+    m_pimpl->unicastSocket.set_option(ip::multicast::enable_loopback(true));
+    m_pimpl->unicastSocket.set_option(ip::multicast::hops(4));
 
-    m_socket.open(addr.protocol());
-    m_socket.set_option(ip::udp::socket::reuse_address(true));
-    m_socket.set_option(ip::udp::socket::broadcast(true));
-    m_socket.set_option(ip::multicast::enable_loopback(true));
-    m_socket.set_option(ip::multicast::hops(4));
+    m_pimpl->socket.open(addr.protocol());
+    m_pimpl->socket.set_option(ip::udp::socket::reuse_address(true));
+    m_pimpl->socket.set_option(ip::udp::socket::broadcast(true));
+    m_pimpl->socket.set_option(ip::multicast::enable_loopback(true));
+    m_pimpl->socket.set_option(ip::multicast::hops(4));
     
-    m_socket.bind(addr);
+    m_pimpl->socket.bind(addr);
     
     // join the multicast channel
-    m_socket.set_option(ip::multicast::join_group(s_ssdpIp));
+    m_pimpl->socket.set_option(ip::multicast::join_group(s_ssdpIp));
 
-    m_socket.async_receive_from(buffer(m_buffer), m_sender, std::bind(&Client::onDataReceived, this, _1, _2));
+    receiveData(m_pimpl);
 }
 
 void Client::stop()
 {
-    m_socket.close();
-    m_unicastSocket.close();
+    m_pimpl->socket.close();
+    m_pimpl->unicastSocket.close();
 }
 
-void Client::onDataReceived(const std::error_code& error, size_t bytesReceived)
+void Client::receiveData(const std::shared_ptr<Pimpl>& pimpl)
 {
-    if (error)
-    {
-        m_parser->reset();
-        m_socket.async_receive_from(buffer(m_buffer), m_sender, std::bind(&Client::onDataReceived, this, _1, _2));
-        return;
-    }
-
-    try
-    {
-        if (bytesReceived > 0)
+    pimpl->socket.async_receive_from(buffer(pimpl->buffer), pimpl->sender, [pimpl] (const std::error_code& error, size_t bytesReceived) {
+        if (error)
         {
-            //log::info("SSDP client msg received: {}", std::string_view(m_buffer.data(), bytesReceived));
-            auto parsed = m_parser->parse(m_buffer.data(), bytesReceived);
-            if (parsed == 0)
+            pimpl->parser.reset();
+            
+            if (pimpl->socket.is_open())
             {
-                m_parser->reset();
+                receiveData(pimpl);
+            }
+            
+            return;
+        }
+
+        try
+        {
+            if (bytesReceived > 0)
+            {
+                //log::info("SSDP client msg received: {}", std::string_view(pimpl->buffer.data(), bytesReceived));
+                pimpl->parser.parse(pimpl->buffer.data(), bytesReceived);
             }
         }
-        else
+        catch (std::exception& e)
         {
-            m_parser->reset();
+            log::warn("Error parsing http notification: {}", e.what());
         }
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Error parsing http notification: {}", e.what());
-        log::info(std::string(m_buffer.data(), bytesReceived));
-        m_parser->reset();
-    }
 
-    m_socket.async_receive_from(buffer(m_buffer), m_sender, std::bind(&Client::onDataReceived, this, _1, _2));
+        pimpl->parser.reset();
+        receiveData(pimpl);
+    });
 }
 
 void Client::setSearchTimeout(std::chrono::seconds timeout)
 {
-    m_searchTimeout = static_cast<uint32_t>(timeout.count());
+    m_pimpl->searchTimeout = static_cast<uint32_t>(timeout.count());
 }
 
 void Client::search()
@@ -118,21 +129,21 @@ void Client::search(const char* serviceType)
                                                          "MAN:\"ssdp:discover\"\r\n"
                                                          "MX:{}\r\n"
                                                          "ST:{}\r\n"
-                                                         "\r\n", s_ssdpIp, s_ssdpPort, m_searchTimeout, serviceType));
+                                                         "\r\n", s_ssdpIp, s_ssdpPort, m_pimpl->searchTimeout, serviceType));
 
-    sendMessages(m_socket, s_ssdpAddressIpv4, req);
+    sendMessages(m_pimpl->socket, s_ssdpAddressIpv4, req);
 }
 
 void Client::search(const char* serviceType, const char* deviceIp)
 {
-    auto addr = m_socket.local_endpoint();
+    auto addr = m_pimpl->socket.local_endpoint();
     auto req = std::make_shared<std::string>(fmt::format("M-SEARCH * HTTP/1.1\r\n"
                                                          "HOST:{}:{}\r\n"
                                                          "MAN:\"ssdp:discover\"\r\n"
                                                          "ST:{}\r\n"
                                                          "\r\n", "192.168.1.10", addr.port(), serviceType));
 
-    sendMessages(m_unicastSocket, ip::udp::endpoint(ip::address_v4::from_string(deviceIp), s_ssdpPort), req);
+    sendMessages(m_pimpl->unicastSocket, ip::udp::endpoint(ip::address_v4::from_string(deviceIp), s_ssdpPort), req);
 }
 
 void Client::sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content)
@@ -150,7 +161,7 @@ void Client::sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endp
 
 void Client::setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb)
 {
-    m_parser->setHeaderParsedCallback(std::move(cb));
+    m_pimpl->parser.setHeaderParsedCallback(std::move(cb));
 }
 
 }

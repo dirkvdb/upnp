@@ -60,6 +60,7 @@ private:
 
     asio::io_service& m_io;
     asio::ip::tcp::acceptor m_acceptor;
+    uint64_t m_sessionId;
     std::unordered_map<std::string, HostedFile> m_servedFiles;
 
     std::array<RequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_handlers;

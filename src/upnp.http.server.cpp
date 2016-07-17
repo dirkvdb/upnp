@@ -55,6 +55,7 @@ static const std::string s_response =
 Server::Server(asio::io_service& io)
 : m_io(io)
 , m_acceptor(io)
+, m_sessionId(0)
 {
 }
 
@@ -76,8 +77,9 @@ void Server::stop()
 class Session : public std::enable_shared_from_this<Session>
 {
 public:
-    Session(io_service& io, const Server& srv)
+    Session(io_service& io, const Server& srv, uint64_t id)
     : parser(http::Type::Request)
+    , m_sessionId(id)
     , socket(io)
     , server(srv)
     {
@@ -91,11 +93,11 @@ public:
             {
                 if (error.value() == asio::error::eof)
                 {
-                    log::debug("Conection closed by client");
+                    log::debug("[{}] Conection closed by client", m_sessionId);
                 }
                 else
                 {
-                    log::error("Failed to read from socket {}", error.message());
+                    log::error("[{}] Failed to read from socket {}", m_sessionId, error.message());
                 }
 
                 socket.close();
@@ -104,20 +106,21 @@ public:
 
             try
             {
-                //log::info(std::string_view(buf.data(), bytesReceived).data());
+                //log::info("[{}] {}", m_sessionId, std::string_view(buf.data(), bytesReceived).data());
                 parser.parse(buf.data(), bytesReceived);
                 if (!parser.isCompleted())
                 {
+                    log::debug("[{}] Parse not completed", m_sessionId);
                     receiveData();
                 }
                 else
                 {
-                    log::debug("Parse completed");
+                    log::debug("[{}] Parse completed", m_sessionId);
                 }
             }
             catch (std::exception& e)
             {
-                log::error("Failed to parse request: {}", e.what());
+                log::error("[{}] Failed to parse request: {}", m_sessionId, e.what());
                 socket.close();
             }
         });
@@ -128,12 +131,14 @@ public:
         async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const std::error_code& error, size_t) {
             if (error)
             {
-                log::error("Failed to write response: {}", error.message());
+                log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
             }
 
+            log::error("[{}] Wrote response: {}", m_sessionId, *response);
             if (error || closeConnection)
             {
                 socket.close();
+                log::error("[{}] Connection closed", m_sessionId);
             }
         });
     }
@@ -145,12 +150,14 @@ public:
         async_write(socket, data, [this, closeConnection, header, thisPtr = shared_from_this()] (const std::error_code& error, size_t) {
             if (error)
             {
-                log::error("Failed to write response: {}", error.message());
+                log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
             }
 
+            log::error("[{}] Wrote response: {}", m_sessionId, *header);
             if (error || closeConnection)
             {
                 socket.close();
+                log::error("[{}] Connection closed", m_sessionId);
             }
         });
     }
@@ -163,13 +170,13 @@ public:
         {
             if (parser.getMethod() == Method::Head)
             {
-                log::info("requested file size: {}", parser.getUrl());
+                log::info("[{}] requested file size: {}", m_sessionId, parser.getUrl());
                 auto& file = server.m_servedFiles.at(parser.getUrl());
                 writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
             else if (parser.getMethod() == Method::Get)
             {
-                log::info("requested file: {}", parser.getUrl());
+                log::info("[{}] requested file: {}", m_sessionId, parser.getUrl());
                 auto& file = server.m_servedFiles.at(parser.getUrl());
 
                 auto rangeHeader = parser.headerValue("Range");
@@ -203,12 +210,13 @@ public:
         }
         catch (std::exception& e)
         {
-            log::error("Http server: {}", e.what());
+            log::error("[{}] Http server: {}", m_sessionId, e.what());
             writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 500, "Internal Server Error")), closeConnection);
         }
     }
 
     Parser parser;
+    uint64_t m_sessionId;
     ip::tcp::socket socket;
     std::array<char, 1024*10> buf;
     const Server& server;
@@ -216,7 +224,8 @@ public:
 
 void Server::accept()
 {
-    auto session = std::make_shared<Session>(m_io, *this);
+    auto session = std::make_shared<Session>(m_io, *this, ++m_sessionId);
+    log::info("Accepting session: {}", m_sessionId);
     m_acceptor.async_accept(session->socket, [this, session] (const asio::error_code& error) {
         if (error)
         {
@@ -224,10 +233,14 @@ void Server::accept()
             {
                 log::error("HTTP server: Failed to accept on socket: {}", error.message());
             }
+            else
+            {
+                log::info("-----------    Aborted    ---------------");
+            }
         }
         else
         {
-            log::info("Http server: Connection attempt");
+            log::info("Http server: Connection attempt {}", m_sessionId);
             session->receiveData();
             accept();
         }

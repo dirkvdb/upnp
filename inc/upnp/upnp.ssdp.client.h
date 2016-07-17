@@ -10,8 +10,6 @@ namespace upnp
 namespace ssdp
 {
 
-class Parser;
-
 enum class NotificationType
 {
     Alive,
@@ -32,8 +30,7 @@ struct DeviceNotificationInfo
 class Client
 {
 public:
-    Client(asio::io_service& svc);
-    ~Client() noexcept;
+    Client(asio::io_service& io);
 
     void run();
     void run(const std::string& address);
@@ -51,19 +48,15 @@ public:
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
-    void run(const asio::ip::udp::endpoint& addr);
-
-    void parseData();
-    void onDataReceived(const std::error_code& error, size_t bytesReceived);
+    struct Pimpl;
+    
+    static void receiveData(const std::shared_ptr<Pimpl>& pimpl);
     static void sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
-
-    uint32_t m_searchTimeout;
-    asio::io_service& m_service;
-    asio::ip::udp::socket m_socket;
-    asio::ip::udp::socket m_unicastSocket;
-    asio::ip::udp::endpoint m_sender;
-    std::unique_ptr<Parser> m_parser;
-    std::array<char, 1024> m_buffer;
+    
+    void run(const asio::ip::udp::endpoint& addr);
+    void parseData();
+    
+    std::shared_ptr<Pimpl> m_pimpl;
 };
 
 }
