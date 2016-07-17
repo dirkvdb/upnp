@@ -71,7 +71,6 @@ Client::~Client()
 
 void Client::initialize()
 {
-    log::debug("Initializing UPnP SDK");
     return initialize(ip::tcp::endpoint(ip::address_v4::any(), 0));
 }
 
@@ -83,6 +82,7 @@ void Client::initialize(const std::string& interfaceName, uint16_t port)
 
 void Client::initialize(const asio::ip::tcp::endpoint& addr)
 {
+    log::debug("Initializing UPnP SDK");
     m_eventServer = std::make_unique<gena::Server>(*m_io, addr, [&] (const SubscriptionEvent& ev) {
         auto iter = m_eventCallbacks.find(ev.sid);
         if (iter != m_eventCallbacks.end())
@@ -92,6 +92,7 @@ void Client::initialize(const asio::ip::tcp::endpoint& addr)
     });
 
     m_asioThread = std::make_unique<std::thread>([this] () {
+        m_io->reset();
         asio::io_service::work work(*m_io);
         m_io->run();
     });
