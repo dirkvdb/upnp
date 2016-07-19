@@ -269,7 +269,7 @@ void MediaRenderer::prepareConnection(const Resource& res, const std::string& pe
     });
 }
 
-void MediaRenderer::setTransportItem(Resource& resource, std::function<void(Status)> cb)
+void MediaRenderer::setTransportItem(const Resource& resource, std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
@@ -277,66 +277,66 @@ void MediaRenderer::setTransportItem(Resource& resource, std::function<void(Stat
     }
 }
 
-void MediaRenderer::setNextTransportItem(Resource& resource)
+void MediaRenderer::setNextTransportItem(const Resource& resource, std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->setNextAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", nullptr);
+        m_avTransport->setNextAVTransportURI(m_connInfo.connectionId, resource.getUrl(), "", cb);
     }
 }
 
-void MediaRenderer::play()
+void MediaRenderer::play(std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->play(m_connInfo.connectionId, "1", nullptr);
+        m_avTransport->play(m_connInfo.connectionId, "1", cb);
     }
 }
 
-void MediaRenderer::pause()
+void MediaRenderer::pause(std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->pause(m_connInfo.connectionId, nullptr);
+        m_avTransport->pause(m_connInfo.connectionId, cb);
     }
 }
 
-void MediaRenderer::stop()
+void MediaRenderer::stop(std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->stop(m_connInfo.connectionId, nullptr);
+        m_avTransport->stop(m_connInfo.connectionId, cb);
     }
 }
 
-void MediaRenderer::next()
+void MediaRenderer::next(std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->next(m_connInfo.connectionId, nullptr);
+        m_avTransport->next(m_connInfo.connectionId, cb);
     }
 }
 
-void MediaRenderer::seekInTrack(std::chrono::seconds position)
+void MediaRenderer::seekInTrack(std::chrono::seconds position, std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, durationToString(position), nullptr);
+        m_avTransport->seek(m_connInfo.connectionId, AVTransport::SeekMode::RelativeTime, durationToString(position), cb);
     }
 }
 
-void MediaRenderer::previous()
+void MediaRenderer::previous(std::function<void(Status)> cb)
 {
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->previous(m_connInfo.connectionId, nullptr);
+        m_avTransport->previous(m_connInfo.connectionId, cb);
     }
 }
 

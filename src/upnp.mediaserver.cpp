@@ -284,7 +284,7 @@ void MediaServer::search(const std::string& id, const std::map<Property, std::st
     search(id, critString.str(), onItems);
 }
 
-void MediaServer::setTransportItem(Resource& resource)
+void MediaServer::setTransportItem(const Resource& resource)
 {
     if (m_avTransport)
     {

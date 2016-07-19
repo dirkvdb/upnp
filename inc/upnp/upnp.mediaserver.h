@@ -80,7 +80,7 @@ public:
     void search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemsCb& onItem);
 
     // AVTransport related methods
-    void setTransportItem(Resource& resource);
+    void setTransportItem(const Resource& resource);
 
     // override the default requestSize of 32
     // Influences the size of the vector in the callbacks

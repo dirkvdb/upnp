@@ -70,7 +70,7 @@ void ControlPoint::deactivate(std::function<void(Status)> cb)
     m_renderer.deactivateEvents(cb);
 }
 
-void ControlPoint::playItem(MediaServer& server, const Item& item)
+void ControlPoint::playItem(MediaServer& server, const Item& item, std::function<void(Status)> cb)
 {
     Resource resource;
     if (!m_renderer.supportsPlayback(item, resource))
@@ -78,19 +78,22 @@ void ControlPoint::playItem(MediaServer& server, const Item& item)
         throw Exception("The requested item is not supported by the renderer");
     }
 
-    stopPlaybackIfNecessary();
+    stopPlaybackIfNecessary([this, cb, resource, &server] (const Status&) {
+        prepareConnection(server, resource);
+        server.setTransportItem(resource);
+        m_renderer.setTransportItem(resource, [this, cb] (Status status) {
+            if (status)
+            {
+                cb(status);
+                return;
+            }
 
-    prepareConnection(server, resource);
-    server.setTransportItem(resource);
-    m_renderer.setTransportItem(resource, [this] (Status status) {
-        if (status)
-        {
-            m_renderer.play();
-        }
+            m_renderer.play(cb);
+        });
     });
 }
 
-void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vector<Item> &items)
+void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vector<Item> &items, std::function<void(Status)> cb)
 {
     if (items.empty())
     {
@@ -99,7 +102,7 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vec
 
     if (items.size() == 1)
     {
-        return playItem(server, items.front());
+        return playItem(server, items.front(), cb);
     }
 
     // create a playlist from the provided items
@@ -117,10 +120,10 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vec
 
     auto filename = generatePlaylistFilename();
     m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
-    playItem(server, createPlaylistItem(filename));
+    playItem(server, createPlaylistItem(filename), cb);
 }
 
-void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item)
+void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item, std::function<void(Status)> cb)
 {
     Resource resource;
     if (!m_renderer.supportsPlayback(item, resource))
@@ -128,10 +131,10 @@ void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item)
         throw Exception("The requested item is not supported by the renderer");
     }
 
-    m_renderer.setNextTransportItem(resource);
+    m_renderer.setNextTransportItem(resource, cb);
 }
 
-void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item>& items)
+void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item>& items, std::function<void(Status)> cb)
 {
     if (items.empty())
     {
@@ -140,7 +143,7 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
 
     if (items.size() == 1)
     {
-        return playItem(server, items.front());
+        return playItem(server, items.front(), cb);
     }
 
     // create a playlist from the provided items
@@ -158,18 +161,15 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
 
     std::string filename = generatePlaylistFilename();
     m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
-    queueItem(server, createPlaylistItem(filename));
+    queueItem(server, createPlaylistItem(filename), cb);
 }
 
-void ControlPoint::stopPlaybackIfNecessary()
+void ControlPoint::stopPlaybackIfNecessary(std::function<void(Status)> cb)
 {
-    try
-    {
-        //if (m_renderer.isActionAvailable(MediaRenderer::Action::Stop))
-        //{
-            m_renderer.stop();
-        //}
-    } catch (std::exception&) {}
+    //if (m_renderer.isActionAvailable(MediaRenderer::Action::Stop))
+    //{
+    m_renderer.stop(cb);
+    //}
 }
 
 void ControlPoint::throwOnMissingWebserver()
@@ -201,7 +201,7 @@ Item ControlPoint::createPlaylistItem(const std::string& filename)
     return playlistItem;
 }
 
-void ControlPoint::prepareConnection(MediaServer& server, Resource& resource)
+void ControlPoint::prepareConnection(MediaServer& server, const Resource& resource)
 {
     if (m_renderer.supportsConnectionPreparation())
     {

@@ -134,7 +134,6 @@ public:
                 log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
             }
 
-            log::error("[{}] Wrote response: {}", m_sessionId, *response);
             if (error || closeConnection)
             {
                 socket.close();
@@ -153,7 +152,6 @@ public:
                 log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
             }
 
-            log::error("[{}] Wrote response: {}", m_sessionId, *header);
             if (error || closeConnection)
             {
                 socket.close();

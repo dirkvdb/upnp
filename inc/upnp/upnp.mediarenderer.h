@@ -81,14 +81,14 @@ public:
     void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
 
     // AV Transport
-    void setTransportItem(Resource& resource, std::function<void(Status)> cb);
-    void setNextTransportItem(Resource& resource);
-    void play();
-    void pause();
-    void stop();
-    void next();
-    void seekInTrack(std::chrono::seconds position);
-    void previous();
+    void setTransportItem(const Resource& resource, std::function<void(Status)> cb);
+    void setNextTransportItem(const Resource& resource, std::function<void(Status)> cb);
+    void play(std::function<void(Status)> cb);
+    void pause(std::function<void(Status)> cb);
+    void stop(std::function<void(Status)> cb);
+    void next(std::function<void(Status)> cb);
+    void seekInTrack(std::chrono::seconds position, std::function<void(Status)> cb);
+    void previous(std::function<void(Status)> cb);
     void getCurrentTrackPosition(std::function<void(Status, std::chrono::seconds)> cb);
     void getPlaybackState(std::function<void(Status, PlaybackState)> cb);
 
