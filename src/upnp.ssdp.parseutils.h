@@ -52,7 +52,7 @@ inline uint32_t parseCacheControl(const std::string& cacheControl)
             return std::stoi(match.str(1));
         }
 
-        throw std::runtime_error("Failed to parse Cache Control");
+        throw std::runtime_error("Failed to parse Cache Control: " + cacheControl);
     }
     catch (const std::regex_error& e)
     {
@@ -137,13 +137,17 @@ private:
             DeviceNotificationInfo info;
             parseUSN(m_parser.headerValue("USN"), info);
             info.location = m_parser.headerValue("LOCATION");
-            info.expirationTime = parseCacheControl(m_parser.headerValue("CACHE-CONTROL"));
 
             if (m_parser.getMethod() == http::Method::Notify)
             {
                 // spontaneous notify message
                 info.type = notificationTypeFromString(m_parser.headerValue("NTS"));
                 info.deviceType = m_parser.headerValue("NT");
+                
+                if (info.type == NotificationType::Alive)
+                {
+                    info.expirationTime = parseCacheControl(m_parser.headerValue("CACHE-CONTROL"));
+                }
             }
             else
             {
@@ -157,6 +161,7 @@ private:
                 // direct responses do not fill in the NTS, mark them as alive
                 info.type = NotificationType::Alive;
                 info.deviceType = m_parser.headerValue("ST");
+                info.expirationTime = parseCacheControl(m_parser.headerValue("CACHE-CONTROL"));
             }
 
             m_cb(info);

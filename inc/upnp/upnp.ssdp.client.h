@@ -49,8 +49,10 @@ public:
 
 private:
     struct Pimpl;
+    struct Receiver;
     
-    static void receiveData(const std::shared_ptr<Pimpl>& pimpl);
+    static void receiveData(asio::ip::udp::endpoint sender, const std::shared_ptr<Receiver>& receiver);
+    static void handleMessage(Receiver& receiver, size_t bytesReceived);
     static void sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
     
     void run(const asio::ip::udp::endpoint& addr);
