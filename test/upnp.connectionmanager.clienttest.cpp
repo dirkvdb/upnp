@@ -41,11 +41,6 @@ bool operator==(const ConnectionInfo& lhs, const ConnectionInfo& rhs)
 
 }
 
-std::ostream& operator<<(std::ostream& os, const ProtocolInfo& lhs)
-{
-    return os << lhs.toString();
-}
-
 namespace test
 {
 

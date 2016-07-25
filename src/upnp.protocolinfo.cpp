@@ -84,3 +84,8 @@ std::string ProtocolInfo::toString() const noexcept
 }
 
 }
+
+std::ostream& operator<< (std::ostream& os, const upnp::ProtocolInfo& info)
+{
+    return os << info.toString();
+}

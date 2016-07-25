@@ -46,6 +46,7 @@ class RootDevice : public IRootDevice
 {
 public:
     RootDevice(std::chrono::seconds advertiseInterval);
+    RootDevice(std::chrono::seconds advertiseInterval, asio::io_service& io);
     ~RootDevice() noexcept;
 
     void initialize() override;
@@ -71,15 +72,16 @@ private:
     std::string onUnsubscriptionRequest(http::Parser& parser) noexcept;
     std::string onActionRequest(http::Parser& parser);
 
-    asio::io_service                m_io;
-    std::unique_ptr<http::Server>   m_httpServer;
-    std::unique_ptr<soap::Client>   m_soapClient;
-    std::unique_ptr<ssdp::Server>   m_ssdpServer;
+    std::unique_ptr<asio::io_service>   m_owningIo;
+    asio::io_service&                   m_io;
+    std::unique_ptr<http::Server>       m_httpServer;
+    std::unique_ptr<soap::Client>       m_soapClient;
+    std::unique_ptr<ssdp::Server>       m_ssdpServer;
 
-    Device                          m_device;
-    std::chrono::seconds            m_advertiseInterval;
+    Device                              m_device;
+    std::chrono::seconds                m_advertiseInterval;
 
-    std::unique_ptr<std::thread>    m_asioThread;
+    std::unique_ptr<std::thread>        m_asioThread;
 
     struct SubscriptionData
     {

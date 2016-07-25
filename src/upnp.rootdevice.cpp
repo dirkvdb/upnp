@@ -72,17 +72,19 @@ static const std::string s_notification =
     "\r\n";
 
 RootDevice::RootDevice(std::chrono::seconds advertiseInterval)
-: m_advertiseInterval(advertiseInterval)
+: m_owningIo(std::make_unique<asio::io_service>())
+, m_io(*m_owningIo)
+, m_advertiseInterval(advertiseInterval)
 {
 }
 
-RootDevice::~RootDevice() noexcept
+RootDevice::RootDevice(std::chrono::seconds advertiseInterval, asio::io_service& io)
+: m_io(io)
+, m_advertiseInterval(advertiseInterval)
 {
-    if (m_asioThread)
-    {
-        uninitialize();
-    }
 }
+
+RootDevice::~RootDevice() noexcept = default;
 
 void RootDevice::initialize()
 {
@@ -107,10 +109,14 @@ void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
     m_soapClient = std::make_unique<soap::Client>(m_io);
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
-    m_asioThread = std::make_unique<std::thread>([this] () {
-        asio::io_service::work work(m_io);
-        m_io.run();
-    });
+    if (m_owningIo)
+    {
+        // this rootdevice is the owner of the io service, so run it in a thread
+        m_asioThread = std::make_unique<std::thread>([this] () {
+            asio::io_service::work work(*m_owningIo);
+            m_owningIo->run();
+        });
+    }
 }
 
 void RootDevice::uninitialize()
@@ -122,8 +128,11 @@ void RootDevice::uninitialize()
         m_io.stop();
     });
 
-    m_asioThread->join();
-    m_asioThread.reset();
+    if (m_asioThread)
+    {
+        m_asioThread->join();
+        m_asioThread.reset();
+    }
 
     m_soapClient.reset();
     m_httpServer.reset();
