@@ -65,6 +65,8 @@ private:
     asio::steady_timer                              m_timer;
     const std::set<DeviceType>                      m_types;
     std::map<std::string, std::shared_ptr<Device>>  m_devices;
+    
+    std::shared_ptr<DeviceScanner>                  m_self;
 };
 
 }
