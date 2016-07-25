@@ -185,7 +185,6 @@ TEST_F(SsdpTest, ParseNotifyByeBye)
     auto notification =
         "NOTIFY * HTTP/1.1\r\n"
         "HOST: 239.255.255.250:1900\r\n"
-        "CACHE-CONTROL: max-age=180\r\n"
         "LOCATION: http://192.168.1.219:49155/description.xml\r\n"
         "OPT: \"http://schemas.upnp.org/upnp/1/0/\"; ns=01\r\n"
         "01-NLS: b0fcf5a0-f417-11e5-96c9-faa940f8bedc\r\n"
@@ -199,7 +198,7 @@ TEST_F(SsdpTest, ParseNotifyByeBye)
         EXPECT_EQ("http://192.168.1.219:49155/description.xml"s, info.location);
         EXPECT_EQ("uuid:356a6e90-8e58-11e2-9e96-0800200c9a55"s, info.deviceId);
         EXPECT_EQ("urn:schemas-upnp-org:service:ConnectionManager:1"s, info.deviceType);
-        EXPECT_EQ(180u, info.expirationTime);
+        EXPECT_EQ(0u, info.expirationTime);
         EXPECT_EQ(ssdp::NotificationType::ByeBye, info.type);
     }));
 

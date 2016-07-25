@@ -48,17 +48,18 @@ public:
     void setDeviceNotificationCallback(std::function<void(const DeviceNotificationInfo&)> cb);
 
 private:
-    struct Pimpl;
     struct Receiver;
-    
-    static void receiveData(asio::ip::udp::endpoint sender, const std::shared_ptr<Receiver>& receiver);
-    static void handleMessage(Receiver& receiver, size_t bytesReceived);
+
+    static void receiveData(const std::shared_ptr<Receiver>& receiver);
     static void sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endpoint& addr, std::shared_ptr<std::string> content);
-    
+
     void run(const asio::ip::udp::endpoint& addr);
     void parseData();
-    
-    std::shared_ptr<Pimpl> m_pimpl;
+
+    std::chrono::seconds m_searchTimeout;
+
+    std::shared_ptr<Receiver> m_unicast;
+    std::shared_ptr<Receiver> m_multicast;
 };
 
 }
