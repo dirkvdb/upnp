@@ -18,7 +18,7 @@ enum class NotificationType
 
 struct DeviceNotificationInfo
 {
-    uint32_t            expirationTime;
+    uint32_t            expirationTime = 0;
     std::string         deviceId;
     std::string         deviceType;
     std::string         serviceType;
