@@ -43,19 +43,25 @@ DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 , m_timer(client.ioService())
 , m_types(types)
 {
-    m_ssdpClient.setDeviceNotificationCallback([=] (const ssdp::DeviceNotificationInfo& info) {
+    m_self = std::shared_ptr<DeviceScanner>(this, [] (DeviceScanner*) {
+        // empty deleter;
+    });
+    
+    m_ssdpClient.setDeviceNotificationCallback([self = std::weak_ptr<DeviceScanner>(m_self)] (const ssdp::DeviceNotificationInfo& info) {
+        auto selfPtr = self.lock();
+        if (!selfPtr)
+        {
+            return;
+        }
+        
         if (info.type == ssdp::NotificationType::Alive)
         {
-            onDeviceDiscovered(info);
+            selfPtr->onDeviceDiscovered(info);
         }
         else if (info.type == ssdp::NotificationType::ByeBye)
         {
-            onDeviceDissapeared(info);
+            selfPtr->onDeviceDissapeared(info);
         }
-    });
-    
-    m_self = std::shared_ptr<DeviceScanner>(this, [] (DeviceScanner*) {
-        // empty deleter;
     });
 }
 
