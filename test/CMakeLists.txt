@@ -33,6 +33,7 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.ssdp.servertest.cpp
     upnp.ssdp.test.cpp
     upnp.http.clienttest.cpp
+    upnp.soap.clienttest.cpp
     upnp.http.parsertest.cpp
     upnp.http.readertest.cpp
     upnp.gena.servertest.cpp

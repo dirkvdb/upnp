@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <string>
 #include <mutex>
@@ -49,7 +49,7 @@ public:
 
     uint32_t getDeviceCount() const;
     std::shared_ptr<Device> getDevice(const std::string& udn) const;
-    std::map<std::string, std::shared_ptr<Device>> getDevices() const;
+    std::vector<std::shared_ptr<Device>> getDevices() const;
 
     utils::Signal<std::shared_ptr<Device>> DeviceDiscoveredEvent;
     utils::Signal<std::shared_ptr<Device>> DeviceDissapearedEvent;
@@ -64,8 +64,8 @@ private:
     ssdp::Client                                    m_ssdpClient;
     asio::steady_timer                              m_timer;
     const std::set<DeviceType>                      m_types;
-    std::map<std::string, std::shared_ptr<Device>>  m_devices;
-    
+    std::vector<std::shared_ptr<Device>>            m_devices;
+
     std::shared_ptr<DeviceScanner>                  m_self;
 };
 

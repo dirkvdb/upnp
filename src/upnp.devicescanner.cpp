@@ -41,19 +41,23 @@ DeviceScanner::DeviceScanner(IClient& client, std::set<DeviceType> types)
 : m_upnpClient(client)
 , m_ssdpClient(client.ioService())
 , m_timer(client.ioService())
-, m_types(types)
+, m_types(std::move(types))
 {
+    // since everything is single threaded, this self reference indicates if this object
+    // is destructed or not, so we can exit in the callback and avoid member access
+    // This does imply that the destructor is invoked on the io service thread!
+
     m_self = std::shared_ptr<DeviceScanner>(this, [] (DeviceScanner*) {
         // empty deleter;
     });
-    
+
     m_ssdpClient.setDeviceNotificationCallback([self = std::weak_ptr<DeviceScanner>(m_self)] (const ssdp::DeviceNotificationInfo& info) {
         auto selfPtr = self.lock();
         if (!selfPtr)
         {
             return;
         }
-        
+
         if (info.type == ssdp::NotificationType::Alive)
         {
             selfPtr->onDeviceDiscovered(info);
@@ -107,44 +111,45 @@ std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
 {
     std::promise<std::shared_ptr<Device>> p;
     auto fut = p.get_future();
-    
+
     m_upnpClient.ioService().post([this, &udn, &p] {
-        p.set_value(m_devices.at(udn));
+        auto iter = std::find_if(m_devices.begin(), m_devices.end(), [&udn] (auto& dev) {
+            return dev->udn == udn;
+        });
+
+        iter == m_devices.end() ? p.set_exception(std::make_exception_ptr(std::invalid_argument("Invalid device udn")))
+                                : p.set_value(*iter);
     });
-    
+
     return fut.get();
 }
 
-std::map<std::string, std::shared_ptr<Device>> DeviceScanner::getDevices() const
+std::vector<std::shared_ptr<Device>> DeviceScanner::getDevices() const
 {
-    std::promise<std::map<std::string, std::shared_ptr<Device>>> p;
+    std::promise<decltype(m_devices)> p;
     auto fut = p.get_future();
-    
+
     m_upnpClient.ioService().post([this, &p] () {
         p.set_value(m_devices);
     });
-    
+
     return fut.get();
 }
 
 void DeviceScanner::checkForDeviceTimeouts()
 {
     auto now = std::chrono::system_clock::now();
-    auto mapEnd = m_devices.end();
-    for (auto iter = m_devices.begin(); iter != mapEnd;)
-    {
-        if (now > iter->second->timeoutTime)
+
+    std::remove_if(m_devices.begin(), m_devices.end(), [this, now] (auto& dev) -> bool {
+        if (now < dev->timeoutTime)
         {
-            auto dev = iter->second;
-            log::info("Device timed out removing it from the list: {}", iter->second->friendlyName);
-            iter = m_devices.erase(iter);
-            DeviceDissapearedEvent(dev);
+            return false;
         }
-        else
-        {
-            ++iter;
-        }
-    }
+
+        log::info("Device timed out removing it from the list: {}", dev->friendlyName);
+        DeviceDissapearedEvent(dev);
+        return true;
+    });
 }
 
 void DeviceScanner::downloadDeviceXml(const std::string& url, std::function<void(std::string)> cb)
@@ -169,13 +174,16 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
         return;
     }
 
-    auto iter = m_devices.find(info.deviceId);
+    auto iter = std::find_if(m_devices.begin(), m_devices.end(), [&info] (auto& dev) {
+        return dev->udn == info.deviceId;
+    });
+
     if (iter != m_devices.end())
     {
-        auto device = iter->second;
+        auto device = *iter;
 
         // device already known, just update the timeout time
-        device->timeoutTime =  std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
+        device->timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
 
         // check if the location is still the same (perhaps a new ip or port)
         if (device->location != info.location)
@@ -200,27 +208,32 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 
     log::debug("Device discovered: {} {}", info.serviceType, info.location);
 
-    auto location = info.location;
-    log::debug("download xml: {}", location);
-    downloadDeviceXml(info.location, [location, exp = info.expirationTime, self = std::weak_ptr<DeviceScanner>(m_self)] (const std::string& xml) {
+    auto device = std::make_shared<Device>();
+    device->location = info.location;
+    device->udn = info.deviceId;
+    device->timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(info.expirationTime);
+
+    log::debug("download xml: {}", info.location);
+    downloadDeviceXml(info.location, [device, self = std::weak_ptr<DeviceScanner>(m_self)] (const std::string& xml) {
         try
         {
             auto selfPtr = self.lock();
             if (!selfPtr)
             {
+                // scanner is destroyed during http get
                 return;
             }
-        
-            auto device = std::make_shared<Device>();
-            device->location = location;
-            device->timeoutTime = std::chrono::system_clock::now() + std::chrono::seconds(exp);
+
             xml::parseDeviceInfo(xml, *device);
 
-            auto iter = selfPtr->m_devices.find(device->udn);
+            auto iter = std::find_if(selfPtr->m_devices.begin(), selfPtr->m_devices.end(), [device] (auto& dev) {
+                return dev->udn == device->udn;
+            });
+
             if (iter == selfPtr->m_devices.end())
             {
                 log::info("Device added to the list: {} ({})", device->friendlyName, device->udn);
-                selfPtr->m_devices.emplace(device->udn, device);
+                selfPtr->m_devices.emplace_back(device);
                 selfPtr->DeviceDiscoveredEvent(device);
             }
         }
@@ -233,12 +246,15 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 
 void DeviceScanner::onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info)
 {
-    auto iter = m_devices.find(info.deviceId);
-    if (iter != m_devices.end())
-    {
-        DeviceDissapearedEvent(iter->second);
-        m_devices.erase(iter);
-    }
+    std::remove_if(m_devices.begin(), m_devices.end(), [this, &info] (auto& dev) -> bool {
+        if (dev->udn == info.deviceId)
+        {
+            DeviceDissapearedEvent(dev);
+            return true;
+        }
+
+        return false;
+    });
 }
 
 }
