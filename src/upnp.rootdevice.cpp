@@ -123,9 +123,11 @@ void RootDevice::uninitialize()
 {
     log::debug("Uninitializing UPnP Root device: {}", m_device.friendlyName);
 
-    m_httpServer->stop();
-    m_ssdpServer->stop([this] () {
-        m_io.stop();
+    m_io.post([this] () {
+        m_httpServer->stop();
+        m_ssdpServer->stop([this] () {
+            m_io.stop();
+        });
     });
 
     if (m_asioThread)
