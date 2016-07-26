@@ -70,8 +70,9 @@ void Client::run(const ip::udp::endpoint& addr)
 
 void Client::stop()
 {
-    m_multicast->socket.close();
-    m_unicast->socket.close();
+    std::error_code error;
+    m_multicast->socket.close(error);
+    m_unicast->socket.close(error);
 }
 
 void Client::receiveData(const std::shared_ptr<Receiver>& receiver)

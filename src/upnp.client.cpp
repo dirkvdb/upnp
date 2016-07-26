@@ -219,6 +219,16 @@ void Client::getFile(const std::string& url, std::function<void(Status, std::str
     });
 }
 
+void Client::dispatch(std::function<void()> func)
+{
+    if (!m_io)
+    {
+        return;
+    }
+    
+    m_io->post(func);
+}
+
 asio::io_service& Client::ioService() noexcept
 {
     return *m_io;

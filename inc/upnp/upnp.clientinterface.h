@@ -48,6 +48,8 @@ public:
 
     virtual void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
+    
+    virtual void dispatch(std::function<void()>) = 0;
 
     virtual asio::io_service& ioService() noexcept = 0;
 };

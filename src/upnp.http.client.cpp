@@ -156,8 +156,20 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
 {
     reset();
 
-    m_socket.close();
-    m_socket.open(addr.protocol());
+    std::error_code error;
+    m_socket.close(error);
+    if (error)
+    {
+        cb(error);
+        return;
+    }
+    
+    m_socket.open(addr.protocol(), error);
+    if (error)
+    {
+        cb(error);
+        return;
+    }
 
     m_timer.expires_from_now(m_timeout);
     m_socket.async_connect(addr, [this, cb, buffers] (const asio::error_code& error) {

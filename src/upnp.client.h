@@ -60,6 +60,7 @@ public:
     void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
+    void dispatch(std::function<void()> func) override;
     asio::io_service& ioService() noexcept override;
 
 private:
