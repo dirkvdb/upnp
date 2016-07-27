@@ -68,6 +68,7 @@ std::error_code convertError(const std::error_code& error)
         return std::make_error_code(error::Timeout);
     }
 
+    log::error("Error performing Http call: {}", error.message());
     return std::make_error_code(error::NetworkError);
 }
 
@@ -163,7 +164,7 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
         cb(error);
         return;
     }
-    
+
     m_socket.open(addr.protocol(), error);
     if (error)
     {
@@ -215,12 +216,18 @@ void Client::receiveData(std::function<void(const std::error_code&)> cb)
             if (processed != bytesReceived)
             {
                 log::warn("Failed to parser received http data");
+                cb(std::make_error_code(error::InvalidResponse));
             }
             else
             {
                 if (!m_parser.isCompleted())
                 {
                     receiveData(cb);
+                }
+                else if (strncasecmp(m_parser.headerValue("Connection").c_str(), "close", 5) == 0)
+                {
+                    std::error_code error;
+                    m_socket.close(error);
                 }
             }
         }
@@ -258,7 +265,7 @@ void Client::setMethodType(Method method)
 void Client::perform(Method method, std::function<void(const std::error_code&, std::string data)> cb)
 {
     setMethodType(method);
-    
+
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
@@ -283,7 +290,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, s
 void Client::perform(Method method, const std::string& body, std::function<void(const std::error_code&, std::string data)> cb)
 {
     setMethodType(method);
-    
+
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
@@ -296,7 +303,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
             cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), m_parser.stealBody());
         });
     }
-    
+
     performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const asio::error_code& error) {
         if (error)
         {
@@ -308,7 +315,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
 void Client::perform(Method method, uint8_t* data, std::function<void(const std::error_code&, uint8_t*)> cb)
 {
     setMethodType(method);
-    
+
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb, data] () {
@@ -323,7 +330,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
             cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
         });
     }
-    
+
     m_parser.setCompletedCallback([this, cb, data] () {
         auto body = m_parser.stealBody();
         memcpy(data, body.data(), body.size());
@@ -352,7 +359,8 @@ void Client::checkTimeout(const asio::error_code& ec)
     {
         // The deadline has passed. The socket is closed so that any outstanding
         // asynchronous operations are cancelled.
-        m_socket.close();
+        std::error_code error;
+        m_socket.close(error);
 
         // There is no longer an active deadline. The expiry is set to positive
         // infinity so that the actor takes no action until a new deadline is set.

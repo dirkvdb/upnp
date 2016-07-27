@@ -19,8 +19,6 @@ using namespace testing;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
-static const std::string s_hostedFile = "Very small file";
-
 namespace
 {
 
@@ -69,15 +67,66 @@ TEST_F(SoapClientTest, SoapAction)
 {
     auto envelope = "data"s;
 
+    auto body = "<html><body><h1>200 OK</h1></body></html>"s;
+    auto response =
+        "HTTP/1.1 200 OK\r\n"
+        "CONTENT-LENGTH: {}\r\n"
+        "\r\n"
+        "{}";
+
     EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (http::Parser& parser) {
         EXPECT_EQ("/soap", parser.getUrl());
         EXPECT_EQ("\"ServiceName#ActionName\"", parser.headerValue("SOAPACTION"));
         EXPECT_EQ("text/xml; charset=\"utf-8\"", parser.headerValue("Content-Type"));
         EXPECT_EQ(std::to_string(envelope.size()), parser.headerValue("Content-Length"));
-        return "HTTP/1.1 200 OK";
+        return fmt::format(response, body.size(), body);
     }));
 
-    EXPECT_CALL(resMock, onResponse(_, _));
+    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::Ok), body));
+
+    client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
+    io.run();
+}
+
+TEST_F(SoapClientTest, SoapActionWithFault)
+{
+    auto envelope = "data"s;
+
+    auto body =
+        "<?xml version=\"1.0\"?>"
+        "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+        "<s:Body>"
+        "<s:Fault>"
+        "<faultcode>s:Client</faultcode>"
+        "<faultstring>UPnPError</faultstring>"
+        "<detail>"
+        "<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+        "<errorCode>718</errorCode>"
+        "<errorDescription>ConflictInMappingEntry</errorDescription>"
+        "</UPnPError>"
+        "</detail>"
+        "</s:Fault>"
+        "</s:Body>"
+        "</s:Envelope>"s;
+
+    auto errorResponse =
+        "HTTP/1.0 500 Internal Server Error\r\n"
+        "CONTENT-TYPE: text/xml; charset=\"utf-8\"\r\n"
+        "CONTENT-LENGTH: {}\r\n"
+        "\r\n"
+        "{}";
+
+    auto response = fmt::format(errorResponse, body.size(), body);
+
+    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (http::Parser& parser) {
+        EXPECT_EQ("/soap", parser.getUrl());
+        EXPECT_EQ("\"ServiceName#ActionName\"", parser.headerValue("SOAPACTION"));
+        EXPECT_EQ("text/xml; charset=\"utf-8\"", parser.headerValue("Content-Type"));
+        EXPECT_EQ(std::to_string(envelope.size()), parser.headerValue("Content-Length"));
+        return response;
+    }));
+
+    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::InternalServerError), body));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
     io.run();
