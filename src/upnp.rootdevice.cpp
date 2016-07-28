@@ -22,7 +22,7 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.server.h"
-#include "upnp/upnp.soap.client.h"
+#include "upnp.soap.client.h"
 #include "upnp.http.client.h"
 
 #include "upnp.soap.parseutils.h"

@@ -33,6 +33,7 @@ enum class ErrorCode
     PreconditionFailed,
     NetworkError,
     HttpError,
+    SoapError,
     EnumCount
 };
 
@@ -42,13 +43,16 @@ int32_t errorCodeToInt(ErrorCode code);
 class Status
 {
 public:
-    Status() : m_errorCode(ErrorCode::Success) {}
-    explicit Status(std::string msg) : m_errorCode(ErrorCode::Unexpected), m_message(std::move(msg)) {}
+    Status() : m_errorCode(ErrorCode::Success), m_statusCode(0) {}
+    explicit Status(std::string msg) : m_errorCode(ErrorCode::Unexpected), m_statusCode(0), m_message(std::move(msg)) {}
     explicit Status(const char* msg) : Status(std::string(msg)) {}
-    explicit Status(ErrorCode ec) : m_errorCode(ec), m_message(errorCodeToString(ec)) {}
+    explicit Status(ErrorCode ec) : m_errorCode(ec), m_statusCode(0), m_message(errorCodeToString(ec)) {}
+    explicit Status(ErrorCode ec, uint32_t statusCode) : m_errorCode(ec), m_statusCode(statusCode) {}
+    explicit Status(ErrorCode ec, uint32_t statusCode, std::string msg) : m_errorCode(ec), m_statusCode(statusCode), m_message(std::move(msg)) {}
 
     Status(ErrorCode ec, const std::string& additionalInfo)
     : m_errorCode(ec)
+    , m_statusCode(0)
     , m_message(fmt::format("{} ({})", errorCodeToString(ec), additionalInfo))
     {
     }
@@ -61,6 +65,11 @@ public:
         return m_errorCode;
     }
 
+    uint32_t getStatusCode() const noexcept
+    {
+        return m_statusCode;
+    }
+
     operator bool() const noexcept
     {
         return m_errorCode == ErrorCode::Success;
@@ -68,7 +77,7 @@ public:
 
     bool operator ==(const Status& other) const noexcept
     {
-        return m_errorCode == other.m_errorCode;
+        return m_errorCode == other.m_errorCode && m_statusCode == other.m_statusCode;
     }
 
     const char* what() const noexcept
@@ -78,6 +87,7 @@ public:
 
 private:
     ErrorCode m_errorCode;
+    uint32_t m_statusCode;
     std::string m_message;
 };
 
@@ -99,7 +109,6 @@ struct ServiceType
     bool operator!=(const ServiceType& other) const noexcept { return type != other.type; }
     bool operator<(const ServiceType& other) const noexcept { return type < other.type; }
 
-
     Type      type = Unknown;
     uint32_t  version = 0;
 };
@@ -119,7 +128,6 @@ struct DeviceType
 
     bool operator==(const DeviceType& other) const { return type == other.type; }
     bool operator<(const DeviceType& other) const { return type < other.type; }
-
 
     Type      type;
     uint32_t  version = 0;
@@ -195,7 +203,7 @@ DeviceType deviceTypeFromString(const std::string& type);
 
 inline std::ostream& operator<<(std::ostream& os, const Status s)
 {
-    return os << errorCodeToInt(s.getErrorCode()) << " - " << s.what();
+    return os << errorCodeToInt(s.getErrorCode()) << " [" << s.getStatusCode() <<  "] (" << s.what() << ")";
 }
 
 }

@@ -153,8 +153,18 @@ protected:
             action.addArgument(arg.first, arg.second);
         }
 
-        // TODO: if the status code is HttpError, parse the response xml, it contains the soap action error code, which is different from the http code
-        m_client.sendAction(action, std::move(cb));
+        m_client.sendAction(action, [cb] (Status status, soap::ActionResult response) {
+            assert(cb);
+
+            if (response.fault)
+            {
+                cb(Status(ErrorCode::SoapError, response.fault->errorCode, response.fault->errorDescription), std::move(response.contents));
+            }
+            else
+            {
+                cb(status, std::move(response.contents));
+            }
+        });
     }
 
     virtual std::chrono::seconds getSubscriptionTimeout() = 0;

@@ -21,7 +21,6 @@
 #include <asio.hpp>
 
 #include "upnp/upnp.clientinterface.h"
-#include "upnp/upnp.types.h"
 
 namespace asio { class io_service; }
 
@@ -57,7 +56,7 @@ public:
                                 const std::string& subscriptionId,
                                 std::function<void(Status status)> cb) override;
 
-    void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) override;
+    void sendAction(const Action& action, std::function<void(Status, soap::ActionResult actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
     void dispatch(std::function<void()> func) override;

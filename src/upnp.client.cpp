@@ -21,7 +21,7 @@
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.http.functions.h"
 #include "upnp.http.client.h"
-#include "upnp/upnp.soap.client.h"
+#include "upnp.soap.client.h"
 #include "upnp.gena.server.h"
 
 #include <stdexcept>
@@ -48,10 +48,10 @@ Status httpStatusToStatus(const std::error_code& error)
     }
     else if (error.value() != http::error::Ok)
     {
-        return Status(ErrorCode::HttpError, error.message());
+        return Status(ErrorCode::HttpError, error.value(), error.message());
     }
 
-    return Status();
+    return Status(ErrorCode::Success, error.value());
 }
 
 }
@@ -193,7 +193,7 @@ void Client::unsubscribeFromService(const std::string& publisherUrl, const std::
     });
 }
 
-void Client::sendAction(const Action& action, std::function<void(Status, std::string)> cb)
+void Client::sendAction(const Action& action, std::function<void(Status, soap::ActionResult)> cb)
 {
 #ifdef DEBUG_UPNP_CLIENT
     log::debug("Execute action: {}", action.getActionDocument().toString());
@@ -202,7 +202,7 @@ void Client::sendAction(const Action& action, std::function<void(Status, std::st
     auto env = std::make_shared<std::string>(action.toString());
     m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, std::string response) {
+        soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, soap::ActionResult response) {
             cb(httpStatusToStatus(error), std::move(response));
         });
     });
@@ -225,7 +225,7 @@ void Client::dispatch(std::function<void()> func)
     {
         return;
     }
-    
+
     m_io->post(func);
 }
 

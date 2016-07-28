@@ -4,7 +4,7 @@
 #include "utils/log.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.http.functions.h"
-#include "upnp/upnp.soap.client.h"
+#include "upnp.soap.client.h"
 #include "upnp.http.client.h"
 #include "upnp/upnp.http.server.h"
 
@@ -29,7 +29,7 @@ struct RequestMock
 
 struct ResponseMock
 {
-    MOCK_METHOD2(onResponse, void(std::error_code, std::string));
+    MOCK_METHOD3(onResponse, void(std::error_code, std::string, std::experimental::optional<soap::Fault>));
 };
 
 }
@@ -48,11 +48,11 @@ public:
         server.start(ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 0));
     }
 
-    std::function<void(const std::error_code& error, const std::string& data)> handleResponse()
+    std::function<void(const std::error_code& error, soap::ActionResult data)> handleResponse()
     {
-        return [this] (const std::error_code& error, const std::string& data) {
+        return [this] (const std::error_code& error, soap::ActionResult res) {
             server.stop();
-            resMock.onResponse(error, data);
+            resMock.onResponse(error, res.contents, res.fault);
         };
     }
 
@@ -82,7 +82,9 @@ TEST_F(SoapClientTest, SoapAction)
         return fmt::format(response, body.size(), body);
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::Ok), body));
+    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::Ok), body,  _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
+        EXPECT_FALSE(fault) << "Unexpected soap fault assigned";
+    })));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
     io.run();
@@ -95,18 +97,18 @@ TEST_F(SoapClientTest, SoapActionWithFault)
     auto body =
         "<?xml version=\"1.0\"?>"
         "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
-        "<s:Body>"
-        "<s:Fault>"
-        "<faultcode>s:Client</faultcode>"
-        "<faultstring>UPnPError</faultstring>"
-        "<detail>"
-        "<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
-        "<errorCode>718</errorCode>"
-        "<errorDescription>ConflictInMappingEntry</errorDescription>"
-        "</UPnPError>"
-        "</detail>"
-        "</s:Fault>"
-        "</s:Body>"
+        "  <s:Body>"
+        "      <s:Fault>"
+        "      <faultcode>s:Client</faultcode>"
+        "      <faultstring>UPnPError</faultstring>"
+        "      <detail>"
+        "        <UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+        "          <errorCode>718</errorCode>"
+        "          <errorDescription>ConflictInMappingEntry</errorDescription>"
+        "        </UPnPError>"
+        "      </detail>"
+        "    </s:Fault>"
+        "  </s:Body>"
         "</s:Envelope>"s;
 
     auto errorResponse =
@@ -126,7 +128,11 @@ TEST_F(SoapClientTest, SoapActionWithFault)
         return response;
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::InternalServerError), body));
+    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::InternalServerError), body, _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
+        ASSERT_TRUE(fault) << "No soap fault assigned";
+        EXPECT_EQ(718u, fault->errorCode);
+        EXPECT_EQ("ConflictInMappingEntry"s, fault->errorDescription);
+    })));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
     io.run();

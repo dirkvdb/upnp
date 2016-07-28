@@ -231,10 +231,6 @@ void Server::accept()
             {
                 log::error("HTTP server: Failed to accept on socket: {}", error.message());
             }
-            else
-            {
-                log::info("-----------    Aborted    ---------------");
-            }
         }
         else
         {

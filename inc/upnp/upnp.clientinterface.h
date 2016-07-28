@@ -22,6 +22,7 @@
 #include <functional>
 
 #include "upnp/upnp.types.h"
+#include "upnp/upnp.soap.types.h"
 
 namespace asio { class io_service; }
 
@@ -46,9 +47,9 @@ public:
     virtual void renewSubscription(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(Status status, std::string subId, std::chrono::seconds timeout)> cb) = 0;
     virtual void unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb) = 0;
 
-    virtual void sendAction(const Action& action, std::function<void(Status, std::string actionResult)> cb) = 0;
+    virtual void sendAction(const Action& action, std::function<void(Status, soap::ActionResult actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
-    
+
     virtual void dispatch(std::function<void()>) = 0;
 
     virtual asio::io_service& ioService() noexcept = 0;

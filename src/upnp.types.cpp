@@ -137,6 +137,7 @@ static constexpr EnumMap<ErrorCode> s_errorNames {{
     std::make_tuple("Precondition failed",    ErrorCode::PreconditionFailed),
     std::make_tuple("Network error",          ErrorCode::NetworkError),
     std::make_tuple("Http error",             ErrorCode::HttpError),
+    std::make_tuple("Soap error",             ErrorCode::SoapError),
 }};
 
 static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
@@ -147,6 +148,7 @@ static constexpr EnumMap<ErrorCode, int32_t> s_errorValues {{
     std::make_tuple(412,      ErrorCode::PreconditionFailed),
     std::make_tuple(3,        ErrorCode::NetworkError),
     std::make_tuple(4,        ErrorCode::HttpError),
+    std::make_tuple(5,        ErrorCode::SoapError),
 }};
 
 ADD_ENUM_MAP(Property, s_propertyNames)

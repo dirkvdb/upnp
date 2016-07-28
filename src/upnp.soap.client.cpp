@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnp.soap.client.h"
+#include "upnp.soap.client.h"
 
 #include "utils/format.h"
 #include "utils/log.h"
@@ -88,7 +88,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
                 cb(ec, "", 0s, "");
                 return;
             }
-            
+
             cb(ec,
                m_httpClient->getResponseHeaderValue("sid"),
                soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
@@ -119,7 +119,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
                 cb(ec, "", 0s, "");
                 return;
             }
-        
+
             cb(ec,
                m_httpClient->getResponseHeaderValue("sid"),
                soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
@@ -169,7 +169,7 @@ void Client::action(const std::string& url,
                     const std::string& actionName,
                     const std::string& serviceName,
                     const std::string& envelope,
-                    std::function<void(const std::error_code&, std::string)> cb)
+                    std::function<void(const std::error_code&, ActionResult)> cb)
 {
     //TODO: if the return code is "405 Method Not Allowed" retry but with M-POST as request and additional MAN header
 
@@ -182,7 +182,23 @@ void Client::action(const std::string& url,
     m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", envelope.size()));
 
     m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, std::string response) {
-        cb(ec, std::move(response));
+        if (ec.value() != http::error::InternalServerError)
+        {
+            cb(ec, ActionResult(std::move(response)));
+        }
+        else
+        {
+            try
+            {
+                auto fault = soap::parseFault(response);
+                cb(ec, ActionResult(std::move(response), std::move(fault)));
+            }
+            catch (std::exception& e)
+            {
+                log::warn("Failed to parse soap fault message: {}", e.what());
+                cb(ec, ActionResult(std::move(response)));
+            }
+        }
     });
 }
 

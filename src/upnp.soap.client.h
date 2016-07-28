@@ -22,6 +22,8 @@
 #include <functional>
 #include <system_error>
 
+#include "upnp/upnp.soap.types.h"
+
 namespace asio
 {
     class io_service;
@@ -61,7 +63,7 @@ public:
                 const std::string& actionName,
                 const std::string& serviceName,
                 const std::string& envelope,
-                std::function<void(const std::error_code&, std::string data)> cb);
+                std::function<void(const std::error_code&, ActionResult response)> cb);
 
 private:
     std::unique_ptr<http::Client> m_httpClient;

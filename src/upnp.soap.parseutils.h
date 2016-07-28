@@ -5,6 +5,7 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "rapidxml.hpp"
+#include "upnp.soap.client.h"
 
 namespace upnp
 {
@@ -36,12 +37,6 @@ inline std::chrono::seconds parseTimeout(const std::string& timeout)
         throw std::runtime_error(fmt::format("Failed to parse Timeout header: {}", e.what()));
     }
 }
-
-struct Fault
-{
-    uint32_t errorCode;
-    std::string errorDescription;
-};
 
 inline Fault parseFault(const std::string& xml)
 {

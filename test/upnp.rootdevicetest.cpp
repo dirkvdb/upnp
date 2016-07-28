@@ -7,6 +7,7 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.devicescanner.h"
+#include "upnp/upnp.soap.types.h"
 
 #include <future>
 
@@ -90,9 +91,11 @@ TEST(RootDeviceTest, ControlAction)
     scanner.DeviceDiscoveredEvent.connect([&] (auto dev) {
         if (dev->udn == device.getUniqueDeviceName())
         {
-            client.sendAction(action, [&] (Status s, std::string actionResult) {
+            client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
                 EXPECT_TRUE(s);
-                EXPECT_EQ("Success", actionResult);
+                EXPECT_EQ(200u, s.getStatusCode());
+                EXPECT_FALSE(actionResult.fault);
+                EXPECT_EQ("Success", actionResult.contents);
                 prom.set_value();
             });
         }
