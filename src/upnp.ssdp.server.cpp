@@ -74,9 +74,7 @@ Server::Server(asio::io_service& io)
 , m_announceTimer(io)
 , m_socket(io, ip::udp::v4())
 , m_unicastSocket(io)
-, m_parser(std::make_unique<SearchParser>())
 {
-    m_parser->setSearchRequestCallback([this] (auto& host, auto& st, auto delay, auto& addr) { this->respondToSearch(host, st, delay, addr); });
 }
 
 Server::~Server() noexcept = default;
@@ -141,36 +139,29 @@ void Server::receiveData()
         if (error and error != asio::error::message_size)
         {
             log::warn("Ssdp Server: Failed to read from udp socket: {}", error.message());
-            m_parser->reset();
             receiveData();
             return;
         }
 
-        //log::info("Ssdp recv: {}", std::string_view(m_buffer.data(), bytesReceived));
+        //log::info("Ssdp recv: {}", std::string(m_buffer.data(), bytesReceived));
 
         try
         {
             if (bytesReceived > 0)
             {
-                auto parsed = m_parser->parse(std::string_view(m_buffer.data(), bytesReceived), m_sender);
+                SearchParser parser;
+                parser.setSearchRequestCallback([this] (auto& host, auto& st, auto delay, auto& addr) { this->respondToSearch(host, st, delay, addr); });
+                auto parsed = parser.parse(std::string_view(m_buffer.data(), bytesReceived), m_sender);
                 assert(parsed == bytesReceived);
                 if (parsed != bytesReceived)
                 {
                     log::warn("Ssdp Server: not enough bytes parsed");
                 }
             }
-
-            if (m_parser->isCompleted())
-            {
-                // always reset the parser after a completed message
-                // the broadcast are do not follow strict request response ordering
-                m_parser->reset();
-            }
         }
         catch (std::exception& e)
         {
-            log::warn("Error parsing ssdp server http notification: {}", e.what());
-            m_parser->reset();
+            log::warn("Error parsing ssdp server http notification: {}\n{}", e.what(), std::string(m_buffer.data(), bytesReceived));
         }
 
         receiveData();

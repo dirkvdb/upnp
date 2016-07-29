@@ -14,8 +14,6 @@ namespace upnp
 namespace ssdp
 {
 
-class SearchParser;
-
 class Server
 {
 public:
@@ -35,7 +33,7 @@ private:
     void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<asio::steady_timer> timer, const asio::ip::udp::endpoint& addr);
 
     bool isResponseNeeded(const std::string& searchTarget);
-    
+
     void receiveData();
     void onDataReceived(const std::error_code& error, size_t bytesReceived);
 
@@ -45,7 +43,6 @@ private:
     asio::ip::udp::socket m_socket;
     asio::ip::udp::socket m_unicastSocket;
     asio::ip::udp::endpoint m_sender;
-    std::unique_ptr<SearchParser> m_parser;
 
     std::vector<std::string> m_announceMessages;
     std::vector<std::string> m_byebyeMessages;
