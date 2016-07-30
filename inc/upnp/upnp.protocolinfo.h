@@ -24,7 +24,7 @@ namespace upnp
 class ProtocolInfo
 {
 public:
-    ProtocolInfo();
+    ProtocolInfo() = default;
     ProtocolInfo(const std::string& protocolString);
 
     std::string getProtocol() const noexcept;

@@ -23,10 +23,6 @@
 namespace upnp
 {
 
-ProtocolInfo::ProtocolInfo()
-{
-}
-
 ProtocolInfo::ProtocolInfo(const std::string& protocolString)
 {
     auto items = utils::stringops::tokenize(protocolString, ":");
