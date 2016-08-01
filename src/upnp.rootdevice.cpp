@@ -283,7 +283,8 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
     ActionRequest request;
 
     auto& action = parser.headerValue("SOAPACTION");
-    log::info("Action request: {}", parser.stealBody());
+    request.action = parser.stealBody();
+    log::info("Action request: {}", request.action);
 
     try
     {
@@ -304,7 +305,7 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
         throw std::runtime_error(fmt::format("Failed to parse Soap action: {}", e.what()));
     }
 
-    request.action = parser.stealBody();
+
 
     try
     {
