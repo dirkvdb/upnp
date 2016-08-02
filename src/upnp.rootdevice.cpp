@@ -44,6 +44,14 @@ static const std::string s_response =
     "\r\n"
     "{}";
 
+static const std::string s_okResponse =
+    "HTTP/1.1 200 OK\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: 41\r\n"
+    "CONTENT-TYPE: text/html\r\n"
+    "\r\n"
+    "<html><body><h1>200 OK</h1></body></html>";
+
 static const std::string s_errorResponse =
     "HTTP/1.1 500 Internal Server Error\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.1\r\n"
@@ -70,6 +78,22 @@ static const std::string s_notification =
     "SEQ: {}\r\n"
     "CONTENT-LENGTH: bytes in body\r\n"
     "\r\n";
+
+namespace
+{
+
+std::vector<std::string> parseCallback(const std::string& cb)
+{
+    if (cb.empty() || cb.size() < 2 || cb[0] != '<' || cb[cb.size() - 1] != '>')
+    {
+        log::warn("Invalid CALLBACK value: {}", cb);
+        return {};
+    }
+
+    return stringops::tokenize(cb.substr(1, cb.size() - 2), ',');
+}
+
+}
 
 RootDevice::RootDevice(std::chrono::seconds advertiseInterval)
 : m_owningIo(std::make_unique<asio::io_service>())
@@ -106,7 +130,6 @@ void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
     m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
     m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
 
-    m_soapClient = std::make_unique<soap::Client>(m_io);
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
     if (m_owningIo)
@@ -136,7 +159,6 @@ void RootDevice::uninitialize()
         m_asioThread.reset();
     }
 
-    m_soapClient.reset();
     m_httpServer.reset();
     m_ssdpServer.reset();
 }
@@ -191,11 +213,17 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
             ++(iter->second.sequence);
         }
 
+        auto soapClient = std::make_shared<soap::Client>(m_io);
         auto data = std::make_shared<std::string>(std::move(eventData));
-        m_soapClient->notify(iter->second.deliveryUrl, iter->first, iter->second.sequence, *data, [this, data] (const std::error_code& error, std::string) {
+        log::debug("Send notification: {} {}", iter->second.deliveryUrls.front(), *data);
+        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, iter->second.sequence, *data, [data, soapClient] (const std::error_code& error, std::string) {
             if (error.value() != http::error::Ok)
             {
                 log::warn("Failed to send notification: HTTP {}", error.message());
+            }
+            else
+            {
+                log::debug("Notification sent: HTTP status {}", error.value());
             }
         });
     }
@@ -211,18 +239,31 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
             // New subscription request
             GuidGenerator generator;
             SubscriptionRequest request;
+            request.url = parser.getUrl();
             request.sid = fmt::format("uuid:{}", generator.newGuid());
             request.timeout = soap::parseTimeout(parser.headerValue("TIMEOUT"));
 
-            log::info("Subscription request: timeout {}s", request.timeout.count());
+            log::info("Subscription request: timeout {}s CB: {}", request.timeout.count(), parser.headerValue("CALLBACK"));
 
             auto response = EventSubscriptionRequested(request);
 
             SubscriptionData data;
-            data.deliveryUrl = parser.headerValue("CALLBACK");
+            data.deliveryUrls = parseCallback(parser.headerValue("CALLBACK"));
             data.expirationTime = std::chrono::steady_clock::now() + response.timeout;
 
+            if (data.deliveryUrls.empty())
+            {
+                throw std::runtime_error("");
+            }
+
             m_subscriptions.emplace(request.sid, std::move(data));
+
+            if (!response.initialEvent.empty())
+            {
+                // Send the initial event
+                notifyEvent(request.sid, response.initialEvent);
+            }
+
             return fmt::format(s_subscriptionResponse, request.sid, response.timeout.count());
         }
         else
@@ -238,6 +279,7 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
                 return fmt::format(s_subscriptionResponse, sid, timeout.count());
             }
 
+            // TODO: proper error information
             throw std::runtime_error("");
         }
     }
@@ -253,7 +295,7 @@ std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
     log::info("Unsubscription request");
     if (m_subscriptions.erase(parser.headerValue("SID")) > 0)
     {
-        return "HTTP/1.1 200 OK";
+        return s_okResponse;
     }
     else
     {
@@ -304,8 +346,6 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
     {
         throw std::runtime_error(fmt::format("Failed to parse Soap action: {}", e.what()));
     }
-
-
 
     try
     {

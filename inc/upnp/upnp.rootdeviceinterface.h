@@ -28,7 +28,7 @@ namespace upnp
 
 struct SubscriptionRequest
 {
-    std::string serviceType;
+    std::string url;
     std::string sid;
     std::chrono::seconds timeout;
 };
@@ -65,9 +65,9 @@ public:
     virtual void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::string& data) = 0;
     virtual void addFileToHttpServer(const std::string& path, const std::string& contentType, const std::vector<uint8_t>& data) = 0;
     virtual void removeFileFromHttpServer(const std::string& path) = 0;
-    
+
     virtual asio::io_service& ioService() noexcept = 0;
-    
+
     std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested;
     std::function<std::string(const ActionRequest&)> ControlActionRequested;
 };

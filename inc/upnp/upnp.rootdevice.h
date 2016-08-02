@@ -63,6 +63,8 @@ public:
     void removeFileFromHttpServer(const std::string& path) override;
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
+
+    std::unique_ptr<soap::Client>       m_soapClient;
     asio::io_service& ioService() noexcept override;
 
 private:
@@ -75,7 +77,6 @@ private:
     std::unique_ptr<asio::io_service>   m_owningIo;
     asio::io_service&                   m_io;
     std::unique_ptr<http::Server>       m_httpServer;
-    std::unique_ptr<soap::Client>       m_soapClient;
     std::unique_ptr<ssdp::Server>       m_ssdpServer;
 
     Device                              m_device;
@@ -85,7 +86,7 @@ private:
 
     struct SubscriptionData
     {
-        std::string deliveryUrl;
+        std::vector<std::string> deliveryUrls;
         std::chrono::steady_clock::time_point expirationTime;
         uint32_t sequence = 0;
     };

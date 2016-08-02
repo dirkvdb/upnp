@@ -159,6 +159,7 @@ void Client::notify(const std::string& url,
     m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
     m_httpClient->addHeader(fmt::format("SEQ:{}\r\n", seq));
     m_httpClient->addHeader("Content-Type:text/xml\r\n");
+    m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", body.size()));
 
     m_httpClient->perform(http::Method::Notify, body, [this, cb] (const std::error_code& ec, std::string response) {
         cb(ec, std::move(response));
