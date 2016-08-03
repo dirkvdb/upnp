@@ -292,7 +292,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
 
         default:
             log::warn("No handler for RenderingControl action: {}", action);
-            throw InvalidActionException();
+            throw InvalidAction();
         }
 
         return response;
@@ -300,7 +300,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     catch (std::exception& e)
     {
         log::error("Error processing RenderingControl request: {}", e.what());
-        throw InvalidActionException();
+        throw InvalidAction();
     }
 }
 

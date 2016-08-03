@@ -145,7 +145,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             break;
         }
         default:
-            throw InvalidActionException();
+            throw InvalidAction();
         }
 
         return response;
@@ -153,7 +153,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     catch (std::exception& e)
     {
         log::error("Error processing ContentDirectory request: {}", e.what());
-        throw InvalidActionException();
+        throw InvalidAction();
     }
 }
 

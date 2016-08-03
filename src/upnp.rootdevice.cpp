@@ -328,6 +328,8 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
     request.action = parser.stealBody();
     log::info("Action request: {}", request.action);
 
+    // TODO: exception handling
+
     try
     {
         std::regex re(R"(\"(.*)#(.*)\")");

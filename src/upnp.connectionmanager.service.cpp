@@ -118,7 +118,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
             break;
 
         default:
-            throw InvalidActionException();
+            throw InvalidAction();
         }
 
         return response;
@@ -126,7 +126,7 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     catch (std::exception& e)
     {
         log::error("Error processing ConnectionManager request: {}", e.what());
-        throw InvalidActionException();
+        throw InvalidAction();
     }
 }
 
@@ -139,7 +139,7 @@ void Service::throwIfNoConnectionManager3Support()
 {
     if (!m_connectionManager3)
     {
-        throw InvalidActionException();
+        throw InvalidAction();
     }
 }
 

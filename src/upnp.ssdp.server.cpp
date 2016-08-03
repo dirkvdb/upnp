@@ -138,8 +138,12 @@ void Server::receiveData()
     m_socket.async_receive_from(buffer(m_buffer), m_sender, [this] (const std::error_code& error, size_t bytesReceived) {
         if (error and error != asio::error::message_size)
         {
-            log::warn("Ssdp Server: Failed to read from udp socket: {}", error.message());
-            receiveData();
+            if (error.value() != asio::error::operation_aborted)
+            {
+                log::warn("Ssdp Server: Failed to read from udp socket: {}", error.message());
+                receiveData();
+            }
+
             return;
         }
 

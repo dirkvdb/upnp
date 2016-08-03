@@ -22,20 +22,21 @@
 #include <cinttypes>
 
 #include "upnp/upnptypes.h"
+#include "upnp/upnp.soap.types.h"
 
 namespace upnp
 {
 
-#define DEFINE_UPNP_SERVICE_EXCEPTION(name, code, msg) \
-class name : public Exception \
+#define DEFINE_UPNP_SERVICE_FAULT(name, code, msg) \
+class name : public soap::Fault \
 { \
 public: \
-    name() : Exception(code, msg) {} \
+    name() : soap::Fault(code, msg) {} \
 }; \
 
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidActionException,               401, "Invalid action")
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidArgumentsServiceException,     401, "Invalid arguments")
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidSubscriptionIdException,       401, "Invalid subscription id")
-DEFINE_UPNP_SERVICE_EXCEPTION(ActionFailedException,                501, "Action failed")
+DEFINE_UPNP_SERVICE_FAULT(InvalidAction,               401, "Invalid action")
+DEFINE_UPNP_SERVICE_FAULT(InvalidArgumentsService,     401, "Invalid arguments")
+DEFINE_UPNP_SERVICE_FAULT(InvalidSubscriptionId,       401, "Invalid subscription id")
+DEFINE_UPNP_SERVICE_FAULT(ActionFailed,                501, "Action failed")
 
 }

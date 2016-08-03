@@ -26,17 +26,17 @@ namespace ConnectionManager
 static const int32_t UnknownConnectionId = -1;
 static const int32_t DefaultConnectionId = 0;
 
-DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleProtocol,                     "Incompatible protocol info",                       701)
-DEFINE_UPNP_SERVICE_EXCEPTION(IncompatibleDirections,                   "Incompatible directions",                          702)
-DEFINE_UPNP_SERVICE_EXCEPTION(InsufficientNetworkResources,             "Insufficient network resources",                   703)
-DEFINE_UPNP_SERVICE_EXCEPTION(LocalRestrictions,                        "Local restrictions",                               704)
-DEFINE_UPNP_SERVICE_EXCEPTION(AccessDenied,                             "Access denied",                                    705)
-DEFINE_UPNP_SERVICE_EXCEPTION(InvalidConnectionReference,               "Invalid connection reference",                     706)
-DEFINE_UPNP_SERVICE_EXCEPTION(NotInNetwork,                             "Not in network",                                   707)
-DEFINE_UPNP_SERVICE_EXCEPTION(ConnectionTableOverflow,                  "Connection table overflow",                        708)
-DEFINE_UPNP_SERVICE_EXCEPTION(InternalProcessingResourcesExceeded,      "Internal processing resources exceeded",           709)
-DEFINE_UPNP_SERVICE_EXCEPTION(InternalMemoryResourcesExceeded,          "Internal memory resources exceeded",               710)
-DEFINE_UPNP_SERVICE_EXCEPTION(InternalStoragSystemCapabilitiesExceeded, "Internal storage system capabilities exceeded",    711)
+DEFINE_UPNP_SERVICE_FAULT(IncompatibleProtocol,                     701, "Incompatible protocol info")
+DEFINE_UPNP_SERVICE_FAULT(IncompatibleDirections,                   702, "Incompatible directions")
+DEFINE_UPNP_SERVICE_FAULT(InsufficientNetworkResources,             703, "Insufficient network resources")
+DEFINE_UPNP_SERVICE_FAULT(LocalRestrictions,                        704, "Local restrictions")
+DEFINE_UPNP_SERVICE_FAULT(AccessDenied,                             705, "Access denied")
+DEFINE_UPNP_SERVICE_FAULT(InvalidConnectionReference,               706, "Invalid connection reference")
+DEFINE_UPNP_SERVICE_FAULT(NotInNetwork,                             707, "Not in network")
+DEFINE_UPNP_SERVICE_FAULT(ConnectionTableOverflow,                  708, "Connection table overflow")
+DEFINE_UPNP_SERVICE_FAULT(InternalProcessingResourcesExceeded,      709, "Internal processing resources exceeded")
+DEFINE_UPNP_SERVICE_FAULT(InternalMemoryResourcesExceeded,          710, "Internal memory resources exceeded")
+DEFINE_UPNP_SERVICE_FAULT(InternalStoragSystemCapabilitiesExceeded, 711, "Internal storage system capabilities exceeded")
 
 enum class Action
 {

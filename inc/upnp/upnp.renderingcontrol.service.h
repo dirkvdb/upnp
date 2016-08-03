@@ -36,23 +36,23 @@ public:
     virtual void selectPreset(uint32_t instanceId, const std::string& name) = 0;
 
     // Optional
-    virtual void setBrightness(uint32_t /*instanceId*/, uint16_t)                                                           { throw InvalidActionException(); }
-    virtual void setContrast(uint32_t /*instanceId*/, uint16_t)                                                             { throw InvalidActionException(); }
-    virtual void setSharpness(uint32_t /*instanceId*/, uint16_t)                                                            { throw InvalidActionException(); }
-    virtual void setRedVideoGain(uint32_t /*instanceId*/, uint16_t)                                                         { throw InvalidActionException(); }
-    virtual void setGreenVideoGain(uint32_t /*instanceId*/, uint16_t)                                                       { throw InvalidActionException(); }
-    virtual void setBlueVideoGain(uint32_t /*instanceId*/, uint16_t)                                                        { throw InvalidActionException(); }
-    virtual void setRedVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                   { throw InvalidActionException(); }
-    virtual void setGreenVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                 { throw InvalidActionException(); }
-    virtual void setBlueVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                  { throw InvalidActionException(); }
-    virtual void setColorTemperature(uint32_t /*instanceId*/, uint16_t)                                                     { throw InvalidActionException(); }
-    virtual void setHorizontalKeystone(uint32_t /*instanceId*/, int16_t)                                                    { throw InvalidActionException(); }
-    virtual void setVerticalKeystone(uint32_t /*instanceId*/, int16_t)                                                      { throw InvalidActionException(); }
-    virtual void setMute(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)                  { throw InvalidActionException(); }
-    virtual void setVolume(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, uint16_t /*value*/)              { throw InvalidActionException(); }
-    virtual int16_t setVolumeDB(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, int16_t /*value*/)          { throw InvalidActionException(); }
-    virtual std::pair<int16_t, int16_t> getVolumeDBRange(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/)    { throw InvalidActionException(); }
-    virtual void setLoudness(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)              { throw InvalidActionException(); }
+    virtual void setBrightness(uint32_t /*instanceId*/, uint16_t)                                                           { throw InvalidAction(); }
+    virtual void setContrast(uint32_t /*instanceId*/, uint16_t)                                                             { throw InvalidAction(); }
+    virtual void setSharpness(uint32_t /*instanceId*/, uint16_t)                                                            { throw InvalidAction(); }
+    virtual void setRedVideoGain(uint32_t /*instanceId*/, uint16_t)                                                         { throw InvalidAction(); }
+    virtual void setGreenVideoGain(uint32_t /*instanceId*/, uint16_t)                                                       { throw InvalidAction(); }
+    virtual void setBlueVideoGain(uint32_t /*instanceId*/, uint16_t)                                                        { throw InvalidAction(); }
+    virtual void setRedVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                   { throw InvalidAction(); }
+    virtual void setGreenVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                 { throw InvalidAction(); }
+    virtual void setBlueVideoBlackLevel(uint32_t /*instanceId*/, uint16_t)                                                  { throw InvalidAction(); }
+    virtual void setColorTemperature(uint32_t /*instanceId*/, uint16_t)                                                     { throw InvalidAction(); }
+    virtual void setHorizontalKeystone(uint32_t /*instanceId*/, int16_t)                                                    { throw InvalidAction(); }
+    virtual void setVerticalKeystone(uint32_t /*instanceId*/, int16_t)                                                      { throw InvalidAction(); }
+    virtual void setMute(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)                  { throw InvalidAction(); }
+    virtual void setVolume(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, uint16_t /*value*/)              { throw InvalidAction(); }
+    virtual int16_t setVolumeDB(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, int16_t /*value*/)          { throw InvalidAction(); }
+    virtual std::pair<int16_t, int16_t> getVolumeDBRange(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/)    { throw InvalidAction(); }
+    virtual void setLoudness(uint32_t /*instanceId*/, RenderingControl::Channel /*channel*/, bool /*enabled*/)              { throw InvalidAction(); }
 };
 
 namespace RenderingControl

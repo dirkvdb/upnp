@@ -38,7 +38,7 @@ class IConnectionManager3
 {
 public:
     virtual ~IConnectionManager3() {}
-    virtual std::string getRendererItemInfo(const std::vector<std::string>& /*itemInfoFilter*/, const std::string& /*itemMetadataList*/) { throw InvalidActionException(); };
+    virtual std::string getRendererItemInfo(const std::vector<std::string>& /*itemInfoFilter*/, const std::string& /*itemMetadataList*/) { throw InvalidAction(); };
     virtual std::string getFeatureList() = 0;
 };
 

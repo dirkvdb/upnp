@@ -24,7 +24,6 @@
 #include "upnp.clientmock.h"
 #include "testxmls.h"
 #include "testutils.h"
-#include "upnpobjectprinter.h"
 #include "eventlistenermock.h"
 
 #include "upnp/upnp.action.h"

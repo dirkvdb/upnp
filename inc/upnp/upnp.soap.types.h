@@ -27,7 +27,14 @@ namespace soap
 
 struct Fault
 {
-    uint32_t errorCode;
+    Fault() = default;
+    Fault(uint32_t ec, std::string desc)
+    : errorCode(ec)
+    , errorDescription(std::move(desc))
+    {
+    }
+
+    uint32_t errorCode = 0;
     std::string errorDescription;
 };
 

@@ -27,6 +27,7 @@
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 
+#include "upnp/upnp.asio.h"
 #include "upnp.enumutils.h"
 #include "stringview.h"
 
@@ -128,6 +129,7 @@ public:
 
     void writeResponse(std::shared_ptr<std::string> response, bool closeConnection)
     {
+        log::info("Write response: {}", *response);
         async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const std::error_code& error, size_t) {
             if (error)
             {
@@ -137,7 +139,7 @@ public:
             if (error || closeConnection)
             {
                 socket.close();
-                log::error("[{}] Connection closed", m_sessionId);
+                log::debug("[{}] Connection closed", m_sessionId);
             }
         });
     }
@@ -155,7 +157,7 @@ public:
             if (error || closeConnection)
             {
                 socket.close();
-                log::error("[{}] Connection closed", m_sessionId);
+                log::debug("[{}] Connection closed", m_sessionId);
             }
         });
     }
@@ -194,6 +196,7 @@ public:
                 auto& func = server.m_handlers.at(enum_value(parser.getMethod()));
                 if (func)
                 {
+                    log::debug("[{}] handle request: {}", m_sessionId, http::Parser::methodToString(parser.getMethod()));
                     writeResponse(std::make_shared<std::string>(func(parser)), closeConnection);
                 }
                 else
@@ -259,7 +262,31 @@ void Server::removeFile(const std::string& urlPath)
 std::string Server::getWebRootUrl() const
 {
     auto addr = m_acceptor.local_endpoint();
-    return fmt::format("http://{}:{}", addr.address(), addr.port());
+    if (addr.address() != ip::address_v4::any())
+    {
+        return fmt::format("http://{}:{}", addr.address(), addr.port());
+    }
+
+    // Use the first non localhost interface
+    auto intfs = getNetworkInterfaces();
+    for (auto& i : intfs)
+    {
+        if (!i.isLoopback && i.address.is_v4())
+        {
+            return fmt::format("http://{}:{}", i.address, addr.port());
+        }
+    }
+
+    // no non localhost interface found, return the first entry
+    for (auto& i : intfs)
+    {
+        if (i.address.is_v4())
+        {
+            return fmt::format("http://{}:{}", intfs.front().address, addr.port());
+        }
+    }
+
+    throw std::runtime_error("Interface information could not be obtained");
 }
 
 asio::ip::tcp::endpoint Server::getAddress() const

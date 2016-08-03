@@ -43,14 +43,14 @@ public:
     virtual ActionResult Browse(const std::string& id, BrowseFlag flag, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<SortProperty>& sortCriteria) = 0;
 
     // Optional
-    virtual ActionResult Search(const std::string& /*id*/, const std::string& /*criteria*/, const std::vector<Property>& /*filter*/, uint32_t /*startIndex*/, uint32_t /*count*/, const std::vector<SortProperty>& /*sortCriteria*/)        { throw InvalidActionException(); }
-    virtual void CreateObject()          { throw InvalidActionException(); }
-    virtual void DestroyObject()         { throw InvalidActionException(); }
-    virtual void UpdateObject()          { throw InvalidActionException(); }
-    virtual void ImportResource()        { throw InvalidActionException(); }
-    virtual void ExportResource()        { throw InvalidActionException(); }
-    virtual void StopTransferResource()  { throw InvalidActionException(); }
-    virtual void GetTransferProgress()   { throw InvalidActionException(); }
+    virtual ActionResult Search(const std::string& /*id*/, const std::string& /*criteria*/, const std::vector<Property>& /*filter*/, uint32_t /*startIndex*/, uint32_t /*count*/, const std::vector<SortProperty>& /*sortCriteria*/)        { throw InvalidAction(); }
+    virtual void CreateObject()          { throw InvalidAction(); }
+    virtual void DestroyObject()         { throw InvalidAction(); }
+    virtual void UpdateObject()          { throw InvalidAction(); }
+    virtual void ImportResource()        { throw InvalidAction(); }
+    virtual void ExportResource()        { throw InvalidAction(); }
+    virtual void StopTransferResource()  { throw InvalidAction(); }
+    virtual void GetTransferProgress()   { throw InvalidAction(); }
 };
 
 class Service : public DeviceService<Variable>
