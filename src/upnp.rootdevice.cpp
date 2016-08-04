@@ -22,6 +22,7 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.server.h"
+#include "upnp/upnp.servicefaults.h"
 #include "upnp.soap.client.h"
 #include "upnp.http.client.h"
 
@@ -52,6 +53,13 @@ static const std::string s_okResponse =
     "\r\n"
     "<html><body><h1>200 OK</h1></body></html>";
 
+static const std::string s_htmlErrorResponse =
+    "HTTP/1.1 {} {}\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.1\r\n"
+    "CONTENT-LENGTH: 0\r\n"
+    "CONTENT-TYPE: text/xml; charset=\"utf-8\"\r\n"
+    "\r\n";
+
 static const std::string s_errorResponse =
     "HTTP/1.1 500 Internal Server Error\r\n"
     "SERVER: Darwin/15.4.0, UPnP/1.1\r\n"
@@ -79,6 +87,39 @@ static const std::string s_notification =
     "CONTENT-LENGTH: bytes in body\r\n"
     "\r\n";
 
+static const std::string s_errorBody =
+    "<?xml version=\"1.0\"?>"
+    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+    "<s:Body>"
+    "<s:Fault>"
+    "<faultcode>s:Client</faultcode>"
+    "<faultstring>UPnPError</faultstring>"
+    "<detail>"
+    "<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+    "<errorCode>{}</errorCode>"
+    "<errorDescription>{}</errorDescription>"
+    "</UPnPError>"
+    "</detail>"
+    "</s:Fault>"
+    "</s:Body>"
+    "</s:Envelope>";
+
+static const std::string s_errorBodyNoDescription =
+    "<?xml version=\"1.0\"?>"
+    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+    "<s:Body>"
+    "<s:Fault>"
+    "<faultcode>s:Client</faultcode>"
+    "<faultstring>UPnPError</faultstring>"
+    "<detail>"
+    "<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+    "<errorCode>{}</errorCode>"
+    "</UPnPError>"
+    "</detail>"
+    "</s:Fault>"
+    "</s:Body>"
+    "</s:Envelope>";
+
 namespace
 {
 
@@ -91,6 +132,30 @@ std::vector<std::string> parseCallback(const std::string& cb)
     }
 
     return stringops::tokenize(cb.substr(1, cb.size() - 2), ',');
+}
+
+std::string faultToString(const soap::Fault& fault)
+{
+    auto& errorMsg = fault.errorDescription();
+    if (errorMsg.empty())
+    {
+        return fmt::format(s_errorBodyNoDescription, fault.errorCode());
+    }
+    else
+    {
+        return fmt::format(s_errorBody, fault.errorCode(), fault.errorDescription());
+    }
+}
+
+std::string createSoapErrorResponse(const soap::Fault& fault)
+{
+    auto faultString = faultToString(fault);
+    return fmt::format(s_errorResponse, faultString.size(), faultString);
+}
+
+std::string createErrorResponse(const soap::Fault& fault)
+{
+    return fmt::format(s_htmlErrorResponse, fault.errorCode(), fault.errorDescription());
 }
 
 }
@@ -245,17 +310,16 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
 
             log::info("Subscription request: timeout {}s CB: {}", request.timeout.count(), parser.headerValue("CALLBACK"));
 
-            auto response = EventSubscriptionRequested(request);
-
             SubscriptionData data;
             data.deliveryUrls = parseCallback(parser.headerValue("CALLBACK"));
-            data.expirationTime = std::chrono::steady_clock::now() + response.timeout;
 
             if (data.deliveryUrls.empty())
             {
-                throw std::runtime_error("");
+                throw PreconditionFailed();
             }
 
+            auto response = EventSubscriptionRequested(request);
+            data.expirationTime = std::chrono::steady_clock::now() + response.timeout;
             m_subscriptions.emplace(request.sid, std::move(data));
 
             if (!response.initialEvent.empty())
@@ -279,14 +343,16 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
                 return fmt::format(s_subscriptionResponse, sid, timeout.count());
             }
 
-            // TODO: proper error information
-            throw std::runtime_error("");
+            throw PreconditionFailed();
         }
     }
-    catch (std::exception&)
+    catch (soap::Fault& fault)
     {
-        // TODO: error response
-        return "";
+        return createErrorResponse(fault);
+    }
+    catch (std::exception& e)
+    {
+        return createErrorResponse(PreconditionFailed());
     }
 }
 
@@ -299,83 +365,39 @@ std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
     }
     else
     {
-        static const std::string errorBody =
-            "<?xml version=\"1.0\"?>"
-            "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
-            "    <s:Body>"
-            "        <s:Fault>"
-            "            <faultcode>s:Client</faultcode>"
-            "            <faultstring>UPnPError</faultstring>"
-            "            <detail>"
-            "                <UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
-            "                    <errorCode>412</errorCode>"
-            "                    <errorDescription>Precondition Failed</errorDescription>"
-            "                </UPnPError>"
-            "            </detail>"
-            "        </s:Fault>"
-            "    </s:Body>"
-            "</s:Envelope>";
-
-        return fmt::format(s_errorResponse, errorBody.size(), errorBody);
+        return createErrorResponse(PreconditionFailed());
     }
 }
 
 std::string RootDevice::onActionRequest(http::Parser& parser)
 {
-    ActionRequest request;
-
-    auto& action = parser.headerValue("SOAPACTION");
-    request.action = parser.stealBody();
-    log::info("Action request: {}", request.action);
-
-    // TODO: exception handling
-
     try
     {
-        std::regex re(R"(\"(.*)#(.*)\")");
-        std::smatch match;
-        if (std::regex_match(action, match, re))
-        {
-            request.serviceType = match.str(1);
-            request.actionName = match.str(2);
-        }
-        else
-        {
-            throw std::runtime_error("Failed to parse Soap action: " + action);
-        }
-    }
-    catch (const std::regex_error& e)
-    {
-        throw std::runtime_error(fmt::format("Failed to parse Soap action: {}", e.what()));
-    }
+        ActionRequest request;
+        auto& action = parser.headerValue("SOAPACTION");
+        request.action = parser.stealBody();
+        log::debug("Action request: {}", request.action);
 
-    try
-    {
+        try
+        {
+            std::tie(request.serviceType, request.actionName) = soap::parseAction(action);
+        }
+        catch (const std::runtime_error& e)
+        {
+            log::error(e.what());
+            throw InvalidAction();
+        }
+
         auto responseBody = ControlActionRequested(request);
         return fmt::format(s_response, responseBody.size(), responseBody);
     }
-    catch (std::exception&)
+    catch (soap::Fault& fault)
     {
-        // Use exeption information to fill in error code and string
-
-        static const std::string errorBody =
-            "<?xml version=\"1.0\"?>"
-            "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
-            "    <s:Body>"
-            "        <s:Fault>"
-            "            <faultcode>s:Client</faultcode>"
-            "            <faultstring>UPnPError</faultstring>"
-            "            <detail>"
-            "                <UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
-            "                    <errorCode>403</errorCode>"
-            "                    <errorDescription>Invalid request</errorDescription>"
-            "                </UPnPError>"
-            "            </detail>"
-            "        </s:Fault>"
-            "    </s:Body>"
-            "</s:Envelope>";
-
-        return fmt::format(s_errorResponse, errorBody.size(), errorBody);
+        return createSoapErrorResponse(fault);
+    }
+    catch (std::exception& e)
+    {
+        return createSoapErrorResponse(ActionFailed());
     }
 }
 

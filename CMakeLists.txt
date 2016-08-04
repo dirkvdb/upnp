@@ -70,7 +70,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.controlpoint.h                        src/upnp.controlpoint.cpp
     inc/upnp/upnp.device.h
     inc/upnp/upnp.deviceservice.h
-    inc/upnp/upnpdeviceserviceexceptions.h
     inc/upnp/upnp.devicescanner.h                       src/upnp.devicescanner.cpp
     inc/upnp/upnp.dlna.info.h                           src/upnp.dlna.info.cpp
     inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
@@ -102,6 +101,7 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
+    inc/upnp/upnp.servicefaults.h
 
     src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "upnp/upnpdeviceserviceexceptions.h"
+#include "upnp/upnp.servicefaults.h"
 
 namespace upnp
 {

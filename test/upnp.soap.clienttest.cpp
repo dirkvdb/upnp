@@ -130,8 +130,8 @@ TEST_F(SoapClientTest, SoapActionWithFault)
 
     EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::InternalServerError), body, _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
         ASSERT_TRUE(fault) << "No soap fault assigned";
-        EXPECT_EQ(718u, fault->errorCode);
-        EXPECT_EQ("ConflictInMappingEntry"s, fault->errorDescription);
+        EXPECT_EQ(718u, fault->errorCode());
+        EXPECT_EQ("ConflictInMappingEntry"s, fault->errorDescription());
     })));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());

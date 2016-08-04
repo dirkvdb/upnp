@@ -37,8 +37,8 @@ TEST(SoapParseUtils, SoapFault)
         "</s:Envelope>"s;
 
     auto fault = soap::parseFault(faultXml);
-    EXPECT_EQ(718u, fault.errorCode);
-    EXPECT_EQ("ConflictInMappingEntry", fault.errorDescription);
+    EXPECT_EQ(718u, fault.errorCode());
+    EXPECT_EQ("ConflictInMappingEntry", fault.errorDescription());
 }
 
 TEST(SoapParseUtils, SoapFaultNoDescription)
@@ -60,8 +60,8 @@ TEST(SoapParseUtils, SoapFaultNoDescription)
         "</s:Envelope>"s;
 
     auto fault = soap::parseFault(faultXml);
-    EXPECT_EQ(718u, fault.errorCode);
-    EXPECT_TRUE(fault.errorDescription.empty());
+    EXPECT_EQ(718u, fault.errorCode());
+    EXPECT_TRUE(fault.errorDescription().empty());
 }
 
 }

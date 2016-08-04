@@ -8,6 +8,9 @@
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.devicescanner.h"
 #include "upnp/upnp.soap.types.h"
+#include "upnp/upnp.servicefaults.h"
+#include "upnp.soap.parseutils.h"
+#include "upnp.soap.client.h"
 
 #include <future>
 
@@ -37,7 +40,9 @@ static const std::string simpleRootDesc =
 struct DeviceCallbackMock
 {
     MOCK_METHOD1(onActionRequest, std::string(const ActionRequest&));
-    MOCK_METHOD1(onSubscriptionRequest, std::string(const SubscriptionRequest&));
+    MOCK_METHOD1(onSubscriptionRequest, SubscriptionResponse(const SubscriptionRequest&));
+
+    MOCK_METHOD1(onEvent, void(const SubscriptionEvent&));
 };
 
 std::string getLoopbackInterface()
@@ -65,8 +70,9 @@ public:
         deviceInfo.friendlyName = "TestDevice";
 
         device.ControlActionRequested = [&] (auto& arg) { return mock.onActionRequest(arg); };
+        device.EventSubscriptionRequested = [&] (auto& arg) { return mock.onSubscriptionRequest(arg); };
 
-        client.initialize();
+        client.initialize(getLoopbackInterface(), 0);
         device.initialize(getLoopbackInterface());
 
         device.registerDevice(fmt::format(simpleRootDesc, deviceInfo.udn, deviceInfo.location), deviceInfo);
@@ -108,6 +114,60 @@ public:
     RootDevice device;
 };
 
+TEST_F(RootDeviceTest, SubscriptionRequest)
+{
+    std::string generatedSid;
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+
+    EXPECT_CALL(mock, onSubscriptionRequest(_)).WillOnce(Invoke([&] (const SubscriptionRequest& req) {
+        EXPECT_EQ("/ctrl/rcev"s, req.url);
+        EXPECT_THAT(req.sid, StartsWith("uuid:"));
+        EXPECT_EQ(180s, req.timeout);
+
+        generatedSid = req.sid;
+
+        SubscriptionResponse res;
+        res.timeout = 120s;
+        res.initialEvent = "EventData"s;
+        return res;
+    }));
+
+    EXPECT_CALL(mock, onEvent(_)).WillOnce(Invoke([&] (const SubscriptionEvent& ev) {
+        EXPECT_EQ(generatedSid, ev.sid);
+        EXPECT_EQ("EventData"s, ev.data);
+        EXPECT_EQ(1u, ev.sequence);
+        prom.set_value();
+    }));
+
+    client.subscribeToService(device.getWebrootUrl() + "/ctrl/rcev", 180s, [&] (Status s, std::string subId, std::chrono::seconds timeout) {
+        EXPECT_TRUE(s);
+        EXPECT_EQ(generatedSid, subId);
+        EXPECT_EQ(120s, timeout);
+
+        return [this] (SubscriptionEvent ev) { mock.onEvent(ev); };
+    });
+
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+}
+
+TEST_F(RootDeviceTest, SubscriptionRequestInvalidCallback)
+{
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+
+    client.ioService().post([&] () {
+        auto soap = std::make_shared<soap::Client>(client.ioService());
+        soap->subscribe(device.getWebrootUrl() + "/ctrl/rcev", "", 180s, [&prom, soap] (const std::error_code& error, std::string, std::chrono::seconds, std::string response) {
+            EXPECT_EQ(412u, error.value());
+            EXPECT_TRUE(response.empty());
+            prom.set_value();
+        });
+    });
+
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+}
+
 TEST_F(RootDeviceTest, ControlAction)
 {
     Action action("SetVolume", device.getWebrootUrl() + "/ctrl/rc", { ServiceType::RenderingControl, 1 });
@@ -134,7 +194,7 @@ TEST_F(RootDeviceTest, ControlAction)
     EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
 }
 
-TEST_F(RootDeviceTest, ControlActionError)
+TEST_F(RootDeviceTest, ControlActionUnknownException)
 {
     Action action("SetVolume", device.getWebrootUrl() + "/ctrl/rc", { ServiceType::RenderingControl, 1 });
 
@@ -146,8 +206,26 @@ TEST_F(RootDeviceTest, ControlActionError)
         EXPECT_FALSE(s);
         EXPECT_EQ(500u, s.getStatusCode());
         EXPECT_TRUE(actionResult.fault);
-        EXPECT_EQ(403u, actionResult.fault->errorCode);
-        EXPECT_EQ("Invalid request"s, actionResult.fault->errorDescription);
+        EXPECT_EQ(ActionFailed(), *actionResult.fault);
+        prom.set_value();
+    });
+
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+}
+
+TEST_F(RootDeviceTest, ControlActionWithFault)
+{
+    Action action("SetVolume", device.getWebrootUrl() + "/ctrl/rc", { ServiceType::RenderingControl, 1 });
+
+    EXPECT_CALL(mock, onActionRequest(_)).WillOnce(Throw(InvalidAction()));
+
+    std::promise<void> prom;
+    auto fut = prom.get_future();
+    client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
+        EXPECT_FALSE(s);
+        EXPECT_EQ(500u, s.getStatusCode());
+        EXPECT_TRUE(actionResult.fault);
+        EXPECT_EQ(InvalidAction(), *actionResult.fault);
         prom.set_value();
     });
 

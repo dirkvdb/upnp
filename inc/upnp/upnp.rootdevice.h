@@ -64,7 +64,7 @@ public:
 
     void notifyEvent(const std::string& serviceId, std::string eventData) override;
 
-    std::unique_ptr<soap::Client>       m_soapClient;
+    //std::unique_ptr<soap::Client>       m_soapClient;
     asio::io_service& ioService() noexcept override;
 
 private:

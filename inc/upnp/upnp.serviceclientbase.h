@@ -158,7 +158,7 @@ protected:
 
             if (response.fault)
             {
-                cb(Status(ErrorCode::SoapError, response.fault->errorCode, response.fault->errorDescription), std::move(response.contents));
+                cb(Status(ErrorCode::SoapError, response.fault->errorCode(), response.fault->errorDescription()), std::move(response.contents));
             }
             else
             {

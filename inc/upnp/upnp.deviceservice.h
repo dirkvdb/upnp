@@ -27,7 +27,7 @@
 #include "upnp/upnptypes.h"
 #include "upnp/upnp.actionresponse.h"
 #include "upnp/upnp.rootdeviceinterface.h"
-#include "upnp/upnpdeviceserviceexceptions.h"
+#include "upnp/upnp.servicefaults.h"
 #include "upnp/upnpservicevariable.h"
 
 namespace upnp

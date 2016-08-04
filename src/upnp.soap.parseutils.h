@@ -38,6 +38,27 @@ inline std::chrono::seconds parseTimeout(const std::string& timeout)
     }
 }
 
+inline std::tuple<std::string, std::string> parseAction(const std::string& action)
+{
+    try
+    {
+        std::regex re(R"(\"(.*)#(.*)\")");
+        std::smatch match;
+        if (std::regex_match(action, match, re))
+        {
+            return std::make_tuple(match.str(1), match.str(2));
+        }
+        else
+        {
+            throw std::runtime_error("Failed to parse soap action: " + action);
+        }
+    }
+    catch (const std::regex_error& e)
+    {
+        throw std::runtime_error(std::string("Failed to parse soap action: ") + e.what());
+    }
+}
+
 inline Fault parseFault(const std::string& xml)
 {
     using namespace rapidxml_ns;
@@ -45,21 +66,20 @@ inline Fault parseFault(const std::string& xml)
     xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
 
-    Fault fault;
     auto& detailNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("detail");
     auto& upnpErrorNode = detailNode.first_node_ref("UPnPError");
 
     // Required error code
-    fault.errorCode = std::atoi(upnpErrorNode.first_node_ref("errorCode").value_string().c_str());
+    auto ec = std::atoi(upnpErrorNode.first_node_ref("errorCode").value_string().c_str());
 
     // Optional error description
     auto* descriptionNode = upnpErrorNode.first_node("errorDescription");
     if (descriptionNode)
     {
-        fault.errorDescription = descriptionNode->value_string();
+        return Fault(ec, descriptionNode->value_string());
     }
 
-    return fault;
+    return Fault(ec);
 }
 
 }

@@ -34,9 +34,11 @@ public: \
     name() : soap::Fault(code, msg) {} \
 }; \
 
-DEFINE_UPNP_SERVICE_FAULT(InvalidAction,               401, "Invalid action")
-DEFINE_UPNP_SERVICE_FAULT(InvalidArgumentsService,     401, "Invalid arguments")
 DEFINE_UPNP_SERVICE_FAULT(InvalidSubscriptionId,       401, "Invalid subscription id")
+DEFINE_UPNP_SERVICE_FAULT(PreconditionFailed,          412, "Precondition failed")
+
+DEFINE_UPNP_SERVICE_FAULT(InvalidAction,               401, "Invalid action")
+DEFINE_UPNP_SERVICE_FAULT(InvalidArguments,            402, "Invalid args")
 DEFINE_UPNP_SERVICE_FAULT(ActionFailed,                501, "Action failed")
 
 }

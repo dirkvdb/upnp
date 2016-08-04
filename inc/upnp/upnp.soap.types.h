@@ -25,17 +25,43 @@ namespace upnp
 namespace soap
 {
 
-struct Fault
+class Fault : public std::exception
 {
-    Fault() = default;
-    Fault(uint32_t ec, std::string desc)
-    : errorCode(ec)
-    , errorDescription(std::move(desc))
+public:
+    Fault(uint32_t ec)
+    : m_errorCode(ec)
     {
     }
 
-    uint32_t errorCode = 0;
-    std::string errorDescription;
+    Fault(uint32_t ec, std::string desc)
+    : m_errorCode(ec)
+    , m_errorDescription(std::move(desc))
+    {
+    }
+
+    uint32_t errorCode() const noexcept
+    {
+        return m_errorCode;
+    }
+
+    const std::string& errorDescription() const noexcept
+    {
+        return m_errorDescription;
+    }
+
+    const char* what() const noexcept override
+    {
+        return m_errorDescription.c_str();
+    }
+
+    bool operator==(const Fault& other) const noexcept
+    {
+        return m_errorCode == other.m_errorCode && m_errorDescription == other.m_errorDescription;
+    }
+
+private:
+    uint32_t m_errorCode = 0;
+    std::string m_errorDescription;
 };
 
 struct ActionResult
