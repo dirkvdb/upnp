@@ -35,6 +35,7 @@ namespace upnp
 namespace http
 {
     class Client;
+    class Response;
 }
 
 namespace soap
@@ -51,13 +52,13 @@ public:
     void subscribe(const std::string& url,
                    const std::string& callbackUrl,
                    std::chrono::seconds timeout,
-                   std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
+                   std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb);
 
     void renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout,
-                           std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb);
-    void unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, std::string response)> cb);
+                           std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb);
+    void unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, http::StatusCode)> cb);
 
-    void notify(const std::string& url, const std::string& sid, uint32_t seq, const std::string& body, std::function<void(const std::error_code&, std::string response)> cb);
+    void notify(const std::string& url, const std::string& sid, uint32_t seq, const std::string& body, std::function<void(const std::error_code&, http::StatusCode)> cb);
 
     void action(const std::string& url,
                 const std::string& actionName,

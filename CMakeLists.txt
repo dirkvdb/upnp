@@ -74,8 +74,6 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.dlna.info.h                           src/upnp.dlna.info.cpp
     inc/upnp/upnp.factory.h                             src/upnp.factory.cpp
     inc/upnp/upnpfwd.h
-    inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
-    inc/upnp/upnp.http.functions.h
     inc/upnp/upnp.item.h                                src/upnp.item.cpp
     inc/upnp/upnp.lastchangevariable.h                  src/upnp.lastchangevariable.cpp
     inc/upnp/upnp.mediarenderer.h                       src/upnp.mediarenderer.cpp
@@ -98,6 +96,9 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.ssdp.client.h                         src/upnp.ssdp.client.cpp
     inc/upnp/upnp.ssdp.server.h                         src/upnp.ssdp.server.cpp
     inc/upnp/upnp.http.functions.h                      src/upnp.http.functions.cpp
+    inc/upnp/upnp.http.functions.h
+    inc/upnp/upnp.http.types.h
+    inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
@@ -110,6 +111,7 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.avtransport.typeconversions.h              src/upnp.avtransport.typeconversions.cpp
     src/upnp.client.h                                   src/upnp.client.cpp
     src/upnp.gena.server.h                              src/upnp.gena.server.cpp
+    src/upnp.http.utils.h                               src/upnp.http.utils.cpp
     src/upnp.http.client.h                              src/upnp.http.client.cpp
     src/upnp.soap.client.h                              src/upnp.soap.client.cpp
     src/upnp.ssdp.parseutils.h

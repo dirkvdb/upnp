@@ -262,64 +262,64 @@ void Client::setMethodType(Method method)
     //m_headers.emplace_back("Connection:Keep-alive\r\n");
 }
 
-void Client::perform(Method method, std::function<void(const std::error_code&, std::string data)> cb)
+void Client::perform(Method method, std::function<void(const std::error_code&, Response)> cb)
 {
     setMethodType(method);
 
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), std::string());
+            cb(std::error_code(), Response(m_parser.getStatus()));
         });
     }
     else
     {
         m_parser.setCompletedCallback([this, cb] () {
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), m_parser.stealBody());
+            cb(std::error_code(), Response(m_parser.getStatus(), m_parser.stealBody()));
         });
     }
 
     performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const asio::error_code& error) {
         if (error)
         {
-            cb(error, "");
+            cb(error, Response());
         }
     });
 }
 
-void Client::perform(Method method, const std::string& body, std::function<void(const std::error_code&, std::string data)> cb)
+void Client::perform(Method method, const std::string& body, std::function<void(const std::error_code&, Response)> cb)
 {
     setMethodType(method);
 
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), std::string());
+            cb(std::error_code(), Response(m_parser.getStatus()));
         });
     }
     else
     {
         m_parser.setCompletedCallback([this, cb] () {
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), m_parser.stealBody());
+            cb(std::error_code(), Response(m_parser.getStatus(), m_parser.stealBody()));
         });
     }
 
     performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const asio::error_code& error) {
         if (error)
         {
-            cb(error, "");
+            cb(error, Response());
         }
     });
 }
 
-void Client::perform(Method method, uint8_t* data, std::function<void(const std::error_code&, uint8_t*)> cb)
+void Client::perform(Method method, uint8_t* data, std::function<void(const std::error_code&, StatusCode, uint8_t*)> cb)
 {
     setMethodType(method);
 
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb, data] () {
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
+            cb(std::error_code(), m_parser.getStatus(), data);
         });
     }
     else
@@ -327,20 +327,14 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         m_parser.setCompletedCallback([this, cb, data] () {
             auto body = m_parser.stealBody();
             memcpy(data, body.data(), body.size());
-            cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
+            cb(std::error_code(), m_parser.getStatus(), data);
         });
     }
-
-    m_parser.setCompletedCallback([this, cb, data] () {
-        auto body = m_parser.stealBody();
-        memcpy(data, body.data(), body.size());
-        cb(std::make_error_code(error::ErrorCode(m_parser.getStatus())), data);
-    });
 
     performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const std::error_code& error) {
         if (error)
         {
-            cb(error, nullptr);
+            cb(error, StatusCode::None, nullptr);
         }
     });
 }

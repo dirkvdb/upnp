@@ -20,6 +20,8 @@
 #include <cinttypes>
 #include <experimental/optional>
 
+#include "upnp/upnp.http.types.h"
+
 namespace upnp
 {
 namespace soap
@@ -66,11 +68,11 @@ private:
 
 struct ActionResult
 {
-    ActionResult(std::string cont) : contents(std::move(cont)) {}
+    ActionResult(http::Response res) : response(std::move(res)) {}
     ActionResult(Fault flt) : fault(std::move(flt)) {}
-    ActionResult(std::string cont, Fault flt) : contents(std::move(cont)), fault(std::move(flt)) {}
+    ActionResult(http::Response res, Fault flt) : response(std::move(res)), fault(std::move(flt)) {}
 
-    std::string contents;
+    http::Response response;
     std::experimental::optional<Fault> fault;
 };
 

@@ -39,64 +39,64 @@ std::string createRangeHeader(size_t offset, size_t size)
     {
         return fmt::format("Range:bytes={}-\r\n", offset);
     }
-    
+
     return fmt::format("Range:bytes={}-{}\r\n", offset, offset + size - 1);
 }
 
 }
 
-void get(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, std::string)> cb)
+void get(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, Response)> cb)
 {
     get(io, url, s_defaultTimeout, cb);
 }
 
-void get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, std::string)> cb)
+void get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb)
 {
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    client->perform(Method::Get, [client, cb] (const std::error_code& error, std::string data) {
-        cb(error, std::move(data));
+    client->perform(Method::Get, [client, cb] (const std::error_code& error, Response response) {
+        cb(error, std::move(response));
     });
 }
 
-void get(asio::io_service& io, const std::string& url, uint8_t* data, std::function<void(const std::error_code& error, uint8_t*)> cb)
+void get(asio::io_service& io, const std::string& url, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb)
 {
     get(io, url, data, s_defaultTimeout, cb);
 }
 
-void get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, uint8_t*)> cb)
+void get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb)
 {
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    client->perform(Method::Get, data, [client, cb] (const std::error_code& error, uint8_t* data) {
-        cb(error, data);
+    client->perform(Method::Get, data, [client, cb] (const std::error_code& error, StatusCode status, uint8_t* data) {
+        cb(error, status, data);
     });
 }
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::function<void(const std::error_code& error, std::string)> cb)
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::function<void(const std::error_code& error, Response)> cb)
 {
     getRange(io, url, offset, size, s_defaultTimeout, cb);
 }
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::chrono::seconds timeout, std::function<void(const std::error_code& error, std::string)> cb)
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb)
 {
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
     client->addHeader(fmt::format(createRangeHeader(offset, size)));
-    client->perform(Method::Get, [client, cb] (const std::error_code& error, std::string data) {
-        cb(error, std::move(data));
+    client->perform(Method::Get, [client, cb] (const std::error_code& error, Response response) {
+        cb(error, std::move(response));
     });
 }
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::function<void(const std::error_code& error, uint8_t*)> cb)
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb)
 {
     getRange(io, url, offset, size, data, s_defaultTimeout, cb);
 }
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, uint8_t*)> cb)
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb)
 {
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
@@ -107,24 +107,24 @@ void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uin
     });
 }
 
-void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, size_t)> cb)
+void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, StatusCode, size_t)> cb)
 {
     getContentLength(io, url, s_defaultTimeout, cb);
 }
 
-void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, size_t)> cb)
+void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, size_t)> cb)
 {
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    client->perform(Method::Head, [client, cb] (const std::error_code& error, std::string) {
+    client->perform(Method::Head, [client, cb] (const std::error_code& error, const Response& response) {
         try
         {
-            cb(error, error.value() == http::error::Ok ? std::stoul(client->getResponseHeaderValue("Content-length")) : 0);
+            cb(error, response.status, response.status == StatusCode::Ok ? std::stoul(client->getResponseHeaderValue("Content-length")) : 0);
         }
         catch (const std::exception& e)
         {
-            cb(std::make_error_code(error::InvalidResponse), 0);
+            cb(std::make_error_code(error::InvalidResponse), response.status, 0);
         }
     });
 }

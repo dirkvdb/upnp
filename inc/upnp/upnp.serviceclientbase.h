@@ -153,16 +153,17 @@ protected:
             action.addArgument(arg.first, arg.second);
         }
 
-        m_client.sendAction(action, [cb] (Status status, soap::ActionResult response) {
+        m_client.sendAction(action, [cb] (Status status, soap::ActionResult res) {
             assert(cb);
 
-            if (response.fault)
+            // TODO: http status gets lost here
+            if (res.fault)
             {
-                cb(Status(ErrorCode::SoapError, response.fault->errorCode(), response.fault->errorDescription()), std::move(response.contents));
+                cb(Status(ErrorCode::SoapError, res.fault->errorCode(), res.fault->errorDescription()), std::move(res.response.body));
             }
             else
             {
-                cb(status, std::move(response.contents));
+                cb(status, std::move(res.response.body));
             }
         });
     }

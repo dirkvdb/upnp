@@ -71,7 +71,7 @@ void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 }
 
 void Client::subscribe(const std::string& url, const std::string& callbackUrl, std::chrono::seconds timeout,
-                       std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb)
+                       std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb)
 {
     m_httpClient->reset();
 
@@ -80,30 +80,29 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     m_httpClient->addHeader(fmt::format("NT:upnp:event\r\n"));
     m_httpClient->addHeader(createTimeoutHeader(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, std::string response) {
+    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const Response& response) {
         try
         {
-            if (ec.value() != http::error::Ok)
+            std::string subId;
+            std::chrono::seconds timeout;
+            if (response.status == http::StatusCode::Ok)
             {
-                cb(ec, "", 0s, "");
-                return;
+                subId = m_httpClient->getResponseHeaderValue("sid");
+                timeout = m_httpClient->getResponseHeaderValue("timeout");
             }
 
-            cb(ec,
-               m_httpClient->getResponseHeaderValue("sid"),
-               soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
-               std::move(response));
+            cb(ec, response.status, subId, timeout);
         }
         catch (const std::exception& e)
         {
             log::error("Subscribe error: {}", e.what());
-            cb(std::make_error_code(http::error::InvalidResponse), "", 0s, "");
+            cb(std::make_error_code(http::error::InvalidResponse), response.status, "", 0s);
         }
     });
 }
 
 void Client::renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout,
-                               std::function<void(const std::error_code&, std::string subId, std::chrono::seconds timeout, std::string response)> cb)
+                               std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb)
 {
     m_httpClient->reset();
 
@@ -111,37 +110,36 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
     m_httpClient->addHeader(createTimeoutHeader(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, std::string response) {
+    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const Response& response) {
         try
         {
-            if (ec.value() != http::error::Ok)
+            std::string subId;
+            std::chrono::seconds timeout;
+            if (response.status == http::StatusCode::Ok)
             {
-                cb(ec, "", 0s, "");
-                return;
+                subId = m_httpClient->getResponseHeaderValue("sid");
+                timeout = m_httpClient->getResponseHeaderValue("timeout");
             }
 
-            cb(ec,
-               m_httpClient->getResponseHeaderValue("sid"),
-               soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout")),
-               std::move(response));
+            cb(ec, response.status, subId, timeout);
         }
         catch (const std::exception& e)
         {
             log::error("Renew Subscription error: {}", e.what());
-            cb(std::make_error_code(http::error::InvalidResponse), "", 0s, "");
+            cb(std::make_error_code(http::error::InvalidResponse), response.status, 0s, "");
         }
     });
 }
 
-void Client::unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, std::string response)> cb)
+void Client::unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, http::StatusCode)> cb)
 {
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
     m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
 
-    m_httpClient->perform(http::Method::Unsubscribe, [this, cb] (const std::error_code& ec, std::string response) {
-        cb(ec, std::move(response));
+    m_httpClient->perform(http::Method::Unsubscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
+        cb(ec, response.status);
     });
 }
 
@@ -149,7 +147,7 @@ void Client::notify(const std::string& url,
                     const std::string& sid,
                     uint32_t seq,
                     const std::string& body,
-                    std::function<void(const std::error_code&, std::string response)> cb)
+                    std::function<void(const std::error_code&, http::StatusCode)> cb)
 {
     m_httpClient->reset();
 
@@ -161,8 +159,8 @@ void Client::notify(const std::string& url,
     m_httpClient->addHeader("Content-Type:text/xml\r\n");
     m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", body.size()));
 
-    m_httpClient->perform(http::Method::Notify, body, [this, cb] (const std::error_code& ec, std::string response) {
-        cb(ec, std::move(response));
+    m_httpClient->perform(http::Method::Notify, body, [this, cb] (const std::error_code& ec, const http::Response& response) {
+        cb(ec, response.status);
     });
 }
 
@@ -182,7 +180,7 @@ void Client::action(const std::string& url,
     m_httpClient->addHeader("Content-Type: text/xml; charset=\"utf-8\"\r\n");
     m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", envelope.size()));
 
-    m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, std::string response) {
+    m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, http::Response response) {
         if (ec.value() != http::error::InternalServerError)
         {
             cb(ec, ActionResult(std::move(response)));

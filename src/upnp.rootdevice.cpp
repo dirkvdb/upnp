@@ -25,6 +25,7 @@
 #include "upnp/upnp.servicefaults.h"
 #include "upnp.soap.client.h"
 #include "upnp.http.client.h"
+#include "upnp.http.utils.h"
 
 #include "upnp.soap.parseutils.h"
 #include "guid.h"
@@ -36,22 +37,6 @@ namespace upnp
 
 using namespace asio;
 using namespace utils;
-
-static const std::string s_response =
-    "HTTP/1.1 200 OK\r\n"
-    "SERVER: Darwin/15.4.0, UPnP/1.1\r\n"
-    "CONTENT-LENGTH: {}\r\n"
-    "CONTENT-TYPE: text/xml; charset=\"utf-8\"\r\n"
-    "\r\n"
-    "{}";
-
-static const std::string s_okResponse =
-    "HTTP/1.1 200 OK\r\n"
-    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
-    "CONTENT-LENGTH: 41\r\n"
-    "CONTENT-TYPE: text/html\r\n"
-    "\r\n"
-    "<html><body><h1>200 OK</h1></body></html>";
 
 static const std::string s_htmlErrorResponse =
     "HTTP/1.1 {} {}\r\n"
@@ -281,14 +266,14 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
         auto soapClient = std::make_shared<soap::Client>(m_io);
         auto data = std::make_shared<std::string>(std::move(eventData));
         log::debug("Send notification: {} {}", iter->second.deliveryUrls.front(), *data);
-        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, iter->second.sequence, *data, [data, soapClient] (const std::error_code& error, std::string) {
-            if (error.value() != http::error::Ok)
+        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, iter->second.sequence, *data, [data, soapClient] (const std::error_code& error, http::StatusCode status) {
+            if (error)
             {
                 log::warn("Failed to send notification: HTTP {}", error.message());
             }
             else
             {
-                log::debug("Notification sent: HTTP status {}", error.value());
+                log::debug("Notification sent: HTTP status {}", status);
             }
         });
     }
@@ -361,7 +346,7 @@ std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
     log::info("Unsubscription request");
     if (m_subscriptions.erase(parser.headerValue("SID")) > 0)
     {
-        return s_okResponse;
+        return http::okResponse();
     }
     else
     {
@@ -389,7 +374,7 @@ std::string RootDevice::onActionRequest(http::Parser& parser)
         }
 
         auto responseBody = ControlActionRequested(request);
-        return fmt::format(s_response, responseBody.size(), responseBody);
+        return http::createResponse(http::StatusCode::Ok, responseBody);
     }
     catch (soap::Fault& fault)
     {

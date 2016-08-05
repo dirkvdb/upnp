@@ -21,6 +21,8 @@
 #include <functional>
 #include <system_error>
 
+#include "upnp/upnp.http.types.h"
+
 namespace asio
 {
     class io_service;
@@ -31,18 +33,18 @@ namespace upnp
 namespace http
 {
 
-void get(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, std::string)> cb);
-void get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, std::string)> cb);
-void get(asio::io_service& io, const std::string& url, uint8_t* data, std::function<void(const std::error_code& error, uint8_t*)> cb);
-void get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, uint8_t*)> cb);
+void get(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, Response)> cb);
+void get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb);
+void get(asio::io_service& io, const std::string& url, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
+void get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::function<void(const std::error_code& error, std::string)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::chrono::seconds timeout, std::function<void(const std::error_code& error, std::string)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::function<void(const std::error_code& error, uint8_t*)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, uint8_t*)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::function<void(const std::error_code& error, Response)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
 
-void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, size_t)> cb);
-void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, size_t)> cb);
+void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
+void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
 
 }
 }
