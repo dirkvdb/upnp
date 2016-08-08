@@ -35,7 +35,7 @@ namespace upnp
 namespace http
 {
     class Client;
-    class Response;
+    struct Response;
 }
 
 namespace soap
