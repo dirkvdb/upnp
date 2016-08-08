@@ -46,7 +46,7 @@ const char* okResponse()
 
 std::string createResponse(StatusCode status, const std::string& body)
 {
-    return fmt::format(s_response, enum_value(status), status_message(ec), body.size(), body);
+    return fmt::format(s_response, enum_value(status), status_message(status), body.size(), body);
 }
 
 }

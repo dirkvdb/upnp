@@ -33,6 +33,7 @@ namespace http
 
 using namespace utils;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 static const auto s_timeout = 10s;
 
@@ -51,10 +52,14 @@ void Reader::open(const std::string& url)
     std::promise<size_t> prom;
     auto fut = prom.get_future();
 
-    http::getContentLength(io, url, s_timeout, [&prom] (const std::error_code& error, size_t contentLength) {
-        if (error.value() != http::error::Ok)
+    http::getContentLength(io, url, s_timeout, [&prom] (const std::error_code& error, StatusCode status, size_t contentLength) {
+        if (error)
         {
-            prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
+            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url: {}", error.message())));
+        }
+        else if (status != StatusCode::Ok)
+        {
+            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url, HTTP error: {}", status_message(status))));
         }
         else
         {
@@ -126,10 +131,14 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
     std::promise<void> prom;
     auto fut = prom.get_future();
 
-    http::getRange(io, m_url, m_currentPosition, size, pData, s_timeout, [&prom] (const std::error_code& error, uint8_t*) {
-        if (error.value() != http::error::PartialContent)
+    http::getRange(io, m_url, m_currentPosition, size, pData, s_timeout, [&prom] (const std::error_code& error, StatusCode status, uint8_t*) {
+        if (error)
         {
-            prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
+            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url: {}", error.message())));
+        }
+        else if (status != StatusCode::PartialContent)
+        {
+            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url, HTTP error: {}", status_message(status))));
         }
         else
         {
@@ -182,7 +191,7 @@ utils::IReader* ReaderBuilder::build(const std::string& uri)
 {
     if (!supportsUri(uri))
     {
-        throw Exception("Uri is not supported by Http reader: " + uri);
+        throw Exception("Uri is not supported by Http reader: {}", uri);
     }
 
     return new Reader();

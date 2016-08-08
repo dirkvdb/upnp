@@ -158,9 +158,9 @@ TEST_F(RootDeviceTest, SubscriptionRequestInvalidCallback)
 
     client.ioService().post([&] () {
         auto soap = std::make_shared<soap::Client>(client.ioService());
-        soap->subscribe(device.getWebrootUrl() + "/ctrl/rcev", "", 180s, [&prom, soap] (const std::error_code& error, std::string, std::chrono::seconds, std::string response) {
-            EXPECT_EQ(412u, error.value());
-            EXPECT_TRUE(response.empty());
+        soap->subscribe(device.getWebrootUrl() + "/ctrl/rcev", "", 180s, [&prom, soap] (const std::error_code& error, http::StatusCode status, std::string, std::chrono::seconds) {
+            EXPECT_FALSE(error);
+            EXPECT_EQ(http::StatusCode::PreconditionFailed, status);
             prom.set_value();
         });
     });
@@ -185,9 +185,9 @@ TEST_F(RootDeviceTest, ControlAction)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_TRUE(s);
-        EXPECT_EQ(200u, s.getStatusCode());
+        EXPECT_EQ(http::StatusCode::Ok, actionResult.response.status);
         EXPECT_FALSE(actionResult.fault);
-        EXPECT_EQ("Success", actionResult.contents);
+        EXPECT_EQ("Success", actionResult.response.body);
         prom.set_value();
     });
 
@@ -204,7 +204,7 @@ TEST_F(RootDeviceTest, ControlActionUnknownException)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_FALSE(s);
-        EXPECT_EQ(500u, s.getStatusCode());
+        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
         EXPECT_TRUE(actionResult.fault);
         EXPECT_EQ(ActionFailed(), *actionResult.fault);
         prom.set_value();
@@ -223,7 +223,7 @@ TEST_F(RootDeviceTest, ControlActionWithFault)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_FALSE(s);
-        EXPECT_EQ(500u, s.getStatusCode());
+        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
         EXPECT_TRUE(actionResult.fault);
         EXPECT_EQ(InvalidAction(), *actionResult.fault);
         prom.set_value();

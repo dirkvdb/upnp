@@ -14,11 +14,11 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef UPNP_TEST_UTILS_H
-#define UPNP_TEST_UTILS_H
+#pragma once
 
 #include "upnp/upnp.item.h"
 #include "upnp/upnptypes.h"
+#include "upnp/upnp.soap.types.h"
 
 #include "utils/numericoperations.h"
 
@@ -57,7 +57,7 @@ inline std::string generateActionResponse(const std::string& action, ServiceType
     return ss.str();
 }
 
-inline std::string wrapSoap(const std::string& actionResponse)
+inline soap::ActionResult wrapSoap(const std::string& actionResponse)
 {
     std::stringstream ss;
     ss << "<?xml version=\"1.0\"?>" << std::endl
@@ -66,10 +66,10 @@ inline std::string wrapSoap(const std::string& actionResponse)
        << actionResponse
        << "</s:Body>"
        << "</s:Envelope>";
-    return ss.str();
+    return soap::ActionResult(http::Response(http::StatusCode::Ok, ss.str()));
 }
 
-inline std::string generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)
+inline soap::ActionResult generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)
 {
     std::stringstream ss;
     ss << "&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot; xmlns:dlna=&quot;urn:schemas-dlna-org:metadata-1-0/&quot;&gt;" << std::endl;
@@ -164,5 +164,3 @@ inline std::vector<Item> generateItems(uint32_t count, const std::string& upnpCl
 }
 
 }
-
-#endif

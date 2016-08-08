@@ -29,7 +29,7 @@ struct RequestMock
 
 struct ResponseMock
 {
-    MOCK_METHOD3(onResponse, void(std::error_code, std::string, std::experimental::optional<soap::Fault>));
+    MOCK_METHOD3(onResponse, void(std::error_code, http::Response, std::experimental::optional<soap::Fault>));
 };
 
 }
@@ -52,7 +52,7 @@ public:
     {
         return [this] (const std::error_code& error, soap::ActionResult res) {
             server.stop();
-            resMock.onResponse(error, res.contents, res.fault);
+            resMock.onResponse(error, res.response, res.fault);
         };
     }
 
@@ -82,7 +82,7 @@ TEST_F(SoapClientTest, SoapAction)
         return fmt::format(response, body.size(), body);
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::Ok), body,  _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
+    EXPECT_CALL(resMock, onResponse(std::error_code(), http::Response(http::StatusCode::Ok, body), _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
         EXPECT_FALSE(fault) << "Unexpected soap fault assigned";
     })));
 
@@ -128,7 +128,7 @@ TEST_F(SoapClientTest, SoapActionWithFault)
         return response;
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::make_error_code(http::error::InternalServerError), body, _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
+    EXPECT_CALL(resMock, onResponse(std::error_code(), http::Response(http::StatusCode::InternalServerError, body), _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
         ASSERT_TRUE(fault) << "No soap fault assigned";
         EXPECT_EQ(718u, fault->errorCode());
         EXPECT_EQ("ConflictInMappingEntry"s, fault->errorDescription());

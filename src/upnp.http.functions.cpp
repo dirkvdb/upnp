@@ -102,8 +102,8 @@ void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uin
     client->setUrl(url);
     client->setTimeout(timeout);
     client->addHeader(fmt::format(createRangeHeader(offset, size)));
-    client->perform(Method::Get, data, [client, cb] (const std::error_code& error, uint8_t* dataPtr) {
-        cb(error, dataPtr);
+    client->perform(Method::Get, data, [client, cb] (const std::error_code& error, StatusCode status, uint8_t* dataPtr) {
+        cb(error, status, dataPtr);
     });
 }
 

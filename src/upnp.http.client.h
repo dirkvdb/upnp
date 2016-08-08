@@ -49,7 +49,7 @@ public:
     uint32_t getStatus();
 
     void perform(Method method, std::function<void(const std::error_code&, Response response)> cb);
-    void perform(Method method, const std::string& body, std::function<void(const std::error_code&, std::string data)> cb);
+    void perform(Method method, const std::string& body, std::function<void(const std::error_code&, Response response)> cb);
     void perform(Method method, uint8_t* data, std::function<void(const std::error_code&, StatusCode, uint8_t* data)> cb);
 
     void reset();
@@ -75,11 +75,3 @@ private:
 
 }
 }
-
-namespace std
-{
-
-error_code make_error_code(upnp::http::error::ErrorCode e) noexcept;
-
-}
-

@@ -80,7 +80,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     m_httpClient->addHeader(fmt::format("NT:upnp:event\r\n"));
     m_httpClient->addHeader(createTimeoutHeader(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const Response& response) {
+    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
             std::string subId;
@@ -88,7 +88,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
             if (response.status == http::StatusCode::Ok)
             {
                 subId = m_httpClient->getResponseHeaderValue("sid");
-                timeout = m_httpClient->getResponseHeaderValue("timeout");
+                timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
             cb(ec, response.status, subId, timeout);
@@ -110,7 +110,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
     m_httpClient->addHeader(createTimeoutHeader(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const Response& response) {
+    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
             std::string subId;
@@ -118,7 +118,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
             if (response.status == http::StatusCode::Ok)
             {
                 subId = m_httpClient->getResponseHeaderValue("sid");
-                timeout = m_httpClient->getResponseHeaderValue("timeout");
+                timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
             cb(ec, response.status, subId, timeout);
@@ -126,7 +126,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
         catch (const std::exception& e)
         {
             log::error("Renew Subscription error: {}", e.what());
-            cb(std::make_error_code(http::error::InvalidResponse), response.status, 0s, "");
+            cb(std::make_error_code(http::error::InvalidResponse), response.status, "", 0s);
         }
     });
 }
@@ -181,7 +181,7 @@ void Client::action(const std::string& url,
     m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", envelope.size()));
 
     m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, http::Response response) {
-        if (ec.value() != http::error::InternalServerError)
+        if (ec || response.status != http::StatusCode::InternalServerError)
         {
             cb(ec, ActionResult(std::move(response)));
         }
@@ -189,7 +189,7 @@ void Client::action(const std::string& url,
         {
             try
             {
-                auto fault = soap::parseFault(response);
+                auto fault = soap::parseFault(response.body);
                 cb(ec, ActionResult(std::move(response), std::move(fault)));
             }
             catch (std::exception& e)

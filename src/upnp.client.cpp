@@ -40,13 +40,13 @@ using namespace std::placeholders;
 namespace
 {
 
-Status httpStatusToStatus(const std::error_code& error)
+Status httpStatusToStatus(const std::error_code& error, http::StatusCode status)
 {
-    if (error.value() < 0)
+    if (error)
     {
         return Status(ErrorCode::NetworkError, error.message());
     }
-    else if (error.value() != http::error::Ok)
+    else if (status != http::StatusCode::Ok)
     {
         return Status(ErrorCode::HttpError, error.value(), error.message());
     }
@@ -136,12 +136,10 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb, soap] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
-            //log::debug("Subscribe response: {}", response);
-
+        soap->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb, soap] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
             if (cb)
             {
-                auto subCb = cb(httpStatusToStatus(error), subId, subTimeout);
+                auto subCb = cb(httpStatusToStatus(error, status), subId, subTimeout);
                 if (subCb)
                 {
                     m_eventCallbacks.emplace(subId, subCb);
@@ -164,12 +162,10 @@ void Client::renewSubscription(const std::string& publisherUrl,
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->renewSubscription(publisherUrl, subscriptionId, timeout, [this, soap, cb] (const std::error_code& error, std::string subId, std::chrono::seconds subTimeout, std::string /*response*/) {
-            //log::debug("Subscription renewal response: {}", response);
-
+        soap->renewSubscription(publisherUrl, subscriptionId, timeout, [this, soap, cb] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
             if (cb)
             {
-                cb(httpStatusToStatus(error), subId, subTimeout);
+                cb(httpStatusToStatus(error, status), subId, subTimeout);
             }
         });
     });
@@ -179,13 +175,10 @@ void Client::unsubscribeFromService(const std::string& publisherUrl, const std::
 {
     m_io->post([=] () {
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->unsubscribe(publisherUrl, subscriptionId, [this, soap, cb, subscriptionId] (const std::error_code& error, std::string response) {
-//#ifdef DEBUG_UPNP_CLIENT
-            log::debug("Unsubscribe response: {}", response);
-//#endif
+        soap->unsubscribe(publisherUrl, subscriptionId, [this, soap, cb, subscriptionId] (const std::error_code& error, http::StatusCode status) {
             if (cb)
             {
-                cb(httpStatusToStatus(error));
+                cb(httpStatusToStatus(error, status));
             }
 
             m_eventCallbacks.erase(subscriptionId);
@@ -202,8 +195,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
     auto env = std::make_shared<std::string>(action.toString());
     m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, soap::ActionResult response) {
-            cb(httpStatusToStatus(error), std::move(response));
+        soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, soap::ActionResult result) {
+            cb(httpStatusToStatus(error, result.response.status), std::move(result));
         });
     });
 
@@ -214,8 +207,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
 
 void Client::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
-    http::get(*m_io, url, [cb] (const std::error_code& error, std::string data) {
-        cb(httpStatusToStatus(error), std::move(data));
+    http::get(*m_io, url, [cb] (const std::error_code& error, http::Response response) {
+        cb(httpStatusToStatus(error, response.status), std::move(response.body));
     });
 }
 

@@ -35,6 +35,39 @@ enum ErrorCode
     Timeout = -3
 };
 
+inline const char* error_message(ErrorCode error)
+{
+    switch (error)
+    {
+    case ErrorCode::InvalidResponse: return "Invalid response";
+    case ErrorCode::NetworkError: return "Network error";
+    case ErrorCode::Timeout: return "Timeout";
+    default: return "<unknown-error>";
+    }
+}
+
+class HttpErrorCategory : public std::error_category
+{
+public:
+    HttpErrorCategory() = default;
+
+    std::string message(int c) const override
+    {
+        return error_message(ErrorCode(c));
+    }
+
+    const char* name() const noexcept override
+    {
+        return "Http Error Category";
+    }
+
+    static const std::error_category& get()
+    {
+        const static HttpErrorCategory cat{};
+        return cat;
+    }
+};
+
 }
 
 enum class StatusCode : uint32_t
@@ -139,11 +172,31 @@ struct Response
     explicit Response(StatusCode s) : status(s) {}
     Response(StatusCode s, std::string b) : status(s), body(std::move(b)) {}
 
+    bool operator==(const Response& other) const noexcept
+    {
+        return status == other.status && body == other.body;
+    }
+
     StatusCode status;
     std::string body;
 };
 
 }
+}
+
+namespace std
+{
+
+inline error_code make_error_code(upnp::http::error::ErrorCode e) noexcept
+{
+    return error_code(static_cast<int>(e), upnp::http::error::HttpErrorCategory::get());
+}
+
+template<>
+struct is_error_code_enum<upnp::http::error::ErrorCode> : std::true_type
+{
+};
+
 }
 
 inline std::ostream& operator<<(std::ostream& os, upnp::http::StatusCode status)

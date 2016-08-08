@@ -29,23 +29,6 @@
 #include "URI.h"
 #include "stringview.h"
 
-
-namespace std
-{
-
-error_code make_error_code(upnp::http::error::ErrorCode e) noexcept
-{
-    return error_code(static_cast<int>(e), upnp::http::error::HttpErrorCategory::get());
-}
-
-template<>
-struct is_error_code_enum<upnp::http::error::ErrorCode> : std::true_type
-{
-};
-
-}
-
-
 namespace upnp
 {
 namespace http
@@ -269,13 +252,13 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
-            cb(std::error_code(), Response(m_parser.getStatus()));
+            cb(std::error_code(), Response(StatusCode(m_parser.getStatus())));
         });
     }
     else
     {
         m_parser.setCompletedCallback([this, cb] () {
-            cb(std::error_code(), Response(m_parser.getStatus(), m_parser.stealBody()));
+            cb(std::error_code(), Response(StatusCode(m_parser.getStatus()), m_parser.stealBody()));
         });
     }
 
@@ -294,13 +277,13 @@ void Client::perform(Method method, const std::string& body, std::function<void(
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb] () {
-            cb(std::error_code(), Response(m_parser.getStatus()));
+            cb(std::error_code(), Response(http::StatusCode(m_parser.getStatus())));
         });
     }
     else
     {
         m_parser.setCompletedCallback([this, cb] () {
-            cb(std::error_code(), Response(m_parser.getStatus(), m_parser.stealBody()));
+            cb(std::error_code(), Response(StatusCode(m_parser.getStatus()), m_parser.stealBody()));
         });
     }
 
@@ -319,7 +302,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
     if (method == Method::Head)
     {
         m_parser.setHeadersCompletedCallback([this, cb, data] () {
-            cb(std::error_code(), m_parser.getStatus(), data);
+            cb(std::error_code(), StatusCode(m_parser.getStatus()), data);
         });
     }
     else
@@ -327,7 +310,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         m_parser.setCompletedCallback([this, cb, data] () {
             auto body = m_parser.stealBody();
             memcpy(data, body.data(), body.size());
-            cb(std::error_code(), m_parser.getStatus(), data);
+            cb(std::error_code(), StatusCode(m_parser.getStatus()), data);
         });
     }
 

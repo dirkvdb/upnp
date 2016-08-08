@@ -34,8 +34,8 @@ namespace upnp
 class Exception : public std::runtime_error
 {
 public:
-    Exception(const char* msg) : std::runtime_error(msg), m_errorCode(0) {}
-    Exception(const std::string& msg) : Exception(msg.c_str()) {}
+    explicit Exception(const char* msg) : std::runtime_error(msg), m_errorCode(0) {}
+    explicit Exception(const std::string& msg) : Exception(msg.c_str()) {}
 
     template<typename... T>
     Exception(const char* fmt, const T&... args) : Exception(0, fmt, std::forward<const T>(args)...) {}
