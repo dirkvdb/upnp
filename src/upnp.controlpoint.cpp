@@ -82,7 +82,7 @@ void ControlPoint::playItem(MediaServer& server, const Item& item, std::function
         prepareConnection(server, resource);
         server.setTransportItem(resource);
         m_renderer.setTransportItem(resource, [this, cb] (Status status) {
-            if (status)
+            if (!status)
             {
                 cb(status);
                 return;
