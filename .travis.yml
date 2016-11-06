@@ -121,7 +121,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake boost
+      brew upgrade
     fi
 
   ############################################################################
