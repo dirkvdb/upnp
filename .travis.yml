@@ -9,6 +9,7 @@ matrix:
         apt:
           packages:
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Debug
     - compiler: clang
@@ -18,6 +19,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
     - compiler: clang
@@ -27,6 +29,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
     - compiler: clang
@@ -36,6 +39,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
     - compiler: gcc
@@ -46,6 +50,7 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
@@ -56,6 +61,7 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
@@ -66,6 +72,7 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
@@ -76,6 +83,7 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
+            - libboost-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
@@ -113,7 +121,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake asio
+      brew install cmake boost
     fi
 
   ############################################################################
@@ -132,13 +140,6 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
 install:
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      wget http://downloads.sourceforge.net/project/asio/asio/1.10.6%20%28Stable%29/asio-1.10.6.tar.bz2
-      wget https://raw.githubusercontent.com/dirkvdb/doozy/develop/dependencies/asio/gcc.patch
-      tar xf asio-1.10.6.tar.bz2
-      cd asio-1.10.6 && patch -p1 < ../gcc.patch && autoreconf --force --install && ./configure --disable-dependency-tracking --without-boost --without-openssl --prefix=${DEPS_DIR}/local && make -j4 && make install
-    fi
   - cd ${TRAVIS_BUILD_DIR}
 
 before_script:
