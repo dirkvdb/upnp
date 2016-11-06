@@ -19,7 +19,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
     - compiler: clang
@@ -29,7 +28,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
     - compiler: clang
@@ -39,7 +37,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
     - compiler: gcc
@@ -50,7 +47,6 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
@@ -61,7 +57,6 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
@@ -72,7 +67,6 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
@@ -83,7 +77,6 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
-            - libboost-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
@@ -140,6 +133,13 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
 install:
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      wget http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.bz2 TIMEOUT 6000
+      tar xf boost_1_62_0.bz2
+      cd boost_1_62_0 && ./bootstrap.sh && ./b2 address-model=64 architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local install
+    fi
+
   - cd ${TRAVIS_BUILD_DIR}
 
 before_script:
