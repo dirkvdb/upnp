@@ -10,24 +10,6 @@ matrix:
           packages:
             - uuid-dev
       env:
-        - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Debug
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - uuid-dev
-      env:
-        - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - uuid-dev
-      env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
     - compiler: clang
       addons:
@@ -38,6 +20,24 @@ matrix:
             - uuid-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - uuid-dev
+      env:
+        - COMPILER=3.9 LLVM_VERSION=3.9.0 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - uuid-dev
+      env:
+        - COMPILER=3.9 LLVM_VERSION=3.9.0 BUILD_TYPE=Release
     - compiler: gcc
       addons:
         apt:
