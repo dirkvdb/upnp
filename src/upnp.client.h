@@ -18,11 +18,9 @@
 
 #include <thread>
 #include <unordered_map>
-#include <asio.hpp>
 
+#include "upnp/asio.h"
 #include "upnp/upnp.clientinterface.h"
-
-namespace asio { class io_service; }
 
 namespace upnp
 {

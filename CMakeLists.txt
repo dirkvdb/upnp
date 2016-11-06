@@ -4,15 +4,24 @@ ENABLE_TESTING()
 SET(CMAKE_MODULES_PATH modules)
 
 FIND_PACKAGE(PkgConfig)
-FIND_PATH(ASIO_INCLUDE_DIR
-    NAMES asio.hpp
-)
 
-IF (NOT ASIO_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Could not find the asio headers")
+IF (STD_ASIO)
+    FIND_PATH(ASIO_INCLUDE_DIR
+        NAMES asio.hpp
+    )
+
+    IF (NOT ASIO_INCLUDE_DIR)
+        MESSAGE(FATAL_ERROR "Could not find the asio headers")
+    ENDIF ()
+
+    ADD_DEFINITIONS("-DASIO_STANDALONE")
+ELSE ()
+    set (Boost_USE_STATIC_LIBS ON)
+    add_definitions("-DBOOST_ALL_NO_LIB")
+    find_package(Boost REQUIRED COMPONENTS system)
 ENDIF ()
 
-ADD_DEFINITIONS("-DASIO_STANDALONE")
+
 if (CMAKE_GENERATOR STREQUAL Xcode)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 ENDIF ()
@@ -133,6 +142,10 @@ IF (APPLE)
 ELSEIF (UNIX)
     # uuid dependency
     TARGET_LINK_LIBRARIES(upnpframework "uuid")
+ENDIF ()
+
+IF (NOT STD_ASIO)
+    TARGET_LINK_LIBRARIES(upnpframework ${Boost_LIBRARIES})
 ENDIF ()
 
 IF (ENABLE_TESTS)

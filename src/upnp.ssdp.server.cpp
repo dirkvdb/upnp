@@ -65,7 +65,7 @@ namespace
         return fmt::format(s_aliveNotification, location, nt, nts);
     }
 
-    auto s_emptyHandler = [] (const std::error_code&, size_t) {};
+    auto s_emptyHandler = [] (const boost::system::error_code&, size_t) {};
 }
 
 Server::Server(asio::io_service& io)
@@ -127,7 +127,7 @@ void Server::stop(std::function<void()> cb)
 {
     m_announceTimer.cancel();
     m_unicastSocket.close();
-    announceDeviceStop([this, cb] (const asio::error_code&, size_t) {
+    announceDeviceStop([this, cb] (const asio_error_code&, size_t) {
         m_socket.close();
         cb();
     });
@@ -135,7 +135,7 @@ void Server::stop(std::function<void()> cb)
 
 void Server::receiveData()
 {
-    m_socket.async_receive_from(buffer(m_buffer), m_sender, [this] (const std::error_code& error, size_t bytesReceived) {
+    m_socket.async_receive_from(buffer(m_buffer), m_sender, [this] (const boost::system::error_code& error, size_t bytesReceived) {
         if (error and error != asio::error::message_size)
         {
             if (error.value() != asio::error::operation_aborted)
@@ -174,7 +174,7 @@ void Server::receiveData()
 
 void Server::sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<asio::steady_timer> timer, int32_t count)
 {
-    m_socket.async_send_to(buffer(msgs.front()), s_ssdpAddressIpv4, [this, timer, count, &msgs] (const std::error_code& error, size_t) {
+    m_socket.async_send_to(buffer(msgs.front()), s_ssdpAddressIpv4, [this, timer, count, &msgs] (const boost::system::error_code& error, size_t) {
         if (error)
         {
             log::warn("Failed to send broadcast message: {}", error.message());
@@ -186,7 +186,7 @@ void Server::sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<
             static std::uniform_int_distribution<> dis(50, 200);
 
             m_timer.expires_from_now(std::chrono::milliseconds(dis(re)));
-            m_timer.async_wait([this, timer, count, &msgs] (const std::error_code& error) {
+            m_timer.async_wait([this, timer, count, &msgs] (const boost::system::error_code& error) {
                 if (error != asio::error::operation_aborted)
                 {
                     sendMessages(msgs, timer, count - 1);
@@ -206,7 +206,7 @@ void Server::announceDevice()
     sendMessages(m_announceMessages, std::make_shared<asio::steady_timer>(m_io), s_broadcastRepeatCount);
 }
 
-void Server::announceDeviceStop(std::function<void(const asio::error_code&, size_t)> cb)
+void Server::announceDeviceStop(std::function<void(const asio_error_code&, size_t)> cb)
 {
     for (size_t i = 1; i < m_byebyeMessages.size() - 1; ++i)
     {
@@ -232,7 +232,7 @@ void Server::respondToSearch(const std::string& /*host*/, const std::string& sea
                 static std::default_random_engine re;
                 std::uniform_int_distribution<> dis(0, std::chrono::duration_cast<std::chrono::milliseconds>(delay).count());
                 timer->expires_from_now(std::chrono::milliseconds(dis(re)));
-                timer->async_wait([this, timer, response, addr] (const std::error_code& e) {
+                timer->async_wait([this, timer, response, addr] (const boost::system::error_code& e) {
                     if (e != asio::error::operation_aborted)
                     {
                         sendResponse(response, timer, addr);
@@ -253,7 +253,7 @@ void Server::respondToSearch(const std::string& /*host*/, const std::string& sea
 
 void Server::sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<asio::steady_timer> timer, const asio::ip::udp::endpoint& addr)
 {
-    m_unicastSocket.async_send_to(buffer(*response), addr, [response] (const std::error_code& error, size_t) {
+    m_unicastSocket.async_send_to(buffer(*response), addr, [response] (const boost::system::error_code& error, size_t) {
         if (error)
         {
             log::warn("Failed to send search response: {}", error.message());

@@ -4,7 +4,7 @@
 #include <memory>
 #include <chrono>
 
-#include <asio.hpp>
+#include "upnp/asio.h"
 
 #include "upnp/upnp.device.h"
 
@@ -27,7 +27,7 @@ private:
     void sendMessages(const std::vector<std::string>& msgs, std::shared_ptr<asio::steady_timer> timer, int32_t count);
 
     void announceDevice();
-    void announceDeviceStop(std::function<void(const asio::error_code&, size_t)> cb);
+    void announceDeviceStop(std::function<void(const asio_error_code&, size_t)> cb);
 
     void respondToSearch(const std::string& host, const std::string& searchTarget, std::chrono::seconds delay, const asio::ip::udp::endpoint& addr);
     void sendResponse(std::shared_ptr<std::string> response, std::shared_ptr<asio::steady_timer> timer, const asio::ip::udp::endpoint& addr);

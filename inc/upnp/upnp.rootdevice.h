@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "upnp/asio.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.ssdp.server.h"
 #include "upnp/upnp.rootdeviceinterface.h"
@@ -24,7 +25,6 @@
 #include <thread>
 #include <cinttypes>
 #include <unordered_map>
-#include <asio.hpp>
 
 namespace upnp
 {

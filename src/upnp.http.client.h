@@ -17,11 +17,11 @@
 #pragma once
 
 #include "URI.h"
+#include "upnp/asio.h"
 #include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.types.h"
 #include "upnp.http.utils.h"
 
-#include <asio.hpp>
 #include <string>
 #include <vector>
 #include <chrono>
@@ -55,12 +55,12 @@ public:
     void reset();
 
 private:
-    void checkTimeout(const asio::error_code& ec);
+    void checkTimeout(const asio_error_code& ec);
 
     void setMethodType(Method method);
-    void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const asio::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const asio::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const asio::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb);
+    void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const std::error_code&)> cb);
     void receiveData(std::function<void(const std::error_code&)> cb);
 
     URI m_uri;

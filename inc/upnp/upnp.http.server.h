@@ -18,8 +18,8 @@
 #include <array>
 #include <string>
 #include <unordered_map>
-#include <asio.hpp>
 
+#include "upnp/asio.h"
 #include "upnp/upnp.http.parser.h"
 
 namespace upnp

@@ -21,8 +21,7 @@
 #include <unordered_map>
 #include <chrono>
 
-#include <asio.hpp>
-
+#include "upnp/asio.h"
 #include "upnp/upnptypes.h"
 #include "upnp/upnpservicevariable.h"
 

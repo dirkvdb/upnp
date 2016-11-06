@@ -70,14 +70,14 @@ void Client::run(const ip::udp::endpoint& addr)
 
 void Client::stop()
 {
-    std::error_code error;
+    boost::system::error_code error;
     m_multicast->socket.close(error);
     m_unicast->socket.close(error);
 }
 
 void Client::receiveData(const std::shared_ptr<Receiver>& receiver)
 {
-    receiver->socket.async_receive_from(buffer(receiver->buffer), receiver->sender, [receiver] (const std::error_code& error, size_t bytesReceived) {
+    receiver->socket.async_receive_from(buffer(receiver->buffer), receiver->sender, [receiver] (const boost::system::error_code& error, size_t bytesReceived) {
         if (error)
         {
             receiver->parser.reset();
@@ -146,7 +146,7 @@ void Client::sendMessages(asio::ip::udp::socket& sock, const asio::ip::udp::endp
 {
     for (uint32_t i = 0; i < s_broadcastRepeatCount; ++i)
     {
-        sock.async_send_to(buffer(*content), addr, [content] (const std::error_code& error, size_t) {
+        sock.async_send_to(buffer(*content), addr, [content] (const boost::system::error_code& error, size_t) {
             if (error)
             {
                 log::warn("Ssdp search failed: {}", error.message());

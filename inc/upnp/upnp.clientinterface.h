@@ -21,10 +21,9 @@
 #include <cinttypes>
 #include <functional>
 
+#include "upnp/asio.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.soap.types.h"
-
-namespace asio { class io_service; }
 
 namespace upnp
 {

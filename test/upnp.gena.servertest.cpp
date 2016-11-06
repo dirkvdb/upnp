@@ -47,11 +47,11 @@ public:
 
     void sendDataAndExpectResponse(const std::string& data, const std::string& expectedResponse)
     {
-        client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
+        client.async_connect(server.getAddress(), [&] (const asio_error_code& error) {
             EXPECT_FALSE(error);
-            async_write(client, buffer(data), [&] (const std::error_code& error, size_t) {
+            async_write(client, buffer(data), [&] (const asio_error_code& error, size_t) {
                 EXPECT_FALSE(error);
-                client.async_receive(buffer(buf), [&] (const std::error_code& error, size_t size) {
+                client.async_receive(buffer(buf), [&] (const asio_error_code& error, size_t size) {
                     EXPECT_FALSE(error);
                     EXPECT_GT(size, 0u);
                     EXPECT_EQ(expectedResponse, std::string(buf.data(), size));
@@ -134,17 +134,17 @@ TEST_F(GenaServerTest, ExptectConnectionClose)
         EXPECT_EQ("<?xml version=\"1.0\"?>"s, ev.data);
     }));
 
-    client.async_connect(server.getAddress(), [&] (const std::error_code& error) {
+    client.async_connect(server.getAddress(), [&] (const asio_error_code& error) {
         EXPECT_FALSE(error);
-        async_write(client, buffer(notification), [&] (const std::error_code& error, size_t) {
+        async_write(client, buffer(notification), [&] (const asio_error_code& error, size_t) {
             EXPECT_FALSE(error);
-            client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
+            client.async_receive(buffer(buf), [&] (const asio_error_code& error, ssize_t size) {
                 EXPECT_FALSE(error);
                 // First read contains the response
                 EXPECT_GT(size, 0);
                 EXPECT_EQ(okResponse, std::string(buf.data(), size));
 
-                client.async_receive(buffer(buf), [&] (const std::error_code& error, ssize_t size) {
+                client.async_receive(buffer(buf), [&] (const asio_error_code& error, ssize_t size) {
                     // Second read should be the connection close
                     EXPECT_EQ(asio::error::eof, error.value());
                     EXPECT_EQ(0, size);

@@ -15,11 +15,11 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.http.functions.h"
+
+#include "upnp/asio.h"
 #include "upnp.http.client.h"
 
 #include "utils/format.h"
-
-#include <asio.hpp>
 
 namespace upnp
 {

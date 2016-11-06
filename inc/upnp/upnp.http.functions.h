@@ -21,12 +21,8 @@
 #include <functional>
 #include <system_error>
 
+#include "upnp/asio.h"
 #include "upnp/upnp.http.types.h"
-
-namespace asio
-{
-    class io_service;
-}
 
 namespace upnp
 {

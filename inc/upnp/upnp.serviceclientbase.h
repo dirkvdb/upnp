@@ -19,12 +19,12 @@
 #include "utils/log.h"
 #include "utils/signal.h"
 
+#include "upnp/asio.h"
 #include "upnp/upnp.clientinterface.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.xml.parseutils.h"
 
-#include <asio.hpp>
 #include <set>
 #include <map>
 #include <vector>
@@ -75,7 +75,7 @@ public:
             if (subTimeout.count() > 0) // 0 timeout is infinite subscription, no need to renew
             {
                 m_subTimer.expires_from_now(subTimeout * 3 / 4);
-                m_subTimer.async_wait([this, subTimeout] (const std::error_code& e) {
+                m_subTimer.async_wait([this, subTimeout] (const boost::system::error_code& e) {
                     if (e != asio::error::operation_aborted)
                     {
                         renewSubscription(subTimeout);
@@ -204,7 +204,7 @@ private:
             else
             {
                 m_subTimer.expires_from_now(timeout * 3 / 4);
-                m_subTimer.async_wait([this, timeout] (const std::error_code& e) {
+                m_subTimer.async_wait([this, timeout] (const boost::system::error_code& e) {
                     if (e !=  asio::error::operation_aborted && timeout.count() > 0)
                     {
                         this->renewSubscription(timeout);

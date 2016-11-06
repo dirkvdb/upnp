@@ -19,9 +19,8 @@
 #include <string>
 #include <functional>
 
+#include "upnp/asio.h"
 #include "upnp/upnp.device.h"
-
-namespace asio { class io_service; }
 
 namespace upnp
 {

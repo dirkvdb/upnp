@@ -24,9 +24,7 @@
 #include <future>
 #include <thread>
 
-#include <asio.hpp>
-#include <asio/steady_timer.hpp>
-
+#include "upnp/asio.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.ssdp.client.h"
 

@@ -3,7 +3,7 @@
 #include <array>
 #include <string>
 
-#include <asio.hpp>
+#include "upnp/asio.h"
 
 namespace upnp
 {

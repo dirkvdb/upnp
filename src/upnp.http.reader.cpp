@@ -21,8 +21,6 @@
 #include "utils/format.h"
 #include "utils/log.h"
 
-#include <asio.hpp>
-
 #include <future>
 #include <stdexcept>
 

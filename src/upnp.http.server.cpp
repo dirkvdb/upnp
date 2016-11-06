@@ -89,7 +89,7 @@ public:
 
     void receiveData()
     {
-        socket.async_receive(buffer(buf), [this, self = shared_from_this()] (const std::error_code& error, size_t bytesReceived) {
+        socket.async_receive(buffer(buf), [this, self = shared_from_this()] (const asio_error_code& error, size_t bytesReceived) {
             if (error)
             {
                 if (error.value() == asio::error::eof)
@@ -130,7 +130,7 @@ public:
     void writeResponse(std::shared_ptr<std::string> response, bool closeConnection)
     {
         log::info("Write response: {}", *response);
-        async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const std::error_code& error, size_t) {
+        async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const asio_error_code& error, size_t) {
             if (error)
             {
                 log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
@@ -148,7 +148,7 @@ public:
     {
         std::vector<asio::const_buffer> data { buffer(*header), body };
 
-        async_write(socket, data, [this, closeConnection, header, thisPtr = shared_from_this()] (const std::error_code& error, size_t) {
+        async_write(socket, data, [this, closeConnection, header, thisPtr = shared_from_this()] (const asio_error_code& error, size_t) {
             if (error)
             {
                 log::error("[{}] Failed to write response: {}", m_sessionId, error.message());
@@ -227,7 +227,7 @@ void Server::accept()
 {
     auto session = std::make_shared<Session>(m_io, *this, ++m_sessionId);
     log::info("Accepting session: {}", m_sessionId);
-    m_acceptor.async_accept(session->socket, [this, session] (const asio::error_code& error) {
+    m_acceptor.async_accept(session->socket, [this, session] (const asio_error_code& error) {
         if (error)
         {
             if (error.value() != asio::error::operation_aborted)

@@ -67,7 +67,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
     {
         *iter = var;
     }
-    
+
     auto now = std::chrono::steady_clock::now();
     auto timeSinceLastUpdate = now - m_lastUpdate;
     if (timeSinceLastUpdate > m_minInterval)
@@ -79,7 +79,7 @@ void LastChangeVariable::addChangedVariable(uint32_t instanceId, const ServiceVa
         auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(m_minInterval - timeSinceLastUpdate);
         m_timerScheduled = true;
         m_timer.expires_from_now(waitTime);
-        m_timer.async_wait([this] (const std::error_code& e) {
+        m_timer.async_wait([this] (const boost::system::error_code& e) {
             if (e != asio::error::operation_aborted)
             {
                 createLastChangeEvent();

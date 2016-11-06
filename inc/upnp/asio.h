@@ -16,35 +16,27 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <string>
-#include <functional>
-#include <unordered_map>
+#ifdef STD_ASIO
+    #include <asio.hpp>
+    #include <asio/steady_timer.hpp>
+    #include <system_error>
 
-#include "upnp/asio.h"
-#include "upnp/upnp.types.h"
-#include "upnp/upnp.http.server.h"
+    namespace upnp
+    {
+        using asio_error_code = asio::error_code;
+    }
+#else
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #include <boost/asio.hpp>
+    #include <boost/asio/steady_timer.hpp>
+    #include <boost/system/error_code.hpp>
+    #pragma GCC diagnostic pop
 
-namespace upnp
-{
-namespace gena
-{
+    namespace asio = boost::asio;
 
-// TODO: handle message with chunked encoding
-class Server
-{
-public:
-    Server(asio::io_service& io, const asio::ip::tcp::endpoint& address, std::function<void(const SubscriptionEvent&)> cb);
-
-    void stop();
-    asio::ip::tcp::endpoint getAddress() const;
-
-private:
-    http::Server m_httpServer;
-    std::function<void(const SubscriptionEvent&)> m_eventCb;
-    SubscriptionEvent m_currentEvent;
-};
-
-}
-}
+    namespace upnp
+    {
+        using asio_error_code = boost::system::error_code;
+    }
+#endif

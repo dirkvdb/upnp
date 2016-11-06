@@ -75,7 +75,7 @@ void DeviceScanner::start()
 
     m_ssdpClient.run();
     m_timer.expires_from_now(s_timeCheckInterval);
-    m_timer.async_wait([this] (const std::error_code& e) {
+    m_timer.async_wait([this] (const asio_error_code& e) {
         if (e != asio::error::operation_aborted)
         {
             checkForDeviceTimeouts();

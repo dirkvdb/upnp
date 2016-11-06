@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <asio.hpp>
+#include "upnp/asio.h"
 #include <sys/types.h>
 #include "utils/stringoperations.h"
 

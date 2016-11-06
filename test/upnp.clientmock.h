@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <asio.hpp>
+#include "upnp/asio.h"
 
 #include "gmock/gmock.h"
 #include "upnp/upnp.clientinterface.h"

@@ -44,7 +44,7 @@ static const std::string s_delimiter = "\r\n";
 namespace
 {
 
-std::error_code convertError(const std::error_code& error)
+std::error_code convertError(const asio_error_code& error)
 {
     if (error.value() == asio::error::timed_out)
     {
@@ -55,7 +55,7 @@ std::error_code convertError(const std::error_code& error)
     return std::make_error_code(error::NetworkError);
 }
 
-bool invokeCallbackOnError(const asio::error_code& error, const std::function<void(const std::error_code&)>& cb)
+bool invokeCallbackOnError(const asio_error_code& error, const std::function<void(const std::error_code&)>& cb)
 {
     if (!error)
     {
@@ -96,7 +96,7 @@ void Client::setUrl(const std::string& url)
     m_uri = URI(url);
 }
 
-void Client::performRequest(const ip::tcp::endpoint& addr, std::function<void(const asio::error_code&)> cb)
+void Client::performRequest(const ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb)
 {
     performRequest(addr, "", cb);
 }
@@ -116,7 +116,7 @@ uint32_t Client::getStatus()
     return m_parser.getStatus();
 }
 
-void Client::performRequest(const ip::tcp::endpoint& addr, const std::string& body, std::function<void(const asio::error_code&)> cb)
+void Client::performRequest(const ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb)
 {
     std::vector<const_buffer> buffers;
     buffers.emplace_back(buffer(m_request));
@@ -136,27 +136,19 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::string& bo
     performRequest(addr, buffers, cb);
 }
 
-void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<const_buffer>& buffers, std::function<void(const asio::error_code&)> cb)
+void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<const_buffer>& buffers, std::function<void(const std::error_code&)> cb)
 {
     reset();
 
-    std::error_code error;
+    asio_error_code error;
     m_socket.close(error);
-    if (error)
-    {
-        cb(error);
-        return;
-    }
+    if (invokeCallbackOnError(error, cb)) return;
 
     m_socket.open(addr.protocol(), error);
-    if (error)
-    {
-        cb(error);
-        return;
-    }
+    if (invokeCallbackOnError(error, cb)) return;
 
     m_timer.expires_from_now(m_timeout);
-    m_socket.async_connect(addr, [this, cb, buffers] (const asio::error_code& error) {
+    m_socket.async_connect(addr, [this, cb, buffers] (const asio_error_code& error) {
         if (!m_socket.is_open())
         {
             cb(std::make_error_code(error::Timeout));
@@ -170,7 +162,7 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
             return;
         }
 
-        async_write(m_socket, buffers, [this, cb] (const std::error_code& error, size_t) {
+        async_write(m_socket, buffers, [this, cb] (const asio_error_code& error, size_t) {
             if (invokeCallbackOnError(error, cb))
             {
                 return;
@@ -180,13 +172,13 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
         });
     });
 
-    m_timer.async_wait([this] (const asio::error_code& ec) { checkTimeout(ec); });
+    m_timer.async_wait([this] (const asio_error_code& ec) { checkTimeout(ec); });
 }
 
 void Client::receiveData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
-    m_socket.async_receive(buffer(m_buffer), [this, cb] (const asio::error_code& error, size_t bytesReceived) {
+    m_socket.async_receive(buffer(m_buffer), [this, cb] (const asio_error_code& error, size_t bytesReceived) {
         m_timer.cancel();
         if (invokeCallbackOnError(error, cb))
         {
@@ -209,7 +201,7 @@ void Client::receiveData(std::function<void(const std::error_code&)> cb)
                 }
                 else if (strncasecmp(m_parser.headerValue("Connection").c_str(), "close", 5) == 0)
                 {
-                    std::error_code error;
+                    asio_error_code error;
                     m_socket.close(error);
                 }
             }
@@ -262,7 +254,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
         });
     }
 
-    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const asio::error_code& error) {
+    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const std::error_code& error) {
         if (error)
         {
             cb(error, Response());
@@ -287,7 +279,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
         });
     }
 
-    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const asio::error_code& error) {
+    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const std::error_code& error) {
         if (error)
         {
             cb(error, Response());
@@ -322,7 +314,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
     });
 }
 
-void Client::checkTimeout(const asio::error_code& ec)
+void Client::checkTimeout(const asio_error_code& ec)
 {
     if (ec.value() == asio::error::operation_aborted)
     {
@@ -336,7 +328,7 @@ void Client::checkTimeout(const asio::error_code& ec)
     {
         // The deadline has passed. The socket is closed so that any outstanding
         // asynchronous operations are cancelled.
-        std::error_code error;
+        asio_error_code error;
         m_socket.close(error);
 
         // There is no longer an active deadline. The expiry is set to positive
@@ -345,7 +337,7 @@ void Client::checkTimeout(const asio::error_code& ec)
         return;
     }
 
-    m_timer.async_wait([this] (const asio::error_code& ec) { checkTimeout(ec); });
+    m_timer.async_wait([this] (const asio_error_code& ec) { checkTimeout(ec); });
 }
 
 }
