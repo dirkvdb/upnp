@@ -44,15 +44,15 @@ using namespace std::chrono_literals;
 namespace
 {
 
-std::string createTimeoutHeader(std::chrono::seconds timeout)
+std::string createTimeoutHeaderValue(std::chrono::seconds timeout)
 {
-    if (timeout.count() == 0)
+    if (timeout == 0s)
     {
-        return "TIMEOUT: Second-infinite\r\n";
+        return "Second-infinite";
     }
     else
     {
-        return fmt::format("TIMEOUT: Second-{}\r\n", timeout.count());
+        return fmt::format("Second-{}", timeout.count());
     }
 }
 
@@ -76,9 +76,9 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader(fmt::format("CALLBACK:<{}>\r\n", callbackUrl));
-    m_httpClient->addHeader(fmt::format("NT:upnp:event\r\n"));
-    m_httpClient->addHeader(createTimeoutHeader(timeout));
+    m_httpClient->addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
@@ -107,8 +107,8 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
-    m_httpClient->addHeader(createTimeoutHeader(timeout));
+    m_httpClient->addHeader("SID", sid);
+    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
@@ -136,7 +136,7 @@ void Client::unsubscribe(const std::string& url, const std::string& sid, std::fu
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
+    m_httpClient->addHeader("SID", sid);
 
     m_httpClient->perform(http::Method::Unsubscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
@@ -152,12 +152,11 @@ void Client::notify(const std::string& url,
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT:upnp:event\r\n");
-    m_httpClient->addHeader("NTS:upnp:propchange\r\n");
-    m_httpClient->addHeader(fmt::format("SID:{}\r\n", sid));
-    m_httpClient->addHeader(fmt::format("SEQ:{}\r\n", seq));
-    m_httpClient->addHeader("Content-Type:text/xml\r\n");
-    m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", body.size()));
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("NTS", "upnp:propchange");
+    m_httpClient->addHeader("SID", sid);
+    m_httpClient->addHeader("SEQ", std::to_string(seq));
+    m_httpClient->addHeader("Content-Type", "text/xml");
 
     m_httpClient->perform(http::Method::Notify, body, [this, cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
@@ -175,10 +174,9 @@ void Client::action(const std::string& url,
     m_httpClient->reset();
 
     m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT:upnp:event\r\n");
-    m_httpClient->addHeader(fmt::format("SOAPACTION:\"{}#{}\"\r\n", serviceName, actionName));
-    m_httpClient->addHeader("Content-Type: text/xml; charset=\"utf-8\"\r\n");
-    m_httpClient->addHeader(fmt::format("Content-Length:{}\r\n", envelope.size()));
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
+    m_httpClient->addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
     m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, http::Response response) {
         if (ec || response.status != http::StatusCode::InternalServerError)

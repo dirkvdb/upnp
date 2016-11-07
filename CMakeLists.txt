@@ -21,10 +21,19 @@ ELSE ()
     find_package(Boost REQUIRED COMPONENTS system)
 ENDIF ()
 
+FIND_PATH(BEAST_INCLUDE_DIR
+    NAMES beast/http.hpp
+)
+
+IF (NOT BEAST_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Could not find the beast http headers")
+ENDIF ()
 
 if (CMAKE_GENERATOR STREQUAL Xcode)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
-ENDIF ()
+elseif (NOT MSVC)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
+endif ()
 
 OPTION(STANDALONE "Not used as a submodule of another project" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
@@ -46,7 +55,7 @@ IF (CMAKE_GENERATOR STREQUAL Xcode)
 ENDIF ()
 
 SET (UPNPFRAMEWORK_SYS_INCLUDE_DIRS
-    ${ASIO_INCLUDE_DIR}
+    ${BEAST_INCLUDE_DIR}
 )
 
 SET (UPNPFRAMEWORK_INCLUDE_DIRS

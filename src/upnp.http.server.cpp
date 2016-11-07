@@ -107,7 +107,7 @@ public:
 
             try
             {
-                //log::info("[{}] {}", m_sessionId, std::string_view(buf.data(), bytesReceived).data());
+                log::info("[{}] {}", m_sessionId, std::string_view(buf.data(), bytesReceived).data());
                 parser.parse(buf.data(), bytesReceived);
                 if (!parser.isCompleted())
                 {

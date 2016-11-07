@@ -16,18 +16,19 @@
 
 #pragma once
 
-#include "URI.h"
-#include "upnp/asio.h"
-#include "upnp/upnp.http.parser.h"
-#include "upnp/upnp.http.types.h"
-#include "upnp.http.utils.h"
-
 #include <string>
 #include <vector>
 #include <chrono>
 #include <cinttypes>
 #include <unordered_map>
+#include <beast/http.hpp>
 #include <experimental/string_view>
+
+#include "URI.h"
+#include "upnp/asio.h"
+#include "upnp/upnp.http.parser.h"
+#include "upnp/upnp.http.types.h"
+#include "upnp.http.utils.h"
 
 namespace upnp
 {
@@ -41,7 +42,7 @@ public:
     Client(const Client&) = delete;
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
-    void addHeader(std::string header);
+    void addHeader(const std::string& name, const std::string& value);
     void setUrl(const std::string& url);
 
     const std::string& getResponseHeaderValue(const char* heeaderValue);
@@ -58,18 +59,17 @@ private:
     void checkTimeout(const asio_error_code& ec);
 
     void setMethodType(Method method);
-    void performRequest(const asio::ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb);
-    void performRequest(const asio::ip::tcp::endpoint& addr, const std::vector<asio::const_buffer>& buffers, std::function<void(const std::error_code&)> cb);
+    void performRequest(std::function<void(const std::error_code&)> cb);
+    void performRequest(const std::string& body, std::function<void(const std::error_code&)> cb);
     void receiveData(std::function<void(const std::error_code&)> cb);
 
-    URI m_uri;
+    URI m_url;
     asio::steady_timer m_timer;
     asio::ip::tcp::socket m_socket;
     std::chrono::milliseconds m_timeout;
-    std::string m_request;
-    std::vector<std::string> m_headers;
     std::array<char, 2048> m_buffer;
+    beast::http::request<beast::http::string_body> m_request;
+
     Parser m_parser;
 };
 

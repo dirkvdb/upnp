@@ -74,11 +74,13 @@ Client::Client(asio::io_service& io)
 , m_timeout(60000ms)
 , m_parser(Type::Response)
 {
+    m_request.version = 11;
 }
 
 void Client::reset()
 {
     m_parser.reset();
+    m_request.headers.clear();
 }
 
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
@@ -86,19 +88,14 @@ void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
     m_timeout = timeout;
 }
 
-void Client::addHeader(std::string header)
+void Client::addHeader(const std::string& name, const std::string& value)
 {
-    m_headers.emplace_back(std::move(header));
+    m_request.headers.insert(name, value);
 }
 
 void Client::setUrl(const std::string& url)
 {
-    m_uri = URI(url);
-}
-
-void Client::performRequest(const ip::tcp::endpoint& addr, std::function<void(const std::error_code&)> cb)
-{
-    performRequest(addr, "", cb);
+    m_url = url;
 }
 
 const std::string& Client::getResponseHeaderValue(const char* headerValue)
@@ -116,39 +113,19 @@ uint32_t Client::getStatus()
     return m_parser.getStatus();
 }
 
-void Client::performRequest(const ip::tcp::endpoint& addr, const std::string& body, std::function<void(const std::error_code&)> cb)
+void Client::performRequest(std::function<void(const std::error_code&)> cb)
 {
-    std::vector<const_buffer> buffers;
-    buffers.emplace_back(buffer(m_request));
-
-    for (auto& h : m_headers)
-    {
-        buffers.emplace_back(buffer(h));
-    }
-
-    buffers.emplace_back(buffer(s_delimiter));
-
-    if (!body.empty())
-    {
-        buffers.emplace_back(buffer(body));
-    }
-
-    performRequest(addr, buffers, cb);
-}
-
-void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<const_buffer>& buffers, std::function<void(const std::error_code&)> cb)
-{
-    reset();
-
     asio_error_code error;
     m_socket.close(error);
     if (invokeCallbackOnError(error, cb)) return;
+    
+    auto addr = ip::tcp::endpoint(ip::address::from_string(m_url.getHost()), m_url.getPort());
 
     m_socket.open(addr.protocol(), error);
     if (invokeCallbackOnError(error, cb)) return;
 
     m_timer.expires_from_now(m_timeout);
-    m_socket.async_connect(addr, [this, cb, buffers] (const asio_error_code& error) {
+    m_socket.async_connect(addr, [this, cb] (const asio_error_code& error) {
         if (!m_socket.is_open())
         {
             cb(std::make_error_code(error::Timeout));
@@ -156,13 +133,16 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
         }
 
         m_timer.cancel();
-
         if (invokeCallbackOnError(error, cb))
         {
             return;
         }
+        
+        m_request.url = m_url.getPath();
+        m_request.headers.replace("Host", fmt::format("{}:{}", m_url.getHost(), std::to_string(m_socket.remote_endpoint().port())));
 
-        async_write(m_socket, buffers, [this, cb] (const asio_error_code& error, size_t) {
+        beast::http::prepare(m_request);
+        beast::http::async_write(m_socket, m_request, [this, cb] (const beast::error_code& error) {
             if (invokeCallbackOnError(error, cb))
             {
                 return;
@@ -173,6 +153,12 @@ void Client::performRequest(const ip::tcp::endpoint& addr, const std::vector<con
     });
 
     m_timer.async_wait([this] (const asio_error_code& ec) { checkTimeout(ec); });
+}
+
+void Client::performRequest(const std::string& body, std::function<void(const std::error_code&)> cb)
+{
+    m_request.body = body;
+    performRequest(cb);
 }
 
 void Client::receiveData(std::function<void(const std::error_code&)> cb)
@@ -232,8 +218,7 @@ static std::string methodToString(Method m)
 
 void Client::setMethodType(Method method)
 {
-    m_request = fmt::format("{} {} HTTP/1.1\r\n", methodToString(method), m_uri.getPath());
-    m_headers.emplace_back(fmt::format("Host:{}\r\n", m_uri.getAuthority()));
+    m_request.method = methodToString(method);
     //m_headers.emplace_back("Connection:Keep-alive\r\n");
 }
 
@@ -254,7 +239,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
         });
     }
 
-    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const std::error_code& error) {
+    performRequest([cb] (const std::error_code& error) {
         if (error)
         {
             cb(error, Response());
@@ -279,7 +264,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
         });
     }
 
-    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), body, [cb] (const std::error_code& error) {
+    performRequest(body, [cb] (const std::error_code& error) {
         if (error)
         {
             cb(error, Response());
@@ -306,7 +291,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         });
     }
 
-    performRequest(ip::tcp::endpoint(ip::address::from_string(m_uri.getHost()), m_uri.getPort()), [cb] (const std::error_code& error) {
+    performRequest([cb] (const std::error_code& error) {
         if (error)
         {
             cb(error, StatusCode::None, nullptr);
