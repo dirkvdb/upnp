@@ -141,6 +141,7 @@ install:
       else
         cd boost_1_62_0 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++14 -fPIC\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install
       fi
+      cat user-config.jam
       cd ..
     fi
 
