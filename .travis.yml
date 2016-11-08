@@ -143,8 +143,11 @@ install:
       cd ..
     fi
 
-    git clone -b headers https://github.com/vinniefalco/Beast.git
-    cp -r ./Beast/include/beast ${DEPS_DIR}/local/include/
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      git clone -b headers https://github.com/vinniefalco/Beast.git
+      cp -r ./Beast/include/beast ${DEPS_DIR}/local/include/
+    fi
 
   - cd ${TRAVIS_BUILD_DIR}
 
