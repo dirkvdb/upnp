@@ -83,7 +83,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
-            std::string subId;
+            std::string_view subId;
             std::chrono::seconds timeout;
             if (response.status == http::StatusCode::Ok)
             {
@@ -91,7 +91,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
                 timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
-            cb(ec, response.status, subId, timeout);
+            cb(ec, response.status, subId.to_string(), timeout);
         }
         catch (const std::exception& e)
         {
@@ -113,7 +113,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
-            std::string subId;
+            std::string_view subId;
             std::chrono::seconds timeout;
             if (response.status == http::StatusCode::Ok)
             {
@@ -121,7 +121,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
                 timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
-            cb(ec, response.status, subId, timeout);
+            cb(ec, response.status, subId.to_string(), timeout);
         }
         catch (const std::exception& e)
         {

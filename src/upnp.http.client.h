@@ -20,15 +20,12 @@
 #include <vector>
 #include <chrono>
 #include <cinttypes>
-#include <unordered_map>
 #include <beast/http.hpp>
-#include <experimental/string_view>
 
 #include "URI.h"
 #include "upnp/asio.h"
-#include "upnp/upnp.http.parser.h"
+#include "stringview.h"
 #include "upnp/upnp.http.types.h"
-#include "upnp.http.utils.h"
 
 namespace upnp
 {
@@ -45,7 +42,7 @@ public:
     void addHeader(const std::string& name, const std::string& value);
     void setUrl(const std::string& url);
 
-    const std::string& getResponseHeaderValue(const char* heeaderValue);
+    std::string_view getResponseHeaderValue(const char* heeaderValue);
     std::string getResponseBody();
     uint32_t getStatus();
 
@@ -60,17 +57,16 @@ private:
 
     void setMethodType(Method method);
     void performRequest(std::function<void(const std::error_code&)> cb);
-    void performRequest(const std::string& body, std::function<void(const std::error_code&)> cb);
     void receiveData(std::function<void(const std::error_code&)> cb);
+    void receiveHeaderData(std::function<void(const std::error_code&)> cb);
 
     URI m_url;
     asio::steady_timer m_timer;
     asio::ip::tcp::socket m_socket;
     std::chrono::milliseconds m_timeout;
-    std::array<char, 2048> m_buffer;
     beast::http::request<beast::http::string_body> m_request;
-
-    Parser m_parser;
+    beast::http::response<beast::http::string_body> m_response;
+    beast::streambuf m_buffer;
 };
 
 }

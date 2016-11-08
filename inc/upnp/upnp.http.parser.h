@@ -22,6 +22,7 @@
 #include <functional>
 
 #include "upnp/upnp.flags.h"
+#include "upnp/upnp.http.types.h"
 
 namespace upnp
 {
@@ -34,18 +35,6 @@ enum class Type
     Response,
     Both,
     EnumCount
-};
-
-enum class Method
-{
-    Notify,
-    Search,
-    Subscribe,
-    Unsubscribe,
-    Get,
-    Head,
-    Post,
-    Unknown
 };
 
 struct Header

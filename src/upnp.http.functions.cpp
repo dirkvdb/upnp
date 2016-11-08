@@ -120,7 +120,7 @@ void getContentLength(asio::io_service& io, const std::string& url, std::chrono:
     client->perform(Method::Head, [client, cb] (const std::error_code& error, const Response& response) {
         try
         {
-            cb(error, response.status, response.status == StatusCode::Ok ? std::stoul(client->getResponseHeaderValue("Content-length")) : 0);
+            cb(error, response.status, response.status == StatusCode::Ok ? std::stoul(std::string(client->getResponseHeaderValue("Content-length"))) : 0);
         }
         catch (const std::exception& e)
         {

@@ -12,7 +12,7 @@ namespace upnp
 namespace soap
 {
 
-inline std::chrono::seconds parseTimeout(const std::string& timeout)
+inline std::chrono::seconds parseTimeout(std::string_view timeout)
 {
     if (timeout == "Second-infinite")
     {
@@ -23,7 +23,8 @@ inline std::chrono::seconds parseTimeout(const std::string& timeout)
     {
         std::regex re(R"(Second-(\d+))");
         std::smatch match;
-        if (std::regex_match(timeout, match, re))
+        std::string input = timeout.to_string();
+        if (std::regex_match(input, match, re))
         {
             return std::chrono::seconds(std::stoi(match.str(1)));
         }

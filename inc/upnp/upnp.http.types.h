@@ -25,6 +25,19 @@ namespace upnp
 namespace http
 {
 
+enum class Method
+{
+    Notify,
+    Search,
+    Subscribe,
+    Unsubscribe,
+    Get,
+    Head,
+    Post,
+    Unknown
+};
+
+
 namespace error
 {
 
