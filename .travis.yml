@@ -135,13 +135,16 @@ install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       wget http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 TIMEOUT 6000
-      tar xf boost_1_62_0.tar.bz2
       if [[ "${CXX}" == "clang++" ]]; then
-        cd boost_1_62_0 && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local install
+        cd boost_1_62_0 && echo "using clang : : : <cxxflags>"-std=c++14 -fPIC" ;" > user-config.jam && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local install --user-config=./user-config.jam
       else
-        cd boost_1_62_0 && ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local install
+        cd boost_1_62_0 && echo "using gcc : 6 : g++-6 : <cxxflags>"-std=c++14 -fPIC" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local install --user-config=./user-config.jam
       fi
+      cd ..
     fi
+
+    git clone -b headers https://github.com/vinniefalco/Beast.git
+    cp -r ./Beast/include/beast ${DEPS_DIR}/local/include/
 
   - cd ${TRAVIS_BUILD_DIR}
 
