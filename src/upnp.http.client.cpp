@@ -79,7 +79,7 @@ Client::Client(asio::io_service& io)
 void Client::reset()
 {
     m_buffer = beast::streambuf();
-    m_request.headers.clear();
+    m_request.fields.clear();
 }
 
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
@@ -89,7 +89,7 @@ void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 
 void Client::addHeader(const std::string& name, const std::string& value)
 {
-    m_request.headers.insert(name, value);
+    m_request.fields.insert(name, value);
 }
 
 void Client::setUrl(const std::string& url)
@@ -99,7 +99,7 @@ void Client::setUrl(const std::string& url)
 
 std::string_view Client::getResponseHeaderValue(const char* headerValue)
 {
-    auto stringref = m_response.headers[headerValue];
+    auto stringref = m_response.fields[headerValue];
     return std::string_view(stringref.data(), stringref.size());
 }
 
@@ -118,7 +118,7 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
     asio_error_code error;
     m_socket.close(error);
     if (invokeCallbackOnError(error, cb)) return;
-    
+
     auto addr = ip::tcp::endpoint(ip::address::from_string(m_url.getHost()), m_url.getPort());
 
     m_socket.open(addr.protocol(), error);
@@ -137,9 +137,9 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
         {
             return;
         }
-        
+
         m_request.url = m_url.getPath();
-        m_request.headers.replace("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
+        m_request.fields.replace("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
 
         beast::http::prepare(m_request);
         beast::http::async_write(m_socket, m_request, [this, cb] (const beast::error_code& error) {
@@ -165,7 +165,7 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
 void Client::receiveData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
-    
+
     beast::http::async_read(m_socket, m_buffer, m_response, [this, cb] (const asio_error_code& error) {
         m_timer.cancel();
         if (invokeCallbackOnError(error, cb))
@@ -175,13 +175,13 @@ void Client::receiveData(std::function<void(const std::error_code&)> cb)
 
         try
         {
-            auto connValue = m_response.headers["Connection"];
+            auto connValue = m_response.fields["Connection"];
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
                 asio_error_code error;
                 m_socket.close(error);
             }
-            
+
             cb(std::error_code());
         }
         catch (const std::exception& e)
@@ -195,28 +195,28 @@ void Client::receiveData(std::function<void(const std::error_code&)> cb)
 void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
-    
-    auto res = std::make_shared<beast::http::response_headers>();
+
+    auto res = std::make_shared<beast::http::response_header>();
     beast::http::async_read(m_socket, m_buffer, *res, [this, res, cb] (const asio_error_code& error) {
         m_timer.cancel();
-        
+
         if (invokeCallbackOnError(error, cb))
         {
             return;
         }
 
         m_response.status = res->status;
-        m_response.headers = std::move(res->headers);
-        
+        m_response.fields = std::move(res->fields);
+
         try
         {
-            auto connValue = m_response.headers["Connection"];
+            auto connValue = m_response.fields["Connection"];
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
                 asio_error_code error;
                 m_socket.close(error);
             }
-            
+
             cb(std::error_code());
         }
         catch (const std::exception& e)
@@ -289,7 +289,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         {
             cb(error, StatusCode::None, nullptr);
         }
-        
+
         memcpy(data, m_response.body.data(), m_response.body.size());
         cb(std::error_code(), StatusCode(StatusCode(m_response.status)), data);
     });
