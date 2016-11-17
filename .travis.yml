@@ -113,7 +113,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      git clone -b b19 --single-branch https://github.com/vinniefalco/Beast.git
+      git clone --single-branch https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast /usr/local/include/
     fi
 
