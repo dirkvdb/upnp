@@ -148,7 +148,7 @@ install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      git clone -b b19 --single-branch https://github.com/vinniefalco/Beast.git
+      git clone --single-branch https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast ${DEPS_DIR}/local/include/
     fi
 
