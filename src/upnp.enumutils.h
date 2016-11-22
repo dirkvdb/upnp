@@ -23,7 +23,7 @@
 
 #include "upnp/upnptypes.h"
 
-#include "stringview.h"
+#include "upnp/stringview.h"
 
 namespace upnp
 {

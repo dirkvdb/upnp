@@ -15,19 +15,19 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #pragma once
 
+#include "upnp/asio.h"
+#include "upnp/upnp.http.types.h"
+
 #include <array>
 #include <string>
 #include <unordered_map>
-
-#include "upnp/asio.h"
-#include "upnp/upnp.http.parser.h"
 
 namespace upnp
 {
 namespace http
 {
 
-using RequestCb = std::function<std::string(http::Parser&)>;
+using RequestCb = std::function<std::string(const Request&)>;
 
 class Server
 {
@@ -55,8 +55,6 @@ private:
     };
 
     void accept();
-
-    static void onHttpParseCompleted(std::shared_ptr<http::Parser> parser, std::shared_ptr<asio::ip::tcp::socket> socket);
 
     asio::io_service& m_io;
     asio::ip::tcp::acceptor m_acceptor;

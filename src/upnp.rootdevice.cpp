@@ -20,7 +20,6 @@
 #include "utils/log.h"
 
 #include "upnp/upnp.asio.h"
-#include "upnp/upnp.http.parser.h"
 #include "upnp/upnp.http.server.h"
 #include "upnp/upnp.servicefaults.h"
 #include "upnp.soap.client.h"
@@ -108,7 +107,7 @@ static const std::string s_errorBodyNoDescription =
 namespace
 {
 
-std::vector<std::string> parseCallback(const std::string& cb)
+std::vector<std::string> parseCallback(const std::string_view& cb)
 {
     if (cb.empty() || cb.size() < 2 || cb[0] != '<' || cb[cb.size() - 1] != '>')
     {
@@ -176,9 +175,9 @@ void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
     m_httpServer = std::make_unique<http::Server>(m_io);
 
     m_httpServer->start(endPoint);
-    m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (http::Parser& parser) { return onSubscriptionRequest(parser); });
-    m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (http::Parser& parser) { return onUnsubscriptionRequest(parser); });
-    m_httpServer->setRequestHandler(http::Method::Post, [this] (http::Parser& parser) { return onActionRequest(parser); });
+    m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (const http::Request& request) { return onSubscriptionRequest(request); });
+    m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (const http::Request& request) { return onUnsubscriptionRequest(request); });
+    m_httpServer->setRequestHandler(http::Method::Post, [this] (const http::Request& request) { return onActionRequest(request); });
 
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
@@ -279,24 +278,24 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
     }
 }
 
-std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
+std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noexcept
 {
     try
     {
-        auto& sid = parser.headerValue("SID");
+        auto sid = httpReq.field("SID");
         if (sid.empty())
         {
             // New subscription request
             GuidGenerator generator;
             SubscriptionRequest request;
-            request.url = parser.getUrl();
+            request.url = httpReq.url().to_string();
             request.sid = fmt::format("uuid:{}", generator.newGuid());
-            request.timeout = soap::parseTimeout(parser.headerValue("TIMEOUT"));
+            request.timeout = soap::parseTimeout(httpReq.field("TIMEOUT"));
 
-            log::info("Subscription request: timeout {}s CB: {}", request.timeout.count(), parser.headerValue("CALLBACK"));
+            log::info("Subscription request: timeout {}s CB: {}", request.timeout.count(), httpReq.field("CALLBACK"));
 
             SubscriptionData data;
-            data.deliveryUrls = parseCallback(parser.headerValue("CALLBACK"));
+            data.deliveryUrls = parseCallback(httpReq.field("CALLBACK"));
 
             if (data.deliveryUrls.empty())
             {
@@ -318,10 +317,10 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
         else
         {
             // Subscription renewal
-            auto timeout = soap::parseTimeout(parser.headerValue("TIMEOUT"));
+            auto timeout = soap::parseTimeout(httpReq.field("TIMEOUT"));
 
             log::info("Subscription renewal");
-            auto iter = m_subscriptions.find(sid);
+            auto iter = m_subscriptions.find(sid.to_string());
             if (iter != m_subscriptions.end())
             {
                 iter->second.expirationTime = std::chrono::steady_clock::now() + timeout;
@@ -341,10 +340,10 @@ std::string RootDevice::onSubscriptionRequest(http::Parser& parser) noexcept
     }
 }
 
-std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
+std::string RootDevice::onUnsubscriptionRequest(const http::Request& request) noexcept
 {
     log::info("Unsubscription request");
-    if (m_subscriptions.erase(parser.headerValue("SID")) > 0)
+    if (m_subscriptions.erase(request.field("SID").to_string()) > 0)
     {
         return http::okResponse();
     }
@@ -354,18 +353,17 @@ std::string RootDevice::onUnsubscriptionRequest(http::Parser& parser) noexcept
     }
 }
 
-std::string RootDevice::onActionRequest(http::Parser& parser)
+std::string RootDevice::onActionRequest(const http::Request& httpReq)
 {
     try
     {
         ActionRequest request;
-        auto& action = parser.headerValue("SOAPACTION");
-        request.action = parser.stealBody();
+        request.action = httpReq.body().to_string();
         log::debug("Action request: {}", request.action);
 
         try
         {
-            std::tie(request.serviceType, request.actionName) = soap::parseAction(action);
+            std::tie(request.serviceType, request.actionName) = soap::parseAction(httpReq.field("SOAPACTION"));
         }
         catch (const std::runtime_error& e)
         {

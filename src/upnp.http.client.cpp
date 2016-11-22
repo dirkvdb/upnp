@@ -27,7 +27,7 @@
 #include "upnp.soap.parseutils.h"
 
 #include "URI.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
 
 namespace upnp
 {

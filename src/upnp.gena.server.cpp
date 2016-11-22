@@ -48,7 +48,7 @@ using namespace std::placeholders;
 
 namespace
 {
-    const std::string& required(const std::string& value)
+    const std::string_view& required(const std::string_view& value)
     {
         if (value.empty())
         {
@@ -66,18 +66,18 @@ Server::Server(asio::io_service& io, const asio::ip::tcp::endpoint& address, std
     assert(m_eventCb);
     log::info("GENA: Start server on http://{}:{}", address.address(), address.port());
 
-    m_httpServer.setRequestHandler(http::Method::Notify, [this] (auto& parser) {
+    m_httpServer.setRequestHandler(http::Method::Notify, [this] (auto& req) {
         try
         {
-            m_currentEvent.sid = required(parser.headerValue("SID"));
-            m_currentEvent.sequence = std::stoi(required(parser.headerValue("SEQ")));
-            m_currentEvent.data = parser.stealBody();
-            if (parser.headerValue("NT") != "upnp:event")
+            m_currentEvent.sid = required(req.field("SID")).to_string();
+            m_currentEvent.sequence = std::stoi(required(req.field("SEQ")).to_string());
+            m_currentEvent.data = req.body().to_string();
+            if (req.field("NT") != "upnp:event")
             {
                 throw Status(ErrorCode::BadRequest);
             }
 
-            if (parser.headerValue("NTS") != "upnp:propchange")
+            if (req.field("NTS") != "upnp:propchange")
             {
                 throw Status(ErrorCode::BadRequest);
             }

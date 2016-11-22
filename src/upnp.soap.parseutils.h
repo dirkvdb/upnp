@@ -12,6 +12,8 @@ namespace upnp
 namespace soap
 {
 
+using namespace std::string_literals;
+
 inline std::chrono::seconds parseTimeout(std::string_view timeout)
 {
     if (timeout == "Second-infinite")
@@ -39,24 +41,25 @@ inline std::chrono::seconds parseTimeout(std::string_view timeout)
     }
 }
 
-inline std::tuple<std::string, std::string> parseAction(const std::string& action)
+inline std::tuple<std::string, std::string> parseAction(const std::string_view& action)
 {
     try
     {
         std::regex re(R"(\"(.*)#(.*)\")");
         std::smatch match;
-        if (std::regex_match(action, match, re))
+        auto actionString = action.to_string();
+        if (std::regex_match(actionString, match, re))
         {
             return std::make_tuple(match.str(1), match.str(2));
         }
         else
         {
-            throw std::runtime_error("Failed to parse soap action: " + action);
+            throw std::runtime_error("Failed to parse soap action: " + actionString);
         }
     }
     catch (const std::regex_error& e)
     {
-        throw std::runtime_error(std::string("Failed to parse soap action: ") + e.what());
+        throw std::runtime_error("Failed to parse soap action: "s + e.what());
     }
 }
 

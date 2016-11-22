@@ -337,7 +337,7 @@ Parser::Range Parser::parseRange(const std::string& range)
     {
         throw std::invalid_argument("Invalid range header: " + range);
     }
-    
+
     if (split.size() == 1)
     {
         if (range[range.size() - 1] != '-')

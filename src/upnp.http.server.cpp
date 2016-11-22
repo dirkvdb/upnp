@@ -28,8 +28,11 @@
 #include "utils/fileoperations.h"
 
 #include "upnp/upnp.asio.h"
+#include "upnp/upnp.http.parseutils.h"
 #include "upnp.enumutils.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
+
+#include <beast/http.hpp>
 
 using namespace utils;
 using namespace asio;
@@ -79,17 +82,15 @@ class Session : public std::enable_shared_from_this<Session>
 {
 public:
     Session(io_service& io, const Server& srv, uint64_t id)
-    : parser(http::Type::Request)
-    , m_sessionId(id)
+    : m_sessionId(id)
     , socket(io)
     , server(srv)
     {
-        parser.setCompletedCallback([this] () { onHttpParseCompleted(); });
     }
 
     void receiveData()
     {
-        socket.async_receive(buffer(buf), [this, self = shared_from_this()] (const asio_error_code& error, size_t bytesReceived) {
+        beast::http::async_read(socket, m_buffer, m_request, [this, self = shared_from_this()] (const asio_error_code& error) {
             if (error)
             {
                 if (error.value() == asio::error::eof)
@@ -105,25 +106,7 @@ public:
                 return;
             }
 
-            try
-            {
-                log::info("[{}] {}", m_sessionId, std::string_view(buf.data(), bytesReceived).data());
-                parser.parse(buf.data(), bytesReceived);
-                if (!parser.isCompleted())
-                {
-                    log::debug("[{}] Parse not completed", m_sessionId);
-                    receiveData();
-                }
-                else
-                {
-                    log::debug("[{}] Parse completed", m_sessionId);
-                }
-            }
-            catch (std::exception& e)
-            {
-                log::error("[{}] Failed to parse request: {}", m_sessionId, e.what());
-                socket.close();
-            }
+            onHttpParseCompleted();
         });
     }
 
@@ -164,40 +147,41 @@ public:
 
     void onHttpParseCompleted()
     {
-        bool closeConnection = parser.getFlags().isSet(http::Parser::Flag::ConnectionClose);
+        bool closeConnection = m_request.fields["Connection"] == "close";
 
         try
         {
-            if (parser.getMethod() == Method::Head)
+            auto method = methodFromString(m_request.method);
+            if (method == http::Method::Head)
             {
-                log::info("[{}] requested file size: {}", m_sessionId, parser.getUrl());
-                auto& file = server.m_servedFiles.at(parser.getUrl());
+                log::info("[{}] requested file size: {}", m_sessionId, m_request.url);
+                auto& file = server.m_servedFiles.at(m_request.url);
                 writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
-            else if (parser.getMethod() == Method::Get)
+            else if (method == http::Method::Get)
             {
-                log::info("[{}] requested file: {}", m_sessionId, parser.getUrl());
-                auto& file = server.m_servedFiles.at(parser.getUrl());
+                log::info("[{}] requested file: {}", m_sessionId, m_request.url);
+                auto& file = server.m_servedFiles.at(m_request.url);
 
-                auto rangeHeader = parser.headerValue("Range");
+                auto rangeHeader = m_request.fields["Range"];
                 if (rangeHeader.empty())
                 {
                     writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), buffer(file.data), closeConnection);
                 }
                 else
                 {
-                    auto range = Parser::parseRange(rangeHeader);
+                    auto range = http::parseutils::parseRange(rangeHeader.to_string());
                     auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
                     writeResponse(std::make_shared<std::string>(fmt::format(s_response, 206, size, file.contentType)), buffer(&file.data[range.start], size), closeConnection);
                 }
             }
             else
             {
-                auto& func = server.m_handlers.at(enum_value(parser.getMethod()));
+                auto& func = server.m_handlers.at(enum_value(method));
                 if (func)
                 {
-                    log::debug("[{}] handle request: {}", m_sessionId, http::Parser::methodToString(parser.getMethod()));
-                    writeResponse(std::make_shared<std::string>(func(parser)), closeConnection);
+                    log::debug("[{}] handle request: {}", m_sessionId, m_request.method);
+                    writeResponse(std::make_shared<std::string>(func(m_request)), closeConnection);
                 }
                 else
                 {
@@ -216,10 +200,10 @@ public:
         }
     }
 
-    Parser parser;
+    beast::http::request<beast::http::string_body> m_request;
+    beast::streambuf m_buffer;
     uint64_t m_sessionId;
     ip::tcp::socket socket;
-    std::array<char, 1024*10> buf;
     const Server& server;
 };
 

@@ -24,7 +24,7 @@
 
 #include "URI.h"
 #include "upnp/asio.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
 #include "upnp/upnp.http.types.h"
 
 namespace upnp

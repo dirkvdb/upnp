@@ -16,9 +16,12 @@
 
 #pragma once
 
+#include "stringview.h"
+
 #include <string>
 #include <ostream>
 #include <system_error>
+#include <beast/http.hpp>
 
 namespace upnp
 {
@@ -37,6 +40,7 @@ enum class Method
     Unknown
 };
 
+Method methodFromString(const std::string_view& str);
 
 namespace error
 {
@@ -178,6 +182,40 @@ inline const char* status_message(StatusCode status)
     default: return "<unknown-status>";
     }
 }
+
+class Request
+{
+public:
+    Request(beast::http::request<beast::http::string_body> req)
+    : m_req(std::move(req))
+    {
+    }
+
+    std::string_view url() const noexcept
+    {
+        return m_req.url;
+    }
+
+    std::string_view field(const char* hdr) const noexcept
+    {
+        auto stringRef = m_req.fields[hdr];
+        return std::string_view(stringRef.data(), stringRef.size());
+    }
+
+    std::string_view field(std::string_view hdr) const noexcept
+    {
+        auto stringRef = m_req.fields[boost::string_ref(hdr.data(), hdr.size())];
+        return std::string_view(stringRef.data(), stringRef.size());
+    }
+
+    std::string_view body() const noexcept
+    {
+        return std::string_view(m_req.body.data(), m_req.body.size());
+    }
+
+private:
+    beast::http::request<beast::http::string_body> m_req;
+};
 
 struct Response
 {

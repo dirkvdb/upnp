@@ -24,7 +24,7 @@
 #include "upnp.http.client.h"
 
 #include "URI.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
 
 #include <cassert>
 #include <stdexcept>

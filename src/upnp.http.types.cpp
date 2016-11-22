@@ -14,30 +14,35 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#pragma once
-
-#include <cinttypes>
-#include <vector>
-
-#include "upnp/stringview.h"
-#include "upnp/upnp.item.h"
-#include "upnp/upnp.contentdirectory.types.h"
+#include "upnp/upnp.http.types.h"
+#include "upnp.enumutils.h"
 
 namespace upnp
 {
-namespace ContentDirectory
+
+using namespace http;
+
+static constexpr EnumMap<http::Method> s_methodConv {{
+    std::make_tuple("NOTIFY",       http::Method::Notify),
+    std::make_tuple("MSEARCH",      http::Method::Search),
+
+    std::make_tuple("SUBSCRIBE",    http::Method::Subscribe),
+    std::make_tuple("UNSUBSCRIBE",  http::Method::Unsubscribe),
+
+    std::make_tuple("GET",          http::Method::Get),
+    std::make_tuple("HEAD",         http::Method::Head),
+    std::make_tuple("POST",         http::Method::Post),
+}};
+
+ADD_ENUM_MAP(http::Method, s_methodConv)
+
+namespace http
 {
 
-Action actionFromString(std::string_view data);
-const char* actionToString(Action value) noexcept;
-
-Variable variableFromString(std::string_view data);
-const char* variableToString(Variable value) noexcept;
-
-BrowseFlag browseFlagFromString(std::string_view data);
-std::string browseFlagToString(BrowseFlag browseFlag) noexcept;
-
-SortType sortTypeFromString(char c);
+Method methodFromString(const std::string_view& str)
+{
+    return enum_cast<Method>(str);
+}
 
 }
 }

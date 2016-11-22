@@ -95,12 +95,14 @@ ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.ssdp.server.h                         src/upnp.ssdp.server.cpp
     inc/upnp/upnp.http.functions.h                      src/upnp.http.functions.cpp
     inc/upnp/upnp.http.functions.h
-    inc/upnp/upnp.http.types.h
+    inc/upnp/upnp.http.types.h                          src/upnp.http.types.cpp
     inc/upnp/upnp.http.reader.h                         src/upnp.http.reader.cpp
     inc/upnp/upnp.http.server.h                         src/upnp.http.server.cpp
     inc/upnp/upnp.http.parser.h                         src/upnp.http.parser.cpp
+    inc/upnp/upnp.http.parseutils.h
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.servicefaults.h
+    inc/upnp/stringview.h
 
     src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
@@ -113,7 +115,6 @@ ADD_LIBRARY(upnpframework STATIC
     src/upnp.http.client.h                              src/upnp.http.client.cpp
     src/upnp.soap.client.h                              src/upnp.soap.client.cpp
     src/upnp.ssdp.parseutils.h
-    src/stringview.h
     src/http_parser.h                                   src/http_parser.cpp
     src/URI.h                                           src/URI.cpp
     src/guid.h                                          src/guid.cpp

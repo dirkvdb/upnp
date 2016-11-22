@@ -17,7 +17,7 @@
 #pragma once
 
 #include "upnp/upnp.avtransport.types.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
 
 namespace upnp
 {

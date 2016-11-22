@@ -8,7 +8,7 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp/upnp.http.parser.h"
-#include "stringview.h"
+#include "upnp/stringview.h"
 
 namespace upnp
 {
@@ -143,7 +143,7 @@ private:
                 // spontaneous notify message
                 info.type = notificationTypeFromString(m_parser.headerValue("NTS"));
                 info.deviceType = m_parser.headerValue("NT");
-                
+
                 if (info.type == NotificationType::Alive)
                 {
                     info.expirationTime = parseCacheControl(m_parser.headerValue("CACHE-CONTROL"));

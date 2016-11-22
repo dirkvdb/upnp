@@ -24,7 +24,7 @@ namespace
 
 struct RequestMock
 {
-    MOCK_METHOD1(onRequest, std::string(http::Parser&));
+    MOCK_METHOD1(onRequest, std::string(const http::Request&));
 };
 
 struct ResponseMock
@@ -41,8 +41,8 @@ public:
     : server(io)
     , client(io)
     {
-        server.setRequestHandler(http::Method::Post, [this] (http::Parser& parser) {
-            return reqMock.onRequest(parser);
+        server.setRequestHandler(http::Method::Post, [this] (const http::Request& req) {
+            return reqMock.onRequest(req);
         });
 
         server.start(ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 0));
@@ -74,11 +74,11 @@ TEST_F(SoapClientTest, SoapAction)
         "\r\n"
         "{}";
 
-    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (http::Parser& parser) {
-        EXPECT_EQ("/soap", parser.getUrl());
-        EXPECT_EQ("\"ServiceName#ActionName\"", parser.headerValue("SOAPACTION"));
-        EXPECT_EQ("text/xml; charset=\"utf-8\"", parser.headerValue("Content-Type"));
-        EXPECT_EQ(std::to_string(envelope.size()), parser.headerValue("Content-Length"));
+    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (const http::Request& request) {
+        EXPECT_EQ("/soap", request.url());
+        EXPECT_EQ("\"ServiceName#ActionName\"", request.field("SOAPACTION"));
+        EXPECT_EQ("text/xml; charset=\"utf-8\"", request.field("Content-Type"));
+        EXPECT_EQ(std::to_string(envelope.size()), request.field("Content-Length"));
         return fmt::format(response, body.size(), body);
     }));
 
@@ -120,11 +120,11 @@ TEST_F(SoapClientTest, SoapActionWithFault)
 
     auto response = fmt::format(errorResponse, body.size(), body);
 
-    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (http::Parser& parser) {
-        EXPECT_EQ("/soap", parser.getUrl());
-        EXPECT_EQ("\"ServiceName#ActionName\"", parser.headerValue("SOAPACTION"));
-        EXPECT_EQ("text/xml; charset=\"utf-8\"", parser.headerValue("Content-Type"));
-        EXPECT_EQ(std::to_string(envelope.size()), parser.headerValue("Content-Length"));
+    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (const http::Request& request) {
+        EXPECT_EQ("/soap", request.url());
+        EXPECT_EQ("\"ServiceName#ActionName\"", request.field("SOAPACTION"));
+        EXPECT_EQ("text/xml; charset=\"utf-8\"", request.field("Content-Type"));
+        EXPECT_EQ(std::to_string(envelope.size()), request.field("Content-Length"));
         return response;
     }));
 

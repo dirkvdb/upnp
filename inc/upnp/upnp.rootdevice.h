@@ -18,6 +18,7 @@
 
 #include "upnp/asio.h"
 #include "upnp/upnp.types.h"
+#include "upnp/upnp.http.types.h"
 #include "upnp/upnp.ssdp.server.h"
 #include "upnp/upnp.rootdeviceinterface.h"
 
@@ -70,9 +71,9 @@ public:
 private:
     void initialize(const asio::ip::tcp::endpoint& endPoint);
 
-    std::string onSubscriptionRequest(http::Parser& parser) noexcept;
-    std::string onUnsubscriptionRequest(http::Parser& parser) noexcept;
-    std::string onActionRequest(http::Parser& parser);
+    std::string onSubscriptionRequest(const http::Request& request) noexcept;
+    std::string onUnsubscriptionRequest(const http::Request& request) noexcept;
+    std::string onActionRequest(const http::Request& request);
 
     std::unique_ptr<asio::io_service>   m_owningIo;
     asio::io_service&                   m_io;
