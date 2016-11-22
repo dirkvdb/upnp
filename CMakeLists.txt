@@ -40,11 +40,10 @@ OPTION(ENABLE_TESTS "build unit tests" ON)
 
 IF (STANDALONE)
     ADD_SUBDIRECTORY(../utils utils)
-    GET_DIRECTORY_PROPERTY(UTILS_INCLUDE_DIRS   DIRECTORY ../utils INCLUDE_DIRECTORIES)
 
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
     SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
-    ADD_DEFINITIONS("-std=c++14")
+    set (CMAKE_CXX_STANDARD 14)
     IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     ENDIF ()
@@ -53,25 +52,6 @@ ENDIF ()
 IF (CMAKE_GENERATOR STREQUAL Xcode)
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 ENDIF ()
-
-SET (UPNPFRAMEWORK_SYS_INCLUDE_DIRS
-    ${BEAST_INCLUDE_DIR}
-)
-
-SET (UPNPFRAMEWORK_INCLUDE_DIRS
-    "${CMAKE_CURRENT_SOURCE_DIR}/inc/"
-    ${UTILS_INCLUDE_DIRS}
-)
-
-SET (UPNPFRAMEWORK_LIBRARY_DIRS
-    "${CMAKE_CURRENT_BINARY_DIR}"
-)
-
-INCLUDE_DIRECTORIES(${UPNPFRAMEWORK_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
-
-INCLUDE_DIRECTORIES(SYSTEM
-    ${UPNPFRAMEWORK_SYS_INCLUDE_DIRS}
-)
 
 ADD_LIBRARY(upnpframework STATIC
     inc/upnp/upnp.serviceclientbase.h
@@ -139,24 +119,35 @@ ADD_LIBRARY(upnpframework STATIC
     src/guid.h                                          src/guid.cpp
 )
 
-TARGET_LINK_LIBRARIES(upnpframework utils)
+target_include_directories(upnpframework PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<INSTALL_INTERFACE:include>
+    ${Boost_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_BINARY_DIR}
+)
+
+target_include_directories(upnpframework SYSTEM PRIVATE
+    ${BEAST_INCLUDE_DIR}
+)
+
+target_link_libraries(upnpframework utils)
 
 IF (MINGW)
-    TARGET_LINK_LIBRARIES(upnpframework Iphlpapi ws2_32 Mswsock)
+    target_link_libraries(upnpframework Iphlpapi ws2_32 Mswsock)
 ENDIF ()
 
 IF (APPLE)
     # uuid dependency
-    TARGET_LINK_LIBRARIES(upnpframework "-framework CoreFoundation")
+    target_link_libraries(upnpframework "-framework CoreFoundation")
 ELSEIF (UNIX)
     # uuid dependency
-    TARGET_LINK_LIBRARIES(upnpframework "uuid")
+    target_link_libraries(upnpframework "uuid")
 ENDIF ()
 
 IF (NOT STD_ASIO)
-    TARGET_LINK_LIBRARIES(upnpframework ${Boost_LIBRARIES})
+    target_link_libraries(upnpframework ${Boost_LIBRARIES})
 ENDIF ()
 
 IF (ENABLE_TESTS)
-    ADD_SUBDIRECTORY(test)
+    add_subdirectory(test)
 ENDIF ()

@@ -1,6 +1,4 @@
 INCLUDE_DIRECTORIES(
-    ${UTILS_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
@@ -8,14 +6,6 @@ INCLUDE_DIRECTORIES(
 INCLUDE_DIRECTORIES(SYSTEM
     ${CMAKE_CURRENT_SOURCE_DIR}/testframework
 )
-
-LINK_DIRECTORIES(
-    ${UPNPFRAMEWORK_LIBRARY_DIRS}
-)
-
-#     devicediscover.h
-#     controlpointtest.cpp
-#     testenvironment.h
 
 ADD_EXECUTABLE(upnpframeworktest
     testframework/gmock-gtest-all.cpp
