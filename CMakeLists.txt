@@ -1,59 +1,59 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-ENABLE_TESTING()
+cmake_minimum_required(VERSION 3.1)
+enable_testing()
 
-SET(CMAKE_MODULES_PATH modules)
+set(CMAKE_MODULES_PATH modules)
 
-FIND_PACKAGE(PkgConfig)
+find_package(PkgConfig)
 
-IF (STD_ASIO)
-    FIND_PATH(ASIO_INCLUDE_DIR
+if (STD_ASIO)
+    find_path(ASIO_INCLUDE_DIR
         NAMES asio.hpp
     )
 
-    IF (NOT ASIO_INCLUDE_DIR)
-        MESSAGE(FATAL_ERROR "Could not find the asio headers")
-    ENDIF ()
+    if (NOT ASIO_INCLUDE_DIR)
+        message(FATAL_ERROR "Could not find the asio headers")
+    endif ()
 
-    ADD_DEFINITIONS("-DASIO_STANDALONE")
-ELSE ()
+    add_definitions("-DASIO_STANDALONE")
+else ()
     set (Boost_USE_STATIC_LIBS ON)
     add_definitions("-DBOOST_ALL_NO_LIB")
     find_package(Boost REQUIRED COMPONENTS system)
-ENDIF ()
+endif ()
 
-FIND_PATH(BEAST_INCLUDE_DIR
+find_path(BEAST_INCLUDE_DIR
     NAMES beast/http.hpp
 )
 
-IF (NOT BEAST_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Could not find the beast http headers")
-ENDIF ()
-
-if (CMAKE_GENERATOR STREQUAL Xcode)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
-elseif (NOT MSVC)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
+if (NOT BEAST_INCLUDE_DIR)
+    message(FATAL_ERROR "Could not find the beast http headers")
 endif ()
 
-OPTION(STANDALONE "Not used as a submodule of another project" OFF)
-OPTION(ENABLE_TESTS "build unit tests" ON)
+if (CMAKE_GENERATOR STREQUAL Xcode)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+elseif (NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
+endif ()
 
-IF (STANDALONE)
-    ADD_SUBDIRECTORY(../utils utils)
+option(STANDALONE "Not used as a submodule of another project" OFF)
+option(ENABLE_TESTS "build unit tests" ON)
 
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-    SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
-    set (CMAKE_CXX_STANDARD 14)
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    ENDIF ()
-ENDIF ()
+if (STANDALONE)
+    add_subdirectory(../utils utils)
 
-IF (CMAKE_GENERATOR STREQUAL Xcode)
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
-ENDIF ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
+    set(CMAKE_CXX_STANDARD 14)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif ()
+endif ()
 
-ADD_LIBRARY(upnpframework STATIC
+if (CMAKE_GENERATOR STREQUAL Xcode)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+endif ()
+
+add_library(upnpframework STATIC
     inc/upnp/upnp.serviceclientbase.h
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp
@@ -133,22 +133,22 @@ target_include_directories(upnpframework SYSTEM PRIVATE
 
 target_link_libraries(upnpframework utils)
 
-IF (MINGW)
+if (MINGW)
     target_link_libraries(upnpframework Iphlpapi ws2_32 Mswsock)
-ENDIF ()
+endif ()
 
-IF (APPLE)
+if (APPLE)
     # uuid dependency
     target_link_libraries(upnpframework "-framework CoreFoundation")
-ELSEIF (UNIX)
+ELSEif (UNIX)
     # uuid dependency
     target_link_libraries(upnpframework "uuid")
-ENDIF ()
+endif ()
 
-IF (NOT STD_ASIO)
+if (NOT STD_ASIO)
     target_link_libraries(upnpframework ${Boost_LIBRARIES})
-ENDIF ()
+endif ()
 
-IF (ENABLE_TESTS)
+if (ENABLE_TESTS)
     add_subdirectory(test)
-ENDIF ()
+endif ()

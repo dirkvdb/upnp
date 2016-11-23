@@ -1,13 +1,12 @@
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
+include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 
-INCLUDE_DIRECTORIES(SYSTEM
+include_directories(SYSTEM
     ${CMAKE_CURRENT_SOURCE_DIR}/testframework
 )
 
-ADD_EXECUTABLE(upnpframeworktest
+add_executable(upnpframeworktest
     testframework/gmock-gtest-all.cpp
     main.cpp
 
@@ -46,35 +45,35 @@ ADD_EXECUTABLE(upnpframeworktest
     upnp.mediarenderertest.cpp
 )
 
-FIND_PATH(BENCHMARK_INCLUDE_DIR
+find_path(BENCHMARK_INCLUDE_DIR
     NAMES benchmark/benchmark.h
 )
 
-FIND_LIBRARY(BENCHMARK_LIBRARY
+find_library(BENCHMARK_LIBRARY
     NAMES benchmark
 )
 
-IF (BENCHMARK_INCLUDE_DIR AND BENCHMARK_LIBRARY)
-    ADD_EXECUTABLE(upnpbenchmark
+if (BENCHMARK_INCLUDE_DIR AND BENCHMARK_LIBRARY)
+    add_executable(upnpbenchmark
         upnp.xml.parseutilsbenchmark.cpp
         benchmark.cpp
     )
 
-    TARGET_LINK_LIBRARIES(upnpbenchmark upnpframework ${BENCHMARK_LIBRARY})
+    target_link_libraries(upnpbenchmark upnpframework ${BENCHMARK_LIBRARY})
 
-    IF (MINGW OR WIN32)
-        TARGET_LINK_LIBRARIES(upnpbenchmark upnpframework Shlwapi)
-    ENDIF ()
-ENDIF ()
+    if (MINGW OR WIN32)
+        target_link_libraries(upnpbenchmark Shlwapi)
+    endif ()
+endif ()
 
-TARGET_LINK_LIBRARIES(upnpframeworktest
+target_link_libraries(upnpframeworktest
     upnpframework
 )
 
-IF (MINGW)
-    TARGET_LINK_LIBRARIES(upnpframeworktest
-        -lIphlpapi -lws2_32 -lwsock32
+if (MINGW)
+    target_link_libraries(upnpframeworktest
+        Iphlpapi ws2_32 wsock32
     )
-ENDIF()
+endif()
 
-ADD_TEST(NAME UPnPFrameworkTests COMMAND upnpframeworktest)
+add_test(NAME UPnPFrameworkTests COMMAND upnpframeworktest)
