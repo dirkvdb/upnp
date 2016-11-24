@@ -3,6 +3,23 @@ enable_testing()
 
 set(CMAKE_MODULES_PATH modules)
 
+option(STANDALONE "Not used as a submodule of another project" OFF)
+option(ENABLE_TESTS "build unit tests" ON)
+
+if (STANDALONE)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif ()
+    
+    add_subdirectory(../utils utils)
+    get_directory_property(UTILS_INCLUDE_DIRS   DIRECTORY ../utils INCLUDE_DIRECTORIES)
+endif ()
+
 find_package(PkgConfig)
 
 if (STD_ASIO)
@@ -33,20 +50,6 @@ if (CMAKE_GENERATOR STREQUAL Xcode)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 elseif (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color")
-endif ()
-
-option(STANDALONE "Not used as a submodule of another project" OFF)
-option(ENABLE_TESTS "build unit tests" ON)
-
-if (STANDALONE)
-    add_subdirectory(../utils utils)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
-    set(CMAKE_CXX_STANDARD 14)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    endif ()
 endif ()
 
 if (CMAKE_GENERATOR STREQUAL Xcode)
