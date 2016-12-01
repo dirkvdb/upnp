@@ -130,7 +130,7 @@ target_include_directories(upnpframework PUBLIC
     PRIVATE ${CMAKE_BINARY_DIR}
 )
 
-target_include_directories(upnpframework SYSTEM PRIVATE
+target_include_directories(upnpframework SYSTEM PUBLIC
     ${BEAST_INCLUDE_DIR}
 )
 

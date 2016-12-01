@@ -30,7 +30,7 @@ static const std::string simpleRootDesc =
     "   <device>"
     "       <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>"
     "       <UDN>{}</UDN>"
-    "       <friendlyName>NAS</friendlyName>"
+    "       <friendlyName>Test Device</friendlyName>"
     "       <UPC></UPC>"
     "       <presentationURL>{}</presentationURL>"
     "       <serviceList/>"
@@ -103,8 +103,16 @@ public:
 
         if (fut.wait_for(3s) != std::future_status::ready)
         {
-            scanner.refresh();
-            EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+            try
+            {
+                scanner.getDevice(device.getUniqueDeviceName());
+            }
+            catch (std::invalid_argument)
+            {
+                // Device still not discovered, try one more wait
+                scanner.refresh();
+                EXPECT_EQ(std::future_status::ready, fut.wait_for(3s));
+            }
         }
     }
 
