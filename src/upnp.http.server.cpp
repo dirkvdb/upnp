@@ -181,7 +181,7 @@ public:
                 if (func)
                 {
                     log::debug("[{}] handle request: {}", m_sessionId, m_request.method);
-                    writeResponse(std::make_shared<std::string>(func(m_request)), closeConnection);
+                    writeResponse(std::make_shared<std::string>(func(Request(m_request))), closeConnection);
                 }
                 else
                 {

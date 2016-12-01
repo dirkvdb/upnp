@@ -186,7 +186,7 @@ inline const char* status_message(StatusCode status)
 class Request
 {
 public:
-    Request(beast::http::request<beast::http::string_body> req)
+    explicit Request(beast::http::request<beast::http::string_body> req)
     : m_req(std::move(req))
     {
     }
