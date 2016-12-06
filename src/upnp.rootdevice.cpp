@@ -309,7 +309,9 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
             if (!response.initialEvent.empty())
             {
                 // Send the initial event
-                notifyEvent(request.sid, response.initialEvent);
+                m_io.post([=] () {
+                    notifyEvent(request.sid, response.initialEvent);
+                });
             }
 
             return fmt::format(s_subscriptionResponse, request.sid, response.timeout.count());

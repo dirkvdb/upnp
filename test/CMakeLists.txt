@@ -17,6 +17,7 @@ add_executable(upnpframeworktest
     testxmls.h
     upnp.utilstest.cpp
     upnp.clienttest.cpp
+    upnp.lastchangevariabletest.cpp
     upnp.rootdevicetest.cpp
     upnp.ssdp.clienttest.cpp
     upnp.ssdp.servertest.cpp

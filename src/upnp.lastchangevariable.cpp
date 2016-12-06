@@ -95,32 +95,34 @@ void LastChangeVariable::createLastChangeEvent()
     {
         if (LastChangeEvent)
         {
-            std::vector<std::pair<std::string, std::string>> vars;
+            std::vector<std::pair<std::string, std::string>> variables;
 
             xml_document<> doc;
             auto* event = doc.allocate_node(node_element, s_event);
             event->append_attribute(doc.allocate_attribute(s_xmlnsAtr, m_eventMetaNamespace.c_str()));
 
-            for (auto& vars : m_changedVariables)
+            for (const auto& vars : m_changedVariables)
             {
                 auto* instance = doc.allocate_node(node_element, s_instanceIdNode);
                 auto* indexString = doc.allocate_string(std::to_string(vars.first).c_str());
                 instance->append_attribute(doc.allocate_attribute(s_valAtr, indexString));
 
-                for (auto& var : vars.second)
+                for (const auto& var : vars.second)
                 {
                     instance->append_node(xml::serviceVariableToElement(doc, var));
                 }
+
+                event->append_node(instance);
             }
 
-            vars.emplace_back("LastChange"s, xml::encode(xml::toString(doc)));
+            variables.emplace_back("LastChange"s, xml::encode(xml::toString(*event)));
 
-            LastChangeEvent(xml::createNotificationXml(vars));
+            LastChangeEvent(xml::createNotificationXml(variables));
             m_changedVariables.clear();
             m_lastUpdate = std::chrono::steady_clock::now();
 
 #ifdef DEBUG_LAST_CHANGE_VAR
-            utils::log::debug("LastChange event: {}", xmlDoc);
+            utils::log::debug("LastChange event: {}", xml::toString(doc));
 #endif
         }
     }
