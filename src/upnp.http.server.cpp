@@ -38,6 +38,8 @@ using namespace utils;
 using namespace asio;
 using namespace std::literals::chrono_literals;
 
+//#define DEBUG_HTTP
+
 namespace upnp
 {
 namespace http
@@ -112,7 +114,10 @@ public:
 
     void writeResponse(std::shared_ptr<std::string> response, bool closeConnection)
     {
+#ifdef DEBUG_HTTP
         log::info("Write response: {}", *response);
+#endif
+
         async_write(socket, buffer(*response), [this, closeConnection, response, self = shared_from_this()] (const asio_error_code& error, size_t) {
             if (error)
             {
@@ -210,7 +215,9 @@ public:
 void Server::accept()
 {
     auto session = std::make_shared<Session>(m_io, *this, ++m_sessionId);
-    log::info("Accepting session: {}", m_sessionId);
+#ifdef DEBUG_HTTP
+    log::debug("Accepting session: {}", m_sessionId);
+#endif
     m_acceptor.async_accept(session->socket, [this, session] (const asio_error_code& error) {
         if (error)
         {
@@ -221,7 +228,9 @@ void Server::accept()
         }
         else
         {
+#ifdef DEBUG_HTTP
             log::info("Http server: Connection attempt {}", m_sessionId);
+#endif
             session->receiveData();
             accept();
         }
