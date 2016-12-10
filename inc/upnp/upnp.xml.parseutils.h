@@ -6,7 +6,7 @@
 #include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "upnp/upnp.contentdirectory.types.h"
-
+#include "upnp/stringview.h"
 
 
 namespace rapidxml_ns
@@ -26,10 +26,8 @@ class ServiceVariable;
 namespace xml
 {
 
-std::string encode(const std::string& data);
-std::string encode(const char* data, size_t dataSize);
-std::string decode(const std::string& data);
-std::string decode(const char* data, size_t dataSize);
+std::string encode(std::string_view data);
+std::string decode(std::string_view data);
 
 void parseDeviceInfo(const std::string& xml, Device& device);
 std::map<std::string, std::string> getEventValues(rapidxml_ns::xml_document<char>& doc);

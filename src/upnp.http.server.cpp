@@ -180,7 +180,7 @@ public:
                 auto& func = server.m_handlers.at(enum_value(method));
                 if (func)
                 {
-                    log::debug("[{}] handle request: {}", m_sessionId, m_request.method);
+                    log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
                     writeResponse(std::make_shared<std::string>(func(Request(m_request))), closeConnection);
                 }
                 else

@@ -64,7 +64,6 @@ std::string Service::getSubscriptionResponse()
     auto* propertySet = doc.allocate_node(node_element, s_propertySet);
     propertySet->append_attribute(doc.allocate_attribute(s_xmlnsAtr, s_ns));
     auto* property = doc.allocate_node(node_element, s_property);
-    auto* lastChange = doc.allocate_node(node_element, s_lastChange);
 
     auto* event = doc.allocate_node(node_element, s_eventNode);
     event->append_attribute(doc.allocate_attribute(s_xmlnsAtr, serviceTypeToUrnMetadataString(m_type)));
@@ -83,10 +82,9 @@ std::string Service::getSubscriptionResponse()
         event->append_node(instance);
     }
 
-    auto* eventString = doc.allocate_string(xml::encode(xml::toString(*event)).c_str());
-    auto* lastChangeValue = doc.allocate_node(node_element, s_eventNode, eventString);
+    auto* eventString = doc.allocate_string(xml::toString(*event).c_str());
+    auto* lastChange = doc.allocate_node(node_element, s_lastChange, eventString);
 
-    lastChange->append_node(lastChangeValue);
     property->append_node(lastChange);
     propertySet->append_node(property);
     doc.append_node(propertySet);
@@ -282,7 +280,8 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
 
 void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& value)
 {
-    if (getInstanceVariable(id, var).getValue() == value)
+    auto instanceVar = getInstanceVariable(id, var);
+    if (instanceVar.getValue() == value && !instanceVar.getName().empty())
     {
         // value is the same
         return;
@@ -300,7 +299,7 @@ void Service::setInstanceVariable(uint32_t id, Variable var, const std::string& 
     }
 
 
-    log::debug("Add change: {} {}", variableToString(var), value);
+    log::debug("Add AVT change: {} {}", variableToString(var), value);
     m_lastChange.addChangedVariable(id, ServiceVariable(variableToString(var), value));
 }
 
@@ -362,6 +361,11 @@ void Service::throwIfNoAVTransport3Support()
 }
 
 const char* Service::toString(State value)
+{
+    return AVTransport::toString(value);
+}
+
+const char* Service::toString(Status value)
 {
     return AVTransport::toString(value);
 }

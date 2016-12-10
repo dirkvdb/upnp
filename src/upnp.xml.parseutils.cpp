@@ -173,47 +173,37 @@ std::vector<StateVariable> getStateVariablesFromDescription(xml_document<char>& 
 
 }
 
-std::string encode(const std::string& data)
-{
-    return encode(data.c_str(), data.size());
-}
-
-std::string encode(const char* data, size_t dataSize)
+std::string encode(std::string_view data)
 {
     std::string buffer;
-    buffer.reserve(dataSize * 1.1f);
+    buffer.reserve(data.size() * 1.1f);
 
-    for (size_t pos = 0; pos != dataSize; ++pos)
+    for (auto character : data)
     {
-        switch(data[pos])
+        switch(character)
         {
             case '&':  buffer.append("&amp;", 5);       break;
             case '\"': buffer.append("&quot;", 6);      break;
             case '\'': buffer.append("&apos;", 6);      break;
             case '<':  buffer.append("&lt;", 4);        break;
             case '>':  buffer.append("&gt;", 4);        break;
-            default:   buffer += data[pos]; break;
+            default:   buffer += character; break;
         }
     }
 
     return buffer;
 }
 
-std::string decode(const std::string& data)
-{
-    return decode(data.c_str(), data.size());
-}
-
-std::string decode(const char* data, size_t dataSize)
+std::string decode(std::string_view data)
 {
     std::string buffer;
-    buffer.reserve(dataSize);
+    buffer.reserve(data.size());
 
-    for (size_t pos = 0; pos != dataSize; ++pos)
+    for (size_t pos = 0; pos != data.size(); ++pos)
     {
         if (data[pos] == '&')
         {
-            if (pos + 3 > dataSize) // minumum escape sequence has 3 more characters
+            if (pos + 3 > data.size()) // minumum escape sequence has 3 more characters
             {
                 buffer.append(&data[pos], 1);
                 continue;
@@ -227,7 +217,7 @@ std::string decode(const char* data, size_t dataSize)
                 {
                 case 'm':
                 {
-                    if (pos + 4 > dataSize) // amp escape sequence has 4 more characters
+                    if (pos + 4 > data.size()) // amp escape sequence has 4 more characters
                     {
                         buffer.append(&data[pos], 3);
                         pos += 2;
@@ -248,7 +238,7 @@ std::string decode(const char* data, size_t dataSize)
                 }
                 case 'p':
                 {
-                    if (pos + 5 > dataSize) // apos escape sequence has 5 more characters
+                    if (pos + 5 > data.size()) // apos escape sequence has 5 more characters
                     {
                         buffer.append(&data[pos], 2);
                         pos += 1;
@@ -272,7 +262,7 @@ std::string decode(const char* data, size_t dataSize)
             }
             case 'q':
             {
-                if (pos + 5 > dataSize) // quot escape sequence has 5 more characters
+                if (pos + 5 > data.size()) // quot escape sequence has 5 more characters
                 {
                     buffer.append(&data[pos], 2);
                     pos += 1;
@@ -458,7 +448,7 @@ Item parseContainer(xml_node<char>& containerElem)
         Property prop = propertyFromString(elem->name(), elem->name_size());
         if (prop == Property::Unknown)
         {
-            item.addMetaData(elem->name_string(), decode(elem->value(), elem->value_size()));
+            item.addMetaData(elem->name_string(), decode(elem->value_view()));
             continue;
         }
 
@@ -468,18 +458,18 @@ Item parseContainer(xml_node<char>& containerElem)
             try
             {
                 auto& attrRef = elem->first_attribute_ref("dlna:profileID");
-                item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), decode(elem->value(), elem->value_size()));
+                item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), decode(elem->value_view()));
             }
             catch (std::exception&)
             {
                 // no profile id present, add it as regular metadata
-                item.addMetaData(prop, decode(elem->value(), elem->value_size()));
+                item.addMetaData(prop, decode(elem->value_view()));
             }
 
             continue;
         }
 
-        item.addMetaData(prop, decode(elem->value(), elem->value_size()));
+        item.addMetaData(prop, decode(elem->value_view()));
     }
 
     // check required properties
@@ -532,28 +522,28 @@ Item parseItem(xml_node<char>& itemElem)
                 auto prop = propertyFromString(elem->name(), elem->name_size());
                 if (prop == Property::Res)
                 {
-                    item.addResource(parseResource(*elem, decode(elem->value(), elem->value_size())));
+                    item.addResource(parseResource(*elem, decode(elem->value_view())));
                 }
                 else if (prop == Property::AlbumArt)
                 {
                     // multiple art uris can be present with different dlna profiles (size)
                     try
                     {
-                        item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), decode(elem->value(), elem->value_size()));
+                        item.setAlbumArt(dlna::profileIdFromString(requiredAttributeValue(*elem, "dlna:profileID")), decode(elem->value_view()));
                     }
                     catch (std::exception&)
                     {
                         // no profile id present, add it as regular metadata
-                        item.addMetaData(prop, decode(elem->value(), elem->value_size()));
+                        item.addMetaData(prop, decode(elem->value_view()));
                     }
                 }
                 else if (prop != Property::Unknown)
                 {
-                    item.addMetaData(prop, decode(elem->value(), elem->value_size()));
+                    item.addMetaData(prop, decode(elem->value_view()));
                 }
                 else
                 {
-                    item.addMetaData(elem->name_string(), decode(elem->value(), elem->value_size()));
+                    item.addMetaData(elem->name_string(), decode(elem->value_view()));
                 }
             }
             catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: {}", e.what()); }
@@ -648,7 +638,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
     {
         if (strncmp("Result", child->name(), child->name_size()) == 0)
         {
-            browseResult = decode(child->value(), child->value_size());
+            browseResult = decode(child->value_view());
         }
         else if (strncmp("NumberReturned", child->name(), child->name_size()) == 0)
         {

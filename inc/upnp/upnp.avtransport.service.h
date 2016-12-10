@@ -81,6 +81,7 @@ public:
     virtual void setInstanceVariable(uint32_t id, Variable var, const std::string& value) override;
 
     static const char* toString(State);
+    static const char* toString(Status);
     static const char* toString(PlayMode);
     static State stateFromString(const std::string& value);
 

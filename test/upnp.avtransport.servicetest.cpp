@@ -211,5 +211,20 @@ TEST_F(AVTransportServiceTest, GetCurrentTransportActions)
     EXPECT_EQ(expected.toString(), response);
 }
 
+TEST_F(AVTransportServiceTest, GetSubscriptionResponse)
+{
+    std::string expected =
+        "<?xml version=\"1.0\"?>"
+        "<e:propertyset xmlns:e=\"urn:schemas-upnp-org:event-1-0\">"
+        "<e:property>"
+        "<LastChange>"
+        "&lt;Event xmlns:e=&quot;urn:schemas-upnp-org:metadata-1-0/AVT/&quot;&gt;&lt;InstanceID val=&quot;0&quot;/&gt;&lt;/Event&gt;"
+        "</LastChange>"
+        "</e:property>"
+        "</e:propertyset>";
+
+    EXPECT_EQ(expected, service.getSubscriptionResponse());
+}
+
 }
 }
