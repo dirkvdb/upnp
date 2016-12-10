@@ -36,6 +36,7 @@ namespace upnp
 
 using namespace asio;
 using namespace utils;
+using namespace std::chrono_literals;
 
 static const std::string s_htmlErrorResponse =
     "HTTP/1.1 {} {}\r\n"
@@ -253,9 +254,11 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
     auto iter = m_subscriptions.find(serviceId);
     if (iter != m_subscriptions.end())
     {
+        auto seq = iter->second.sequence;
+
         if (iter->second.sequence == std::numeric_limits<uint32_t>::max())
         {
-            iter->second.sequence = 1;
+            iter->second.sequence = 0;
         }
         else
         {
@@ -265,7 +268,7 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
         auto soapClient = std::make_shared<soap::Client>(m_io);
         auto data = std::make_shared<std::string>(std::move(eventData));
         log::debug("Send notification: {} {}", iter->second.deliveryUrls.front(), *data);
-        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, iter->second.sequence, *data, [data, soapClient] (const std::error_code& error, http::StatusCode status) {
+        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, seq, *data, [data, soapClient] (const std::error_code& error, http::StatusCode status) {
             if (error)
             {
                 log::warn("Failed to send notification: HTTP {}", error.message());

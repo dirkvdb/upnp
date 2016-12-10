@@ -144,7 +144,7 @@ TEST_F(RootDeviceTest, SubscriptionRequest)
     EXPECT_CALL(mock, onEvent(_)).WillOnce(Invoke([&] (const SubscriptionEvent& ev) {
         EXPECT_EQ(generatedSid, ev.sid);
         EXPECT_EQ("EventData"s, ev.data);
-        EXPECT_EQ(1u, ev.sequence);
+        EXPECT_EQ(0u, ev.sequence);
         prom.set_value();
     }));
 
