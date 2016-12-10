@@ -258,7 +258,7 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
 
         if (iter->second.sequence == std::numeric_limits<uint32_t>::max())
         {
-            iter->second.sequence = 0;
+            iter->second.sequence = 1;
         }
         else
         {
