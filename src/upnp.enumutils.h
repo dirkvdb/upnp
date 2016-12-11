@@ -21,8 +21,7 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "upnp/upnptypes.h"
-
+#include "utils/format.h"
 #include "upnp/stringview.h"
 
 namespace upnp
@@ -87,7 +86,7 @@ IfEndsWithCount<EnumType> enum_cast(const std::string_view& span)
     auto value = details::enum_cast<EnumType>(span);
     if (value == EnumType::EnumCount)
     {
-        throw Exception("Unknown {} enum value: {}", typeid(EnumType).name(), span.to_string());
+        throw std::invalid_argument(fmt::format("Unknown {} enum value: {}", typeid(EnumType).name(), span.to_string()));
     }
 
     return value;

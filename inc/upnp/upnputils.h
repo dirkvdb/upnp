@@ -23,7 +23,6 @@
 #include <chrono>
 
 #include "utils/stringoperations.h"
-#include "upnp/upnptypes.h"
 
 namespace upnp
 {
@@ -32,7 +31,7 @@ inline void throwOnNull(const void* pPtr, const char* pMsg)
 {
     if (!pPtr)
     {
-        throw Exception(pMsg);
+        throw std::runtime_error(pMsg);
     }
 }
 

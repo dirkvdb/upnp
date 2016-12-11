@@ -17,7 +17,6 @@
 #pragma once
 
 #include "upnp/upnp.item.h"
-#include "upnp/upnptypes.h"
 #include "upnp/upnp.soap.types.h"
 
 #include "utils/numericoperations.h"

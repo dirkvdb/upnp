@@ -346,7 +346,7 @@ std::string Service::getStateVariables(uint32_t id, const std::string& variableL
 
         return xml::toString(doc);
     }
-    catch (Exception& e)
+    catch (const std::exception& e)
     {
         throw InvalidStateVariableListException();
     }

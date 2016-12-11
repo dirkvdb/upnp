@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "upnp/upnp.protocolinfo.h"
 #include "upnp/upnp.servicefaults.h"
 
 namespace upnp

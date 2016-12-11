@@ -91,7 +91,7 @@ SortType ContentDirectory::sortTypeFromString(char c)
     if (c == '-')   return SortType::Descending;
     if (c == '+')   return SortType::Ascending;
 
-    throw Exception("Invalid sort character: {}", c);
+    throw std::runtime_error(fmt::format("Invalid sort character: {}", c));
 }
 
 }

@@ -22,7 +22,7 @@
 #include <chrono>
 
 #include "upnp/asio.h"
-#include "upnp/upnptypes.h"
+#include "upnp/upnp.types.h"
 #include "upnp/upnpservicevariable.h"
 
 namespace upnp

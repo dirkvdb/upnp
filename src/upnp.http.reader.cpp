@@ -17,7 +17,6 @@
 #include "upnp/upnp.http.reader.h"
 #include "upnp/upnp.http.functions.h"
 #include "upnp.http.client.h"
-#include "upnp/upnptypes.h"
 #include "utils/format.h"
 #include "utils/log.h"
 
@@ -53,11 +52,11 @@ void Reader::open(const std::string& url)
     http::getContentLength(io, url, s_timeout, [&prom] (const std::error_code& error, StatusCode status, size_t contentLength) {
         if (error)
         {
-            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url: {}", error.message())));
+            prom.set_exception(std::make_exception_ptr(std::runtime_error("Failed to open url: " + error.message())));
         }
         else if (status != StatusCode::Ok)
         {
-            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url, HTTP error: {}", status_message(status))));
+            prom.set_exception(std::make_exception_ptr(std::runtime_error(fmt::format("Failed to open url, HTTP error: {}", status_message(status)))));
         }
         else
         {
@@ -132,11 +131,11 @@ uint64_t Reader::read(uint8_t* pData, uint64_t size)
     http::getRange(io, m_url, m_currentPosition, size, pData, s_timeout, [&prom] (const std::error_code& error, StatusCode status, uint8_t*) {
         if (error)
         {
-            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url: {}", error.message())));
+            prom.set_exception(std::make_exception_ptr(std::runtime_error(fmt::format("Failed to open url: " + error.message()))));
         }
         else if (status != StatusCode::PartialContent)
         {
-            prom.set_exception(std::make_exception_ptr(Exception("Failed to open url, HTTP error: {}", status_message(status))));
+            prom.set_exception(std::make_exception_ptr(std::runtime_error(fmt::format("Failed to open url, HTTP error: {}", status_message(status)))));
         }
         else
         {
@@ -161,7 +160,7 @@ std::vector<uint8_t> Reader::readAllData()
     seekAbsolute(0);
     if (data.size() != read(data.data(), data.size()))
     {
-        throw Exception("Failed to read all file data for url: {}", m_url);
+        throw std::runtime_error("Failed to read all file data for url: " + m_url);
     }
 
     return data;
@@ -175,7 +174,7 @@ void Reader::throwOnEmptyUrl()
 {
     if (m_url.empty())
     {
-        throw Exception("HttpReader: no url was opened yet");
+        throw std::runtime_error("HttpReader: no url was opened yet");
     }
 }
 
@@ -189,7 +188,7 @@ utils::IReader* ReaderBuilder::build(const std::string& uri)
 {
     if (!supportsUri(uri))
     {
-        throw Exception("Uri is not supported by Http reader: {}", uri);
+        throw std::runtime_error("Uri is not supported by Http reader: " + uri);
     }
 
     return new Reader();

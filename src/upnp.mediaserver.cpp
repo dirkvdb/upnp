@@ -275,7 +275,7 @@ void MediaServer::search(const std::string& id, const std::map<Property, std::st
 
         if (!canSearchForProperty(crit.first))
         {
-            throw Exception("The server does not support to search on {}", toString(crit.first));
+            throw std::runtime_error(fmt::format("The server does not support to search on {}", toString(crit.first)));
         }
 
         critString << toString(crit.first) << " contains \"" << crit.second << "\"";
@@ -349,7 +349,7 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
 
     if (sort != Property::Unknown && !canSortOnProperty(sort))
     {
-        throw Exception("The server does not support sort on: {}", toString(sort));
+        throw std::runtime_error(fmt::format("The server does not support sort on: {}", toString(sort)));
     }
 
     std::stringstream ss;

@@ -428,7 +428,7 @@ Resource parseResource(xml_node<char>& node, const std::string& url)
                 res.addMetaData(node.name_string(), attr->value_string());
             }
         }
-        catch (std::exception& e) { /* skip invalid resource */ log::warn(e.what()); }
+        catch (const std::exception& e) { /* skip invalid resource */ log::warn(e.what()); }
     }
 
     return res;
@@ -460,7 +460,7 @@ Item parseContainer(xml_node<char>& containerElem)
                 auto& attrRef = elem->first_attribute_ref("dlna:profileID");
                 item.setAlbumArt(dlna::profileIdFromString(attrRef.value(), attrRef.value_size()), decode(elem->value_view()));
             }
-            catch (std::exception&)
+            catch (const std::exception&)
             {
                 // no profile id present, add it as regular metadata
                 item.addMetaData(prop, decode(elem->value_view()));
@@ -475,7 +475,7 @@ Item parseContainer(xml_node<char>& containerElem)
     // check required properties
     if (item.getTitle().empty())
     {
-        throw Exception("No title found in item");
+        throw std::runtime_error("No title found in item");
     }
 
     return item;
@@ -496,7 +496,7 @@ std::vector<Item> parseContainers(const std::string& xml)
         {
             containers.push_back(parseContainer(*elem));
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             log::warn("Failed to parse container, skipping ({})", e.what());
         }
@@ -546,10 +546,10 @@ Item parseItem(xml_node<char>& itemElem)
                     item.addMetaData(elem->name_string(), decode(elem->value_view()));
                 }
             }
-            catch (std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: {}", e.what()); }
+            catch (const std::exception& e) { /* try to parse the rest */ log::warn("Failed to parse upnp item: {}", e.what()); }
         }
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         log::warn("Failed to parse item");
     }
@@ -582,7 +582,7 @@ std::vector<Item> parseItems(const std::string& xml)
         {
             items.push_back(parseItem(*elem));
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             log::error("Failed to parse item, skipping ({})", e.what());
         }
@@ -613,7 +613,7 @@ Item parseMetaData(const std::string& meta)
                 return parseItem(*node);
             }
         }
-        catch (std::exception&) {}
+        catch (const std::exception&) {}
     }
 
     log::warn("No metadata could be retrieved");
@@ -656,7 +656,7 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
 
     if (browseResult.empty())
     {
-        throw Exception("Failed to obtain browse result");
+        throw std::runtime_error("Failed to obtain browse result");
     }
 
     return browseResult;
@@ -797,7 +797,7 @@ void addItemToDidl(xml_document<char>& doc, xml_node<char>& didl, const Item& it
             elem->append_node(node);
             itemElem->append_node(elem);
         }
-        catch (std::exception&) { /* Unknown metadata */ }
+        catch (const std::exception&) { /* Unknown metadata */ }
     }
 
     for (auto& uri : item.getAlbumArtUris())
@@ -810,7 +810,7 @@ void addItemToDidl(xml_document<char>& doc, xml_node<char>& didl, const Item& it
             elem->append_node(node);
             itemElem->append_node(elem);
         }
-        catch (std::exception&) { /* Unknown profileId */ }
+        catch (const std::exception&) { /* Unknown profileId */ }
     }
 
     for (auto& res : item.getResources())
@@ -845,7 +845,7 @@ void addItemToDidl(xml_document<char>& doc, xml_node<char>& didl, const Item& it
                 itemElem->append_node(elem);
             }
         }
-        catch (std::exception&) {}
+        catch (const std::exception&) {}
     }
 
     didl.append_node(itemElem);

@@ -24,7 +24,6 @@
 
 #include "utils/log.h"
 #include "utils/stringoperations.h"
-#include "upnp/upnptypes.h"
 #include "upnp/upnp.actionresponse.h"
 #include "upnp/upnp.rootdeviceinterface.h"
 #include "upnp/upnp.servicefaults.h"

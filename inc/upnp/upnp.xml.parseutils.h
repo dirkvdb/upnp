@@ -3,7 +3,6 @@
 #include <string>
 
 #include "upnp/upnp.item.h"
-#include "upnp/upnptypes.h"
 #include "upnp/upnpstatevariable.h"
 #include "upnp/upnp.contentdirectory.types.h"
 #include "upnp/stringview.h"

@@ -21,7 +21,6 @@
 #include <chrono>
 #include <cinttypes>
 
-#include "upnp/upnptypes.h"
 #include "upnp/upnp.soap.types.h"
 
 namespace upnp

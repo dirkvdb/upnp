@@ -18,7 +18,8 @@
 
 #include "utils/format.h"
 #include "utils/stringoperations.h"
-#include "upnp/upnptypes.h"
+
+#include <stdexcept>
 
 namespace upnp
 {
@@ -28,7 +29,7 @@ ProtocolInfo::ProtocolInfo(const std::string& protocolString)
     auto items = utils::stringops::tokenize(protocolString, ":");
     if (items.size() != 4)
     {
-        throw Exception("Invalid protocol definition: {}", protocolString);
+        throw std::invalid_argument("Invalid protocol definition: " + protocolString);
     }
 
     m_protocol          = items[0];

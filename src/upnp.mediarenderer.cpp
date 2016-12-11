@@ -82,7 +82,7 @@ MediaRenderer::PlaybackState transportStateToPlaybackState(AVTransport::State st
         case AVTransport::State::Stopped:
         case AVTransport::State::NoMediaPresent:    return MediaRenderer::PlaybackState::Stopped;
 
-        default: throw Exception("Invalid transport state");
+        default: throw std::invalid_argument("Invalid transport state");
     }
 }
 
@@ -98,7 +98,7 @@ MediaRenderer::Action transportActionToAction(AVTransport::Action action)
         case AVTransport::Action::Previous: return MediaRenderer::Action::Previous;
         case AVTransport::Action::Record:   return MediaRenderer::Action::Record;
 
-        default: throw Exception("Invalid transport action");
+        default: throw std::invalid_argument("Invalid transport action");
     }
 }
 
@@ -209,7 +209,7 @@ bool MediaRenderer::supportsPlayback(const upnp::Item& item, Resource& suggested
 {
     if (!m_device)
     {
-        throw Exception("No UPnP renderer selected");
+        throw std::runtime_error("No UPnP renderer selected");
     }
 
     if (m_protocolInfo.empty())
@@ -601,7 +601,7 @@ void MediaRenderer::throwOnUnknownConnectionId() const
 {
     if (m_connInfo.connectionId == ConnectionManager::UnknownConnectionId)
     {
-        throw Exception("No active renderer connection");
+        throw std::runtime_error("No active renderer connection");
     }
 }
 
