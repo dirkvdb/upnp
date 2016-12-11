@@ -30,36 +30,15 @@ namespace soap
 class Fault : public std::exception
 {
 public:
-    Fault(uint32_t ec)
-    : m_errorCode(ec)
-    {
-    }
+    Fault(uint32_t ec);
+    Fault(uint32_t ec, std::string desc);
 
-    Fault(uint32_t ec, std::string desc)
-    : m_errorCode(ec)
-    , m_errorDescription(std::move(desc))
-    {
-    }
+    uint32_t errorCode() const noexcept;
+    const std::string& errorDescription() const noexcept;
 
-    uint32_t errorCode() const noexcept
-    {
-        return m_errorCode;
-    }
+    const char* what() const noexcept override;
 
-    const std::string& errorDescription() const noexcept
-    {
-        return m_errorDescription;
-    }
-
-    const char* what() const noexcept override
-    {
-        return m_errorDescription.c_str();
-    }
-
-    bool operator==(const Fault& other) const noexcept
-    {
-        return m_errorCode == other.m_errorCode && m_errorDescription == other.m_errorDescription;
-    }
+    bool operator==(const Fault& other) const noexcept;
 
 private:
     uint32_t m_errorCode = 0;

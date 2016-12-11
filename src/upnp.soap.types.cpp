@@ -1,4 +1,4 @@
-//    Copyright (C) 2013 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2012 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,31 +14,43 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#pragma once
-
-#include <string>
-#include <map>
-#include <chrono>
-#include <cinttypes>
-
-#include "upnp/upnptypes.h"
 #include "upnp/upnp.soap.types.h"
 
 namespace upnp
 {
+namespace soap
+{
 
-#define DEFINE_UPNP_SERVICE_FAULT(name, code, msg) \
-class name final : public soap::Fault \
-{ \
-public: \
-    name() : soap::Fault(code, msg) {} \
-}; \
+Fault::Fault(uint32_t ec)
+: m_errorCode(ec)
+{
+}
 
-DEFINE_UPNP_SERVICE_FAULT(InvalidSubscriptionId,       401, "Invalid subscription id")
-DEFINE_UPNP_SERVICE_FAULT(PreconditionFailed,          412, "Precondition failed")
+Fault::Fault(uint32_t ec, std::string desc)
+: m_errorCode(ec)
+, m_errorDescription(std::move(desc))
+{
+}
 
-DEFINE_UPNP_SERVICE_FAULT(InvalidAction,               401, "Invalid action")
-DEFINE_UPNP_SERVICE_FAULT(InvalidArguments,            402, "Invalid args")
-DEFINE_UPNP_SERVICE_FAULT(ActionFailed,                501, "Action failed")
+uint32_t Fault::errorCode() const noexcept
+{
+    return m_errorCode;
+}
 
+const std::string& Fault::errorDescription() const noexcept
+{
+    return m_errorDescription;
+}
+
+const char* Fault::what() const noexcept
+{
+    return m_errorDescription.c_str();
+}
+
+bool Fault::operator==(const Fault& other) const noexcept
+{
+    return m_errorCode == other.m_errorCode && m_errorDescription == other.m_errorDescription;
+}
+
+}
 }
