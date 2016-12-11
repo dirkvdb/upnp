@@ -55,79 +55,71 @@ std::string Service::getSubscriptionResponse()
     return doc;
 }
 
-ActionResponse Service::onAction(const std::string& action, const std::string& request)
+ActionResponse Service::onAction(const std::string& action, const std::string& requestXml)
 {
-    try
+    xml_document<> doc;
+    doc.parse<parse_non_destructive | parse_trim_whitespace>(requestXml.c_str());
+
+    ActionResponse response(action, { ServiceType::ConnectionManager, 1 });
+    auto& request = doc.first_node_ref().first_node_ref().first_node_ref();
+
+    switch (actionFromString(action))
     {
-        xml_document<> doc;
-        doc.parse<parse_non_destructive | parse_trim_whitespace>(request.c_str());
+    case Action::GetProtocolInfo:
+        response.addArgument("Source",               getVariable(Variable::SourceProtocolInfo).getValue());
+        response.addArgument("Sink",                 getVariable(Variable::SinkProtocolInfo).getValue());
+        break;
+    case Action::PrepareForConnection:
+    {
+        ConnectionInfo connInfo;
+        connInfo.peerConnectionManager  = xml::requiredChildValue(request, "PeerConnectionManager");
+        connInfo.peerConnectionId       = std::stoi(xml::requiredChildValue(request, "PeerConnectionID"));
+        connInfo.direction              = directionFromString(xml::requiredChildValue(request, "Direction"));
 
-        ActionResponse response(action, { ServiceType::ConnectionManager, 1 });
-        auto& request = doc.first_node_ref().first_node_ref().first_node_ref();
+        ProtocolInfo protoInfo(xml::requiredChildValue(request, "RemoteProtocolInfo"));
+        m_connectionManager.prepareForConnection(protoInfo, connInfo);
 
-        switch (actionFromString(action))
-        {
-        case Action::GetProtocolInfo:
-            response.addArgument("Source",               getVariable(Variable::SourceProtocolInfo).getValue());
-            response.addArgument("Sink",                 getVariable(Variable::SinkProtocolInfo).getValue());
-            break;
-        case Action::PrepareForConnection:
-        {
-            ConnectionInfo connInfo;
-            connInfo.peerConnectionManager  = xml::requiredChildValue(request, "PeerConnectionManager");
-            connInfo.peerConnectionId       = std::stoi(xml::requiredChildValue(request, "PeerConnectionID"));
-            connInfo.direction              = directionFromString(xml::requiredChildValue(request, "Direction"));
-
-            ProtocolInfo protoInfo(xml::requiredChildValue(request, "RemoteProtocolInfo"));
-            m_connectionManager.prepareForConnection(protoInfo, connInfo);
-
-            response.addArgument("ConnectionID",         std::to_string(connInfo.connectionId));
-            response.addArgument("AVTransportID",        std::to_string(connInfo.avTransportId));
-            response.addArgument("RcsID",                std::to_string(connInfo.renderingControlServiceId));
-            break;
-        }
-        case Action::ConnectionComplete:
-            m_connectionManager.connectionComplete(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
-            break;
-        case Action::GetCurrentConnectionIDs:
-            response.addArgument("ConnectionIDs", getVariable(Variable::CurrentConnectionIds).getValue());
-            break;
-        case Action::GetCurrentConnectionInfo:
-        {
-            auto connInfo = m_connectionManager.getCurrentConnectionInfo(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
-            response.addArgument("RcsID",                   std::to_string(connInfo.renderingControlServiceId));
-            response.addArgument("AVTransportID",           std::to_string(connInfo.avTransportId));
-            response.addArgument("ProtocolInfo",            connInfo.protocolInfo.toString());
-            response.addArgument("PeerConnectionManager",   connInfo.peerConnectionManager);
-            response.addArgument("PeerConnectionID",        std::to_string(connInfo.peerConnectionId));
-            response.addArgument("Direction",               toString(connInfo.direction));
-            response.addArgument("Status",                  toString(connInfo.connectionStatus));
-            break;
-        }
-
-        case Action::GetRendererItemInfo:
-            // TODO: CHeck ItemMetadataList argument (wrap in xml doxument?)
-            throwIfNoConnectionManager3Support();
-            response.addArgument("ItemRenderingInfoList", m_connectionManager3->getRendererItemInfo(
-                                    csvToVector(xml::requiredChildValue(request, "ItemInfoFilter")),
-                                    xml::requiredChildValue(request, "ItemMetadataList")));
-            break;
-        case Action::GetFeatureList:
-            throwIfNoConnectionManager3Support();
-            response.addArgument("FeatureList", m_connectionManager3->getFeatureList());
-            break;
-
-        default:
-            throw InvalidAction();
-        }
-
-        return response;
+        response.addArgument("ConnectionID",         std::to_string(connInfo.connectionId));
+        response.addArgument("AVTransportID",        std::to_string(connInfo.avTransportId));
+        response.addArgument("RcsID",                std::to_string(connInfo.renderingControlServiceId));
+        break;
     }
-    catch (std::exception& e)
+    case Action::ConnectionComplete:
+        m_connectionManager.connectionComplete(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
+        break;
+    case Action::GetCurrentConnectionIDs:
+        response.addArgument("ConnectionIDs", getVariable(Variable::CurrentConnectionIds).getValue());
+        break;
+    case Action::GetCurrentConnectionInfo:
     {
-        log::error("Error processing ConnectionManager request: {}", e.what());
+        auto connInfo = m_connectionManager.getCurrentConnectionInfo(std::stoi(xml::requiredChildValue(request, "ConnectionID")));
+        response.addArgument("RcsID",                   std::to_string(connInfo.renderingControlServiceId));
+        response.addArgument("AVTransportID",           std::to_string(connInfo.avTransportId));
+        response.addArgument("ProtocolInfo",            connInfo.protocolInfo.toString());
+        response.addArgument("PeerConnectionManager",   connInfo.peerConnectionManager);
+        response.addArgument("PeerConnectionID",        std::to_string(connInfo.peerConnectionId));
+        response.addArgument("Direction",               toString(connInfo.direction));
+        response.addArgument("Status",                  toString(connInfo.connectionStatus));
+        break;
+    }
+
+    case Action::GetRendererItemInfo:
+        // TODO: CHeck ItemMetadataList argument (wrap in xml doxument?)
+        throwIfNoConnectionManager3Support();
+        response.addArgument("ItemRenderingInfoList", m_connectionManager3->getRendererItemInfo(
+                                csvToVector(xml::requiredChildValue(request, "ItemInfoFilter")),
+                                xml::requiredChildValue(request, "ItemMetadataList")));
+        break;
+    case Action::GetFeatureList:
+        throwIfNoConnectionManager3Support();
+        response.addArgument("FeatureList", m_connectionManager3->getFeatureList());
+        break;
+
+    default:
         throw InvalidAction();
     }
+
+    return response;
 }
 
 const char* Service::variableToString(Variable type) const
