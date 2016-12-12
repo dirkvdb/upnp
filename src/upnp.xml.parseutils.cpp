@@ -7,7 +7,7 @@
 #include "utils/format.h"
 #include "utils/stringoperations.h"
 
-#include "upnp/upnputils.h"
+#include "upnp/upnp.utils.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnpservicevariable.h"
 

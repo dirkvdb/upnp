@@ -17,7 +17,7 @@
 #include "upnp/upnp.mediarenderer.h"
 
 #include "upnp/upnp.item.h"
-#include "upnp/upnputils.h"
+#include "upnp/upnp.utils.h"
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "upnp.avtransport.typeconversions.h"

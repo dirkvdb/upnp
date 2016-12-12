@@ -15,7 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.avtransport.client.h"
-#include "upnp/upnputils.h"
+#include "upnp/upnp.utils.h"
 #include "upnp.avtransport.typeconversions.h"
 
 #include "utils/log.h"

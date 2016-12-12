@@ -20,7 +20,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "upnp/upnputils.h"
+#include "upnp/upnp.utils.h"
 
 using namespace utils;
 using namespace testing;
