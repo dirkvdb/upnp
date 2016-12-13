@@ -31,6 +31,7 @@
 #include "upnp/upnp.http.parseutils.h"
 #include "upnp.enumutils.h"
 #include "upnp/stringview.h"
+#include "URI.h"
 
 #include <beast/http.hpp>
 
@@ -68,6 +69,7 @@ Server::Server(asio::io_service& io)
 void Server::start(const ip::tcp::endpoint& address)
 {
     m_acceptor.open(address.protocol());
+    m_acceptor.set_option(asio::socket_base::reuse_address(true));
     m_acceptor.bind(address);
     m_acceptor.listen();
     accept();
@@ -157,40 +159,54 @@ public:
         try
         {
             auto method = methodFromString(m_request.method);
+
+            auto& func = server.m_handlers.at(enum_value(method));
+            if (func)
+            {
+                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
+                writeResponse(std::make_shared<std::string>(func(Request(m_request))), closeConnection);
+                return;
+            }
+
+            auto& asyFunc = server.m_asyncHandlers.at(enum_value(method));
+            if (asyFunc)
+            {
+                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
+                auto self = shared_from_this();
+                asyFunc(Request(m_request), [=] (StatusCode status, const std::string& response) {
+                    if (status == StatusCode::Ok)
+                    {
+                        self->writeResponse(std::make_shared<std::string>(response), closeConnection);
+                    }
+                    else
+                    {
+                        self->writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, enum_value(status), status_message(status))), closeConnection);
+                    }
+                });
+
+                return;
+            }
+
             if (method == http::Method::Head)
             {
                 log::info("[{}] requested file size: {}", m_sessionId, m_request.url);
                 auto& file = server.m_servedFiles.at(m_request.url);
-                writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
+                return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
             else if (method == http::Method::Get)
             {
                 log::info("[{}] requested file: {}", m_sessionId, m_request.url);
                 auto& file = server.m_servedFiles.at(m_request.url);
-
                 auto rangeHeader = m_request.fields["Range"];
                 if (rangeHeader.empty())
                 {
-                    writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), buffer(file.data), closeConnection);
+                    return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), buffer(file.data), closeConnection);
                 }
                 else
                 {
                     auto range = http::parseutils::parseRange(rangeHeader.to_string());
                     auto size = (range.end == 0) ? (file.data.size() - range.start) : (range.end - range.start) + 1;
-                    writeResponse(std::make_shared<std::string>(fmt::format(s_response, 206, size, file.contentType)), buffer(&file.data[range.start], size), closeConnection);
-                }
-            }
-            else
-            {
-                auto& func = server.m_handlers.at(enum_value(method));
-                if (func)
-                {
-                    log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
-                    writeResponse(std::make_shared<std::string>(func(Request(m_request))), closeConnection);
-                }
-                else
-                {
-                    writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, 501, "Not Implemented")), closeConnection);
+                    return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 206, size, file.contentType)), buffer(&file.data[range.start], size), closeConnection);
                 }
             }
         }
@@ -290,6 +306,16 @@ asio::ip::tcp::endpoint Server::getAddress() const
 void Server::setRequestHandler(Method method, RequestCb cb)
 {
     m_handlers.at(enum_value(method)) = cb;
+}
+
+void Server::setRequestHandler(Method method, AsyncRequestCb cb)
+{
+    m_asyncHandlers.at(enum_value(method)) = cb;
+}
+
+std::vector<std::pair<std::string, std::string>> Server::getQueryParameters(std::string_view url)
+{
+    return URI(url.to_string()).getQueryParameters();
 }
 
 }

@@ -57,6 +57,7 @@ if (CMAKE_GENERATOR STREQUAL Xcode)
 endif ()
 
 add_library(upnpframework STATIC
+    inc/upnp/asio.h
     inc/upnp/upnp.serviceclientbase.h
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp

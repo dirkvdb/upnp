@@ -57,7 +57,13 @@ Status httpStatusToStatus(const std::error_code& error, http::StatusCode status)
 }
 
 Client::Client()
-: m_io(std::make_unique<asio::io_service>())
+: m_owningIo(std::make_unique<asio::io_service>())
+, m_io(m_owningIo.get())
+{
+}
+
+Client::Client(asio::io_service& io)
+: m_io(&io)
 {
 }
 
@@ -91,11 +97,14 @@ void Client::initialize(const asio::ip::tcp::endpoint& addr)
         }
     });
 
-    m_asioThread = std::make_unique<std::thread>([this] () {
-        m_io->reset();
-        asio::io_service::work work(*m_io);
-        m_io->run();
-    });
+    if (m_owningIo)
+    {
+        m_asioThread = std::make_unique<std::thread>([this] () {
+            m_io->reset();
+            asio::io_service::work work(*m_io);
+            m_io->run();
+        });
+    }
 }
 
 void Client::uninitialize()
@@ -107,8 +116,11 @@ void Client::uninitialize()
 
     m_eventServer.reset();
 
-    m_asioThread->join();
-    m_asioThread.reset();
+    if (m_asioThread)
+    {
+        m_asioThread->join();
+        m_asioThread.reset();
+    }
 }
 
 std::string Client::getIpAddress() const

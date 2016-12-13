@@ -107,33 +107,18 @@ uint32_t DeviceScanner::getDeviceCount() const
     return static_cast<uint32_t>(m_devices.size());
 }
 
-std::shared_ptr<Device> DeviceScanner::getDevice(const std::string& udn) const
+std::shared_ptr<Device> DeviceScanner::getDevice(std::string_view udn) const
 {
-    std::promise<std::shared_ptr<Device>> p;
-    auto fut = p.get_future();
-
-    m_upnpClient.ioService().post([this, &udn, &p] {
-        auto iter = std::find_if(m_devices.begin(), m_devices.end(), [&udn] (auto& dev) {
-            return dev->udn == udn;
-        });
-
-        iter == m_devices.end() ? p.set_exception(std::make_exception_ptr(std::invalid_argument("Invalid device udn")))
-                                : p.set_value(*iter);
+    auto iter = std::find_if(m_devices.begin(), m_devices.end(), [&udn] (auto& dev) {
+        return dev->udn == udn;
     });
 
-    return fut.get();
+    return iter == m_devices.end() ? nullptr : *iter;
 }
 
 std::vector<std::shared_ptr<Device>> DeviceScanner::getDevices() const
 {
-    std::promise<decltype(m_devices)> p;
-    auto fut = p.get_future();
-
-    m_upnpClient.ioService().post([this, &p] () {
-        p.set_value(m_devices);
-    });
-
-    return fut.get();
+    return m_devices;
 }
 
 void DeviceScanner::checkForDeviceTimeouts()

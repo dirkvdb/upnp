@@ -27,5 +27,10 @@ std::unique_ptr<IClient> createClient()
     return std::make_unique<Client>();
 }
 
+std::unique_ptr<IClient> createClient(asio::io_service& io)
+{
+    return std::make_unique<Client>(io);
+}
+
 }
 }

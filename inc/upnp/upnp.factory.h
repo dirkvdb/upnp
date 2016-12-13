@@ -18,6 +18,8 @@
 
 #include <memory>
 
+#include "upnp/asio.h"
+
 namespace upnp
 {
 
@@ -27,6 +29,7 @@ namespace factory
 {
 
 std::unique_ptr<IClient> createClient();
+std::unique_ptr<IClient> createClient(asio::io_service& io);
 
 }
 }

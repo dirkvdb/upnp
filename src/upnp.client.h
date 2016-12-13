@@ -32,6 +32,7 @@ class Client : public IClient
 {
 public:
     Client();
+    Client(asio::io_service& io);
     virtual ~Client();
 
     void initialize() override;
@@ -66,7 +67,8 @@ private:
     void handlEvent(const SubscriptionEvent& event);
 
     std::unique_ptr<std::thread> m_asioThread;
-    std::unique_ptr<asio::io_service> m_io;
+    std::unique_ptr<asio::io_service> m_owningIo;
+    asio::io_service* m_io;
     std::unique_ptr<gena::Server> m_eventServer;
     std::unordered_map<std::string, std::function<void(SubscriptionEvent)>> m_eventCallbacks;
 };

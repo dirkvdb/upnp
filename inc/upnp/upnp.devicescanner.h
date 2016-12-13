@@ -27,6 +27,7 @@
 #include "upnp/asio.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.ssdp.client.h"
+#include "upnp/stringview.h"
 
 #include "utils/signal.h"
 
@@ -46,7 +47,7 @@ public:
     void refresh();
 
     uint32_t getDeviceCount() const;
-    std::shared_ptr<Device> getDevice(const std::string& udn) const;
+    std::shared_ptr<Device> getDevice(std::string_view udn) const;
     std::vector<std::shared_ptr<Device>> getDevices() const;
 
     utils::Signal<std::shared_ptr<Device>> DeviceDiscoveredEvent;

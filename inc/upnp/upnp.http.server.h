@@ -16,6 +16,7 @@
 #pragma once
 
 #include "upnp/asio.h"
+#include "upnp/upnp.types.h"
 #include "upnp/upnp.http.types.h"
 
 #include <array>
@@ -28,6 +29,7 @@ namespace http
 {
 
 using RequestCb = std::function<std::string(const Request&)>;
+using AsyncRequestCb = std::function<void(const Request&, std::function<void(StatusCode, std::string)>)>;
 
 class Server
 {
@@ -44,6 +46,9 @@ public:
     asio::ip::tcp::endpoint getAddress() const;
 
     void setRequestHandler(Method method, RequestCb cb);
+    void setRequestHandler(Method method, AsyncRequestCb cb);
+
+    static std::vector<std::pair<std::string, std::string>> getQueryParameters(std::string_view url);
 
 private:
     friend class Session;
@@ -62,6 +67,7 @@ private:
     std::unordered_map<std::string, HostedFile> m_servedFiles;
 
     std::array<RequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_handlers;
+    std::array<AsyncRequestCb, std::underlying_type_t<Method>(Method::Unknown)> m_asyncHandlers;
 };
 
 }
