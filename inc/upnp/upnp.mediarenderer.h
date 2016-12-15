@@ -109,6 +109,8 @@ public:
     void activateEvents(std::function<void(Status)> cb);
     void deactivateEvents(std::function<void(Status)> cb);
 
+    static const char* actionToString(Action action);
+
     utils::Signal<std::shared_ptr<Device>>    DeviceChanged;
     utils::Signal<uint32_t>                   VolumeChanged;
     utils::Signal<const Item&>                CurrentTrackChanged;

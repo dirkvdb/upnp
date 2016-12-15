@@ -20,6 +20,7 @@
 #include "upnp/upnp.utils.h"
 #include "utils/log.h"
 #include "utils/stringoperations.h"
+#include "upnp.enumutils.h"
 #include "upnp.avtransport.typeconversions.h"
 
 #include <sstream>
@@ -514,6 +515,21 @@ void MediaRenderer::deactivateEvents(std::function<void(Status)> cb)
     {
         cb(Status());
     }
+}
+
+const char* MediaRenderer::actionToString(Action action)
+{
+    static const std::array<const char*, 7> actions {
+        "Play",
+        "Stop",
+        "Pause",
+        "Seek",
+        "Next",
+        "Previous",
+        "Record"
+    };
+
+    return actions[enum_value(action)];
 }
 
 void MediaRenderer::resetData()
