@@ -1272,6 +1272,16 @@ static const std::string browseResponseContainers =
 "    <UpdateID>4</UpdateID>"
 "</u:BrowseResponse>";
 
+static const std::string browseResponseContainersPart2 =
+"<u:BrowseResponse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">"
+"    <Result>&lt;DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\" xmlns:arib=\"urn:schemas-arib-or-jp:elements-1-0/\" xmlns:dtcp=\"urn:schemas-dtcp-com:metadata-1-0/\" xmlns:pv=\"http://www.pv.com/pvns/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"&gt;"
+"&lt;container id=\"0$1$17$994$23309\" parentID=\"0$1$17$994\" restricted=\"1\" childCount=\"12\" searchable=\"1\"&gt;&lt;dc:title&gt;Title&lt;/dc:title&gt;&lt;upnp:genre&gt;Dubstep, Indie, Experimental, Ambient&lt;/upnp:genre&gt;&lt;upnp:album&gt;+DOME&lt;/upnp:album&gt;&lt;dc:creator&gt;Seekae&lt;/dc:creator&gt;&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" &gt;http://192.168.1.13:9000/disk/DLNA-PNJPEG_TN-OP01-CI1-FLAGS00d00000/defaa/C/O0$1$17$994$23308.jpg?scale=org&lt;/upnp:albumArtURI&gt;&lt;upnp:artist&gt;Seekae&lt;/upnp:artist&gt;&lt;upnp:class&gt;object.container.album.musicAlbum&lt;/upnp:class&gt;&lt;/container&gt;"
+"&lt;/DIDL-Lite&gt;</Result>"
+"    <NumberReturned>1</NumberReturned>"
+"    <TotalMatches>3</TotalMatches>"
+"    <UpdateID>4</UpdateID>"
+"</u:BrowseResponse>";
+
 struct EventValue
 {
     EventValue(const std::string& eventName, const std::string& eventValue)

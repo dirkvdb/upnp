@@ -163,6 +163,44 @@ TEST_F(MediaServerTest, getAllInContainer)
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
 }
 
+TEST_F(MediaServerTest, getAllInContainerMultipleRequests)
+{
+    Action expectedAction1("Browse", "CDCurl", m_cdSvcType);
+    expectedAction1.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction1.addArgument("Filter", "*");
+    expectedAction1.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction1.addArgument("RequestedCount", "2");
+    expectedAction1.addArgument("SortCriteria", "");
+    expectedAction1.addArgument("StartingIndex", "0");
+
+    Action expectedAction2("Browse", "CDCurl", m_cdSvcType);
+    expectedAction2.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction2.addArgument("Filter", "*");
+    expectedAction2.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction2.addArgument("RequestedCount", "2");
+    expectedAction2.addArgument("SortCriteria", "");
+    expectedAction2.addArgument("StartingIndex", "2");
+
+    EXPECT_CALL(m_client, sendAction(_, _))
+        .Times(2)
+        .WillOnce(Invoke([&] (auto& action, auto& cb) {
+            EXPECT_EQ(expectedAction1.toString(), action.toString());
+            cb(Status(), wrapSoap(testxmls::browseResponseContainers));
+        }))
+        .WillOnce(Invoke([&] (auto& action, auto& cb) {
+            EXPECT_EQ(expectedAction2.toString(), action.toString());
+            cb(Status(), wrapSoap(testxmls::browseResponseContainersPart2));
+        }));
+
+    InSequence seq;
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(1))));
+    EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
+
+    m_server.setRequestSize(2);
+    m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
+}
+
 TEST_F(MediaServerTest, getAllInContainerNoResults)
 {
     Action expectedAction("Browse", "CDCurl", m_cdSvcType);
