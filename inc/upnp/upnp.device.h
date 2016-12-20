@@ -42,6 +42,8 @@ struct Device
     bool implementsService(ServiceType type) const { return services.find(type.type) != services.end(); }
 
     DeviceType      type;
+    uint8_t         majorVersion = 0;
+    uint8_t         minorVersion = 0;
     std::string     userDefinedName;
     std::string     friendlyName;
     std::string     udn;

@@ -44,9 +44,19 @@ bool findAndParseService(const xml_node<char>& node, const ServiceType::Type ser
         if (service.type.type == serviceType)
         {
             service.id                    = requiredChildValue(*serviceNode, "serviceId");
-            service.controlURL            = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "controlURL")).toString();
-            service.eventSubscriptionURL  = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "eventSubURL")).toString();
-            service.scpdUrl               = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "SCPDURL")).toString();
+
+            if (device.majorVersion == 1 && device.minorVersion == 0)
+            {
+                service.controlURL            = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "controlURL")).toString();
+                service.eventSubscriptionURL  = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "eventSubURL")).toString();
+                service.scpdUrl               = URI(base.getScheme(), base.getAuthority(), requiredChildValue(*serviceNode, "SCPDURL")).toString();
+            }
+            else
+            {
+                service.controlURL            = requiredChildValue(*serviceNode, "controlURL");
+                service.eventSubscriptionURL  = requiredChildValue(*serviceNode, "eventSubURL");
+                service.scpdUrl               = requiredChildValue(*serviceNode, "SCPDURL");
+            }
 
             device.services[serviceType] = service;
             return true;
@@ -331,6 +341,10 @@ void parseDeviceInfo(const std::string& xml, Device& device)
 {
     xml_document<char> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(xml.c_str());
+
+    auto& versionNode = doc.first_node_ref("root").first_node_ref("specVersion");
+    device.majorVersion = static_cast<uint8_t>(std::stoi(requiredChildValue(versionNode, "major")));
+    device.minorVersion = static_cast<uint8_t>(std::stoi(requiredChildValue(versionNode, "minor")));
 
     auto& deviceNode = doc.first_node_ref("root").first_node_ref("device");
     device.udn            = requiredChildValue(deviceNode, "UDN");

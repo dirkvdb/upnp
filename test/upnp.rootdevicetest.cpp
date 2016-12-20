@@ -27,6 +27,10 @@ using namespace std::chrono_literals;
 static const std::string simpleRootDesc =
     "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
     "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
+    "    <specVersion>"
+    "        <major>1</major>"
+    "        <minor>0</minor>"
+    "    </specVersion>"
     "   <device>"
     "       <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>"
     "       <UDN>{}</UDN>"

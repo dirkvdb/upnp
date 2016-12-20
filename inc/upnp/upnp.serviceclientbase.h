@@ -120,13 +120,13 @@ protected:
                         {
                             m_supportedActions.insert(actionFromString(action));
                         }
-                        catch (std::exception& e)
+                        catch (const std::exception& e)
                         {
                             utils::log::warn(e.what());
                         }
                     });
                 }
-                catch (std::exception& e)
+                catch (const std::exception& e)
                 {
                     status = Status(ErrorCode::Unexpected, e.what());
                 }

@@ -519,7 +519,7 @@ void MediaRenderer::deactivateEvents(std::function<void(Status)> cb)
 
 const char* MediaRenderer::actionToString(Action action)
 {
-    static const std::array<const char*, 7> actions {
+    static const std::array<const char*, 7> actions {{
         "Play",
         "Stop",
         "Pause",
@@ -527,7 +527,7 @@ const char* MediaRenderer::actionToString(Action action)
         "Next",
         "Previous",
         "Record"
-    };
+    }};
 
     return actions[enum_value(action)];
 }
