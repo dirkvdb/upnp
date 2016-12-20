@@ -207,10 +207,10 @@ void RootDevice::uninitialize()
     {
         m_asioThread->join();
         m_asioThread.reset();
-    }
 
-    m_httpServer.reset();
-    m_ssdpServer.reset();
+        m_httpServer.reset();
+        m_ssdpServer.reset();
+    }
 }
 
 std::string RootDevice::getWebrootUrl()
