@@ -231,15 +231,16 @@ void DeviceScanner::onDeviceDiscovered(const ssdp::DeviceNotificationInfo& info)
 
 void DeviceScanner::onDeviceDissapeared(const ssdp::DeviceNotificationInfo& info)
 {
-    std::remove_if(m_devices.begin(), m_devices.end(), [this, &info] (auto& dev) -> bool {
+    m_devices.erase(std::remove_if(m_devices.begin(), m_devices.end(), [this, &info] (auto& dev) -> bool {
         if (dev->udn == info.deviceId)
         {
             DeviceDissapearedEvent(dev);
+            log::info("Device removed from the list: {} ({})", dev->friendlyName, dev->udn);
             return true;
         }
 
         return false;
-    });
+    }), m_devices.end());
 }
 
 }
