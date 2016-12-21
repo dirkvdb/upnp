@@ -202,7 +202,6 @@ void MediaRenderer::getProtocolInfo(std::function<void(Status)> cb)
         }
 
         cb(status);
-        log::info("Renderer: GetProtocolInfo complete {}", status);
     });
 }
 
