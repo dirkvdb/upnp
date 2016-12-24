@@ -173,18 +173,13 @@ public:
             {
                 log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
                 auto self = shared_from_this();
-                asyFunc(Request(m_request), [=] (StatusCode status, const std::string& response) {
-                    if (status == StatusCode::Ok)
-                    {
-                        self->writeResponse(std::make_shared<std::string>(response), closeConnection);
-                    }
-                    else
-                    {
-                        self->writeResponse(std::make_shared<std::string>(fmt::format(s_errorResponse, enum_value(status), status_message(status))), closeConnection);
-                    }
-                });
-
-                return;
+                if (asyFunc(Request(m_request), [=] (std::string response) {
+                    self->writeResponse(std::make_shared<std::string>(std::move(response)), closeConnection);
+                }))
+                {
+                    // Request handled
+                    return;
+                }
             }
 
             if (method == http::Method::Head)

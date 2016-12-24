@@ -29,7 +29,7 @@ namespace http
 {
 
 using RequestCb = std::function<std::string(const Request&)>;
-using AsyncRequestCb = std::function<void(const Request&, std::function<void(StatusCode, std::string)>)>;
+using AsyncRequestCb = std::function<bool(const Request&, std::function<void(std::string)>)>;
 
 class Server
 {
