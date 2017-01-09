@@ -15,12 +15,13 @@ if (STANDALONE)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     endif ()
-    
+
     add_subdirectory(../utils utils)
     get_directory_property(UTILS_INCLUDE_DIRS   DIRECTORY ../utils INCLUDE_DIRECTORIES)
 endif ()
 
 find_package(PkgConfig)
+find_package(Threads)
 
 if (STD_ASIO)
     find_path(ASIO_INCLUDE_DIR
@@ -134,7 +135,7 @@ target_include_directories(upnpframework SYSTEM PUBLIC
     ${BEAST_INCLUDE_DIR}
 )
 
-target_link_libraries(upnpframework utils)
+target_link_libraries(upnpframework utils ${CMAKE_THREAD_LIBS_INIT})
 
 if (MINGW)
     target_link_libraries(upnpframework Iphlpapi ws2_32 Mswsock)
