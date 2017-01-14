@@ -144,9 +144,10 @@ endif ()
 if (APPLE)
     # uuid dependency
     target_link_libraries(upnpframework "-framework CoreFoundation")
-ELSEif (UNIX)
+elseif (UNIX)
     # uuid dependency
-    target_link_libraries(upnpframework "uuid")
+    find_library(UUID_LIBRARY NAMES uuid)
+    target_link_libraries(upnpframework ${UUID_LIBRARY})
 endif ()
 
 if (NOT STD_ASIO)
