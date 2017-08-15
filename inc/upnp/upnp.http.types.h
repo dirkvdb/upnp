@@ -18,15 +18,18 @@
 
 #include "stringview.h"
 
-#include <string>
+#include <boost/beast/http.hpp>
+#include <boost/utility/string_view.hpp>
 #include <ostream>
+#include <string>
 #include <system_error>
-#include <beast/http.hpp>
 
 namespace upnp
 {
 namespace http
 {
+
+namespace beast = boost::beast;
 
 enum class Method
 {
@@ -193,18 +196,19 @@ public:
 
     std::string_view url() const noexcept
     {
-        return m_req.url;
+        auto target = m_req.target();
+        return std::string_view(target.data(), target.size());
     }
 
     std::string_view field(const char* hdr) const noexcept
     {
-        auto stringRef = m_req.fields[hdr];
+        auto stringRef = m_req[hdr];
         return std::string_view(stringRef.data(), stringRef.size());
     }
 
     std::string_view field(std::string_view hdr) const noexcept
     {
-        auto stringRef = m_req.fields[boost::string_ref(hdr.data(), hdr.size())];
+        auto stringRef = m_req[boost::string_view(hdr.data(), hdr.size())];
         return std::string_view(stringRef.data(), stringRef.size());
     }
 
@@ -220,13 +224,12 @@ private:
 struct Response
 {
     Response() = default;
-    explicit Response(StatusCode s) : status(s) {}
-    Response(StatusCode s, std::string b) : status(s), body(std::move(b)) {}
+    explicit Response(StatusCode s);
+    explicit Response(beast::http::status s);
+    Response(StatusCode s, std::string b);
+    Response(beast::http::status, std::string b);
 
-    bool operator==(const Response& other) const noexcept
-    {
-        return status == other.status && body == other.body;
-    }
+    bool operator==(const Response& other) const noexcept;
 
     StatusCode status;
     std::string body;

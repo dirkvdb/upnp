@@ -86,7 +86,7 @@ IfEndsWithCount<EnumType> enum_cast(const std::string_view& span)
     auto value = details::enum_cast<EnumType>(span);
     if (value == EnumType::EnumCount)
     {
-        throw std::invalid_argument(fmt::format("Unknown {} enum value: {}", typeid(EnumType).name(), span.to_string()));
+        throw std::invalid_argument(fmt::format("Unknown {} enum value: {}", typeid(EnumType).name(), span));
     }
 
     return value;

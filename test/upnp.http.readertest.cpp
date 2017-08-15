@@ -37,7 +37,7 @@ namespace upnp
 namespace test
 {
 
-constexpr size_t s_fileSize = 1024 * 1024 * 10; //10MB
+constexpr size_t s_fileSize = 1024 * 1024 * 7; //10MB
 
 class HttpReaderTest : public Test
 {

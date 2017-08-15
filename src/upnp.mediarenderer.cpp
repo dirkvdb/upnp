@@ -345,7 +345,7 @@ void MediaRenderer::getCurrentTrackPosition(std::function<void(Status, std::chro
     if (m_avTransport)
     {
         throwOnUnknownConnectionId();
-        m_avTransport->getPositionInfo(m_connInfo.connectionId, [this, cb] (Status status, AVTransport::PositionInfo info) {
+        m_avTransport->getPositionInfo(m_connInfo.connectionId, [cb] (Status status, AVTransport::PositionInfo info) {
             if (status)
             {
                 cb(status, parseDuration(info.relativeTime));

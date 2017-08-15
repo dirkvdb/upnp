@@ -44,5 +44,31 @@ Method methodFromString(const std::string_view& str)
     return enum_cast<Method>(str);
 }
 
+Response::Response(StatusCode s)
+: status(s)
+{
+}
+
+Response::Response(beast::http::status s)
+: Response(StatusCode(enum_value(s)))
+{
+}
+
+Response::Response(StatusCode s, std::string b)
+: status(s)
+, body(std::move(b))
+{
+}
+
+Response::Response(beast::http::status s, std::string b)
+: Response(StatusCode(enum_value(s)), std::move(b))
+{
+}
+
+bool Response::operator==(const Response& other) const noexcept
+{
+    return status == other.status && body == other.body;
+}
+
 }
 }

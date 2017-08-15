@@ -38,7 +38,7 @@ namespace
 {
 
 template <typename Func, typename... Args>
-void invoke(Func&& func, Args&&... args)
+void invokeCb(Func&& func, Args&&... args)
 {
     if (func)
     {
@@ -49,7 +49,7 @@ void invoke(Func&& func, Args&&... args)
 std::function<void(upnp::Status, std::string)> stripResponse(std::function<void(upnp::Status)> cb)
 {
     return [cb] (upnp::Status status, const std::string&) {
-        invoke(cb, status);
+        invokeCb(cb, status);
     };
 }
 
@@ -155,7 +155,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(upnp::Stat
             }
         }
 
-        invoke(cb, status, info);
+        invokeCb(cb, status, info);
     });
 }
 
@@ -187,7 +187,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status,
             }
         }
 
-        invoke(cb, status, info);
+        invokeCb(cb, status, info);
     });
 }
 
@@ -226,13 +226,13 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Sta
             }
         }
 
-        invoke(cb, status, info);
+        invokeCb(cb, status, info);
     });
 }
 
 void Client::getCurrentTransportActions(int32_t connectionId, std::function<void(upnp::Status, std::set<Action>)> cb)
 {
-    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [this, cb] (upnp::Status status, std::string response) {
+    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, std::string response) {
         std::set<Action> actions;
         if (status)
         {
@@ -259,7 +259,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
             }
         }
 
-        invoke(cb, status, actions);
+        invokeCb(cb, status, actions);
     });
 }
 

@@ -33,13 +33,14 @@
 #include "upnp/stringview.h"
 #include "URI.h"
 
-#include <beast/http.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/core.hpp>
 
 using namespace utils;
 using namespace asio;
 using namespace std::literals::chrono_literals;
 
-//#define DEBUG_HTTP
+#define DEBUG_HTTP
 
 namespace upnp
 {
@@ -154,16 +155,17 @@ public:
 
     void onHttpParseCompleted()
     {
-        bool closeConnection = m_request.fields["Connection"] == "close";
+        bool closeConnection = m_request["Connection"] == "close";
 
         try
         {
-            auto method = methodFromString(m_request.method);
+            auto methodStr = m_request.method_string();
+            auto method = methodFromString(std::string_view(methodStr.data(), methodStr.size()));
 
             auto& func = server.m_handlers.at(enum_value(method));
             if (func)
             {
-                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
+                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method_string(), m_request.target());
                 writeResponse(std::make_shared<std::string>(func(Request(m_request))), closeConnection);
                 return;
             }
@@ -171,7 +173,7 @@ public:
             auto& asyFunc = server.m_asyncHandlers.at(enum_value(method));
             if (asyFunc)
             {
-                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method, m_request.url);
+                log::debug("[{}] handle request: {} {}", m_sessionId, m_request.method_string(), m_request.target());
                 auto self = shared_from_this();
                 if (asyFunc(Request(m_request), [=] (std::string response) {
                     self->writeResponse(std::make_shared<std::string>(std::move(response)), closeConnection);
@@ -184,15 +186,17 @@ public:
 
             if (method == http::Method::Head)
             {
-                log::info("[{}] requested file size: {}", m_sessionId, m_request.url);
-                auto& file = server.m_servedFiles.at(m_request.url);
+                log::info("[{}] requested file size: {}", m_sessionId, m_request.target());
+                auto target = m_request.target();
+                auto& file = server.m_servedFiles.at(std::string(target.begin(), target.end()));
                 return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
             else if (method == http::Method::Get)
             {
-                log::info("[{}] requested file: {}", m_sessionId, m_request.url);
-                auto& file = server.m_servedFiles.at(m_request.url);
-                auto rangeHeader = m_request.fields["Range"];
+                log::info("[{}] requested file: {}", m_sessionId, m_request.target());
+                auto target = m_request.target();
+                auto& file = server.m_servedFiles.at(std::string(target.begin(), target.end()));
+                auto rangeHeader = m_request["Range"];
                 if (rangeHeader.empty())
                 {
                     return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), buffer(file.data), closeConnection);
@@ -217,7 +221,7 @@ public:
     }
 
     beast::http::request<beast::http::string_body> m_request;
-    beast::streambuf m_buffer;
+    beast::flat_buffer m_buffer;
     uint64_t m_sessionId;
     ip::tcp::socket socket;
     const Server& server;
@@ -310,7 +314,7 @@ void Server::setRequestHandler(Method method, AsyncRequestCb cb)
 
 std::vector<std::pair<std::string, std::string>> Server::getQueryParameters(std::string_view url)
 {
-    return URI(url.to_string()).getQueryParameters();
+    return URI(std::string(url)).getQueryParameters();
 }
 
 }

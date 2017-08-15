@@ -15,6 +15,8 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp.http.client.h"
+#include "upnp.http.utils.h"
+#include "upnp.enumutils.h"
 
 #include <cassert>
 #include <stdexcept>
@@ -78,8 +80,8 @@ Client::Client(asio::io_service& io)
 
 void Client::reset()
 {
-    m_buffer = beast::streambuf();
-    m_request.fields.clear();
+    m_buffer = beast::flat_buffer();
+    m_request = beast::http::request<beast::http::string_body>();
 }
 
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
@@ -89,7 +91,7 @@ void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 
 void Client::addHeader(const std::string& name, const std::string& value)
 {
-    m_request.fields.insert(name, value);
+    m_request.insert(name, value);
 }
 
 void Client::setUrl(const std::string& url)
@@ -99,8 +101,7 @@ void Client::setUrl(const std::string& url)
 
 std::string_view Client::getResponseHeaderValue(const char* headerValue)
 {
-    auto stringref = m_response.fields[headerValue];
-    return std::string_view(stringref.data(), stringref.size());
+    return sv_cast<std::string_view>(m_response[headerValue]);
 }
 
 std::string Client::getResponseBody()
@@ -110,7 +111,7 @@ std::string Client::getResponseBody()
 
 uint32_t Client::getStatus()
 {
-    return m_response.status;
+    return enum_value(m_response.result());
 }
 
 void Client::performRequest(std::function<void(const std::error_code&)> cb)
@@ -138,17 +139,16 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
             return;
         }
 
-        m_request.url = m_url.getPath();
-        m_request.fields.replace("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
-
-        beast::http::prepare(m_request);
+        m_request.target(m_url.getPath());
+        m_request.set("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
+        m_request.prepare_payload();
         beast::http::async_write(m_socket, m_request, [this, cb] (const beast::error_code& error) {
             if (invokeCallbackOnError(error, cb))
             {
                 return;
             }
 
-            if (m_request.method == "HEAD")
+            if (m_request.method() == beast::http::verb::head)
             {
                 receiveHeaderData(cb);
             }
@@ -175,7 +175,7 @@ void Client::receiveData(std::function<void(const std::error_code&)> cb)
 
         try
         {
-            auto connValue = m_response.fields["Connection"];
+            auto connValue = m_response["Connection"];
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
                 asio_error_code error;
@@ -196,27 +196,29 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
 
-    auto res = std::make_shared<beast::http::response_header>();
-    beast::http::async_read(m_socket, m_buffer, *res, [this, res, cb] (const asio_error_code& error) {
+    auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
+    beast::http::async_read_header(m_socket, m_buffer, *parser, [this, cb, parser] (const asio_error_code& error) {
         m_timer.cancel();
-
         if (invokeCallbackOnError(error, cb))
         {
             return;
         }
 
-        m_response.status = res->status;
-        m_response.fields = std::move(res->fields);
-
         try
         {
-            auto connValue = m_response.fields["Connection"];
+            log::info("read head: {}", parser->get().result());
+            auto connValue = parser->get()["Connection"];
+            log::info("read head: {}", connValue);
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
                 asio_error_code error;
                 m_socket.close(error);
             }
 
+            for (auto& field : parser->get().base())
+            {
+                m_response.insert(field.name(), field.value());
+            }
             cb(std::error_code());
         }
         catch (const std::exception& e)
@@ -227,17 +229,17 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
     });
 }
 
-static std::string methodToString(Method m)
+static beast::http::verb methodToVerb(Method m)
 {
     switch (m)
     {
-    case Method::Head:          return "HEAD";
-    case Method::Notify:        return "NOTIFY";
-    case Method::Search:        return "M-SEARCH";
-    case Method::Subscribe:     return "SUBSCRIBE";
-    case Method::Unsubscribe:   return "UNSUBSCRIBE";
-    case Method::Get:           return "GET";
-    case Method::Post:          return "POST";
+    case Method::Head:          return beast::http::verb::head;
+    case Method::Notify:        return beast::http::verb::notify;
+    case Method::Search:        return beast::http::verb::msearch;
+    case Method::Subscribe:     return beast::http::verb::subscribe;
+    case Method::Unsubscribe:   return beast::http::verb::unsubscribe;
+    case Method::Get:           return beast::http::verb::get;
+    case Method::Post:          return beast::http::verb::post;
     default:
         throw std::invalid_argument("Invalid http method provided");
     }
@@ -245,7 +247,7 @@ static std::string methodToString(Method m)
 
 void Client::setMethodType(Method method)
 {
-    m_request.method = methodToString(method);
+    m_request.method(methodToVerb(method));
     //m_headers.emplace_back("Connection:Keep-alive\r\n");
 }
 
@@ -259,7 +261,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
         }
         else
         {
-            cb(error, Response(StatusCode(m_response.status), m_response.body));
+            cb(error, Response(StatusCode(m_response.result()), m_response.body));
         }
     });
 }
@@ -275,7 +277,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
         }
         else
         {
-            cb(error, Response(StatusCode(m_response.status), m_response.body));
+            cb(error, Response(StatusCode(m_response.result()), m_response.body));
         }
     });
 }
@@ -291,7 +293,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         }
 
         memcpy(data, m_response.body.data(), m_response.body.size());
-        cb(std::error_code(), StatusCode(StatusCode(m_response.status)), data);
+        cb(std::error_code(), StatusCode(m_response.result()), data);
     });
 }
 

@@ -32,7 +32,7 @@ TEST(UPnPClientTest, DISABLED_Client)
             EXPECT_EQ(sid, ev.sid);
             EXPECT_FALSE(ev.data.empty());
 
-            client.unsubscribeFromService(url, sid, [&client, &prom] (int32_t status) {
+            client.unsubscribeFromService(url, sid, [&prom] (int32_t status) {
                 EXPECT_EQ(200, status);
                 prom.set_value();
             });

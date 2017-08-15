@@ -69,9 +69,9 @@ Server::Server(asio::io_service& io, const asio::ip::tcp::endpoint& address, std
     m_httpServer.setRequestHandler(http::Method::Notify, [this] (auto& req) {
         try
         {
-            m_currentEvent.sid = required(req.field("SID")).to_string();
-            m_currentEvent.sequence = std::stoi(required(req.field("SEQ")).to_string());
-            m_currentEvent.data = req.body().to_string();
+            m_currentEvent.sid = required(req.field("SID"));
+            m_currentEvent.sequence = std::stoi(std::string(required(req.field("SEQ"))));
+            m_currentEvent.data = req.body();
             if (req.field("NT") != "upnp:event")
             {
                 throw Status(ErrorCode::BadRequest);

@@ -291,7 +291,7 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
             // New subscription request
             GuidGenerator generator;
             SubscriptionRequest request;
-            request.url = httpReq.url().to_string();
+            request.url = httpReq.url();
             request.sid = fmt::format("uuid:{}", generator.newGuid());
             request.timeout = soap::parseTimeout(httpReq.field("TIMEOUT"));
 
@@ -325,7 +325,7 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
             auto timeout = soap::parseTimeout(httpReq.field("TIMEOUT"));
 
             log::info("Subscription renewal");
-            auto iter = m_subscriptions.find(sid.to_string());
+            auto iter = m_subscriptions.find(std::string(sid));
             if (iter != m_subscriptions.end())
             {
                 iter->second.expirationTime = std::chrono::steady_clock::now() + timeout;
@@ -348,7 +348,7 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
 std::string RootDevice::onUnsubscriptionRequest(const http::Request& request) noexcept
 {
     log::info("Unsubscription request");
-    if (m_subscriptions.erase(request.field("SID").to_string()) > 0)
+    if (m_subscriptions.erase(std::string(request.field("SID"))) > 0)
     {
         return http::okResponse();
     }
@@ -363,7 +363,7 @@ std::string RootDevice::onActionRequest(const http::Request& httpReq)
     try
     {
         ActionRequest request;
-        request.action = httpReq.body().to_string();
+        request.action = httpReq.body();
         log::debug("Action request: {}", request.action);
 
         try

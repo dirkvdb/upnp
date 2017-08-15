@@ -174,7 +174,7 @@ void Client::renewSubscription(const std::string& publisherUrl,
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
         auto soap = std::make_shared<soap::Client>(*m_io);
-        soap->renewSubscription(publisherUrl, subscriptionId, timeout, [this, soap, cb] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
+        soap->renewSubscription(publisherUrl, subscriptionId, timeout, [soap, cb] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
             if (cb)
             {
                 cb(httpStatusToStatus(error, status), subId, subTimeout);

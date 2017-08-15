@@ -136,7 +136,7 @@ void Client::parseCapabilities(Status status, const std::string& nodeName, const
 
 void Client::querySystemUpdateID(std::function<void(Status, std::string)> cb)
 {
-    executeAction(Action::GetSystemUpdateID, [this, cb] (Status status, const std::string& response) {
+    executeAction(Action::GetSystemUpdateID, [cb] (Status status, const std::string& response) {
         std::string sysUpdateId;
 
         if (status)
@@ -159,7 +159,7 @@ void Client::querySystemUpdateID(std::function<void(Status, std::string)> cb)
 
 void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(Status, Item)> cb)
 {
-    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [this, cb] (Status status, const std::string& response) {
+    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [cb] (Status status, const std::string& response) {
         if (!status)
         {
             cb(status, Item());

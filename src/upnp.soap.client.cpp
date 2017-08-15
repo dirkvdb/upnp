@@ -91,7 +91,7 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
                 timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
-            cb(ec, response.status, subId.to_string(), timeout);
+            cb(ec, response.status, std::string(subId), timeout);
         }
         catch (const std::exception& e)
         {
@@ -121,7 +121,7 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
                 timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
             }
 
-            cb(ec, response.status, subId.to_string(), timeout);
+            cb(ec, response.status, std::string(subId), timeout);
         }
         catch (const std::exception& e)
         {
@@ -138,7 +138,7 @@ void Client::unsubscribe(const std::string& url, const std::string& sid, std::fu
     m_httpClient->setUrl(url);
     m_httpClient->addHeader("SID", sid);
 
-    m_httpClient->perform(http::Method::Unsubscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
+    m_httpClient->perform(http::Method::Unsubscribe, [cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
     });
 }
@@ -158,7 +158,7 @@ void Client::notify(const std::string& url,
     m_httpClient->addHeader("SEQ", std::to_string(seq));
     m_httpClient->addHeader("Content-Type", "text/xml");
 
-    m_httpClient->perform(http::Method::Notify, body, [this, cb] (const std::error_code& ec, const http::Response& response) {
+    m_httpClient->perform(http::Method::Notify, body, [cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
     });
 }
@@ -178,7 +178,7 @@ void Client::action(const std::string& url,
     m_httpClient->addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
     m_httpClient->addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
-    m_httpClient->perform(http::Method::Post, envelope, [this, cb] (const std::error_code& ec, http::Response response) {
+    m_httpClient->perform(http::Method::Post, envelope, [cb] (const std::error_code& ec, http::Response response) {
         if (ec || response.status != http::StatusCode::InternalServerError)
         {
             cb(ec, ActionResult(std::move(response)));

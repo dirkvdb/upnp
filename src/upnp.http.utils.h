@@ -16,10 +16,12 @@
 
 #pragma once
 
-#include <string>
-#include <system_error>
-
 #include "upnp/upnp.http.types.h"
+
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <boost/utility/string_view.hpp>
 
 namespace upnp
 {
@@ -28,6 +30,12 @@ namespace http
 
 const char* okResponse();
 std::string createResponse(StatusCode status, const std::string& body);
+
+template <typename DestView, typename SourceView>
+DestView sv_cast(SourceView sv)
+{
+    return DestView(sv.data(), sv.size());
+}
 
 }
 }

@@ -20,7 +20,8 @@
 #include <vector>
 #include <chrono>
 #include <cinttypes>
-#include <beast/http.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/core.hpp>
 
 #include "URI.h"
 #include "upnp/asio.h"
@@ -66,7 +67,7 @@ private:
     std::chrono::milliseconds m_timeout;
     beast::http::request<beast::http::string_body> m_request;
     beast::http::response<beast::http::string_body> m_response;
-    beast::streambuf m_buffer;
+    beast::flat_buffer m_buffer;
 };
 
 }

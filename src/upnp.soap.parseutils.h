@@ -25,7 +25,7 @@ inline std::chrono::seconds parseTimeout(std::string_view timeout)
     {
         std::regex re(R"(Second-(\d+))");
         std::smatch match;
-        std::string input = timeout.to_string();
+        std::string input(timeout);
         if (std::regex_match(input, match, re))
         {
             return std::chrono::seconds(std::stoi(match.str(1)));
@@ -47,7 +47,7 @@ inline std::tuple<std::string, std::string> parseAction(const std::string_view& 
     {
         std::regex re(R"(\"(.*)#(.*)\")");
         std::smatch match;
-        auto actionString = action.to_string();
+        std::string actionString(action);
         if (std::regex_match(actionString, match, re))
         {
             return std::make_tuple(match.str(1), match.str(2));

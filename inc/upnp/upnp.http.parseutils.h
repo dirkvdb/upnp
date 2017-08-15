@@ -40,20 +40,20 @@ Range parseRange(std::string_view range)
 
     if (!utils::stringops::startsWith(range, "bytes="))
     {
-        throw std::invalid_argument("Invalid range header: " + range.to_string());
+        throw std::invalid_argument("Invalid range header: " + std::string(range));
     }
 
     auto split = utils::stringops::tokenize(&range[6], '-');
     if (split.size() > 2)
     {
-        throw std::invalid_argument("Invalid range header: " + range.to_string());
+        throw std::invalid_argument("Invalid range header: " + std::string(range));
     }
 
     if (split.size() == 1)
     {
         if (range[range.size() - 1] != '-')
         {
-            throw std::invalid_argument("Invalid range header: " + range.to_string());
+            throw std::invalid_argument("Invalid range header: " + std::string(range));
         }
     }
     else if (!split[1].empty())
