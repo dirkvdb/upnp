@@ -142,7 +142,7 @@ install:
 
   - |
     git clone --single-branch https://github.com/boostorg/beast.git
-    cp -r ./beast/include/boost ${DEPS_DIR}/local/include/
+    cp -rv ./beast/include/boost ${DEPS_DIR}/local/include/
 
   - |
     git clone --single-branch https://github.com/fmtlib/fmt.git --branch 4.0.0
