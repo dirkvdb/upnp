@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #include "upnp/upnp.item.h"
 #include "upnp/upnpstatevariable.h"
