@@ -40,7 +40,7 @@ else ()
 endif ()
 
 find_path(BEAST_INCLUDE_DIR
-    NAMES beast/http.hpp
+    NAMES boost/beast/http.hpp
 )
 
 if (NOT BEAST_INCLUDE_DIR)
