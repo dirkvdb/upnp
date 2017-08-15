@@ -157,7 +157,7 @@ before_script:
 
 script:
   - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/local/include -DSTANDALONE=ON .
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/local -DSTANDALONE=ON .
   - make -j4
   - CTEST_OUTPUT_ON_FAILURE=1 make test
 
