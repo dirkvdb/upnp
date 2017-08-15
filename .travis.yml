@@ -141,7 +141,7 @@ install:
     fi
 
   - |
-    git clone --single-branch https://github.com/vinniefalco/Beast.git
+    git clone --single-branch https://github.com/boostorg/beast.git
     cp -r ./Beast/include/boost ${DEPS_DIR}/local/include/
 
   - |
