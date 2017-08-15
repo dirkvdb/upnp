@@ -165,7 +165,6 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
 void Client::receiveData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
-    m_response.body.reserve(10 * 1024 * 1024);
     beast::http::async_read(m_socket, m_buffer, m_response, [this, cb] (const asio_error_code& error) {
         m_timer.cancel();
         if (invokeCallbackOnError(error, cb))
