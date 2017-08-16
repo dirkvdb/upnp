@@ -23,21 +23,8 @@ endif ()
 find_package(PkgConfig)
 find_package(Threads)
 
-if (STD_ASIO)
-    find_path(ASIO_INCLUDE_DIR
-        NAMES asio.hpp
-    )
-
-    if (NOT ASIO_INCLUDE_DIR)
-        message(FATAL_ERROR "Could not find the asio headers")
-    endif ()
-
-    add_definitions("-DASIO_STANDALONE")
-else ()
-    set (Boost_USE_STATIC_LIBS ON)
-    add_definitions("-DBOOST_ALL_NO_LIB")
-    find_package(Boost REQUIRED COMPONENTS system)
-endif ()
+set (Boost_USE_STATIC_LIBS ON)
+find_package(Boost REQUIRED COMPONENTS system)
 
 find_path(BEAST_INCLUDE_DIR
     NAMES boost/beast/http.hpp
@@ -124,18 +111,24 @@ add_library(upnpframework STATIC
     src/guid.h                                          src/guid.cpp
 )
 
-target_include_directories(upnpframework PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-    $<INSTALL_INTERFACE:include>
-    ${Boost_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_BINARY_DIR}
+target_include_directories(upnpframework
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_BINARY_DIR}
 )
 
-target_include_directories(upnpframework SYSTEM PUBLIC
-    ${BEAST_INCLUDE_DIR}
+target_compile_definitions(upnpframework PUBLIC
+    -DBOOST_NO_AUTO_PTR
 )
 
-target_link_libraries(upnpframework utils ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(upnpframework
+    utils
+    Boost::system
+    Boost::disable_autolinking
+    Threads::Threads
+)
 
 if (MINGW)
     target_link_libraries(upnpframework Iphlpapi ws2_32 Mswsock)
@@ -148,10 +141,6 @@ elseif (UNIX)
     # uuid dependency
     find_library(UUID_LIBRARY NAMES uuid)
     target_link_libraries(upnpframework ${UUID_LIBRARY})
-endif ()
-
-if (NOT STD_ASIO)
-    target_link_libraries(upnpframework ${Boost_LIBRARIES})
 endif ()
 
 if (ENABLE_TESTS)
