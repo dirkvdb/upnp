@@ -58,12 +58,12 @@ Status httpStatusToStatus(const std::error_code& error, http::StatusCode status)
 
 Client::Client()
 : m_owningIo(std::make_unique<asio::io_service>())
-, m_io(m_owningIo.get())
+, m_io(*m_owningIo)
 {
 }
 
 Client::Client(asio::io_service& io)
-: m_io(&io)
+: m_io(io)
 {
 }
 
@@ -89,7 +89,7 @@ void Client::initialize(const std::string& interfaceName, uint16_t port)
 void Client::initialize(const asio::ip::tcp::endpoint& addr)
 {
     log::debug("Initializing UPnP SDK");
-    m_eventServer = std::make_unique<gena::Server>(*m_io, addr, [&] (const SubscriptionEvent& ev) {
+    m_eventServer = std::make_unique<gena::Server>(m_io, addr, [&] (const SubscriptionEvent& ev) {
         auto iter = m_eventCallbacks.find(ev.sid);
         if (iter != m_eventCallbacks.end())
         {
@@ -100,9 +100,9 @@ void Client::initialize(const asio::ip::tcp::endpoint& addr)
     if (m_owningIo)
     {
         m_asioThread = std::make_unique<std::thread>([this] () {
-            m_io->reset();
-            asio::io_service::work work(*m_io);
-            m_io->run();
+            m_io.reset();
+            asio::io_service::work work(m_io);
+            m_io.run();
         });
     }
 }
@@ -112,7 +112,7 @@ void Client::uninitialize()
     log::debug("Uninitializing UPnP SDK");
 
     m_eventServer->stop();
-    m_io->stop();
+    m_io.stop();
 
     m_eventServer.reset();
 
@@ -143,11 +143,11 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
     auto addr = m_eventServer->getAddress();
     auto eventServerUrl = fmt::format("http://{}:{}/", addr.address(), addr.port());
 
-    m_io->post([=] () {
+    m_io.post([=] () {
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Subscribe to service: {}", publisherUrl);
 #endif
-        auto soap = std::make_shared<soap::Client>(*m_io);
+        auto soap = std::make_shared<soap::Client>(m_io);
         soap->subscribe(publisherUrl, eventServerUrl, timeout, [this, cb, soap] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
             if (cb)
             {
@@ -169,11 +169,11 @@ void Client::renewSubscription(const std::string& publisherUrl,
     assert(m_eventServer);
     assert(timeout.count() > 0);
 
-    m_io->post([=] () {
+    m_io.post([=] () {
 #ifdef DEBUG_UPNP_CLIENT
         log::debug("Renew subscription: {} {}", publisherUrl, subscriptionId);
 #endif
-        auto soap = std::make_shared<soap::Client>(*m_io);
+        auto soap = std::make_shared<soap::Client>(m_io);
         soap->renewSubscription(publisherUrl, subscriptionId, timeout, [soap, cb] (const std::error_code& error, http::StatusCode status, std::string subId, std::chrono::seconds subTimeout) {
             if (cb)
             {
@@ -185,8 +185,8 @@ void Client::renewSubscription(const std::string& publisherUrl,
 
 void Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)> cb)
 {
-    m_io->post([=] () {
-        auto soap = std::make_shared<soap::Client>(*m_io);
+    m_io.post([=] () {
+        auto soap = std::make_shared<soap::Client>(m_io);
         soap->unsubscribe(publisherUrl, subscriptionId, [this, soap, cb, subscriptionId] (const std::error_code& error, http::StatusCode status) {
             if (cb)
             {
@@ -205,8 +205,8 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
 #endif
 
     auto env = std::make_shared<std::string>(action.toString());
-    m_io->post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
-        auto soap = std::make_shared<soap::Client>(*m_io);
+    m_io.post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
+        auto soap = std::make_shared<soap::Client>(m_io);
         soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, soap::ActionResult result) {
             cb(httpStatusToStatus(error, result.response.status), std::move(result));
         });
@@ -219,24 +219,19 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
 
 void Client::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
-    http::get(*m_io, url, [cb] (const std::error_code& error, http::Response response) {
+    http::get(m_io, url, [cb] (const std::error_code& error, http::Response response) {
         cb(httpStatusToStatus(error, response.status), std::move(response.body));
     });
 }
 
 void Client::dispatch(std::function<void()> func)
 {
-    if (!m_io)
-    {
-        return;
-    }
-
-    m_io->post(func);
+    m_io.post(func);
 }
 
 asio::io_service& Client::ioService() noexcept
 {
-    return *m_io;
+    return m_io;
 }
 
 void Client::handlEvent(const SubscriptionEvent& event)
