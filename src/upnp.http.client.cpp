@@ -229,6 +229,97 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
     });
 }
 
+Task<void> Client::performRequest()
+{
+    try
+    {
+        m_socket.close();
+        auto addr = ip::tcp::endpoint(ip::address::from_string(m_url.getHost()), m_url.getPort());
+
+        m_socket.open(addr.protocol());
+        m_timer.expires_from_now(m_timeout);
+        co_await async_connect(m_socket, addr);
+        if (!m_socket.is_open())
+        {
+            throw std::system_error(std::make_error_code(error::Timeout));
+        }
+
+        m_timer.cancel();
+        m_request.target(m_url.getPath());
+        m_request.set("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
+        m_request.prepare_payload();
+        co_await http::async_write(m_socket, m_request);
+
+        m_timer.async_wait([this] (const asio_error_code& ec) { checkTimeout(ec); });
+        if (m_request.method() == beast::http::verb::head)
+        {
+            co_await receiveHeaderData();
+        }
+        else
+        {
+            co_await receiveData();
+        }
+    }
+    catch (const boost::system::system_error& ex)
+    {
+        m_timer.cancel();
+        throw std::system_error(convertError(ex.code()));
+    }
+}
+
+Task<void> Client::receiveData()
+{
+    m_timer.expires_from_now(m_timeout);
+    co_await http::async_read(m_socket, m_buffer, m_response);
+    m_timer.cancel();
+
+    try
+    {
+        auto connValue = m_response["Connection"];
+        if (strncasecmp(connValue.data(), "close", connValue.size()))
+        {
+            asio_error_code error;
+            m_socket.close(error);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        log::error("Failed to parse http response: {}", e.what());
+        throw std::system_error(std::make_error_code(error::InvalidResponse));
+    }
+}
+
+Task<void> Client::receiveHeaderData()
+{
+    m_timer.expires_from_now(m_timeout);
+    auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
+    parser->skip(true); // tell the parser not to expect a body
+    co_await http::async_read_header(m_socket, m_buffer, *parser);
+    m_timer.cancel();
+
+    try
+    {
+        log::info("read head: {}", parser->get().result());
+        auto connValue = parser->get()["Connection"];
+        log::info("read head: {}", connValue);
+        if (strncasecmp(connValue.data(), "close", connValue.size()))
+        {
+            asio_error_code error;
+            m_socket.close(error);
+        }
+
+        for (auto& field : parser->get().base())
+        {
+            m_response.insert(field.name(), field.value());
+        }
+    }
+    catch (const std::exception& e)
+    {
+        log::error("Failed to parse http response: {}", e.what());
+        throw std::system_error(std::make_error_code(error::InvalidResponse));
+    }
+}
+
 static beast::http::verb methodToVerb(Method m)
 {
     switch (m)
@@ -293,11 +384,45 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         }
         else
         {
-        memcpy(data, m_response.body().data(), m_response.body().size());
-        cb(std::error_code(), StatusCode(m_response.result()), data);
+            memcpy(data, m_response.body().data(), m_response.body().size());
+            cb(std::error_code(), StatusCode(m_response.result()), data);
         }
     });
 }
+
+Task<Response> Client::perform(Method method)
+{
+    return perform(method, "");
+}
+
+Task<Response> Client::perform(Method method, const std::string& body)
+{
+    setMethodType(method);
+    m_request.body = body;
+
+    co_await performRequest();
+    co_return Response(StatusCode(m_response.result()), m_response.body);
+}
+
+//Task<StatusCode> Client::perform(Method method, uint8_t* data)
+//{
+//    setMethodType(method);
+//    m_request.body.clear();
+
+//    return Task<StatusCode>([this, data] (std::function<void(std::error_code, StatusCode)> completedCb) {
+//        performRequest([this, completedCb, data] (const std::error_code& error) {
+//            if (error)
+//            {
+//                completedCb(error, StatusCode::None);
+//            }
+//            else
+//            {
+//                memcpy(data, m_response.body.data(), m_response.body.size());
+//                completedCb(std::error_code(), StatusCode(m_response.result()));
+//            }
+//        });
+//    });
+//}
 
 void Client::checkTimeout(const asio_error_code& ec)
 {

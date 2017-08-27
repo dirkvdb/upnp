@@ -23,6 +23,7 @@
 
 #include "upnp/asio.h"
 #include "upnp/upnp.http.types.h"
+#include "upnp/upnp.coroutine.h"
 
 namespace upnp
 {
@@ -41,6 +42,9 @@ void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint
 
 void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
 void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
+
+Task<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url);
+Task<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout);
 
 }
 }

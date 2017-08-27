@@ -53,7 +53,8 @@ enum ErrorCode
 {
     InvalidResponse = -1,
     NetworkError = -2,
-    Timeout = -3
+    Timeout = -3,
+    Unexpected = -4
 };
 
 inline const char* error_message(ErrorCode error)
@@ -63,6 +64,7 @@ inline const char* error_message(ErrorCode error)
     case ErrorCode::InvalidResponse: return "Invalid response";
     case ErrorCode::NetworkError: return "Network error";
     case ErrorCode::Timeout: return "Timeout";
+    case ErrorCode::Unexpected: return "Unexpected";
     default: return "<unknown-error>";
     }
 }

@@ -24,7 +24,7 @@ find_package(PkgConfig)
 find_package(Threads)
 
 set (Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
 find_path(BEAST_INCLUDE_DIR
     NAMES boost/beast/http.hpp
@@ -43,6 +43,8 @@ endif ()
 if (CMAKE_GENERATOR STREQUAL Xcode)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 endif ()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
 
 add_library(upnpframework STATIC
     inc/upnp/asio.h
@@ -121,11 +123,14 @@ target_include_directories(upnpframework
 
 target_compile_definitions(upnpframework PUBLIC
     -DBOOST_NO_AUTO_PTR
+    -DBOOST_THREAD_PROVIDES_FUTURE
+    -DBOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 )
 
 target_link_libraries(upnpframework
     utils
     Boost::system
+    Boost::thread
     Boost::disable_autolinking
     Threads::Threads
 )
