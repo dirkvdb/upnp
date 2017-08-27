@@ -291,9 +291,11 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         {
             cb(error, StatusCode::None, nullptr);
         }
-
+        else
+        {
         memcpy(data, m_response.body.data(), m_response.body.size());
         cb(std::error_code(), StatusCode(m_response.result()), data);
+        }
     });
 }
 
