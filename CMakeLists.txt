@@ -24,7 +24,7 @@ find_package(PkgConfig)
 find_package(Threads)
 
 set (Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS system)
 
 find_path(BEAST_INCLUDE_DIR
     NAMES boost/beast/http.hpp
@@ -130,7 +130,6 @@ target_compile_definitions(upnpframework PUBLIC
 target_link_libraries(upnpframework
     utils
     Boost::system
-    Boost::thread
     Boost::disable_autolinking
     Threads::Threads
 )

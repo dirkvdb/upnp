@@ -21,7 +21,6 @@
 
 #include <variant>
 #include <future>
-#include <boost/thread/future.hpp>
 #include <boost/beast/http.hpp>
 #include <experimental/coroutine>
 
@@ -237,135 +236,8 @@ struct Task<void>
 
 }
 
-namespace std::experimental
-{
-inline namespace coroutines_v1
-{
-
-// Use boost future which supports then until libc++'s future is compatible with coroutines
-template <typename... Args>
-struct coroutine_traits<boost::future<void>, Args...>
-{
-    struct promise_type
-    {
-        boost::promise<void> p;
-
-        ~promise_type()
-        {
-            utils::log::info("~promise_type");
-        }
-
-        auto get_return_object() { return p.get_future(); }
-        std::experimental::suspend_never initial_suspend() { return {}; }
-        std::experimental::suspend_never final_suspend() { return {}; }
-        void set_exception(std::exception_ptr e) {
-            utils::log::info("Set exception");
-            p.set_exception(std::move(e));
-        }
-        void return_void() { p.set_value(); }
-        void unhandled_exception()
-        {
-            // boost promise does not support std::exception_ptr,
-            // so on a get() this will be rethrown as an exception_ptr
-            p.set_exception(std::current_exception());
-        }
-    };
-};
-
-template <typename R, typename... Args>
-struct coroutine_traits<boost::future<R>, Args...>
-{
-    struct promise_type
-    {
-        boost::promise<R> p;
-        auto get_return_object() { return p.get_future(); }
-        std::experimental::suspend_never initial_suspend() { return {}; }
-        std::experimental::suspend_never final_suspend() { return {}; }
-        void set_exception(std::exception_ptr e) { p.set_exception(std::move(e)); }
-        template <typename U> void return_value(U &&u)
-        {
-            p.set_value(std::forward<U>(u));
-        }
-    };
-};
-
-// template <typename... Args>
-// struct std::experimental::coroutine_traits<boost::future<void>, Args...>
-// {
-//     struct promise_type
-//     {
-//         boost::promise<void> p;
-//         auto get_return_object() { return p.get_future(); }
-//         std::experimental::suspend_never initial_suspend() { return {}; }
-//         std::experimental::suspend_never final_suspend() { return {}; }
-//         void set_exception(std::exception_ptr e) { p.set_exception(std::move(e)); }
-//         void return_void() { p.set_value(); }
-//     };
-// };
-
-// template <typename R, typename... Args>
-// struct std::experimental::coroutine_traits<boost::future<R>, Args...>
-// {
-//     struct promise_type
-//     {
-//         boost::promise<R> p;
-//         auto get_return_object() { return p.get_future(); }
-//         std::experimental::suspend_never initial_suspend() { return {}; }
-//         std::experimental::suspend_never final_suspend() { return {}; }
-//         void set_exception(std::exception_ptr e) { p.set_exception(std::move(e)); }
-//         template <typename U> void return_value(U &&u)
-//         {
-//             p.set_value(std::forward<U>(u));
-//         }
-//     };
-// };
-
-}
-}
-
 namespace upnp
 {
-
-inline auto operator co_await(boost::future<void>&& f)
-{
-    struct Awaiter
-    {
-        boost::future<void>&& input;
-        boost::future<void> output;
-
-        Awaiter(boost::future<void>&& in)
-        : input(std::forward<boost::future<void>>(in))
-        {
-            utils::log::info("Awaiter");
-        }
-
-        ~Awaiter()
-        {
-            utils::log::info("~Awaiter");
-        }
-
-        bool await_ready()
-        {
-            if (input.is_ready())
-            {
-                output = std::move(input);
-                return true;
-            }
-            return false;
-        }
-
-        auto await_resume() { return output.get(); }
-        void await_suspend(std::experimental::coroutine_handle<> coro)
-        {
-            input.then([this, coro](auto resultFuture) mutable {
-                this->output = std::move(resultFuture);
-                coro.resume();
-            });
-        }
-    };
-
-    return Awaiter(static_cast<boost::future<void>&&>(f));
-}
 
 struct sync_await_helper
 {
@@ -429,48 +301,6 @@ auto sync_await(Awaitable&& a)
 
     return a.await_resume();
 }
-
-//template <typename T>
-//inline auto operator asy_action(std::function<void(std::function<void(std::error_code, T)>)>&& action)
-//{
-//    struct Awaiter
-//    {
-//        Task<T>&& input;
-//        Task<T> output;
-
-//        Awaiter(std::function<void(std::function<void(std::error_code, T)>)>&& in)
-//        : input(std::forward<std::function<void(std::function<void(std::error_code, T)>)>>(in))
-//        {
-//            utils::log::info("Awaiter");
-//        }
-
-//        ~Awaiter()
-//        {
-//            utils::log::info("~Awaiter");
-//        }
-
-//        bool await_ready()
-//        {
-//            if (input.is_ready())
-//            {
-//                output = std::move(input);
-//                return true;
-//            }
-//            return false;
-//        }
-
-//        auto await_resume() { return output.get(); }
-//        void await_suspend(std::experimental::coroutine_handle<> coro)
-//        {
-//            input.then([this, coro](auto resultFuture) mutable {
-//                this->output = std::move(resultFuture);
-//                coro.resume();
-//            });
-//        }
-//    };
-
-//    return Awaiter(std::forward<std::function<void(std::function<void(std::error_code, T)>)>>(action));
-//}
 
 inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoint& ep)
 {
