@@ -1,25 +1,24 @@
-sudo: required
 dist: trusty
 language: cpp
 
 matrix:
   include:
-    # - compiler: clang
-    #   addons:
-    #     apt:
-    #       packages:
-    #         - uuid-dev
-    #   env:
-    #     - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
-    # - compiler: clang
-    #   addons:
-    #     apt:
-    #       sources:
-    #         - ubuntu-toolchain-r-test
-    #       packages:
-    #         - uuid-dev
-    #   env:
-    #     - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
+    - compiler: clang
+      addons:
+        apt:
+          packages:
+            - uuid-dev
+      env:
+        - COMPILER=5.0 LLVM_VERSION=5.0.0 BUILD_TYPE=Debug
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - uuid-dev
+      env:
+        - COMPILER=5.0 LLVM_VERSION=5.0.0 BUILD_TYPE=Release
     - compiler: clang
       addons:
         apt:
@@ -116,7 +115,11 @@ before_install:
   ############################################################################
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
-      travis_retry wget --quiet -O - http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
+      if [[ "$COMPILER" == "4.0" ]]; then
+        travis_retry wget --quiet -O - http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
+      else
+        travis_retry wget --quiet -O - http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-linux-x86_64-ubuntu14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
+      fi
 
       export PATH=${DEPS_DIR}/local/bin:${PATH}
       export LDFLAGS="${LDFLAGS} -lc++ -lc++abi -lm"
