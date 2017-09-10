@@ -95,7 +95,7 @@ public:
 
     void receiveData()
     {
-        beast::http::async_read(socket, m_buffer, m_request, [this, self = shared_from_this()] (const asio_error_code& error) {
+        beast::http::async_read(socket, m_buffer, m_request, [this, self = shared_from_this()] (const asio_error_code& error, size_t) {
             if (error)
             {
                 if (error.value() == asio::error::eof)
