@@ -142,7 +142,7 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
         m_request.target(m_url.getPath());
         m_request.set("Host", fmt::format("{}:{}", m_url.getHost(), m_socket.remote_endpoint().port()));
         m_request.prepare_payload();
-        beast::http::async_write(m_socket, m_request, [this, cb] (const beast::error_code& error) {
+        beast::http::async_write(m_socket, m_request, [this, cb] (const beast::error_code& error, size_t) {
             if (invokeCallbackOnError(error, cb))
             {
                 return;
@@ -165,7 +165,7 @@ void Client::performRequest(std::function<void(const std::error_code&)> cb)
 void Client::receiveData(std::function<void(const std::error_code&)> cb)
 {
     m_timer.expires_from_now(m_timeout);
-    beast::http::async_read(m_socket, m_buffer, m_response, [this, cb] (const asio_error_code& error) {
+    beast::http::async_read(m_socket, m_buffer, m_response, [this, cb] (const asio_error_code& error, size_t) {
         m_timer.cancel();
         if (invokeCallbackOnError(error, cb))
         {
@@ -197,7 +197,7 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
 
     auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
     parser->skip(true); // tell the parser not to expect a body
-    beast::http::async_read_header(m_socket, m_buffer, *parser, [this, cb, parser] (const asio_error_code& error) {
+    beast::http::async_read_header(m_socket, m_buffer, *parser, [this, cb, parser] (const asio_error_code& error, size_t) {
         m_timer.cancel();
         if (invokeCallbackOnError(error, cb))
         {
