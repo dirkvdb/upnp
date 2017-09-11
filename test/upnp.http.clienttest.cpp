@@ -84,13 +84,18 @@ TEST_F(HttpClientTest, ContentLength)
 
 TEST_F(HttpClientTest, ContentLengthCoro)
 {
-    auto task = http::getContentLength(io, server.getWebRootUrl() + "/test.txt");
-    task.setCompletionHandler([this] () {
-        server.stop();
+//    auto task = ;
+
+    Future<void> fut;
+    io.post([&] () {
+        auto res = sync_await(http::getContentLength(io, server.getWebRootUrl() + "/test.txt"));
+        EXPECT_EQ(http::StatusCode::Ok, std::get<0>(res));
+        EXPECT_EQ(s_hostedFile.size(), std::get<1>(res));
+        std::cout << "Rres ok" << std::endl;
+        io.stop();
     });
     std::cout << "Run io" << std::endl;
     io.run();
-    sync_await(task);
 }
 
 TEST_F(HttpClientTest, GetAsString)

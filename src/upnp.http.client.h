@@ -53,8 +53,8 @@ public:
     void perform(Method method, const std::string& body, std::function<void(const std::error_code&, Response response)> cb);
     void perform(Method method, uint8_t* data, std::function<void(const std::error_code&, StatusCode, uint8_t* data)> cb);
 
-    Task<Response> perform(Method method);
-    Task<Response> perform(Method method, const std::string& body);
+    Future<Response> perform(Method method);
+    Future<Response> perform(Method method, const std::string& body);
     //Task<StatusCode> perform(Method method, uint8_t* data);
 
     void reset();
@@ -67,9 +67,9 @@ private:
     void receiveData(std::function<void(const std::error_code&)> cb);
     void receiveHeaderData(std::function<void(const std::error_code&)> cb);
 
-    Task<void> performRequest();
-    Task<void> receiveData();
-    Task<void> receiveHeaderData();
+    Future<void> performRequest();
+    Future<void> receiveData();
+    Future<void> receiveHeaderData();
 
     URI m_url;
     asio::steady_timer m_timer;

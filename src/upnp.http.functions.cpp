@@ -129,15 +129,14 @@ void getContentLength(asio::io_service& io, const std::string& url, std::chrono:
     });
 }
 
-Task<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url)
+Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url)
 {
     utils::log::debug("getcontent length");
     return getContentLength(io, url, s_defaultTimeout);
 }
 
-Task<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout)
+Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout)
 {
-    assert(false);
     utils::log::debug("getcontent length timeout");
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);

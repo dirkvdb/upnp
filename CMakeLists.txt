@@ -48,6 +48,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
 
 add_library(upnpframework STATIC
     inc/upnp/asio.h
+    inc/upnp/upnp.coroutine.h
     inc/upnp/upnp.serviceclientbase.h
     inc/upnp/upnp.avtransport.types.h
     inc/upnp/upnp.avtransport.client.h                  src/upnp.avtransport.client.cpp
