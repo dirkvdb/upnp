@@ -229,7 +229,7 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
     });
 }
 
-Task<void> Client::performRequest()
+Future<void> Client::performRequest()
 {
     try
     {
@@ -267,7 +267,7 @@ Task<void> Client::performRequest()
     }
 }
 
-Task<void> Client::receiveData()
+Future<void> Client::receiveData()
 {
     m_timer.expires_from_now(m_timeout);
     co_await http::async_read(m_socket, m_buffer, m_response);
@@ -289,7 +289,7 @@ Task<void> Client::receiveData()
     }
 }
 
-Task<void> Client::receiveHeaderData()
+Future<void> Client::receiveHeaderData()
 {
     m_timer.expires_from_now(m_timeout);
     auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
@@ -390,13 +390,14 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
     });
 }
 
-Task<Response> Client::perform(Method method)
+Future<Response> Client::perform(Method method)
 {
     return perform(method, "");
 }
 
-Task<Response> Client::perform(Method method, const std::string& body)
+Future<Response> Client::perform(Method method, const std::string& body)
 {
+    log::info("perform");
     setMethodType(method);
     m_request.body = body;
 

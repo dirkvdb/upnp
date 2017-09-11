@@ -35,20 +35,15 @@ struct Task
     bool await_ready() { return false; }
     void await_suspend(std::experimental::coroutine_handle<> callerCoro)
     {
-        utils::log::debug(__FUNCTION__);
+        utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
         coro.promise().waiter = callerCoro;
         coro.resume();
     }
 
     T await_resume()
     {
-        utils::log::debug(__FUNCTION__);
+        utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
         assert(coro.promise().result.index() != 0);
-
-        if (completionCb)
-        {
-            completionCb();
-        }
 
         if (coro.promise().result.index() == 2)
         {
@@ -58,51 +53,37 @@ struct Task
         return std::get<1>(coro.promise().result);
     }
 
-//    void await_suspend(std::experimental::coroutine_handle<> coro)
-//    {
-//        func([this, coro] (std::error_code ec, T res) mutable {
-//            if (ec)
-//            {
-//                result = ec;
-//            }
-//            else
-//            {
-//                result = std::move(res);
-//            }
-//            coro.resume();
-//        });
-//    }
-
     struct promise_type
     {
         std::variant<EmptyState, T, std::exception_ptr> result;
         std::experimental::coroutine_handle<> waiter;
+        std::function<void()> completionCb;
 
         promise_type()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
         }
 
         ~promise_type()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
         }
 
         Task get_return_object()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
             return { this };
         }
 
         std::experimental::suspend_always initial_suspend()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
             return {};
         }
 
         auto final_suspend()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
             struct Awaiter
             {
                 promise_type* me;
@@ -116,37 +97,46 @@ struct Task
         template <typename U>
         void return_value(U&& value)
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
             result.template emplace<1>(value);
+
+            if (completionCb)
+            {
+                completionCb();
+            }
         }
 
         void unhandled_exception()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
             result.template emplace<2>(std::current_exception());
+
+            if (completionCb)
+            {
+                completionCb();
+            }
         }
     };
 
     Task(promise_type* p)
     : coro(std::experimental::coroutine_handle<promise_type>::from_promise(*p))
     {
-        utils::log::debug(__FUNCTION__);
+        utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
     }
 
     ~Task()
     {
-        utils::log::debug(__FUNCTION__);
+        utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
         coro.destroy();
     }
 
     template <typename Callable>
     void setCompletionHandler(Callable&& cb)
     {
-        completionCb = cb;
+        coro.promise().completionCb = cb;
     }
 
     std::experimental::coroutine_handle<promise_type> coro;
-    std::function<void()> completionCb;
 };
 
 template <>
@@ -161,11 +151,6 @@ struct Task<void>
 
     void await_resume()
     {
-        if (completionCb)
-        {
-            completionCb();
-        }
-
         assert(coro.promise().result.index() == 1);
         auto& res = std::get<1>(coro.promise().result);
         if (res)
@@ -178,10 +163,11 @@ struct Task<void>
     {
         std::variant<EmptyState, std::exception_ptr> result;
         std::experimental::coroutine_handle<> waiter;
+        std::function<void()> completionCb;
 
         Task get_return_object()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
             return { this };
         }
 
@@ -204,13 +190,23 @@ struct Task<void>
 
         void return_void()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
+
+            if (completionCb)
+            {
+                completionCb();
+            }
         }
 
         void unhandled_exception()
         {
-            utils::log::debug(__FUNCTION__);
+            utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
             result.emplace<1>(std::current_exception());
+
+            if (completionCb)
+            {
+                completionCb();
+            }
         }
     };
 
@@ -219,19 +215,229 @@ struct Task<void>
     {
     }
 
+    Task(const Task&) = delete;
+    Task(Task&&) = default;
+
     ~Task()
     {
-        coro.destroy();
+        if (coro)
+        {
+            coro.destroy();
+        }
     }
 
     template <typename Callable>
     void setCompletionHandler(Callable&& cb)
     {
-        completionCb = cb;
+        coro.promise().completionCb = cb;
     }
 
-    std::experimental::coroutine_handle<promise_type> coro;
-    std::function<void()> completionCb;
+    std::experimental::coroutine_handle<promise_type> coro = nullptr;
+};
+
+template <typename T>
+struct Future
+{
+    struct promise_type
+    {
+        T _value;
+        bool _ready = false;
+        std::experimental::coroutine_handle<> _waiter = nullptr;
+
+        Future get_return_object()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return Future(std::experimental::coroutine_handle<promise_type>::from_promise(*this));
+        }
+
+        auto initial_suspend()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return std::experimental::suspend_never();
+        }
+
+        auto final_suspend()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return std::experimental::suspend_always();
+        }
+
+        void return_value(T value)
+        {
+            _value = value;
+            _ready = true;
+
+            if (_waiter)
+            {
+                _waiter.resume();
+            }
+        }
+
+        void unhandled_exception()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            std::terminate();
+        }
+    };
+
+    Future() = default;
+    Future(const Future&) = delete;
+    Future(Future&& f)
+    : _coro(f._coro)
+    {
+        std::cout << __FUNCTION__ << "&&:" << __LINE__ << " [" << this << "]" << std::endl;
+        f._coro = nullptr;
+    }
+
+    Future& operator=(const Future&) = delete;
+    Future& operator=(Future&& other)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        _coro = other._coro;
+        other._coro = nullptr;
+        return *this;
+    }
+
+    explicit Future(std::experimental::coroutine_handle<promise_type> coro)
+    : _coro(coro)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+    }
+
+    ~Future()
+    {
+        if (_coro)
+        {
+            _coro.destroy();
+        }
+    }
+
+    bool await_ready()
+    {
+        assert(_coro);
+        return _coro.promise()._ready;
+    }
+
+    void await_suspend(std::experimental::coroutine_handle<> callerCoro)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        _coro.promise()._waiter = callerCoro;
+        //_coro.resume();
+    }
+
+    T await_resume()
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        _coro.promise()._waiter.resume();
+        return _coro.promise()._value;
+    }
+
+    T get()
+    {
+        return _coro.promise()._value;
+    }
+
+    std::experimental::coroutine_handle<promise_type> _coro = nullptr;
+};
+
+template <>
+struct Future<void>
+{
+    struct promise_type
+    {
+        bool _ready = false;
+        std::experimental::coroutine_handle<> _waiter = nullptr;
+
+        Future get_return_object()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return Future(std::experimental::coroutine_handle<promise_type>::from_promise(*this));
+        }
+
+        auto initial_suspend()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return std::experimental::suspend_never();
+        }
+
+        auto final_suspend()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            return std::experimental::suspend_always();
+        }
+
+        void return_void()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            _ready = true;
+            if (_waiter)
+            {
+                _waiter.resume();
+            }
+        }
+
+        void unhandled_exception()
+        {
+            std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+            std::terminate();
+        }
+    };
+
+    Future() = default;
+    Future(const Future&) = delete;
+    Future& operator=(const Future&) = delete;
+    Future& operator=(Future&& other)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        _coro = other._coro;
+        other._coro = nullptr;
+        return *this;
+    }
+
+    explicit Future(std::experimental::coroutine_handle<promise_type> coro)
+    : _coro(coro)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+    }
+
+    Future(Future&& f)
+    : _coro(f._coro)
+    {
+        std::cout << __FUNCTION__ << "&&:" << __LINE__ << " [" << this << "]" << std::endl;
+        f._coro = nullptr;
+    }
+
+    ~Future()
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        if (_coro)
+        {
+            std::cout << " Destroy [" << this << "]" << std::endl;
+            _coro.destroy();
+        }
+    }
+
+    bool await_ready()
+    {
+        assert(_coro);
+        std::cout << __FUNCTION__ << ":" << __LINE__ << ": ready " << _coro.promise()._ready << std::endl;
+        return _coro.promise()._ready;
+    }
+
+    void await_suspend(std::experimental::coroutine_handle<> callerCoro)
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        _coro.promise()._waiter = callerCoro;
+        //_coro.resume();
+    }
+
+    void await_resume()
+    {
+        std::cout << __FUNCTION__ << ":" << __LINE__ << " [" << this << "]" << std::endl;
+        //_coro.promise()._waiter.resume();
+    }
+
+    std::experimental::coroutine_handle<promise_type> _coro = nullptr;
 };
 
 }
@@ -252,7 +458,7 @@ struct sync_await_helper
             return {std::experimental::coroutine_handle<promise_type>::from_promise(*this)};
         }
 
-        std::experimental::suspend_always initial_suspend() { return {}; }
+        std::experimental::suspend_never initial_suspend() { return {}; }
         auto final_suspend()
         {
             struct Awaiter
@@ -261,11 +467,13 @@ struct sync_await_helper
                 void await_resume() {}
                 void await_suspend(std::experimental::coroutine_handle<promise_type> h)
                 {
-                    promise_type &me = h.promise();
+                    utils::log::debug("Connect done");
+                    promise_type& me = h.promise();
                     {
                         std::lock_guard<std::mutex> lock(me.m);
                         me.done = true;
                     }
+
                     me.c.notify_all();
                 }
             };
@@ -315,21 +523,23 @@ inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoin
         : s(s)
         , ep(ep)
         {
-            utils::log::info("connect Awaiter");
+            utils::log::info("async_connect Awaiter");
         }
 
         ~Awaiter()
         {
-            utils::log::info("connect ~Awaiter");
+            utils::log::info("async_connect ~Awaiter");
         }
 
         bool await_ready()
         {
+            utils::log::info("async_connect Awaiter ready {}", ready);
             return ready;
         }
 
         void await_resume()
         {
+            utils::log::info("async_connect Awaiter await_resume: {}", ready);
             if (ec)
             {
                 throw boost::system::system_error(ec);
@@ -338,7 +548,9 @@ inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoin
 
         void await_suspend(std::experimental::coroutine_handle<> coro)
         {
+            utils::log::info("async_connect Awaiter await_suspend {}", ready);
             s.async_connect(this->ep, [this, coro] (auto ec) mutable {
+                utils::log::info("connect ready");
                 this->ready = true;
                 this->ec = ec;
                 coro.resume();
