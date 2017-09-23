@@ -55,6 +55,14 @@ public:
         };
     }
 
+    template <typename Ret, typename Awaitable>
+    Future<Ret> waitForIt(io_service& io, Awaitable&& awaitable)
+    {
+        auto res = co_await awaitable;
+        io.stop();
+        co_return res;
+    }
+
     io_service io;
     http::Server server;
     http::Client client;
@@ -84,18 +92,29 @@ TEST_F(HttpClientTest, ContentLength)
 
 TEST_F(HttpClientTest, ContentLengthCoro)
 {
-//    auto task = ;
+    auto task = http::getContentLength(io, server.getWebRootUrl() + "/test.txt");
 
-    Future<void> fut;
+    Future<std::tuple<http::StatusCode, size_t>> res;
     io.post([&] () {
-        auto res = sync_await(http::getContentLength(io, server.getWebRootUrl() + "/test.txt"));
-        EXPECT_EQ(http::StatusCode::Ok, std::get<0>(res));
-        EXPECT_EQ(s_hostedFile.size(), std::get<1>(res));
-        std::cout << "Rres ok" << std::endl;
-        io.stop();
+        res = waitForIt<std::tuple<http::StatusCode, size_t>>(io, task);
     });
-    std::cout << "Run io" << std::endl;
+
+    // io.post([&] () {
+    //     auto fut = http::getContentLength(io, server.getWebRootUrl() + "/test.txt");
+    //     std::thread t([this, fut = std::move(fut)] () mutable {
+    //         auto res = sync_await(fut);
+    //         EXPECT_EQ(http::StatusCode::Ok, std::get<0>(res));
+    //         EXPECT_EQ(s_hostedFile.size(), std::get<1>(res));
+    //     });
+
+    //     t.join();
+    // });
+
     io.run();
+
+    auto [status, size] = res.get();
+    EXPECT_EQ(http::StatusCode::Ok, status);
+    EXPECT_EQ(s_hostedFile.size(), size);
 }
 
 TEST_F(HttpClientTest, GetAsString)
