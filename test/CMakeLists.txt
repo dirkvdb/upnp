@@ -6,14 +6,6 @@ include_directories(SYSTEM
     ${CMAKE_CURRENT_SOURCE_DIR}/testframework
 )
 
-add_executable(corotest
-    coro.cpp
-)
-
-target_link_libraries(corotest
-    upnpframework
-)
-
 add_executable(upnpframeworktest
     testframework/gmock-gtest-all.cpp
     main.cpp

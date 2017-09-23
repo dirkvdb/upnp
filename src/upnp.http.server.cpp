@@ -40,7 +40,7 @@ using namespace utils;
 using namespace asio;
 using namespace std::literals::chrono_literals;
 
-#define DEBUG_HTTP
+//#define DEBUG_HTTP
 
 namespace upnp
 {

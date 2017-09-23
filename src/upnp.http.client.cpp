@@ -206,9 +206,7 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
 
         try
         {
-            log::info("read head: {}", parser->get().result());
             auto connValue = parser->get()["Connection"];
-            log::info("read head: {}", connValue);
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
                 asio_error_code error;
@@ -299,9 +297,7 @@ Future<void> Client::receiveHeaderData()
 
     try
     {
-        log::info("read head: {}", parser->get().result());
         auto connValue = parser->get()["Connection"];
-        log::info("read head: {}", connValue);
         if (strncasecmp(connValue.data(), "close", connValue.size()))
         {
             asio_error_code error;

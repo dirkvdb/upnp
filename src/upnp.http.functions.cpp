@@ -131,17 +131,14 @@ void getContentLength(asio::io_service& io, const std::string& url, std::chrono:
 
 Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url)
 {
-    utils::log::debug("getcontent length");
     return getContentLength(io, url, s_defaultTimeout);
 }
 
 Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout)
 {
-    utils::log::debug("getcontent length timeout");
     auto client = std::make_shared<http::Client>(io);
     client->setUrl(url);
     client->setTimeout(timeout);
-    utils::log::debug("getcontent length perform");
     auto response = co_await client->perform(Method::Head);
     size_t length = 0;
     if (response.status == StatusCode::Ok)
