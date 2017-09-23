@@ -35,13 +35,23 @@ void get(asio::io_service& io, const std::string& url, std::chrono::seconds time
 void get(asio::io_service& io, const std::string& url, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
 void get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
 
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::function<void(const std::error_code& error, Response)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
-void getRange(asio::io_service& io, const std::string& url, uint32_t start, uint32_t end, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::function<void(const std::error_code& error, Response)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::chrono::seconds timeout, std::function<void(const std::error_code& error, Response)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
+void getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, uint8_t*)> cb);
 
 void getContentLength(asio::io_service& io, const std::string& url, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
 void getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout, std::function<void(const std::error_code& error, StatusCode, size_t)> cb);
+
+Future<Response> get(asio::io_service& io, const std::string& url);
+Future<Response> get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout);
+Future<StatusCode> get(asio::io_service& io, const std::string& url, uint8_t* data);
+Future<StatusCode> get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout);
+
+Future<Response> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size);
+Future<Response> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::chrono::seconds timeout);
+Future<StatusCode> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data);
+Future<StatusCode> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::chrono::seconds timeout);
 
 Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url);
 Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url, std::chrono::seconds timeout);

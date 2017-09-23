@@ -55,7 +55,7 @@ public:
 
     Future<Response> perform(Method method);
     Future<Response> perform(Method method, const std::string& body);
-    //Task<StatusCode> perform(Method method, uint8_t* data);
+    Future<StatusCode> perform(Method method, uint8_t* data);
 
     void reset();
 

@@ -31,234 +31,12 @@ namespace beast = boost::beast;
 
 struct EmptyState {};
 
-// template <typename T>
-// struct Task
-// {
-//     bool await_ready() { return false; }
-//     void await_suspend(std::experimental::coroutine_handle<> callerCoro)
-//     {
-//         utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//         coro.promise().waiter = callerCoro;
-//         coro.resume();
-//     }
-
-//     T await_resume()
-//     {
-//         utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//         assert(coro.promise().result.index() != 0);
-
-//         if (coro.promise().result.index() == 2)
-//         {
-//             std::rethrow_exception(std::get<2>(coro.promise().result));
-//         }
-
-//         return std::get<1>(coro.promise().result);
-//     }
-
-//     struct promise_type
-//     {
-//         std::variant<EmptyState, T, std::exception_ptr> result;
-//         std::experimental::coroutine_handle<> waiter;
-//         std::function<void()> completionCb;
-
-//         promise_type()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//         }
-
-//         ~promise_type()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//         }
-
-//         Task get_return_object()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//             return { this };
-//         }
-
-//         std::experimental::suspend_always initial_suspend()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//             return {};
-//         }
-
-//         auto final_suspend()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//             struct Awaiter
-//             {
-//                 promise_type* me;
-//                 bool await_ready() { return false; }
-//                 void await_suspend(std::experimental::coroutine_handle<>) { me->waiter.resume(); }
-//                 void await_resume() {}
-//             };
-//             return Awaiter{ this };
-//         }
-
-//         template <typename U>
-//         void return_value(U&& value)
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//             result.template emplace<1>(value);
-
-//             if (completionCb)
-//             {
-//                 completionCb();
-//             }
-//         }
-
-//         void unhandled_exception()
-//         {
-//             utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//             result.template emplace<2>(std::current_exception());
-
-//             if (completionCb)
-//             {
-//                 completionCb();
-//             }
-//         }
-//     };
-
-//     Task() = default;
-//     Task(promise_type* p)
-//     : coro(std::experimental::coroutine_handle<promise_type>::from_promise(*p))
-//     {
-//         utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//     }
-
-//     Task(Task&& other)
-//     : coro(other.coro)
-//     {
-//         other.coro = nullptr;
-//     }
-
-//     ~Task()
-//     {
-//         utils::log::debug("{}:{}", __FUNCTION__, __LINE__);
-//         if (coro) {
-//             coro.destroy();
-//         }
-//     }
-
-//     Task& operator=(Task&& other)
-//     {
-//         coro = other.coro;
-//         other.coro = nullptr;
-//         return *this;
-//     }
-
-//     std::experimental::coroutine_handle<promise_type> coro;
-// };
-
-// template <>
-// struct Task<void>
-// {
-//     bool await_ready() { return false; }
-//     void await_suspend(std::experimental::coroutine_handle<> callerCoro)
-//     {
-//         coro.promise().waiter = callerCoro;
-//         coro.resume();
-//     }
-
-//     void await_resume()
-//     {
-//         assert(coro.promise().result.index() == 1);
-//         auto& res = std::get<1>(coro.promise().result);
-//         if (res)
-//         {
-//             std::rethrow_exception(res);
-//         }
-//     }
-
-//     struct promise_type
-//     {
-//         std::variant<EmptyState, std::exception_ptr> result;
-//         std::experimental::coroutine_handle<> waiter;
-//         std::function<void()> completionCb;
-
-//         Task get_return_object()
-//         {
-//             utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
-//             return { this };
-//         }
-
-//         std::experimental::suspend_always initial_suspend()
-//         {
-//             return {};
-//         }
-
-//         auto final_suspend()
-//         {
-//             struct Awaiter
-//             {
-//                 promise_type* me;
-//                 bool await_ready() { return false; }
-//                 void await_suspend(std::experimental::coroutine_handle<>) { me->waiter.resume(); }
-//                 void await_resume() {}
-//             };
-//             return Awaiter{ this };
-//         }
-
-//         void return_void()
-//         {
-//             utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
-
-//             if (completionCb)
-//             {
-//                 completionCb();
-//             }
-//         }
-
-//         void unhandled_exception()
-//         {
-//             utils::log::debug("{}:{} [{}]", __FUNCTION__, __LINE__, (void*)this);
-//             result.emplace<1>(std::current_exception());
-
-//             if (completionCb)
-//             {
-//                 completionCb();
-//             }
-//         }
-//     };
-
-//     Task() = default;
-//     Task(promise_type* p)
-//     : coro(std::experimental::coroutine_handle<promise_type>::from_promise(*p))
-//     {
-//     }
-
-//     Task(const Task&) = delete;
-//     Task(Task&& other)
-//     : coro(other.coro)
-//     {
-//         other.coro = nullptr;
-//     }
-
-//     ~Task()
-//     {
-//         if (coro)
-//         {
-//             coro.destroy();
-//         }
-//     }
-
-//     Task& operator=(Task&& other)
-//     {
-//         coro       = other.coro;
-//         other.coro = nullptr;
-//         return *this;
-//     }
-
-//     std::experimental::coroutine_handle<promise_type> coro = nullptr;
-// };
-
 template <typename T>
 struct MyTask
 {
     struct promise_type
     {
-        T _value;
+        std::variant<T, std::exception_ptr> _value;
         bool _ready = false;
         std::experimental::coroutine_handle<> _waiter = nullptr;
 
@@ -302,7 +80,7 @@ struct MyTask
 
         void unhandled_exception()
         {
-            std::terminate();
+            _value = std::current_exception();
         }
     };
 
@@ -348,12 +126,17 @@ struct MyTask
 
     T await_resume()
     {
-        return _coro.promise()._value;
+        return get();
     }
 
     T get()
     {
-        return _coro.promise()._value;
+        if (std::holds_alternative<T>(_coro.promise()._value))
+        {
+            return std::get<T>(_coro.promise()._value);
+        }
+
+        std::rethrow_exception(std::get<std::exception_ptr>(_coro.promise()._value));
     }
 
     std::experimental::coroutine_handle<promise_type> _coro = nullptr;
@@ -365,6 +148,7 @@ struct MyTask<void>
     struct promise_type
     {
         bool _ready = false;
+        std::exception_ptr _ex;
         std::experimental::coroutine_handle<> _waiter = nullptr;
 
         MyTask get_return_object()
@@ -406,7 +190,7 @@ struct MyTask<void>
 
         void unhandled_exception()
         {
-            std::terminate();
+            _ex = std::current_exception();
         }
     };
 
@@ -452,6 +236,10 @@ struct MyTask<void>
 
     void await_resume()
     {
+        if (_coro.promise()._ex)
+        {
+            std::rethrow_exception(_coro.promise()._ex);
+        }
     }
 
     std::experimental::coroutine_handle<promise_type> _coro = nullptr;
@@ -543,23 +331,15 @@ inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoin
         : s(s)
         , ep(ep)
         {
-            utils::log::info("async_connect Awaiter");
-        }
-
-        ~Awaiter()
-        {
-            utils::log::info("async_connect ~Awaiter");
         }
 
         bool await_ready()
         {
-            utils::log::info("async_connect Awaiter ready {}", ready);
             return ready;
         }
 
         void await_resume()
         {
-            utils::log::info("async_connect Awaiter await_resume: {}", ready);
             if (ec)
             {
                 throw boost::system::system_error(ec);
@@ -568,9 +348,7 @@ inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoin
 
         void await_suspend(std::experimental::coroutine_handle<> coro)
         {
-            utils::log::info("async_connect Awaiter await_suspend {}", ready);
             s.async_connect(this->ep, [this, coro] (auto ec) mutable {
-                utils::log::info("connect ready");
                 this->ready = true;
                 this->ec = ec;
                 coro.resume();

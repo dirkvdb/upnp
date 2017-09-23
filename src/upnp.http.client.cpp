@@ -290,21 +290,21 @@ Future<void> Client::receiveData()
 Future<void> Client::receiveHeaderData()
 {
     m_timer.expires_from_now(m_timeout);
-    auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
-    parser->skip(true); // tell the parser not to expect a body
-    co_await http::async_read_header(m_socket, m_buffer, *parser);
+    beast::http::parser<false, beast::http::empty_body> parser;
+    parser.skip(true); // tell the parser not to expect a body
+    co_await http::async_read_header(m_socket, m_buffer, parser);
     m_timer.cancel();
 
     try
     {
-        auto connValue = parser->get()["Connection"];
+        auto connValue = parser.get()["Connection"];
         if (strncasecmp(connValue.data(), "close", connValue.size()))
         {
             asio_error_code error;
             m_socket.close(error);
         }
 
-        for (auto& field : parser->get().base())
+        for (auto& field : parser.get().base())
         {
             m_response.insert(field.name(), field.value());
         }
@@ -401,25 +401,15 @@ Future<Response> Client::perform(Method method, const std::string& body)
     co_return Response(StatusCode(m_response.result()), m_response.body());
 }
 
-//Task<StatusCode> Client::perform(Method method, uint8_t* data)
-//{
-//    setMethodType(method);
-//    m_request.body.clear();
+Future<StatusCode> Client::perform(Method method, uint8_t* data)
+{
+    setMethodType(method);
+    m_request.body().clear();
 
-//    return Task<StatusCode>([this, data] (std::function<void(std::error_code, StatusCode)> completedCb) {
-//        performRequest([this, completedCb, data] (const std::error_code& error) {
-//            if (error)
-//            {
-//                completedCb(error, StatusCode::None);
-//            }
-//            else
-//            {
-//                memcpy(data, m_response.body.data(), m_response.body.size());
-//                completedCb(std::error_code(), StatusCode(m_response.result()));
-//            }
-//        });
-//    });
-//}
+    co_await performRequest();
+    memcpy(data, m_response.body().data(), m_response.body().size());
+    co_return StatusCode(m_response.result());
+}
 
 void Client::checkTimeout(const asio_error_code& ec)
 {

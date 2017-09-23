@@ -56,11 +56,32 @@ public:
     }
 
     template <typename Ret, typename Awaitable>
-    Future<Ret> waitForIt(io_service& io, Awaitable&& awaitable)
+    Future<Ret> waitForIt(Awaitable&& awaitable)
     {
-        auto res = co_await awaitable;
-        io.stop();
-        co_return res;
+        try
+        {
+            auto res = co_await awaitable;
+            io.stop();
+            co_return res;
+
+        }
+        catch (...)
+        {
+            io.stop();
+            std::rethrow_exception(std::current_exception());
+        }
+    }
+
+    template <typename TaskResult>
+    auto runCoroTask(Future<TaskResult>&& task)
+    {
+        Future<TaskResult> res;
+        io.post([&] () {
+            res = waitForIt<TaskResult>(task);
+        });
+
+        io.run();
+        return res.get();
     }
 
     io_service io;
@@ -92,27 +113,7 @@ TEST_F(HttpClientTest, ContentLength)
 
 TEST_F(HttpClientTest, ContentLengthCoro)
 {
-    auto task = http::getContentLength(io, server.getWebRootUrl() + "/test.txt");
-
-    Future<std::tuple<http::StatusCode, size_t>> res;
-    io.post([&] () {
-        res = waitForIt<std::tuple<http::StatusCode, size_t>>(io, task);
-    });
-
-    // io.post([&] () {
-    //     auto fut = http::getContentLength(io, server.getWebRootUrl() + "/test.txt");
-    //     std::thread t([this, fut = std::move(fut)] () mutable {
-    //         auto res = sync_await(fut);
-    //         EXPECT_EQ(http::StatusCode::Ok, std::get<0>(res));
-    //         EXPECT_EQ(s_hostedFile.size(), std::get<1>(res));
-    //     });
-
-    //     t.join();
-    // });
-
-    io.run();
-
-    auto [status, size] = res.get();
+    auto [status, size] = runCoroTask(http::getContentLength(io, server.getWebRootUrl() + "/test.txt"));
     EXPECT_EQ(http::StatusCode::Ok, status);
     EXPECT_EQ(s_hostedFile.size(), size);
 }
@@ -122,6 +123,13 @@ TEST_F(HttpClientTest, GetAsString)
     EXPECT_CALL(mock, onResponse(std::error_code(), http::StatusCode::Ok, s_hostedFile));
     http::get(io, server.getWebRootUrl() + "/test.txt", handleHttpResponse());
     io.run();
+}
+
+TEST_F(HttpClientTest, GetAsStringCoro)
+{
+    auto response = runCoroTask(http::get(io, server.getWebRootUrl() + "/test.txt"));
+    EXPECT_EQ(http::StatusCode::Ok, response.status);
+    EXPECT_EQ(s_hostedFile, response.body);
 }
 
 TEST_F(HttpClientTest, GetAsArray)
@@ -136,11 +144,27 @@ TEST_F(HttpClientTest, GetAsArray)
     EXPECT_TRUE(std::equal(array.begin(), array.end(), s_hostedFile.begin(), s_hostedFile.end()));
 }
 
+TEST_F(HttpClientTest, GetAsArrayCoro)
+{
+    std::array<uint8_t, 15> array = {};
+
+    auto status = runCoroTask(http::get(io, server.getWebRootUrl() + "/test.txt", array.data()));
+    EXPECT_EQ(http::StatusCode::Ok, status);
+    EXPECT_TRUE(std::equal(array.begin(), array.end(), s_hostedFile.begin(), s_hostedFile.end()));
+}
+
 TEST_F(HttpClientTest, GetInvalidUrlAsString)
 {
     EXPECT_CALL(mock, onResponse(std::error_code(), http::StatusCode::NotFound, ""));
     http::get(io, server.getWebRootUrl() + "/bad.txt", handleHttpResponse());
     io.run();
+}
+
+TEST_F(HttpClientTest, GetInvalidUrlAsStringCoro)
+{
+    auto response = runCoroTask(http::get(io, server.getWebRootUrl() + "/bad.txt"));
+    EXPECT_EQ(http::StatusCode::NotFound, response.status);
+    EXPECT_TRUE(response.body.empty());
 }
 
 TEST_F(HttpClientTest, GetRange)
@@ -150,6 +174,13 @@ TEST_F(HttpClientTest, GetRange)
     io.run();
 }
 
+TEST_F(HttpClientTest, GetRangeCoro)
+{
+    auto response = runCoroTask(http::getRange(io, server.getWebRootUrl() + "/test.txt", 5, 9));
+    EXPECT_EQ(http::StatusCode::PartialContent, response.status);
+    EXPECT_EQ("small fil"s, response.body);
+}
+
 TEST_F(HttpClientTest, GetRangeTillEnd)
 {
     EXPECT_CALL(mock, onResponse(std::error_code(), http::StatusCode::PartialContent, "small file"));
@@ -157,12 +188,35 @@ TEST_F(HttpClientTest, GetRangeTillEnd)
     io.run();
 }
 
+TEST_F(HttpClientTest, GetRangeTillEndCoro)
+{
+    auto response = runCoroTask(http::getRange(io, server.getWebRootUrl() + "/test.txt", 5, 0));
+    EXPECT_EQ(http::StatusCode::PartialContent, response.status);
+    EXPECT_EQ("small file"s, response.body);
+}
 
 TEST_F(HttpClientTest, CouldNotConnect)
 {
     EXPECT_CALL(mock, onResponse(std::make_error_code(http::error::NetworkError), _, Matcher<size_t>(_)));
     http::getContentLength(io, "http://127.0.0.1:81/index.html", handleResponse<size_t>());
     io.run();
+}
+
+TEST_F(HttpClientTest, CouldNotConnectCoro)
+{
+    try
+    {
+        runCoroTask(http::getContentLength(io, "http://127.0.0.1:81/index.html"));
+        FAIL() << "No exception thrown";
+    }
+    catch (const std::system_error& e)
+    {
+        EXPECT_EQ(std::make_error_code(http::error::NetworkError), e.code());
+    }
+    catch (...)
+    {
+        FAIL() << "Wrong exception type thrown";
+    }
 }
 
 }

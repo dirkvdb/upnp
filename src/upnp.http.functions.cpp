@@ -129,6 +129,64 @@ void getContentLength(asio::io_service& io, const std::string& url, std::chrono:
     });
 }
 
+Future<Response> get(asio::io_service& io, const std::string& url)
+{
+    return get(io, url, s_defaultTimeout);
+}
+
+Future<Response> get(asio::io_service& io, const std::string& url, std::chrono::seconds timeout)
+{
+    http::Client client(io);
+    client.setUrl(url);
+    client.setTimeout(timeout);
+    auto res = co_await client.perform(Method::Get);
+    co_return res;
+}
+
+Future<StatusCode> get(asio::io_service& io, const std::string& url, uint8_t* data)
+{
+    return get(io, url, data, s_defaultTimeout);
+}
+
+Future<StatusCode> get(asio::io_service& io, const std::string& url, uint8_t* data, std::chrono::seconds timeout)
+{
+    http::Client client(io);
+    client.setUrl(url);
+    client.setTimeout(timeout);
+    auto res = co_await client.perform(Method::Get, data);
+    co_return res;
+}
+
+Future<Response> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size)
+{
+    return getRange(io, url, offset, size, s_defaultTimeout);
+}
+
+Future<Response> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, std::chrono::seconds timeout)
+{
+    http::Client client(io);
+    client.setUrl(url);
+    client.setTimeout(timeout);
+    client.addHeader("Range", createRangeHeaderValue(offset, size));
+    auto res = co_await client.perform(Method::Get);
+    co_return res;
+}
+
+Future<StatusCode> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data)
+{
+    return getRange(io, url, offset, size, data, s_defaultTimeout);
+}
+
+Future<StatusCode> getRange(asio::io_service& io, const std::string& url, uint32_t offset, uint32_t size, uint8_t* data, std::chrono::seconds timeout)
+{
+    http::Client client(io);
+    client.setUrl(url);
+    client.setTimeout(timeout);
+    client.addHeader("Range", createRangeHeaderValue(offset, size));
+    auto res = co_await client.perform(Method::Get, data);
+    co_return res;
+}
+
 Future<std::tuple<StatusCode, size_t>> getContentLength(asio::io_service& io, const std::string& url)
 {
     return getContentLength(io, url, s_defaultTimeout);
