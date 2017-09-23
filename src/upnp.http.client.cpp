@@ -395,10 +395,10 @@ Future<Response> Client::perform(Method method, const std::string& body)
 {
     log::info("perform");
     setMethodType(method);
-    m_request.body = body;
+    m_request.body() = body;
 
     co_await performRequest();
-    co_return Response(StatusCode(m_response.result()), m_response.body);
+    co_return Response(StatusCode(m_response.result()), m_response.body());
 }
 
 //Task<StatusCode> Client::perform(Method method, uint8_t* data)
