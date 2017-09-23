@@ -77,4 +77,10 @@ inline std::chrono::seconds durationFromString(const std::string& durationString
     return hours + minutes + seconds;
 }
 
+template <typename DestView, typename SourceView>
+DestView sv_cast(const SourceView& sv)
+{
+    return DestView(sv.data(), sv.size());
+}
+
 }

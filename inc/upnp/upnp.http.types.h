@@ -17,6 +17,7 @@
 #pragma once
 
 #include "stringview.h"
+#include "upnp/upnp.utils.h"
 
 #include <boost/beast/http.hpp>
 #include <boost/utility/string_view.hpp>
@@ -209,12 +210,12 @@ public:
     std::string_view field(std::string_view hdr) const noexcept
     {
         auto stringRef = m_req[boost::string_view(hdr.data(), hdr.size())];
-        return std::string_view(stringRef.data(), stringRef.size());
+        return sv_cast<std::string_view>(stringRef);
     }
 
     std::string_view body() const noexcept
     {
-        return std::string_view(m_req.body.data(), m_req.body.size());
+        return sv_cast<std::string_view>(m_req.body());
     }
 
 private:

@@ -75,7 +75,7 @@ Client::Client(asio::io_service& io)
 , m_socket(io)
 , m_timeout(60000ms)
 {
-    m_request.version = 11;
+    m_request.version(11);
 }
 
 void Client::reset()
@@ -106,7 +106,7 @@ std::string_view Client::getResponseHeaderValue(const char* headerValue)
 
 std::string Client::getResponseBody()
 {
-    return m_response.body;
+    return m_response.body();
 }
 
 uint32_t Client::getStatus()
@@ -261,7 +261,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
         }
         else
         {
-            cb(error, Response(StatusCode(m_response.result()), m_response.body));
+            cb(error, Response(StatusCode(m_response.result()), m_response.body()));
         }
     });
 }
@@ -269,7 +269,7 @@ void Client::perform(Method method, std::function<void(const std::error_code&, R
 void Client::perform(Method method, const std::string& body, std::function<void(const std::error_code&, Response)> cb)
 {
     setMethodType(method);
-    m_request.body = body;
+    m_request.body() = body;
     performRequest([this, cb] (const std::error_code& error) {
         if (error)
         {
@@ -277,7 +277,7 @@ void Client::perform(Method method, const std::string& body, std::function<void(
         }
         else
         {
-            cb(error, Response(StatusCode(m_response.result()), m_response.body));
+            cb(error, Response(StatusCode(m_response.result()), m_response.body()));
         }
     });
 }
@@ -293,7 +293,7 @@ void Client::perform(Method method, uint8_t* data, std::function<void(const std:
         }
         else
         {
-        memcpy(data, m_response.body.data(), m_response.body.size());
+        memcpy(data, m_response.body().data(), m_response.body().size());
         cb(std::error_code(), StatusCode(m_response.result()), data);
         }
     });

@@ -31,11 +31,5 @@ namespace http
 const char* okResponse();
 std::string createResponse(StatusCode status, const std::string& body);
 
-template <typename DestView, typename SourceView>
-DestView sv_cast(SourceView sv)
-{
-    return DestView(sv.data(), sv.size());
-}
-
 }
 }
