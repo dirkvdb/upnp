@@ -19,24 +19,24 @@ matrix:
             - uuid-dev
       env:
         - COMPILER=5.0 LLVM_VERSION=5.0.0 BUILD_TYPE=Release
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - uuid-dev
-      env:
-        - COMPILER=4.0 LLVM_VERSION=4.0.0 BUILD_TYPE=Debug
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - uuid-dev
-      env:
-        - COMPILER=4.0 LLVM_VERSION=4.0.0 BUILD_TYPE=Release
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #       packages:
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=4.0 LLVM_VERSION=4.0.0 BUILD_TYPE=Debug
+    # - compiler: clang
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #       packages:
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=4.0 LLVM_VERSION=4.0.0 BUILD_TYPE=Release
     # - compiler: gcc
     #   addons:
     #     apt:
@@ -57,36 +57,36 @@ matrix:
     #         - uuid-dev
     #   env:
     #     - COMPILER=6 BUILD_TYPE=Release
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-            - uuid-dev
-      env:
-        - COMPILER=7 BUILD_TYPE=Debug
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-            - uuid-dev
-      env:
-        - COMPILER=7 BUILD_TYPE=Release
-    - compiler: clang
-      os: osx
-      env:
-        - BUILD_TYPE=Debug
-      osx_image: xcode9
-    - compiler: clang
-      os: osx
-      env:
-        - BUILD_TYPE=Release
-      osx_image: xcode9
+    # - compiler: gcc
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #       packages:
+    #         - g++-7
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=7 BUILD_TYPE=Debug
+    # - compiler: gcc
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #       packages:
+    #         - g++-7
+    #         - uuid-dev
+    #   env:
+    #     - COMPILER=7 BUILD_TYPE=Release
+    # - compiler: clang
+    #   os: osx
+    #   env:
+    #     - BUILD_TYPE=Debug
+    #   osx_image: xcode9
+    # - compiler: clang
+    #   os: osx
+    #   env:
+    #     - BUILD_TYPE=Release
+    #   osx_image: xcode9
 
 before_install:
   ############################################################################

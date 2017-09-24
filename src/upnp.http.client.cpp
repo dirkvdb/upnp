@@ -289,22 +289,24 @@ Future<void> Client::receiveData()
 
 Future<void> Client::receiveHeaderData()
 {
+    //TODO: Causes crash when on the stack, investigate. coro bug?
+    //beast::http::parser<false, beast::http::empty_body> parser;
+    auto parser = std::make_shared<beast::http::parser<false, beast::http::empty_body>>();
+    parser->skip(true); // tell the parser not to expect a body
     m_timer.expires_from_now(m_timeout);
-    beast::http::parser<false, beast::http::empty_body> parser;
-    parser.skip(true); // tell the parser not to expect a body
-    co_await http::async_read_header(m_socket, m_buffer, parser);
+    co_await http::async_read_header(m_socket, m_buffer, *parser);
     m_timer.cancel();
 
     try
     {
-        auto connValue = parser.get()["Connection"];
+        auto connValue = parser->get()["Connection"];
         if (strncasecmp(connValue.data(), "close", connValue.size()))
         {
             asio_error_code error;
             m_socket.close(error);
         }
 
-        for (auto& field : parser.get().base())
+        for (auto& field : parser->get().base())
         {
             m_response.insert(field.name(), field.value());
         }
