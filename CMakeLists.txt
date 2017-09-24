@@ -124,8 +124,6 @@ target_include_directories(upnpframework
 
 target_compile_definitions(upnpframework PUBLIC
     -DBOOST_NO_AUTO_PTR
-    -DBOOST_THREAD_PROVIDES_FUTURE
-    -DBOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 )
 
 target_link_libraries(upnpframework

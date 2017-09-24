@@ -56,6 +56,20 @@ std::string createTimeoutHeaderValue(std::chrono::seconds timeout)
     }
 }
 
+ActionResult createFaultResult(const http::Response& response) noexcept
+{
+    try
+    {
+        auto fault = soap::parseFault(response.body);
+        return ActionResult(std::move(response), std::move(fault));
+    }
+    catch (std::exception& e)
+    {
+        log::warn("Failed to parse soap fault message: {}", e.what());
+        return ActionResult(std::move(response));
+    }
+}
+
 }
 
 Client::Client(asio::io_service& io)
@@ -131,6 +145,71 @@ void Client::renewSubscription(const std::string& url, const std::string& sid, s
     });
 }
 
+Future<SubscriptionResponse> Client::subscribe(const std::string& url,
+                                               const std::string& callbackUrl,
+                                               std::chrono::seconds timeout)
+{
+    m_httpClient->reset();
+
+    m_httpClient->setUrl(url);
+    m_httpClient->addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+
+    auto response = co_await m_httpClient->perform(http::Method::Subscribe);
+
+    SubscriptionResponse subResponse;
+    subResponse.statusCode = response.status;
+
+    if (response.status == http::StatusCode::Ok)
+    {
+        try
+        {
+            subResponse.subId = m_httpClient->getResponseHeaderValue("sid");
+            subResponse.timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+        }
+        catch (const std::exception& e)
+        {
+            log::error("Subscribe error: {}", e.what());
+            throw std::system_error(std::make_error_code(http::error::InvalidResponse));
+        }
+    }
+
+    co_return subResponse;
+}
+
+Future<SubscriptionResponse> Client::renewSubscription(const std::string& url,
+                                                       const std::string& sid,
+                                                       std::chrono::seconds timeout)
+{
+    m_httpClient->reset();
+
+    m_httpClient->setUrl(url);
+    m_httpClient->addHeader("SID", sid);
+    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+
+    auto response = co_await m_httpClient->perform(http::Method::Subscribe);
+
+    SubscriptionResponse subResponse;
+    subResponse.statusCode = response.status;
+
+    if (response.status == http::StatusCode::Ok)
+    {
+        try
+        {
+            subResponse.subId = m_httpClient->getResponseHeaderValue("sid");
+            subResponse.timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+        }
+        catch (const std::exception& e)
+        {
+            log::error("Renew Subscription error: {}", e.what());
+            throw std::system_error(std::make_error_code(http::error::InvalidResponse));
+        }
+    }
+
+    co_return subResponse;
+}
+
 void Client::unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, http::StatusCode)> cb)
 {
     m_httpClient->reset();
@@ -163,6 +242,35 @@ void Client::notify(const std::string& url,
     });
 }
 
+Future<http::StatusCode> Client::unsubscribe(const std::string& url, const std::string& sid)
+{
+    m_httpClient->reset();
+
+    m_httpClient->setUrl(url);
+    m_httpClient->addHeader("SID", sid);
+
+    auto response = co_await m_httpClient->perform(http::Method::Unsubscribe);
+    co_return response.status;
+}
+
+Future<http::StatusCode> Client::notify(const std::string& url,
+                                        const std::string& sid,
+                                        uint32_t seq,
+                                        const std::string& body)
+{
+    m_httpClient->reset();
+
+    m_httpClient->setUrl(url);
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("NTS", "upnp:propchange");
+    m_httpClient->addHeader("SID", sid);
+    m_httpClient->addHeader("SEQ", std::to_string(seq));
+    m_httpClient->addHeader("Content-Type", "text/xml");
+
+    auto response = co_await m_httpClient->perform(http::Method::Notify, body);
+    co_return response.status;
+}
+
 void Client::action(const std::string& url,
                     const std::string& actionName,
                     const std::string& serviceName,
@@ -185,18 +293,32 @@ void Client::action(const std::string& url,
         }
         else
         {
-            try
-            {
-                auto fault = soap::parseFault(response.body);
-                cb(ec, ActionResult(std::move(response), std::move(fault)));
-            }
-            catch (std::exception& e)
-            {
-                log::warn("Failed to parse soap fault message: {}", e.what());
-                cb(ec, ActionResult(std::move(response)));
-            }
+            cb(ec, createFaultResult(response));
         }
     });
+}
+
+Future<ActionResult> Client::action(const std::string& url,
+                                    const std::string& actionName,
+                                    const std::string& serviceName,
+                                    const std::string& envelope)
+{
+    //TODO: if the return code is "405 Method Not Allowed" retry but with M-POST as request and additional MAN header
+
+    m_httpClient->reset();
+
+    m_httpClient->setUrl(url);
+    m_httpClient->addHeader("NT", "upnp:event");
+    m_httpClient->addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
+    m_httpClient->addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
+
+    auto response = co_await m_httpClient->perform(http::Method::Post, envelope);
+    if (response.status == http::StatusCode::InternalServerError)
+    {
+        co_return createFaultResult(response);
+    }
+
+    co_return ActionResult(std::move(response));
 }
 
 }

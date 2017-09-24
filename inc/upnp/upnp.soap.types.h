@@ -18,7 +18,7 @@
 
 #include <string>
 #include <cinttypes>
-#include <experimental/optional>
+#include <optional>
 
 #include "upnp/upnp.http.types.h"
 
@@ -47,12 +47,13 @@ private:
 
 struct ActionResult
 {
+    ActionResult() = default;
     ActionResult(http::Response res) : response(std::move(res)) {}
     ActionResult(Fault flt) : fault(std::move(flt)) {}
     ActionResult(http::Response res, Fault flt) : response(std::move(res)), fault(std::move(flt)) {}
 
     http::Response response;
-    std::experimental::optional<Fault> fault;
+    std::optional<Fault> fault;
 };
 
 }

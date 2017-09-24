@@ -29,7 +29,7 @@ struct RequestMock
 
 struct ResponseMock
 {
-    MOCK_METHOD3(onResponse, void(std::error_code, http::Response, std::experimental::optional<soap::Fault>));
+    MOCK_METHOD3(onResponse, void(std::error_code, http::Response, std::optional<soap::Fault>));
 };
 
 }
@@ -54,6 +54,35 @@ public:
             server.stop();
             resMock.onResponse(error, res.response, res.fault);
         };
+    }
+
+    template <typename Ret, typename Awaitable>
+    Future<Ret> waitForIt(Awaitable&& awaitable)
+    {
+        try
+        {
+            auto res = co_await awaitable;
+            io.stop();
+            co_return res;
+
+        }
+        catch (...)
+        {
+            io.stop();
+            std::rethrow_exception(std::current_exception());
+        }
+    }
+
+    template <typename TaskResult>
+    auto runCoroTask(Future<TaskResult>&& task)
+    {
+        Future<TaskResult> res;
+        io.post([&] () {
+            res = waitForIt<TaskResult>(task);
+        });
+
+        io.run();
+        return res.get();
     }
 
     io_service io;
@@ -88,6 +117,31 @@ TEST_F(SoapClientTest, SoapAction)
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
     io.run();
+}
+
+TEST_F(SoapClientTest, SoapActionCoro)
+{
+    auto envelope = "data"s;
+
+    auto body = "<html><body><h1>200 OK</h1></body></html>"s;
+    auto response =
+        "HTTP/1.1 200 OK\r\n"
+        "CONTENT-LENGTH: {}\r\n"
+        "\r\n"
+        "{}";
+
+    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (const http::Request& request) {
+        EXPECT_EQ("/soap", request.url());
+        EXPECT_EQ("\"ServiceName#ActionName\"", request.field("SOAPACTION"));
+        EXPECT_EQ("text/xml; charset=\"utf-8\"", request.field("Content-Type"));
+        EXPECT_EQ(std::to_string(envelope.size()), request.field("Content-Length"));
+        return fmt::format(response, body.size(), body);
+    }));
+
+    auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
+    EXPECT_EQ(http::StatusCode::Ok, actionResult.response.status);
+    EXPECT_EQ(body, actionResult.response.body);
+    EXPECT_FALSE(actionResult.fault.has_value());
 }
 
 TEST_F(SoapClientTest, SoapActionWithFault)
@@ -136,6 +190,52 @@ TEST_F(SoapClientTest, SoapActionWithFault)
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
     io.run();
+}
+
+TEST_F(SoapClientTest, SoapActionWithFaultCoro)
+{
+    auto envelope = "data"s;
+
+    auto body =
+        "<?xml version=\"1.0\"?>"
+        "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+        "  <s:Body>"
+        "      <s:Fault>"
+        "      <faultcode>s:Client</faultcode>"
+        "      <faultstring>UPnPError</faultstring>"
+        "      <detail>"
+        "        <UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+        "          <errorCode>718</errorCode>"
+        "          <errorDescription>ConflictInMappingEntry</errorDescription>"
+        "        </UPnPError>"
+        "      </detail>"
+        "    </s:Fault>"
+        "  </s:Body>"
+        "</s:Envelope>"s;
+
+    auto errorResponse =
+        "HTTP/1.0 500 Internal Server Error\r\n"
+        "CONTENT-TYPE: text/xml; charset=\"utf-8\"\r\n"
+        "CONTENT-LENGTH: {}\r\n"
+        "\r\n"
+        "{}";
+
+    auto response = fmt::format(errorResponse, body.size(), body);
+
+    EXPECT_CALL(reqMock, onRequest(_)).WillOnce(Invoke([&] (const http::Request& request) {
+        EXPECT_EQ("/soap", request.url());
+        EXPECT_EQ("\"ServiceName#ActionName\"", request.field("SOAPACTION"));
+        EXPECT_EQ("text/xml; charset=\"utf-8\"", request.field("Content-Type"));
+        EXPECT_EQ(std::to_string(envelope.size()), request.field("Content-Length"));
+        return response;
+    }));
+
+    auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
+    EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
+    EXPECT_EQ(body, actionResult.response.body);
+    EXPECT_TRUE(actionResult.fault.has_value());
+    EXPECT_EQ(718u, actionResult.fault->errorCode());
+    EXPECT_EQ("ConflictInMappingEntry"s, actionResult.fault->errorDescription());
 }
 
 }

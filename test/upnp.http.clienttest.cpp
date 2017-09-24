@@ -91,19 +91,6 @@ public:
     std::thread ioThread;
 };
 
-TEST_F(HttpClientTest, DISABLED_ContentLengthNotProvided)
-{
-    bool gotCallback = false;
-    http::getContentLength(io, server.getWebRootUrl() + "/test.txt", [&] (const std::error_code& error, http::StatusCode status, size_t /*size*/) {
-        EXPECT_FALSE(error) << "System error: " << error.message();
-        EXPECT_EQ(http::StatusCode::Ok, status) << "HTTP error: " << status_message(status);
-        gotCallback = true;
-    });
-
-    io.run();
-    EXPECT_TRUE(gotCallback);
-}
-
 TEST_F(HttpClientTest, ContentLength)
 {
     EXPECT_CALL(mock, onResponse(std::error_code(), http::StatusCode::Ok, s_hostedFile.size()));

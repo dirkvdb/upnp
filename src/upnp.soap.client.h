@@ -23,6 +23,7 @@
 #include <system_error>
 
 #include "upnp/asio.h"
+#include "upnp/upnp.coroutine.h"
 #include "upnp/upnp.soap.types.h"
 
 namespace upnp
@@ -36,6 +37,13 @@ namespace http
 
 namespace soap
 {
+
+struct SubscriptionResponse
+{
+    http::StatusCode statusCode;
+    std::string subId;
+    std::chrono::seconds timeout;
+};
 
 class Client
 {
@@ -61,6 +69,19 @@ public:
                 const std::string& serviceName,
                 const std::string& envelope,
                 std::function<void(const std::error_code&, ActionResult response)> cb);
+
+    Future<SubscriptionResponse> subscribe(const std::string& url, const std::string& callbackUrl, std::chrono::seconds timeout);
+    Future<SubscriptionResponse> renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout);
+    Future<http::StatusCode> unsubscribe(const std::string& url, const std::string& sid);
+    Future<http::StatusCode> notify(const std::string& url,
+                                    const std::string& sid,
+                                    uint32_t seq,
+                                    const std::string& body);
+
+    Future<ActionResult> action(const std::string& url,
+                                const std::string& actionName,
+                                const std::string& serviceName,
+                                const std::string& envelope);
 
 private:
     std::unique_ptr<http::Client> m_httpClient;
