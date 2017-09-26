@@ -24,6 +24,7 @@
 #include "upnp/asio.h"
 #include "upnp/upnp.types.h"
 #include "upnp/upnp.soap.types.h"
+#include "upnp/upnp.coroutine.h"
 
 namespace upnp
 {
@@ -48,6 +49,9 @@ public:
 
     virtual void sendAction(const Action& action, std::function<void(Status, soap::ActionResult actionResult)> cb) = 0;
     virtual void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) = 0;
+
+    virtual Future<soap::ActionResult> sendAction(const Action& action) = 0;
+    virtual Future<std::string> getFile(const std::string& url) = 0;
 
     virtual void dispatch(std::function<void()>) = 0;
 

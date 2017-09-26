@@ -44,6 +44,9 @@ public:
     MOCK_METHOD2(sendAction, void(const Action&, std::function<void(Status status, soap::ActionResult actionResult)>));
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(Status, std::string contents)>));
 
+    MOCK_METHOD1(sendAction, Future<soap::ActionResult>(const Action&));
+    MOCK_METHOD1(getFile, Future<std::string>(const std::string&));
+
     MOCK_METHOD1(dispatch, void(std::function<void()>));
 
     asio::io_service& ioService() noexcept override

@@ -217,11 +217,33 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
 #endif
 }
 
+Future<soap::ActionResult> Client::sendAction(const Action& action)
+{
+#ifdef DEBUG_UPNP_CLIENT
+    log::debug("Execute action: {}", action.getActionDocument().toString());
+#endif
+
+    soap::Client soap(m_io);
+    auto actionResult = co_await soap.action(action.getUrl(), action.getName(), action.getServiceTypeUrn(), action.toString());
+
+#ifdef DEBUG_UPNP_CLIENT
+    log::debug(result.toString());
+#endif
+
+    co_return actionResult;
+}
+
 void Client::getFile(const std::string& url, std::function<void(Status, std::string contents)> cb)
 {
     http::get(m_io, url, [cb] (const std::error_code& error, http::Response response) {
         cb(httpStatusToStatus(error, response.status), std::move(response.body));
     });
+}
+
+Future<std::string> Client::getFile(const std::string& url)
+{
+    auto httpResponse = co_await http::get(m_io, url);
+    co_return std::move(httpResponse.body);
 }
 
 void Client::dispatch(std::function<void()> func)

@@ -44,8 +44,6 @@ if (CMAKE_GENERATOR STREQUAL Xcode)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
-
 add_library(upnpframework STATIC
     inc/upnp/asio.h
     inc/upnp/upnp.coroutine.h
@@ -124,6 +122,10 @@ target_include_directories(upnpframework
 
 target_compile_definitions(upnpframework PUBLIC
     -DBOOST_NO_AUTO_PTR
+)
+
+target_compile_options(upnpframework PUBLIC
+    -fcoroutines-ts
 )
 
 target_link_libraries(upnpframework

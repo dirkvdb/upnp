@@ -58,6 +58,9 @@ public:
     void sendAction(const Action& action, std::function<void(Status, soap::ActionResult actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;
 
+    Future<soap::ActionResult> sendAction(const Action& action) override;
+    Future<std::string> getFile(const std::string& url) override;
+
     void dispatch(std::function<void()> func) override;
     asio::io_service& ioService() noexcept override;
 
