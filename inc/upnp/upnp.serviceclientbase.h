@@ -47,6 +47,19 @@ public:
 
     virtual ~ServiceClientBase() = default;
 
+    virtual Future<void> setDevice(const std::shared_ptr<Device>& device)
+    {
+        if (device->implementsService(serviceType()))
+        {
+            m_service = device->services[Traits::SvcType];
+            co_await processServiceDescription(m_service.scpdUrl);
+        }
+        else
+        {
+            throw std::invalid_argument("Device does not implement interface");
+        }
+    }
+
     virtual void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb)
     {
         if (device->implementsService(serviceType()))
@@ -108,6 +121,21 @@ public:
     }
 
 protected:
+    virtual Future<void> processServiceDescription(const std::string& descriptionUrl)
+    {
+        auto contents = co_await m_client.getFile(descriptionUrl);
+        m_stateVariables = xml::parseServiceDescription(contents, [this] (const std::string& action) {
+            try
+            {
+                m_supportedActions.insert(actionFromString(action));
+            }
+            catch (const std::exception& e)
+            {
+                utils::log::warn(e.what());
+            }
+        });
+    }
+
     virtual void processServiceDescription(const std::string& descriptionUrl, std::function<void(Status)> cb)
     {
         m_client.getFile(descriptionUrl, [this, cb] (Status status, const std::string& contents) {
@@ -143,6 +171,27 @@ protected:
     void executeAction(typename Traits::ActionType actionType, std::function<void(Status, std::string)> cb)
     {
         executeAction(actionType, std::map<std::string, std::string> {}, std::move(cb));
+    }
+
+    Future<std::string> executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args)
+    {
+        Action action(actionToString(actionType), m_service.controlURL, serviceType());
+        for (auto& arg : args)
+        {
+            action.addArgument(arg.first, arg.second);
+        }
+
+        auto res = co_await m_client.sendAction(action);
+
+        // TODO: http status gets lost here
+        if (res.fault)
+        {
+            throw Status(ErrorCode::SoapError, res.fault->errorCode(), res.fault->errorDescription());
+        }
+        else
+        {
+            co_return std::move(res.response.body);
+        }
     }
 
     void executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(Status, std::string)> cb)

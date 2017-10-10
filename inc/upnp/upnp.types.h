@@ -40,7 +40,7 @@ enum class ErrorCode
 const char* errorCodeToString(ErrorCode code);
 int32_t errorCodeToInt(ErrorCode code);
 
-class Status
+class Status : public std::exception
 {
 public:
     Status() : m_errorCode(ErrorCode::Success), m_statusCode(0) {}
@@ -80,7 +80,7 @@ public:
         return m_errorCode == other.m_errorCode && m_statusCode == other.m_statusCode;
     }
 
-    const char* what() const noexcept
+    const char* what() const noexcept override
     {
         return m_message.c_str();
     }
