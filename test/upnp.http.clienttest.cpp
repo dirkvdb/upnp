@@ -55,33 +55,15 @@ public:
         };
     }
 
-    template <typename Ret, typename Awaitable>
-    Future<Ret> waitForIt(Awaitable&& awaitable)
-    {
-        try
-        {
-            auto res = co_await awaitable;
-            io.stop();
-            co_return res;
-
-        }
-        catch (...)
-        {
-            io.stop();
-            std::rethrow_exception(std::current_exception());
-        }
-    }
-
     template <typename TaskResult>
     auto runCoroTask(Future<TaskResult>&& task)
     {
-        Future<TaskResult> res;
-        io.post([&] () {
-            res = waitForIt<TaskResult>(task);
-        });
+        while (!task.await_ready())
+        {
+            io.run_one();
+        }
 
-        io.run();
-        return res.get();
+        return task.get();
     }
 
     io_service io;

@@ -32,7 +32,7 @@ namespace http
 
 namespace beast = boost::beast;
 
-enum class Method
+enum class Method : uint8_t
 {
     Notify,
     Search,

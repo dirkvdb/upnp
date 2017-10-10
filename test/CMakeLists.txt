@@ -44,6 +44,8 @@ add_executable(upnpframeworktest
 
     upnp.mediaservertest.cpp
     upnp.mediarenderertest.cpp
+
+    upnp.coroutinetest.cpp
 )
 
 find_path(BENCHMARK_INCLUDE_DIR

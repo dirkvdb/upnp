@@ -81,6 +81,7 @@ struct MyTask
         void unhandled_exception()
         {
             _value = std::current_exception();
+            _ready = true;
         }
     };
 
@@ -191,6 +192,7 @@ struct MyTask<void>
         void unhandled_exception()
         {
             _ex = std::current_exception();
+            _ready = true;
         }
     };
 
@@ -236,6 +238,11 @@ struct MyTask<void>
 
     void await_resume()
     {
+        get();
+    }
+
+    void get()
+    {
         if (_coro.promise()._ex)
         {
             std::rethrow_exception(_coro.promise()._ex);
@@ -252,71 +259,6 @@ using Future = MyTask<T>;
 
 namespace upnp
 {
-
-struct sync_await_helper
-{
-    struct promise_type
-    {
-        std::condition_variable c;
-        std::mutex m;
-        bool done = false;
-
-        sync_await_helper get_return_object()
-        {
-            return {std::experimental::coroutine_handle<promise_type>::from_promise(*this)};
-        }
-
-        std::experimental::suspend_never initial_suspend() { return {}; }
-        auto final_suspend()
-        {
-            struct Awaiter
-            {
-                bool await_ready() { return false; }
-                void await_resume() {}
-                void await_suspend(std::experimental::coroutine_handle<promise_type> h)
-                {
-                    utils::log::debug("Connect done");
-                    promise_type& me = h.promise();
-                    {
-                        std::lock_guard<std::mutex> lock(me.m);
-                        me.done = true;
-                    }
-
-                    me.c.notify_all();
-                }
-            };
-
-            return Awaiter{};
-        }
-
-        void unhandled_exception()
-        {
-            std::rethrow_exception(std::current_exception());
-        }
-
-        void return_void() {}
-    };
-
-    ~sync_await_helper() { handle.destroy(); }
-    sync_await_helper(std::experimental::coroutine_handle<promise_type> h) : handle(h) {}
-    std::experimental::coroutine_handle<promise_type> handle;
-};
-
-template <typename Awaitable>
-auto sync_await(Awaitable&& a)
-{
-    if (!a.await_ready())
-    {
-        auto coro = []() -> sync_await_helper { co_return; }();
-        a.await_suspend(coro.handle);
-
-        auto *p = &coro.handle.promise();
-        std::unique_lock<std::mutex> lock(p->m);
-        p->c.wait(lock, [p] { return p->done; });
-    }
-
-    return a.await_resume();
-}
 
 inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoint& ep)
 {
@@ -351,12 +293,96 @@ inline auto async_connect(asio::ip::tcp::socket& s, const asio::ip::tcp::endpoin
             s.async_connect(this->ep, [this, coro] (auto ec) mutable {
                 this->ready = true;
                 this->ec = ec;
+                assert(coro);
                 coro.resume();
             });
         }
     };
 
     return Awaiter(s, ep);
+}
+
+inline auto async_accept(asio::ip::tcp::acceptor& acceptor, asio::ip::tcp::socket& socket)
+{
+    struct Awaiter
+    {
+        asio::ip::tcp::acceptor& acceptor;
+        asio::ip::tcp::socket& socket;
+        asio_error_code ec;
+        bool ready = false;
+
+        Awaiter(asio::ip::tcp::acceptor& acc, asio::ip::tcp::socket& sock)
+        : acceptor(acc)
+        , socket(sock)
+        {
+        }
+
+        bool await_ready()
+        {
+            return ready;
+        }
+
+        void await_resume()
+        {
+            if (ec)
+            {
+                throw boost::system::system_error(ec);
+            }
+        }
+
+        void await_suspend(std::experimental::coroutine_handle<> coro)
+        {
+            acceptor.async_accept(socket, [this, coro] (auto ec) mutable {
+                this->ready = true;
+                this->ec = ec;
+                coro.resume();
+            });
+        }
+    };
+
+    return Awaiter(acceptor, socket);
+}
+
+template <typename AsyncWriteStream>
+inline auto async_write(asio::ip::tcp::socket& socket, const AsyncWriteStream& buf)
+{
+    struct Awaiter
+    {
+        asio::ip::tcp::socket& socket;
+        const AsyncWriteStream& buffer;
+        asio_error_code ec;
+        bool ready = false;
+
+        Awaiter(asio::ip::tcp::socket& sock, const AsyncWriteStream& buf)
+        : socket(sock)
+        , buffer(buf)
+        {
+        }
+
+        bool await_ready()
+        {
+            return ready;
+        }
+
+        void await_resume()
+        {
+            if (ec)
+            {
+                throw boost::system::system_error(ec);
+            }
+        }
+
+        void await_suspend(std::experimental::coroutine_handle<> coro)
+        {
+            asio::async_write(socket, buffer, [this, coro] (auto ec, size_t) mutable {
+                this->ready = true;
+                this->ec = ec;
+                coro.resume();
+            });
+        }
+    };
+
+    return Awaiter(socket, buf);
 }
 
 namespace http
@@ -391,7 +417,9 @@ inline auto async_write(asio::ip::tcp::socket& s, beast::http::request<beast::ht
 
         void await_suspend(std::experimental::coroutine_handle<> coro)
         {
+            utils::log::debug("http async write");
             boost::beast::http::async_write(this->s, this->req, [this, coro] (auto ec, size_t) mutable {
+                utils::log::debug("http async written");
                 this->ready = true;
                 this->ec = ec;
                 coro.resume();
@@ -402,20 +430,22 @@ inline auto async_write(asio::ip::tcp::socket& s, beast::http::request<beast::ht
     return Awaiter(s, req);
 }
 
-template <class DynamicBuffer>
-inline auto async_read(asio::ip::tcp::socket& s, DynamicBuffer& buf, beast::http::response<beast::http::string_body>& res)
+template <class DynamicBuffer, bool isRequest, class Body, class Allocator>
+inline auto async_read(asio::ip::tcp::socket& s,
+                       DynamicBuffer& buf,
+                       beast::http::message<isRequest, Body, boost::beast::http::basic_fields<Allocator>>& msg)
 {
     struct Awaiter
     {
         asio::ip::tcp::socket& s;
-        beast::http::response<beast::http::string_body>& res;
+        beast::http::message<isRequest, Body, boost::beast::http::basic_fields<Allocator>>& msg;
         DynamicBuffer& buf;
         asio_error_code ec;
         bool ready = false;
 
-        Awaiter(asio::ip::tcp::socket& s, DynamicBuffer& buf, beast::http::response<beast::http::string_body>& res)
+        Awaiter(asio::ip::tcp::socket& s, DynamicBuffer& buf, boost::beast::http::message<isRequest, Body, boost::beast::http::basic_fields<Allocator>>& msg)
         : s(s)
-        , res(res)
+        , msg(msg)
         , buf(buf)
         {
         }
@@ -435,7 +465,7 @@ inline auto async_read(asio::ip::tcp::socket& s, DynamicBuffer& buf, beast::http
 
         void await_suspend(std::experimental::coroutine_handle<> coro)
         {
-            boost::beast::http::async_read(this->s, this->buf, this->res, [this, coro] (auto ec, size_t) mutable {
+            boost::beast::http::async_read(this->s, this->buf, this->msg, [this, coro] (auto ec, size_t) mutable {
                 this->ready = true;
                 this->ec = ec;
                 coro.resume();
@@ -443,7 +473,7 @@ inline auto async_read(asio::ip::tcp::socket& s, DynamicBuffer& buf, beast::http
         }
     };
 
-    return Awaiter(s, buf, res);
+    return Awaiter(s, buf, msg);
 }
 
 template <class DynamicBuffer>
