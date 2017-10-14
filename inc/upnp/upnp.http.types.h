@@ -189,6 +189,11 @@ inline const char* status_message(StatusCode status)
     }
 }
 
+inline std::ostream& operator<<(std::ostream& os, StatusCode sc)
+{
+    return os << status_message(sc);
+}
+
 class Request
 {
 public:
@@ -254,9 +259,4 @@ struct is_error_code_enum<upnp::http::error::ErrorCode> : std::true_type
 {
 };
 
-}
-
-inline std::ostream& operator<<(std::ostream& os, upnp::http::StatusCode status)
-{
-    return os << upnp::http::status_message(status);
 }

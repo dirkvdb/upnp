@@ -54,7 +54,7 @@ public:
     void perform(Method method, uint8_t* data, std::function<void(const std::error_code&, StatusCode, uint8_t* data)> cb);
 
     Future<Response> perform(Method method);
-    Future<Response> perform(Method method, const std::string& body);
+    Future<Response> perform(Method method, std::string_view body);
     Future<StatusCode> perform(Method method, uint8_t* data);
 
     void reset();

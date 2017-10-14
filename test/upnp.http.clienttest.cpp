@@ -6,6 +6,7 @@
 #include "upnp/upnp.http.functions.h"
 #include "upnp.http.client.h"
 #include "upnp/upnp.http.server.h"
+#include "upnp.testutils.h"
 
 namespace upnp
 {
@@ -85,6 +86,20 @@ TEST_F(HttpClientTest, ContentLengthCoro)
     auto [status, size] = runCoroTask(http::getContentLength(io, server.getWebRootUrl() + "/test.txt"));
     EXPECT_EQ(http::StatusCode::Ok, status);
     EXPECT_EQ(s_hostedFile.size(), size);
+}
+
+TEST_F(HttpClientTest, ContentLength404)
+{
+    EXPECT_CALL(mock, onResponse(std::error_code(), http::StatusCode::NotFound, size_t(0)));
+    http::getContentLength(io, server.getWebRootUrl() + "/test1.txt", handleResponse<size_t>());
+    io.run();
+}
+
+TEST_F(HttpClientTest, ContentLength404Coro)
+{
+    auto [status, size] = runCoroTask(http::getContentLength(io, server.getWebRootUrl() + "/test1.txt"));
+    EXPECT_EQ(http::StatusCode::NotFound, status);
+    EXPECT_EQ(0, size);
 }
 
 TEST_F(HttpClientTest, GetAsString)
@@ -173,19 +188,8 @@ TEST_F(HttpClientTest, CouldNotConnect)
 
 TEST_F(HttpClientTest, CouldNotConnectCoro)
 {
-    try
-    {
-        runCoroTask(http::getContentLength(io, "http://127.0.0.1:81/index.html"));
-        FAIL() << "No exception thrown";
-    }
-    catch (const std::system_error& e)
-    {
-        EXPECT_EQ(std::make_error_code(http::error::NetworkError), e.code());
-    }
-    catch (...)
-    {
-        FAIL() << "Wrong exception type thrown";
-    }
+    EXPECT_SYSTEM_ERROR(runCoroTask(http::getContentLength(io, "http://127.0.0.1:81/index.html")),
+                        std::make_error_code(http::error::NetworkError));
 }
 
 }

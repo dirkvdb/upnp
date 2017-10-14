@@ -206,6 +206,8 @@ void Client::receiveHeaderData(std::function<void(const std::error_code&)> cb)
 
         try
         {
+            m_response.result(parser->get().result());
+
             auto connValue = parser->get()["Connection"];
             if (strncasecmp(connValue.data(), "close", connValue.size()))
             {
@@ -299,6 +301,8 @@ Future<void> Client::receiveHeaderData()
 
     try
     {
+        m_response.result(parser->get().result());
+
         auto connValue = parser->get()["Connection"];
         if (strncasecmp(connValue.data(), "close", connValue.size()))
         {
@@ -393,7 +397,7 @@ Future<Response> Client::perform(Method method)
     return perform(method, "");
 }
 
-Future<Response> Client::perform(Method method, const std::string& body)
+Future<Response> Client::perform(Method method, std::string_view body)
 {
     log::info("perform");
     setMethodType(method);
