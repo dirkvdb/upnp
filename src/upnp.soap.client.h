@@ -25,17 +25,9 @@
 #include "upnp/asio.h"
 #include "upnp/upnp.coroutine.h"
 #include "upnp/upnp.soap.types.h"
+#include "upnp.http.client.h"
 
-namespace upnp
-{
-
-namespace http
-{
-    class Client;
-    struct Response;
-}
-
-namespace soap
+namespace upnp::soap
 {
 
 struct SubscriptionResponse
@@ -49,7 +41,6 @@ class Client
 {
 public:
     Client(asio::io_service& io);
-    ~Client();
 
     void setTimeout(std::chrono::milliseconds timeout) noexcept;
 
@@ -84,8 +75,7 @@ public:
                                 const std::string& envelope);
 
 private:
-    std::unique_ptr<http::Client> m_httpClient;
+    http::Client _httpClient;
 };
 
-}
 }

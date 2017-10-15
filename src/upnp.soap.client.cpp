@@ -21,7 +21,6 @@
 #include "utils/stringoperations.h"
 
 #include "upnp.soap.parseutils.h"
-#include "upnp.http.client.h"
 
 #include "URI.h"
 #include "upnp/stringview.h"
@@ -31,9 +30,7 @@
 #include <sstream>
 
 
-namespace upnp
-{
-namespace soap
+namespace upnp::soap
 {
 
 using namespace asio;
@@ -73,36 +70,34 @@ ActionResult createFaultResult(const http::Response& response) noexcept
 }
 
 Client::Client(asio::io_service& io)
-: m_httpClient(std::make_unique<http::Client>(io))
+: _httpClient(io)
 {
 }
 
-Client::~Client() = default;
-
 void Client::setTimeout(std::chrono::milliseconds timeout) noexcept
 {
-    m_httpClient->setTimeout(timeout);
+    _httpClient.setTimeout(timeout);
 }
 
 void Client::subscribe(const std::string& url, const std::string& callbackUrl, std::chrono::seconds timeout,
                        std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
+    _httpClient.perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
             std::string_view subId;
             std::chrono::seconds timeout;
             if (response.status == http::StatusCode::Ok)
             {
-                subId = m_httpClient->getResponseHeaderValue("sid");
-                timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+                subId = _httpClient.getResponseHeaderValue("sid");
+                timeout = soap::parseTimeout(_httpClient.getResponseHeaderValue("timeout"));
             }
 
             cb(ec, response.status, std::string(subId), timeout);
@@ -118,21 +113,21 @@ void Client::subscribe(const std::string& url, const std::string& callbackUrl, s
 void Client::renewSubscription(const std::string& url, const std::string& sid, std::chrono::seconds timeout,
                                std::function<void(const std::error_code&, http::StatusCode, std::string subId, std::chrono::seconds timeout)> cb)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("SID", sid);
-    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("SID", sid);
+    _httpClient.addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
-    m_httpClient->perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
+    _httpClient.perform(http::Method::Subscribe, [this, cb] (const std::error_code& ec, const http::Response& response) {
         try
         {
             std::string_view subId;
             std::chrono::seconds timeout;
             if (response.status == http::StatusCode::Ok)
             {
-                subId = m_httpClient->getResponseHeaderValue("sid");
-                timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+                subId = _httpClient.getResponseHeaderValue("sid");
+                timeout = soap::parseTimeout(_httpClient.getResponseHeaderValue("timeout"));
             }
 
             cb(ec, response.status, std::string(subId), timeout);
@@ -149,14 +144,14 @@ Future<SubscriptionResponse> Client::subscribe(const std::string& url,
                                                const std::string& callbackUrl,
                                                std::chrono::seconds timeout)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("CALLBACK", fmt::format("<{}>", callbackUrl));
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
-    auto response = co_await m_httpClient->perform(http::Method::Subscribe);
+    auto response = co_await _httpClient.perform(http::Method::Subscribe);
 
     SubscriptionResponse subResponse;
     subResponse.statusCode = response.status;
@@ -165,8 +160,8 @@ Future<SubscriptionResponse> Client::subscribe(const std::string& url,
     {
         try
         {
-            subResponse.subId = m_httpClient->getResponseHeaderValue("sid");
-            subResponse.timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+            subResponse.subId = _httpClient.getResponseHeaderValue("sid");
+            subResponse.timeout = soap::parseTimeout(_httpClient.getResponseHeaderValue("timeout"));
         }
         catch (const std::exception& e)
         {
@@ -182,13 +177,13 @@ Future<SubscriptionResponse> Client::renewSubscription(const std::string& url,
                                                        const std::string& sid,
                                                        std::chrono::seconds timeout)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("SID", sid);
-    m_httpClient->addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("SID", sid);
+    _httpClient.addHeader("TIMEOUT", createTimeoutHeaderValue(timeout));
 
-    auto response = co_await m_httpClient->perform(http::Method::Subscribe);
+    auto response = co_await _httpClient.perform(http::Method::Subscribe);
 
     SubscriptionResponse subResponse;
     subResponse.statusCode = response.status;
@@ -197,8 +192,8 @@ Future<SubscriptionResponse> Client::renewSubscription(const std::string& url,
     {
         try
         {
-            subResponse.subId = m_httpClient->getResponseHeaderValue("sid");
-            subResponse.timeout = soap::parseTimeout(m_httpClient->getResponseHeaderValue("timeout"));
+            subResponse.subId = _httpClient.getResponseHeaderValue("sid");
+            subResponse.timeout = soap::parseTimeout(_httpClient.getResponseHeaderValue("timeout"));
         }
         catch (const std::exception& e)
         {
@@ -212,12 +207,12 @@ Future<SubscriptionResponse> Client::renewSubscription(const std::string& url,
 
 void Client::unsubscribe(const std::string& url, const std::string& sid, std::function<void(const std::error_code&, http::StatusCode)> cb)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("SID", sid);
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("SID", sid);
 
-    m_httpClient->perform(http::Method::Unsubscribe, [cb] (const std::error_code& ec, const http::Response& response) {
+    _httpClient.perform(http::Method::Unsubscribe, [cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
     });
 }
@@ -228,28 +223,28 @@ void Client::notify(const std::string& url,
                     const std::string& body,
                     std::function<void(const std::error_code&, http::StatusCode)> cb)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("NTS", "upnp:propchange");
-    m_httpClient->addHeader("SID", sid);
-    m_httpClient->addHeader("SEQ", std::to_string(seq));
-    m_httpClient->addHeader("Content-Type", "text/xml");
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("NTS", "upnp:propchange");
+    _httpClient.addHeader("SID", sid);
+    _httpClient.addHeader("SEQ", std::to_string(seq));
+    _httpClient.addHeader("Content-Type", "text/xml");
 
-    m_httpClient->perform(http::Method::Notify, body, [cb] (const std::error_code& ec, const http::Response& response) {
+    _httpClient.perform(http::Method::Notify, body, [cb] (const std::error_code& ec, const http::Response& response) {
         cb(ec, response.status);
     });
 }
 
 Future<http::StatusCode> Client::unsubscribe(const std::string& url, const std::string& sid)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("SID", sid);
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("SID", sid);
 
-    auto response = co_await m_httpClient->perform(http::Method::Unsubscribe);
+    auto response = co_await _httpClient.perform(http::Method::Unsubscribe);
     co_return response.status;
 }
 
@@ -258,16 +253,16 @@ Future<http::StatusCode> Client::notify(const std::string& url,
                                         uint32_t seq,
                                         const std::string& body)
 {
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("NTS", "upnp:propchange");
-    m_httpClient->addHeader("SID", sid);
-    m_httpClient->addHeader("SEQ", std::to_string(seq));
-    m_httpClient->addHeader("Content-Type", "text/xml");
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("NTS", "upnp:propchange");
+    _httpClient.addHeader("SID", sid);
+    _httpClient.addHeader("SEQ", std::to_string(seq));
+    _httpClient.addHeader("Content-Type", "text/xml");
 
-    auto response = co_await m_httpClient->perform(http::Method::Notify, body);
+    auto response = co_await _httpClient.perform(http::Method::Notify, body);
     co_return response.status;
 }
 
@@ -279,14 +274,14 @@ void Client::action(const std::string& url,
 {
     //TODO: if the return code is "405 Method Not Allowed" retry but with M-POST as request and additional MAN header
 
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
-    m_httpClient->addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
+    _httpClient.addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
-    m_httpClient->perform(http::Method::Post, envelope, [cb] (const std::error_code& ec, http::Response response) {
+    _httpClient.perform(http::Method::Post, envelope, [cb] (const std::error_code& ec, http::Response response) {
         if (ec || response.status != http::StatusCode::InternalServerError)
         {
             cb(ec, ActionResult(std::move(response)));
@@ -305,14 +300,14 @@ Future<ActionResult> Client::action(const std::string& url,
 {
     //TODO: if the return code is "405 Method Not Allowed" retry but with M-POST as request and additional MAN header
 
-    m_httpClient->reset();
+    _httpClient.reset();
 
-    m_httpClient->setUrl(url);
-    m_httpClient->addHeader("NT", "upnp:event");
-    m_httpClient->addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
-    m_httpClient->addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
+    _httpClient.setUrl(url);
+    _httpClient.addHeader("NT", "upnp:event");
+    _httpClient.addHeader("SOAPACTION", fmt::format("\"{}#{}\"", serviceName, actionName));
+    _httpClient.addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
-    auto response = co_await m_httpClient->perform(http::Method::Post, envelope);
+    auto response = co_await _httpClient.perform(http::Method::Post, envelope);
     if (response.status == http::StatusCode::InternalServerError)
     {
         co_return createFaultResult(response);
@@ -321,5 +316,4 @@ Future<ActionResult> Client::action(const std::string& url,
     co_return ActionResult(std::move(response));
 }
 
-}
 }
