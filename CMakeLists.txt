@@ -120,10 +120,6 @@ target_include_directories(upnpframework
         ${CMAKE_BINARY_DIR}
 )
 
-target_compile_definitions(upnpframework PUBLIC
-    -DBOOST_NO_AUTO_PTR
-)
-
 target_compile_options(upnpframework PUBLIC
     -fcoroutines-ts
 )

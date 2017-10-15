@@ -29,8 +29,6 @@ namespace upnp
 
 namespace beast = boost::beast;
 
-struct EmptyState {};
-
 template <typename T>
 struct MyTask
 {
