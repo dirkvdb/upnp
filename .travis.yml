@@ -132,13 +132,13 @@ install:
   - cd ${DEPS_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      wget http://downloads.sourceforge.net/project/boost/boost/1.64.0/boost_1_64_0.tar.bz2 TIMEOUT 6000
-      tar xf boost_1_64_0.tar.bz2
+      wget http://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.xz
+      tar xf boost_1_65_1.tar.xz
       echo "Build boost using ${CXX}"
       if [[ "${CXX}" == "clang-${COMPILER}" ]]; then
-        cd boost_1_64_0 && echo "using clang : ${COMPILER} : clang-${COMPILER} : <cxxflags>\"-std=c++14 ${CXXFLAGS}\" ;" > user-config.jam && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
+        cd boost_1_65_1 && echo "using clang : ${COMPILER} : clang-${COMPILER} : <cxxflags>\"-std=c++14 ${CXXFLAGS}\" ;" > user-config.jam && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
       else
-        cd boost_1_64_0 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++14\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
+        cd boost_1_65_1 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++14\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
       fi
       cd ..
     fi

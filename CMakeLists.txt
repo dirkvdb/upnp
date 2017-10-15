@@ -124,24 +124,23 @@ target_compile_options(upnpframework PUBLIC
     -fcoroutines-ts
 )
 
-target_link_libraries(upnpframework
+target_link_libraries(upnpframework PUBLIC
     utils
     Boost::system
     Boost::disable_autolinking
-    Threads::Threads
 )
 
 if (MINGW)
-    target_link_libraries(upnpframework Iphlpapi ws2_32 Mswsock)
+    target_link_libraries(upnpframework PRIVATE Iphlpapi ws2_32 Mswsock)
 endif ()
 
 if (APPLE)
     # uuid dependency
-    target_link_libraries(upnpframework "-framework CoreFoundation")
+    target_link_libraries(upnpframework PRIVATE "-framework CoreFoundation")
 elseif (UNIX)
     # uuid dependency
     find_library(UUID_LIBRARY NAMES uuid)
-    target_link_libraries(upnpframework ${UUID_LIBRARY})
+    target_link_libraries(upnpframework PRIVATE ${UUID_LIBRARY})
 endif ()
 
 if (ENABLE_TESTS)
