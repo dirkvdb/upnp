@@ -7,6 +7,7 @@
 #include "upnp.soap.client.h"
 #include "upnp.http.client.h"
 #include "upnp/upnp.http.server.h"
+#include "upnp.testutils.h"
 
 namespace upnp
 {
@@ -54,17 +55,6 @@ public:
             server.stop();
             resMock.onResponse(error, res);
         };
-    }
-
-    template <typename TaskResult>
-    auto runCoroTask(Future<TaskResult>&& task)
-    {
-        while (!task.await_ready())
-        {
-            io.run_one();
-        }
-
-        return task.get();
     }
 
     io_service io;
@@ -120,7 +110,7 @@ TEST_F(SoapClientTest, SoapActionCoro)
         return fmt::format(response, body.size(), body);
     }));
 
-    auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
+    auto actionResult = runCoroTask(io, client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
     EXPECT_EQ(http::StatusCode::Ok, actionResult.httpStatus);
     EXPECT_EQ(body, actionResult.response);
     EXPECT_FALSE(actionResult.isFaulty());
@@ -213,7 +203,7 @@ TEST_F(SoapClientTest, SoapActionWithFaultCoro)
         return response;
     }));
 
-    auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
+    auto actionResult = runCoroTask(io, client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
     EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.httpStatus);
     EXPECT_EQ(body, actionResult.response);
     EXPECT_TRUE(actionResult.isFaulty());

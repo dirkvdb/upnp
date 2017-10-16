@@ -18,6 +18,8 @@
 
 #include <stdexcept>
 
+#include "upnp/upnp.coroutine.h"
+
 namespace upnp::test {
 #define EXPECT_SYSTEM_ERROR(call, errorCode) \
     try \
@@ -33,4 +35,20 @@ namespace upnp::test {
     { \
         FAIL() << "Unexpected exception thrown"; \
     }
+}
+
+namespace upnp::test
+{
+
+template <typename TaskResult>
+auto runCoroTask(asio::io_service& io, Future<TaskResult>&& task)
+{
+    while (!task.await_ready())
+    {
+        io.run_one();
+    }
+
+    return task.get();
+}
+
 }
