@@ -48,12 +48,15 @@ private:
 struct ActionResult
 {
     ActionResult() = default;
-    ActionResult(http::Response res) : response(std::move(res)) {}
-    ActionResult(Fault flt) : fault(std::move(flt)) {}
-    ActionResult(http::Response res, Fault flt) : response(std::move(res)), fault(std::move(flt)) {}
+    ActionResult(http::StatusCode sc, std::string res);
 
-    http::Response response;
-    std::optional<Fault> fault;
+    bool isFaulty() const noexcept;
+    Fault getFault() const;
+
+    bool operator==(const ActionResult& other) const noexcept;
+
+    http::StatusCode httpStatus = http::StatusCode::None;
+    std::string response;
 };
 
 }

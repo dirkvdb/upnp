@@ -197,9 +197,9 @@ TEST_F(RootDeviceTest, ControlAction)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_TRUE(s);
-        EXPECT_EQ(http::StatusCode::Ok, actionResult.response.status);
-        EXPECT_FALSE(actionResult.fault);
-        EXPECT_EQ("Success", actionResult.response.body);
+        EXPECT_EQ(http::StatusCode::Ok, actionResult.httpStatus);
+        EXPECT_FALSE(actionResult.isFaulty());
+        EXPECT_EQ("Success", actionResult.response);
         prom.set_value();
     });
 
@@ -216,9 +216,9 @@ TEST_F(RootDeviceTest, ControlActionUnknownException)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_FALSE(s);
-        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
-        EXPECT_TRUE(actionResult.fault);
-        EXPECT_EQ(ActionFailed(), *actionResult.fault);
+        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.httpStatus);
+        EXPECT_TRUE(actionResult.isFaulty());
+        EXPECT_EQ(ActionFailed(), actionResult.getFault());
         prom.set_value();
     });
 
@@ -235,9 +235,9 @@ TEST_F(RootDeviceTest, ControlActionWithFault)
     auto fut = prom.get_future();
     client.sendAction(action, [&] (Status s, soap::ActionResult actionResult) {
         EXPECT_FALSE(s);
-        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
-        EXPECT_TRUE(actionResult.fault);
-        EXPECT_EQ(InvalidAction(), *actionResult.fault);
+        EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.httpStatus);
+        EXPECT_TRUE(actionResult.isFaulty());
+        EXPECT_EQ(InvalidAction(), actionResult.getFault());
         prom.set_value();
     });
 

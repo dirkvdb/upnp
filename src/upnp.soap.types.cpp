@@ -16,6 +16,8 @@
 
 #include "upnp/upnp.soap.types.h"
 
+#include "upnp.soap.parseutils.h"
+
 namespace upnp
 {
 namespace soap
@@ -50,6 +52,32 @@ const char* Fault::what() const noexcept
 bool Fault::operator==(const Fault& other) const noexcept
 {
     return m_errorCode == other.m_errorCode && m_errorDescription == other.m_errorDescription;
+}
+
+ActionResult::ActionResult(http::StatusCode sc, std::string res)
+: httpStatus(sc)
+, response(std::move(res))
+{
+}
+
+bool ActionResult::isFaulty() const noexcept
+{
+    return httpStatus == http::StatusCode::InternalServerError;
+}
+
+Fault ActionResult::getFault() const
+{
+    if (!isFaulty())
+    {
+        throw std::runtime_error("No soap fault available for parsing");
+    }
+
+    return soap::parseFault(response);
+}
+
+bool ActionResult::operator==(const ActionResult& other) const noexcept
+{
+    return httpStatus == other.httpStatus && response == other.response;
 }
 
 }

@@ -205,14 +205,15 @@ protected:
         m_client.sendAction(action, [cb] (Status status, soap::ActionResult res) {
             assert(cb);
 
-            // TODO: http status gets lost here
-            if (res.fault)
+            // TODO: http status gets lost here, an issue?
+            if (res.isFaulty())
             {
-                cb(Status(ErrorCode::SoapError, res.fault->errorCode(), res.fault->errorDescription()), std::move(res.response.body));
+                auto fault = res.getFault();
+                cb(Status(ErrorCode::SoapError, fault.errorCode(), fault.errorDescription()), std::move(res.response));
             }
             else
             {
-                cb(status, std::move(res.response.body));
+                cb(status, std::move(res.response));
             }
         });
     }

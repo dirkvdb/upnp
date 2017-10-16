@@ -208,7 +208,7 @@ void Client::sendAction(const Action& action, std::function<void(Status, soap::A
     m_io.post([this, url = action.getUrl(), name = action.getName(), urn = action.getServiceTypeUrn(), env, cb = std::move(cb)] () {
         auto soap = std::make_shared<soap::Client>(m_io);
         soap->action(url, name, urn, *env, [cb, env, soap] (const std::error_code& error, soap::ActionResult result) {
-            cb(httpStatusToStatus(error, result.response.status), std::move(result));
+            cb(httpStatusToStatus(error, result.httpStatus), std::move(result));
         });
     });
 

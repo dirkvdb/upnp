@@ -65,7 +65,7 @@ inline soap::ActionResult wrapSoap(const std::string& actionResponse)
        << actionResponse
        << "</s:Body>"
        << "</s:Envelope>";
-    return soap::ActionResult(http::Response(http::StatusCode::Ok, ss.str()));
+    return soap::ActionResult(http::StatusCode::Ok, ss.str());
 }
 
 inline soap::ActionResult generateBrowseResponse(const std::vector<upnp::Item>& containers, const std::vector<upnp::Item>& items)

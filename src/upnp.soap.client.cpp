@@ -53,20 +53,6 @@ std::string createTimeoutHeaderValue(std::chrono::seconds timeout)
     }
 }
 
-ActionResult createFaultResult(const http::Response& response) noexcept
-{
-    try
-    {
-        auto fault = soap::parseFault(response.body);
-        return ActionResult(std::move(response), std::move(fault));
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to parse soap fault message: {}", e.what());
-        return ActionResult(std::move(response));
-    }
-}
-
 }
 
 Client::Client(asio::io_service& io)
@@ -282,14 +268,7 @@ void Client::action(const std::string& url,
     _httpClient.addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
     _httpClient.perform(http::Method::Post, envelope, [cb] (const std::error_code& ec, http::Response response) {
-        if (ec || response.status != http::StatusCode::InternalServerError)
-        {
-            cb(ec, ActionResult(std::move(response)));
-        }
-        else
-        {
-            cb(ec, createFaultResult(response));
-        }
+        cb(ec, ActionResult(response.status, std::move(response.body)));
     });
 }
 
@@ -308,12 +287,7 @@ Future<ActionResult> Client::action(const std::string& url,
     _httpClient.addHeader("Content-Type", "text/xml; charset=\"utf-8\"");
 
     auto response = co_await _httpClient.perform(http::Method::Post, envelope);
-    if (response.status == http::StatusCode::InternalServerError)
-    {
-        co_return createFaultResult(response);
-    }
-
-    co_return ActionResult(std::move(response));
+    co_return ActionResult(response.status, std::move(response.body));
 }
 
 }

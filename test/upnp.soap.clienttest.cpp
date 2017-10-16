@@ -29,7 +29,7 @@ struct RequestMock
 
 struct ResponseMock
 {
-    MOCK_METHOD3(onResponse, void(std::error_code, http::Response, std::optional<soap::Fault>));
+    MOCK_METHOD2(onResponse, void(std::error_code, soap::ActionResult));
 };
 
 }
@@ -52,7 +52,7 @@ public:
     {
         return [this] (const std::error_code& error, soap::ActionResult res) {
             server.stop();
-            resMock.onResponse(error, res.response, res.fault);
+            resMock.onResponse(error, res);
         };
     }
 
@@ -93,8 +93,8 @@ TEST_F(SoapClientTest, SoapAction)
         return fmt::format(response, body.size(), body);
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::error_code(), http::Response(http::StatusCode::Ok, body), _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
-        EXPECT_FALSE(fault) << "Unexpected soap fault assigned";
+    EXPECT_CALL(resMock, onResponse(std::error_code(), soap::ActionResult(http::StatusCode::Ok, body))).WillOnce(WithArgs<1>(Invoke([] (auto& res) {
+        EXPECT_FALSE(res.isFaulty()) << "Unexpected soap fault assigned";
     })));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
@@ -121,9 +121,9 @@ TEST_F(SoapClientTest, SoapActionCoro)
     }));
 
     auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
-    EXPECT_EQ(http::StatusCode::Ok, actionResult.response.status);
-    EXPECT_EQ(body, actionResult.response.body);
-    EXPECT_FALSE(actionResult.fault.has_value());
+    EXPECT_EQ(http::StatusCode::Ok, actionResult.httpStatus);
+    EXPECT_EQ(body, actionResult.response);
+    EXPECT_FALSE(actionResult.isFaulty());
 }
 
 TEST_F(SoapClientTest, SoapActionWithFault)
@@ -164,10 +164,11 @@ TEST_F(SoapClientTest, SoapActionWithFault)
         return response;
     }));
 
-    EXPECT_CALL(resMock, onResponse(std::error_code(), http::Response(http::StatusCode::InternalServerError, body), _)).WillOnce(WithArgs<2>(Invoke([] (auto& fault) {
-        ASSERT_TRUE(fault) << "No soap fault assigned";
-        EXPECT_EQ(718u, fault->errorCode());
-        EXPECT_EQ("ConflictInMappingEntry"s, fault->errorDescription());
+    EXPECT_CALL(resMock, onResponse(std::error_code(), soap::ActionResult(http::StatusCode::InternalServerError, body))).WillOnce(WithArgs<1>(Invoke([] (auto& response) {
+        ASSERT_TRUE(response.isFaulty()) << "No soap fault assigned";
+        auto fault = response.getFault();
+        EXPECT_EQ(718u, fault.errorCode());
+        EXPECT_EQ("ConflictInMappingEntry"s, fault.errorDescription());
     })));
 
     client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope, handleResponse());
@@ -213,11 +214,12 @@ TEST_F(SoapClientTest, SoapActionWithFaultCoro)
     }));
 
     auto actionResult = runCoroTask(client.action(server.getWebRootUrl() + "/soap", "ActionName", "ServiceName", envelope));
-    EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.response.status);
-    EXPECT_EQ(body, actionResult.response.body);
-    EXPECT_TRUE(actionResult.fault.has_value());
-    EXPECT_EQ(718u, actionResult.fault->errorCode());
-    EXPECT_EQ("ConflictInMappingEntry"s, actionResult.fault->errorDescription());
+    EXPECT_EQ(http::StatusCode::InternalServerError, actionResult.httpStatus);
+    EXPECT_EQ(body, actionResult.response);
+    EXPECT_TRUE(actionResult.isFaulty());
+    auto fault = actionResult.getFault();
+    EXPECT_EQ(718u, fault.errorCode());
+    EXPECT_EQ("ConflictInMappingEntry"s, fault.errorDescription());
 }
 
 }
