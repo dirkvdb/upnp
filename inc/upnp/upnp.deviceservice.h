@@ -50,7 +50,7 @@ public:
 
     std::map<std::string, std::string> getVariables(uint32_t id) const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::scoped_lock<std::mutex> lock(m_mutex);
         std::map<std::string, std::string> vars;
         for (auto& var : m_variables.at(id))
         {
@@ -67,7 +67,7 @@ public:
 
     ServiceVariable getInstanceVariable(uint32_t id, VariableType var) const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::scoped_lock<std::mutex> lock(m_mutex);
         auto vars = m_variables.find(id);
         if (vars != m_variables.end())
         {

@@ -100,6 +100,36 @@ void Client::getVolume(int32_t connectionId, std::function<void(Status status, u
     });
 }
 
+Future<void> Client::setVolume(int32_t connectionId, uint32_t value)
+{
+    numericops::clip(value, m_minVolume, m_maxVolume);
+    (void) co_await executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
+                                                     {"Channel", "Master"},
+                                                     {"DesiredVolume", numericops::toString(value)} });
+
+    co_return;
+}
+
+Future<uint32_t> Client::getVolume(int32_t connectionId)
+{
+    auto response = co_await executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
+                                                                {"Channel", "Master"} });
+    uint32_t volume = 0;
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(response.c_str());
+        auto& volumeNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("CurrentVolume");
+        volume = stringops::toNumeric<uint32_t>(volumeNode.value_string());
+    }
+    catch (const std::exception&)
+    {
+        throw Status(ErrorCode::Unexpected, "Failed to parse volume");
+    }
+
+    co_return volume;
+}
+
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return s_subscriptionTimeout;
@@ -125,6 +155,22 @@ void Client::processServiceDescription(const std::string& descriptionUrl, std::f
 
         cb(status);
     });
+}
+
+Future<void> Client::processServiceDescription(const std::string& descriptionUrl)
+{
+    co_await ServiceClientBase::processServiceDescription(descriptionUrl);
+    for (auto& variable : m_stateVariables)
+    {
+        if (variable.name == toString(Variable::Volume))
+        {
+            if (variable.valueRange)
+            {
+                m_minVolume = variable.valueRange->minimumValue;
+                m_maxVolume = variable.valueRange->maximumValue;
+            }
+        }
+    }
 }
 
 void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std::string>& variables)

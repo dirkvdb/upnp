@@ -52,6 +52,12 @@ public:
     void getCurrentConnectionIds(std::function<void(Status, std::vector<std::string>)> cb);
     void getCurrentConnectionInfo(int32_t connectionId, std::function<void(Status, ConnectionInfo)> cb);
 
+    Future<std::vector<ProtocolInfo>> getProtocolInfo();
+    Future<ConnectionInfo> prepareForConnection(const ProtocolInfo& protocolInfo, const std::string& peerConnectionManager, int32_t peerConnectionId, Direction direction);
+    Future<void> connectionComplete(const ConnectionInfo& connectionInfo);
+    Future<std::vector<std::string>> getCurrentConnectionIds();
+    Future<ConnectionInfo> getCurrentConnectionInfo(int32_t connectionId);
+
 protected:
     std::chrono::seconds getSubscriptionTimeout() override;
 };

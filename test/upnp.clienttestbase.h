@@ -121,6 +121,27 @@ protected:
         }));
     }
 
+    #define expectActionCoro(expected) \
+        EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expected] (auto& action) -> Future<soap::ActionResult> { \
+            EXPECT_EQ(expected.toString(), action.toString()); \
+            co_return wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), {})); \
+        }));
+
+    #define expectActionCoroResponse(expected, responseVars) \
+    EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expected, & responseVars] (auto& action) -> Future<soap::ActionResult> { \
+        EXPECT_EQ(expected.toString(), action.toString()); \
+        co_return wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)); \
+    }));
+
+    // Causes llvm segfault
+    // void expectActionCoro(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
+    // {
+    //     EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expected, responseVars] (auto& action) -> Future<soap::ActionResult> {
+    //         EXPECT_EQ(expected.toString(), action.toString());
+    //         co_return wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars));
+    //     }));
+    // }
+
     std::function<void(Status)> checkStatusCallback()
     {
         return [this] (Status status) { statusMock.onStatus(status); };

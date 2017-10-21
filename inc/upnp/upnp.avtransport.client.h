@@ -62,6 +62,21 @@ public:
     void getTransportInfo(int32_t connectionId, std::function<void(upnp::Status, TransportInfo)> cb);
     void getCurrentTransportActions(int32_t connectionId, std::function<void(upnp::Status, std::set<Action>)> cb);
 
+    Future<void> setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData);
+    Future<void> setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData);
+
+    Future<void> play(int32_t connectionId, const std::string& speed);
+    Future<void> pause(int32_t connectionId);
+    Future<void> stop(int32_t connectionId);
+    Future<void> previous(int32_t connectionId);
+    Future<void> seek(int32_t connectionId, SeekMode mode, const std::string& target);
+    Future<void> next(int32_t connectionId);
+
+    Future<PositionInfo> getPositionInfo(int32_t connectionId);
+    Future<MediaInfo> getMediaInfo(int32_t connectionId);
+    Future<TransportInfo> getTransportInfo(int32_t connectionId);
+    Future<std::set<Action>> getCurrentTransportActions(int32_t connectionId);
+
     utils::Signal<const std::map<Variable, std::string>&> LastChangeEvent;
 
 protected:

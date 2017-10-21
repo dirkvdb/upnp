@@ -173,6 +173,11 @@ protected:
         executeAction(actionType, std::map<std::string, std::string> {}, std::move(cb));
     }
 
+    Future<std::string> executeAction(typename Traits::ActionType actionType)
+    {
+        return executeAction(actionType, std::map<std::string, std::string> {});
+    }
+
     Future<std::string> executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args)
     {
         Action action(actionToString(actionType), m_service.controlURL, serviceType());
@@ -184,14 +189,13 @@ protected:
         auto res = co_await m_client.sendAction(action);
 
         // TODO: http status gets lost here
-        if (res.fault)
+        if (res.isFaulty())
         {
-            throw Status(ErrorCode::SoapError, res.fault->errorCode(), res.fault->errorDescription());
+            auto fault = res.getFault();
+            throw Status(ErrorCode::SoapError, fault.errorCode(), fault.errorDescription());
         }
-        else
-        {
-            co_return std::move(res.response.body);
-        }
+
+        co_return std::move(res.response);
     }
 
     void executeAction(typename Traits::ActionType actionType, const std::map<std::string, std::string>& args, std::function<void(Status, std::string)> cb)

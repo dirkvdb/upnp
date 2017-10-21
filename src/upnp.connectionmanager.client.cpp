@@ -198,6 +198,123 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(S
     });
 }
 
+Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
+{
+    auto response = co_await executeAction(Action::GetProtocolInfo);
+    std::vector<ProtocolInfo> protocolInfo;
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
+        auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
+
+        auto infos = stringops::tokenize(sink.value_string(), ',');
+        for (const auto& info : infos)
+        {
+            try
+            {
+                protocolInfo.push_back(ProtocolInfo(info));
+    #ifdef DEBUG_CONNECTION_MANAGER
+                log::debug(info);
+    #endif
+            }
+            catch (std::exception& e)
+            {
+                log::warn(e.what());
+            }
+        }
+    }
+    catch(std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return protocolInfo;
+}
+
+Future<ConnectionInfo> Client::prepareForConnection(const ProtocolInfo& protocolInfo,
+                                                    const std::string& peerConnectionManager,
+                                                    int32_t peerConnectionId,
+                                                    Direction direction)
+{
+    auto response = co_await executeAction(Action::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
+                                                                           {"PeerConnectionManager", peerConnectionManager},
+                                                                           {"PeerConnectionID", std::to_string(peerConnectionId)},
+                                                                           {"Direction", toString(direction)} });
+    ConnectionInfo connInfo;
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+        auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
+
+        connInfo.peerConnectionManager      = peerConnectionManager;
+        connInfo.peerConnectionId           = peerConnectionId;
+        connInfo.protocolInfo               = protocolInfo;
+        connInfo.direction                  = direction;
+        connInfo.connectionId               = std::stoi(rootNode.first_node_ref("ConnectionId").value());
+        connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value());
+        connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value());
+    }
+    catch(std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return connInfo;
+}
+
+Future<void> Client::connectionComplete(const ConnectionInfo& connectionInfo)
+{
+    (void) co_await executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} });
+    co_return;
+}
+
+Future<std::vector<std::string>> Client::getCurrentConnectionIds()
+{
+    auto response = co_await executeAction(Action::GetCurrentConnectionIDs);
+    std::vector<std::string> ids;
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+        ids = stringops::tokenize(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+    }
+    catch(std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return ids;
+}
+
+Future<ConnectionInfo> Client::getCurrentConnectionInfo(int32_t connectionId)
+{
+    auto response = co_await executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} });
+    ConnectionInfo connInfo;
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
+        auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
+
+        connInfo.connectionId               = connectionId;
+        connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
+        connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value_string());
+        connInfo.protocolInfo               = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
+        connInfo.peerConnectionManager      = rootNode.first_node_ref("PeerConnectionManager").value_string();
+        connInfo.peerConnectionId           = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
+        connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_view());
+        connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
+    }
+    catch(std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return connInfo;
+}
+
 std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return s_subscriptionTimeout;

@@ -64,12 +64,23 @@ public:
     void querySortCapabilities(std::function<void(Status, std::vector<Property>)> cb);
     void querySystemUpdateID(std::function<void(Status, std::string)> cb);
 
+    Future<Item> browseMetadata(const std::string& objectId, const std::string& filter);
+    Future<ActionResult> browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    Future<ActionResult> search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+
+    Future<std::vector<Property>> querySearchCapabilities();
+    Future<std::vector<Property>> querySortCapabilities();
+    Future<std::string> querySystemUpdateID();
+
 protected:
     virtual std::chrono::seconds getSubscriptionTimeout() override;
 
 private:
     void browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, std::function<void(Status, std::string)> cb);
     void parseCapabilities(Status status, const std::string& nodeName, const std::string& response, std::function<void(Status, std::vector<Property>)> cb);
+
+    Future<std::string> browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort);
+    std::vector<Property> parseCapabilities(const std::string& nodeName, const std::string& response);
 
     bool    m_abort;
 };

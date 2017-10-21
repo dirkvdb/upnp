@@ -288,6 +288,172 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
                                     {"SortCriteria", sort} }, cb);
 }
 
+Future<std::vector<Property>> Client::querySearchCapabilities()
+{
+    auto response = co_await executeAction(Action::GetSearchCapabilities);
+    co_return parseCapabilities("SearchCaps", response);
+}
+
+Future<std::vector<Property>> Client::querySortCapabilities()
+{
+    auto response = co_await executeAction(Action::GetSortCapabilities);
+    co_return parseCapabilities("SortCaps", response);
+}
+
+std::vector<Property> Client::parseCapabilities(const std::string& nodeName, const std::string& response)
+{
+    try
+    {
+        std::vector<Property> props;
+
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(response.c_str());
+        auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
+
+        // TODO: don't fail if the search caps is an empty list
+        for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+        {
+            addPropertyToList(cap, props);
+        }
+
+        return props;
+    }
+    catch (std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+}
+
+Future<std::string> Client::querySystemUpdateID()
+{
+    auto response = co_await executeAction(Action::GetSystemUpdateID);
+    std::string sysUpdateId;
+
+    try
+    {
+        xml_document<> doc;
+        doc.parse<parse_non_destructive>(&response.front());
+        sysUpdateId = doc.first_node_ref().first_node_ref("Id").value_string();
+    }
+    catch (std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return sysUpdateId;
+}
+
+Future<Item> Client::browseMetadata(const std::string& objectId, const std::string& filter)
+{
+    auto response = co_await browseAction(objectId, "BrowseMetadata", filter, 0, 0, "");
+
+    ActionResult res;
+    auto browseResult = xml::parseBrowseResult(response, res);
+    if (browseResult.empty())
+    {
+        throw Status(ErrorCode::Unexpected, "Failed to browse metadata");
+    }
+
+    #ifdef DEBUG_CONTENT_BROWSING
+        log::debug(browseResult);
+    #endif
+
+    co_return xml::parseMetaData(browseResult);
+}
+
+Future<ActionResult> Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+{
+    auto response = co_await browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
+    ActionResult actionResult;
+
+    try
+    {
+        auto browseResult = xml::parseBrowseResult(response, actionResult);
+    #ifdef DEBUG_CONTENT_BROWSING
+        log::debug(browseResult);
+    #endif
+
+        if (type == ContainersOnly || type == All)
+        {
+            try { actionResult.result = xml::parseContainers(browseResult); }
+            catch (std::exception&e ) { log::warn(e.what()); }
+        }
+
+        if (type == ItemsOnly || type == All)
+        {
+            try
+            {
+                auto items = xml::parseItems(browseResult);
+                for (auto& item : items)
+                {
+                    actionResult.result.emplace_back(std::move(item));
+                }
+            }
+            catch (std::exception& e) { log::warn(e.what()); }
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return actionResult;
+}
+
+Future<ActionResult> Client::search(const std::string& objectId, const std::string& criteria, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+{
+    m_abort = false;
+
+    auto response = co_await executeAction(Action::Search, { {"ObjectID", objectId},
+                                                             {"SearchCriteria", criteria},
+                                                             {"Filter", filter},
+                                                             {"StartingIndex", numericops::toString(startIndex)},
+                                                             {"RequestedCount", numericops::toString(limit)},
+                                                             {"SortCriteria", sort} });
+
+    ActionResult searchResult;
+
+    try
+    {
+        auto searchResultDoc = xml::parseBrowseResult(response, searchResult);
+
+        try { searchResult.result = xml::parseContainers(searchResultDoc); }
+        catch (std::exception&e ) { log::warn(e.what()); }
+
+        try
+        {
+            auto items = xml::parseItems(searchResultDoc);
+            for (auto& item : items)
+            {
+                searchResult.result.emplace_back(std::move(item));
+            }
+        }
+        catch (std::exception& e) { log::warn(e.what()); }
+    }
+    catch (std::exception& e)
+    {
+        throw Status(ErrorCode::Unexpected, e.what());
+    }
+
+    co_return searchResult;
+}
+
+Future<std::string> Client::browseAction(const std::string& objectId, const std::string& flag, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
+{
+    m_abort = false;
+
+#ifdef DEBUG_CONTENT_BROWSING
+    log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
+#endif
+
+    return executeAction(Action::Browse, { {"ObjectID", objectId},
+                                           {"BrowseFlag", flag},
+                                           {"Filter", filter},
+                                           {"StartingIndex", numericops::toString(startIndex)},
+                                           {"RequestedCount", numericops::toString(limit)},
+                                           {"SortCriteria", sort} });
+}
+
 // void Client::handleUPnPResult(int errorCode)
 // {
 //     if (errorCode == UPNP_E_SUCCESS) return;
