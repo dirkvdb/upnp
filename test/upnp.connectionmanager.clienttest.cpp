@@ -94,6 +94,16 @@ TEST_F(ConnectionManagerClientTest, getProtocolInfo)
     serviceInstance->getProtocolInfo(checkStatusCallback<std::vector<ProtocolInfo>>());
 }
 
+TEST_F(ConnectionManagerClientTest, getProtocolInfoCoro)
+{
+    Action expectedAction("GetProtocolInfo", s_controlUrl, serviceType());
+    std::vector<std::pair<std::string, std::string>> responseVars = { { "Sink", "http-get:*:audio/mpeg:*,http-get:*:audio/wav:*" } };
+    expectActionCoroResponse(expectedAction, responseVars);
+
+    std::vector<ProtocolInfo> sinks = { ProtocolInfo("http-get:*:audio/mpeg:*"), ProtocolInfo("http-get:*:audio/wav:*") };
+    EXPECT_EQ(sinks, serviceInstance->getProtocolInfo().get());
+}
+
 TEST_F(ConnectionManagerClientTest, prepareForConnection)
 {
     const ProtocolInfo protInfo("http-get:*:audio/mpeg:*");
@@ -123,6 +133,38 @@ TEST_F(ConnectionManagerClientTest, prepareForConnection)
     serviceInstance->prepareForConnection(protInfo, peerMgr, peerConnectionId, ConnectionManager::Direction::Input, checkStatusCallback<ConnectionManager::ConnectionInfo>());
 }
 
+TEST_F(ConnectionManagerClientTest, prepareForConnectionCoro)
+{
+    const ProtocolInfo protInfo("http-get:*:audio/mpeg:*");
+    const std::string peerMgr = "ConnMgr";
+    const int32_t peerConnectionId = 1;
+
+    Action expectedAction("PrepareForConnection", s_controlUrl, serviceType());
+    expectedAction.addArgument("Direction", "Input");
+    expectedAction.addArgument("PeerConnectionID", std::to_string(peerConnectionId));
+    expectedAction.addArgument("PeerConnectionManager", peerMgr);
+    expectedAction.addArgument("RemoteProtocolInfo", protInfo.toString());
+
+    std::vector<std::pair<std::string, std::string>> responseVars = {
+        { "ConnectionId", std::to_string(s_connectionId) },
+        { "AVTransportID", "5" },
+        { "RcsID", "55" }
+    };
+
+    expectActionCoroResponse(expectedAction, responseVars);
+
+    ConnectionManager::ConnectionInfo expectedInfo;
+    expectedInfo.avTransportId = 5;
+    expectedInfo.connectionId = s_connectionId;
+    expectedInfo.direction = ConnectionManager::Direction::Input;
+    expectedInfo.peerConnectionId = peerConnectionId;
+    expectedInfo.peerConnectionManager = peerMgr;
+    expectedInfo.protocolInfo = ProtocolInfo("http-get:*:audio/mpeg:*");
+    expectedInfo.renderingControlServiceId = 55;
+
+    EXPECT_EQ(expectedInfo, serviceInstance->prepareForConnection(protInfo, peerMgr, peerConnectionId, ConnectionManager::Direction::Input).get());
+}
+
 TEST_F(ConnectionManagerClientTest, connectionComplete)
 {
     Action expectedAction("ConnectionComplete", s_controlUrl, serviceType());
@@ -137,6 +179,18 @@ TEST_F(ConnectionManagerClientTest, connectionComplete)
     serviceInstance->connectionComplete(connInfo, checkStatusCallback());
 }
 
+TEST_F(ConnectionManagerClientTest, connectionCompleteCoro)
+{
+    Action expectedAction("ConnectionComplete", s_controlUrl, serviceType());
+    expectedAction.addArgument("ConnectionID", std::to_string(s_connectionId));
+
+    expectActionCoro(expectedAction);
+
+    ConnectionManager::ConnectionInfo connInfo;
+    connInfo.connectionId = s_connectionId;
+    serviceInstance->connectionComplete(connInfo).get();
+}
+
 TEST_F(ConnectionManagerClientTest, getCurrentConnectionIds)
 {
     Action expectedAction("GetCurrentConnectionIDs", s_controlUrl, serviceType());
@@ -146,6 +200,16 @@ TEST_F(ConnectionManagerClientTest, getCurrentConnectionIds)
     std::vector<std::string> expectedIds = { "3", "5", "6" };
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<std::vector<std::string>>(ContainerEq(expectedIds))));
     serviceInstance->getCurrentConnectionIds(checkStatusCallback<std::vector<std::string>>());
+}
+
+TEST_F(ConnectionManagerClientTest, getCurrentConnectionIdsCoro)
+{
+    Action expectedAction("GetCurrentConnectionIDs", s_controlUrl, serviceType());
+    std::vector<std::pair<std::string, std::string>> responseVars = { { "ConnectionIDs", "3,5,6" } };
+    expectActionCoroResponse(expectedAction, responseVars);
+
+    std::vector<std::string> expectedIds = { "3", "5", "6" };
+    EXPECT_EQ(expectedIds, serviceInstance->getCurrentConnectionIds().get());
 }
 
 TEST_F(ConnectionManagerClientTest, getCurrentConnectionInfo)
@@ -177,6 +241,40 @@ TEST_F(ConnectionManagerClientTest, getCurrentConnectionInfo)
 
     EXPECT_CALL(statusMock, onStatus(Status(), expectedInfo));
     serviceInstance->getCurrentConnectionInfo(s_connectionId, checkStatusCallback<ConnectionManager::ConnectionInfo>());
+}
+
+TEST_F(ConnectionManagerClientTest, getCurrentConnectionInfoCoro)
+{
+    const ProtocolInfo protInfo("http-get:*:audio/mpeg:*");
+    const std::string peerMgr = "ConnMgr";
+    const int32_t peerConnectionId = 1;
+
+    Action expectedAction("GetCurrentConnectionInfo", s_controlUrl, serviceType());
+    expectedAction.addArgument("ConnectionID", std::to_string(s_connectionId));
+
+    std::vector<std::pair<std::string, std::string>> responseVars = {
+        { "AVTransportID", "5" },
+        { "RcsID", "55" },
+        { "ProtocolInfo", protInfo.toString() },
+        { "PeerConnectionManager", peerMgr },
+        { "PeerConnectionID", std::to_string(peerConnectionId) },
+        { "Direction", "Input" },
+        { "Status", "OK" }
+    };
+
+    expectActionCoroResponse(expectedAction, responseVars);
+
+    ConnectionManager::ConnectionInfo expectedInfo;
+    expectedInfo.avTransportId = 5;
+    expectedInfo.connectionId = s_connectionId;
+    expectedInfo.direction = ConnectionManager::Direction::Input;
+    expectedInfo.peerConnectionId = peerConnectionId;
+    expectedInfo.peerConnectionManager = peerMgr;
+    expectedInfo.protocolInfo = ProtocolInfo(protInfo);
+    expectedInfo.renderingControlServiceId = 55;
+    expectedInfo.connectionStatus = ConnectionManager::ConnectionStatus::Ok;
+
+    EXPECT_EQ(expectedInfo, serviceInstance->getCurrentConnectionInfo(s_connectionId).get());
 }
 
 }
