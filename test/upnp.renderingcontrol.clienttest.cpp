@@ -101,6 +101,28 @@ TEST_F(RenderingControlClientTest, setVolume)
     }
 }
 
+TEST_F(RenderingControlClientTest, setVolumeCoro)
+{
+    EXPECT_CALL(eventListener, LastChangedEvent(RenderingControl::Variable::LastChange, _));
+    triggerLastChangeUpdate("0", "35");
+
+    // the service description xml defines the volume range between 10 and 110
+    std::map<int32_t, std::string> values = {{69, "69"}, {120, "110"}, {0, "10"}};
+
+    InSequence seq;
+
+    for (auto& value : values)
+    {
+        Action expectedAction("SetVolume", s_controlUrl, {ServiceType::RenderingControl, 1});
+        expectedAction.addArgument("Channel", "Master");
+        expectedAction.addArgument("DesiredVolume", value.second);
+        expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
+
+        expectActionCoro(expectedAction);
+        serviceInstance->setVolume(s_connectionId, value.first).get();
+    }
+}
+
 TEST_F(RenderingControlClientTest, getVolume)
 {
     Action expectedAction("GetVolume", s_controlUrl, { ServiceType::RenderingControl, 1 });
@@ -113,5 +135,16 @@ TEST_F(RenderingControlClientTest, getVolume)
     serviceInstance->getVolume(s_connectionId, checkStatusCallback<uint32_t>());
 }
 
+TEST_F(RenderingControlClientTest, getVolumeCoro)
+{
+    Action expectedAction("GetVolume", s_controlUrl, {ServiceType::RenderingControl, 1});
+    expectedAction.addArgument("Channel", "Master");
+    expectedAction.addArgument("InstanceID", std::to_string(s_connectionId));
+
+    std::vector<std::pair<std::string, std::string>> responseVars = { {"CurrentVolume", "36"} };
+    expectActionCoroResponse(expectedAction, responseVars);
+
+    EXPECT_EQ(36, serviceInstance->getVolume(s_connectionId).get());
+}
 }
 }
