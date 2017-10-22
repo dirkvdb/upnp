@@ -186,14 +186,14 @@ public:
 
             if (method == http::Method::Head)
             {
-                log::info("[{}] requested file size: {}", m_sessionId, m_request.target());
+                log::debug("[{}] requested file size: {}", m_sessionId, m_request.target());
                 auto target = m_request.target();
                 auto& file = server.m_servedFiles.at(std::string(target.begin(), target.end()));
                 return writeResponse(std::make_shared<std::string>(fmt::format(s_response, 200, file.data.size(), file.contentType)), closeConnection);
             }
             else if (method == http::Method::Get)
             {
-                log::info("[{}] requested file: {}", m_sessionId, m_request.target());
+                log::debug("[{}] requested file: {}", m_sessionId, m_request.target());
                 auto target = m_request.target();
                 auto& file = server.m_servedFiles.at(std::string(target.begin(), target.end()));
                 auto rangeHeader = m_request["Range"];
@@ -244,7 +244,7 @@ void Server::accept()
         else
         {
 #ifdef DEBUG_HTTP
-            log::info("Http server: Connection attempt {}", m_sessionId);
+            log::debug("Http server: Connection attempt {}", m_sessionId);
 #endif
             session->receiveData();
             accept();

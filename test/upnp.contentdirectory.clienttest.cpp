@@ -100,6 +100,16 @@ TEST_F(ContentDirectoryClientTest, querySearchCapabilities)
     serviceInstance->querySearchCapabilities(checkStatusCallback<std::vector<Property>>());
 }
 
+TEST_F(ContentDirectoryClientTest, querySearchCapabilitiesCoro)
+{
+    Action searchCaps("GetSearchCapabilities", s_controlUrl, { ServiceType::ContentDirectory, 1 });
+    std::vector<std::pair<std::string, std::string>> responseVars = { {"SearchCaps", "upnp:artist,dc:title"} };
+    expectActionCoroResponse(searchCaps, responseVars);
+
+    std::vector<Property> props = { Property::Artist, Property::Title };
+    EXPECT_THAT(serviceInstance->querySearchCapabilities().get(), ContainerEq(props));
+}
+
 TEST_F(ContentDirectoryClientTest, querySortCapabilities)
 {
     Action sortCaps("GetSortCapabilities", s_controlUrl, { ServiceType::ContentDirectory, 1 });
@@ -108,6 +118,16 @@ TEST_F(ContentDirectoryClientTest, querySortCapabilities)
     std::vector<Property> props = {Property::Artist, Property::Title, Property::Genre};
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<std::vector<Property>>(ContainerEq(props))));
     serviceInstance->querySortCapabilities(checkStatusCallback<std::vector<Property>>());
+}
+
+TEST_F(ContentDirectoryClientTest, querySortCapabilitiesCoro)
+{
+    Action sortCaps("GetSortCapabilities", s_controlUrl, {ServiceType::ContentDirectory, 1});
+    std::vector<std::pair<std::string, std::string>> responseVars = { {"SortCaps", "upnp:artist,dc:title,upnp:genre"} };
+    expectActionCoroResponse(sortCaps, responseVars);
+
+    std::vector<Property> props = {Property::Artist, Property::Title, Property::Genre};
+    EXPECT_THAT(serviceInstance->querySortCapabilities().get(), ContainerEq(props));
 }
 
 TEST_F(ContentDirectoryClientTest, supportedActions)
