@@ -16,13 +16,6 @@
 
 #include "upnp/upnp.http.server.h"
 
-#include <chrono>
-#include <cstring>
-#include <sstream>
-#include <map>
-#include <mutex>
-#include <memory>
-
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
@@ -30,9 +23,15 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.parseutils.h"
 #include "upnp.enumutils.h"
-#include "upnp/stringview.h"
 #include "URI.h"
 
+#include <chrono>
+#include <cstring>
+#include <sstream>
+#include <map>
+#include <mutex>
+#include <memory>
+#include <string_view>
 #include <boost/beast/http.hpp>
 #include <boost/beast/core.hpp>
 

@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include <cinttypes>
-#include <vector>
-
-#include "upnp/stringview.h"
 #include "upnp/upnp.item.h"
 #include "upnp/upnp.contentdirectory.types.h"
+
+#include <vector>
+#include <cinttypes>
+#include <string_view>
 
 namespace upnp
 {

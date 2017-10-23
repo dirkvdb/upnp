@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-#include <functional>
-
 #include "upnp/upnp.item.h"
 #include "upnp/upnpstatevariable.h"
 #include "upnp/upnp.contentdirectory.types.h"
-#include "upnp/stringview.h"
+
+#include <string>
+#include <functional>
+#include <string_view>
 
 
 namespace rapidxml_ns

@@ -14,7 +14,7 @@
     #include <vector>
 #endif
 
-#include "upnp/stringview.h"
+#include <string_view>
 
 // On MSVC, disable "conditional expression is constant" warning (level 4).
 // This warning is almost impossible to avoid with certain types of templated code

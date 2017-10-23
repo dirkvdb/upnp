@@ -16,6 +16,12 @@
 
 #pragma once
 
+
+#include "URI.h"
+#include "upnp/asio.h"
+#include "upnp/upnp.http.types.h"
+#include "upnp/upnp.coroutine.h"
+
 #include <string>
 #include <vector>
 #include <chrono>
@@ -23,12 +29,7 @@
 #include <experimental/coroutine>
 #include <boost/beast/http.hpp>
 #include <boost/beast/core.hpp>
-
-#include "URI.h"
-#include "upnp/asio.h"
-#include "upnp/stringview.h"
-#include "upnp/upnp.http.types.h"
-#include "upnp/upnp.coroutine.h"
+#include <string_view>
 
 namespace upnp
 {

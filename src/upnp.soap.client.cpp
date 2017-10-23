@@ -23,11 +23,11 @@
 #include "upnp.soap.parseutils.h"
 
 #include "URI.h"
-#include "upnp/stringview.h"
 
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
+#include <string_view>
 
 
 namespace upnp::soap

@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "stringview.h"
 #include "utils/stringoperations.h"
 
 #include <cinttypes>
+#include <string_view>
 
 namespace upnp
 {

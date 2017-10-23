@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include "stringview.h"
 #include "upnp/upnp.utils.h"
 
 #include <boost/beast/http.hpp>
 #include <boost/utility/string_view.hpp>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 namespace upnp

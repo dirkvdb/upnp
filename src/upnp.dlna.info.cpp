@@ -8,10 +8,10 @@
 
 #include "upnp/upnp.dlna.info.h"
 #include "upnp.enumutils.h"
-#include "upnp/stringview.h"
 #include "utils/stringoperations.h"
 
 #include <cstring>
+#include <string_view>
 
 namespace upnp
 {

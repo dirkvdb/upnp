@@ -18,9 +18,6 @@
 #include "upnp.http.utils.h"
 #include "upnp.enumutils.h"
 
-#include <cassert>
-#include <stdexcept>
-#include <sstream>
 
 #include "utils/format.h"
 #include "utils/log.h"
@@ -29,7 +26,11 @@
 #include "upnp.soap.parseutils.h"
 
 #include "URI.h"
-#include "upnp/stringview.h"
+
+#include <cassert>
+#include <stdexcept>
+#include <sstream>
+#include <string_view>
 
 namespace upnp
 {

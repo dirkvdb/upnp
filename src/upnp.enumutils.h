@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include "utils/format.h"
+
 #include <array>
 #include <tuple>
 #include <algorithm>
 #include <type_traits>
-
-#include "utils/format.h"
-#include "upnp/stringview.h"
+#include <string_view>
 
 namespace upnp
 {

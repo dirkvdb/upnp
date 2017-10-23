@@ -8,7 +8,6 @@ option(ENABLE_TESTS "build unit tests" ON)
 
 if (STANDALONE)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1")
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_EXTENSIONS OFF)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -94,8 +93,7 @@ add_library(upnpframework STATIC
     inc/upnp/upnp.http.parseutils.h
     inc/upnp/upnp.xml.parseutils.h                      src/upnp.xml.parseutils.cpp
     inc/upnp/upnp.servicefaults.h
-    inc/upnp/stringview.h
-
+    
     src/upnp.enumutils.h
     src/upnp.connectionmanager.typeconversions.h        src/upnp.connectionmanager.typeconversions.cpp
     src/upnp.contentdirectory.typeconversions.h         src/upnp.contentdirectory.typeconversions.cpp

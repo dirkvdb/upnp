@@ -1,14 +1,13 @@
 
 #pragma once
 
-#include "upnp/upnp.ssdp.client.h"
-
-#include <regex>
-
 #include "utils/log.h"
 #include "utils/stringoperations.h"
+#include "upnp/upnp.ssdp.client.h"
 #include "upnp/upnp.http.parser.h"
-#include "upnp/stringview.h"
+
+#include <regex>
+#include <string_view>
 
 namespace upnp
 {

@@ -23,11 +23,11 @@
 #include <memory>
 #include <future>
 #include <thread>
+#include <string_view>
 
 #include "upnp/asio.h"
 #include "upnp/upnp.device.h"
 #include "upnp/upnp.ssdp.client.h"
-#include "upnp/stringview.h"
 
 #include "utils/signal.h"
 
