@@ -161,6 +161,25 @@ TEST_F(ContentDirectoryClientTest, browseMetadataItem)
     expectItem(0, item);
 }
 
+TEST_F(ContentDirectoryClientTest, browseMetadataItemCoro)
+{
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
+    expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "0");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse({}, generateItems(1, "object.item.audioItem"));
+    }));
+
+    expectItem(0, serviceInstance->browseMetadata("ObjectId", "filter").get());
+}
+
 TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
 {
     Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
@@ -181,6 +200,25 @@ TEST_F(ContentDirectoryClientTest, browseMetadataContainer)
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<Item>(_))).WillOnce(SaveArg<1>(&item));
     serviceInstance->browseMetadata("ObjectId", "filter", checkStatusCallback<Item>());
     expectContainer(0, item);
+}
+
+TEST_F(ContentDirectoryClientTest, browseMetadataContainerCoro)
+{
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
+    expectedAction.addArgument("BrowseFlag", "BrowseMetadata");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "0");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse({}, generateContainers(1, "object.container"));
+    }));
+    
+    expectContainer(0, serviceInstance->browseMetadata("ObjectId", "filter").get());
 }
 
 TEST_F(ContentDirectoryClientTest, browseDirectChildren)
@@ -206,6 +244,48 @@ TEST_F(ContentDirectoryClientTest, browseDirectChildren)
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_))).WillOnce(SaveArg<1>(&result));
     serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort", checkStatusCallback<ActionResult>());
 
+    EXPECT_EQ(size * 2, result.totalMatches);
+    EXPECT_EQ(size * 2, result.numberReturned);
+
+    uint32_t containerCount = 0;
+    uint32_t itemCount = 0;
+    for (auto& item : result.result)
+    {
+        if (item.getClass() == Class::Container)
+        {
+            expectContainer(containerCount++, item);
+        }
+        else if (item.getClass() == Class::Audio)
+        {
+            expectItem(itemCount++, item);
+        }
+        else
+        {
+            FAIL() << "Unexpected class type encountered";
+        }
+    }
+}
+
+TEST_F(ContentDirectoryClientTest, browseDirectChildrenCoro)
+{
+    const uint32_t size = 10;
+
+    Action expectedAction("Browse", s_controlUrl, { ServiceType::ContentDirectory, 1 });
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "filter");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "100");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse(generateContainers(size, "object.container"),
+                                         generateItems(size, "object.item.audioItem"));
+    }));
+
+    ActionResult result = serviceInstance->browseDirectChildren(ContentDirectory::Client::All, "ObjectId", "filter", 0, 100, "sort").get();
     EXPECT_EQ(size * 2, result.totalMatches);
     EXPECT_EQ(size * 2, result.numberReturned);
 
@@ -273,6 +353,48 @@ TEST_F(ContentDirectoryClientTest, search)
     }
 }
 
+TEST_F(ContentDirectoryClientTest, searchCoro)
+{
+    const uint32_t size = 10;
+
+    Action expectedAction("Search", s_controlUrl, { ServiceType::ContentDirectory, 1 });
+    expectedAction.addArgument("Filter", "filt");
+    expectedAction.addArgument("ObjectID", "ObjectId");
+    expectedAction.addArgument("RequestedCount", "100");
+    expectedAction.addArgument("SearchCriteria", "crit");
+    expectedAction.addArgument("SortCriteria", "sort");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    InSequence seq;
+    EXPECT_CALL(client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse(generateContainers(size, "object.container"),
+                                         generateItems(size, "object.item.audioItem"));
+    }));
+
+    ActionResult result = serviceInstance->search("ObjectId", "crit", "filt", 0, 100, "sort").get();
+    EXPECT_EQ(size * 2, result.totalMatches);
+    EXPECT_EQ(size * 2, result.numberReturned);
+
+    uint32_t containerCount = 0;
+    uint32_t itemCount = 0;
+    for (auto& item : result.result)
+    {
+        if (item.getClass() == Class::Container)
+        {
+            expectContainer(containerCount++, item);
+        }
+        else if (item.getClass() == Class::Audio)
+        {
+            expectItem(itemCount++, item);
+        }
+        else
+        {
+            FAIL() << "Unexpected class type encountered";
+        }
+    }
+}
+
 TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
 {
     const uint32_t size = 10000;
@@ -288,7 +410,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestAll)
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
         cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
-                                                generateItems(size, "object.item.audioItem")));
+                                            generateItems(size, "object.item.audioItem")));
     }));
 
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_)));
@@ -314,7 +436,7 @@ TEST_F(ContentDirectoryClientTest, DISABLED_performanceTestContainersOnly)
     EXPECT_CALL(client, sendAction(_, _)).WillOnce(Invoke([&] (auto& action, auto& cb) {
         EXPECT_EQ(expectedAction.toString(), action.toString());
         cb(Status(), generateBrowseResponse(generateContainers(size, "object.container"),
-                                                generateItems(size, "object.item.audioItem")));
+                                            generateItems(size, "object.item.audioItem")));
     }));
 
     EXPECT_CALL(statusMock, onStatus(Status(), Matcher<ActionResult>(_)));
