@@ -41,6 +41,11 @@ public:
     MOCK_METHOD3(subscribeToService, void(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<std::function<void(SubscriptionEvent)>(Status status, std::string subId, std::chrono::seconds timeout)>));
     MOCK_METHOD4(renewSubscription, void(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(Status status, std::string subId, std::chrono::seconds timeout)>));
     MOCK_METHOD3(unsubscribeFromService, void(const std::string& publisherUrl, const std::string& subscriptionId, std::function<void(Status status)>));
+
+    MOCK_METHOD3(subscribeToService, Future<SubscriptionResponse>(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<void(SubscriptionEvent)>));
+    //MOCK_METHOD4(renewSubscription, void(const std::string& publisherUrl, const std::string& subscriptionId, std::chrono::seconds timeout, std::function<void(Status status, std::string subId, std::chrono::seconds timeout)>));
+    MOCK_METHOD2(unsubscribeFromService, Future<void>(const std::string& publisherUrl, const std::string& subscriptionId));
+
     MOCK_METHOD2(sendAction, void(const Action&, std::function<void(Status status, soap::ActionResult actionResult)>));
     MOCK_METHOD2(getFile, void(const std::string&, std::function<void(Status, std::string contents)>));
 

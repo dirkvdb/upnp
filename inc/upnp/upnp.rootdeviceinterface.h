@@ -32,7 +32,7 @@ struct SubscriptionRequest
     std::chrono::seconds timeout;
 };
 
-struct SubscriptionResponse
+struct DeviceSubscriptionResponse
 {
     // Actual timeout as decided by the service implementation
     std::chrono::seconds timeout;
@@ -67,7 +67,7 @@ public:
 
     virtual asio::io_service& ioService() noexcept = 0;
 
-    std::function<SubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested;
+    std::function<DeviceSubscriptionResponse(const SubscriptionRequest&)> EventSubscriptionRequested;
     std::function<std::string(const ActionRequest&)> ControlActionRequested;
 };
 

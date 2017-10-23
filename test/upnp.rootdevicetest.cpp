@@ -44,7 +44,7 @@ static const std::string simpleRootDesc =
 struct DeviceCallbackMock
 {
     MOCK_METHOD1(onActionRequest, std::string(const ActionRequest&));
-    MOCK_METHOD1(onSubscriptionRequest, SubscriptionResponse(const SubscriptionRequest&));
+    MOCK_METHOD1(onSubscriptionRequest, DeviceSubscriptionResponse(const SubscriptionRequest&));
 
     MOCK_METHOD1(onEvent, void(const SubscriptionEvent&));
 };
@@ -139,7 +139,7 @@ TEST_F(RootDeviceTest, SubscriptionRequest)
 
         generatedSid = req.sid;
 
-        SubscriptionResponse res;
+        DeviceSubscriptionResponse res;
         res.timeout = 120s;
         res.initialEvent = "EventData"s;
         return res;

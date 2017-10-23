@@ -101,6 +101,25 @@ public:
         });
     }
 
+    Future<void> subscribe()
+    {
+        auto response = co_await m_client.subscribeToService(m_service.eventSubscriptionURL, getSubscriptionTimeout(), std::bind(&ServiceClientBase<Traits>::eventCb, this, std::placeholders::_1));
+        m_subscriptionId = response.subId;
+
+        if (response.timeout.count() > 0) // 0 timeout is infinite subscription, no need to renew
+        {
+            m_subTimer.expires_from_now(response.timeout * 3 / 4);
+            m_subTimer.async_wait([this, timeout = response.timeout] (const boost::system::error_code& e) {
+                if (e != asio::error::operation_aborted)
+                {
+                    renewSubscription(timeout);
+                }
+            });
+        }
+
+        co_return;
+    }
+
     void unsubscribe(std::function<void(Status)> cb)
     {
         m_client.ioService().post([this] () {
@@ -108,6 +127,12 @@ public:
         });
 
         m_client.unsubscribeFromService(m_service.eventSubscriptionURL, m_subscriptionId, cb);
+    }
+
+    Future<void> unsubscribe()
+    {
+        m_subTimer.cancel();
+        co_await m_client.unsubscribeFromService(m_service.eventSubscriptionURL, m_subscriptionId);
     }
 
     bool supportsAction(typename Traits::ActionType action) const

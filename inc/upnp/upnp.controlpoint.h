@@ -45,6 +45,7 @@ public:
 
     void setWebserver(http::Server& webServer);
     void setRendererDevice(const std::shared_ptr<Device>& dev, std::function<void(Status)> cb);
+    Future<void> setRendererDevice(const std::shared_ptr<Device>& dev);
     MediaRenderer& getActiveRenderer();
 
     void activate(std::function<void(Status)> cb);

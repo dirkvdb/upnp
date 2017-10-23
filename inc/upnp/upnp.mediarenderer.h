@@ -71,6 +71,7 @@ public:
 
     std::shared_ptr<Device> getDevice();
     void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb);
+    Future<void> setDevice(const std::shared_ptr<Device>& device);
     bool supportsPlayback(const upnp::Item& item, Resource& suggestedResource) const;
 
     // Connection management
@@ -78,7 +79,8 @@ public:
     void resetConnection();
     void useDefaultConnection();
     bool supportsConnectionPreparation() const;
-    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
+    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId, std::function<void(Status)> cb);
+    Future<void> prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
 
     // AV Transport
     void setTransportItem(const Resource& resource, std::function<void(Status)> cb);
@@ -92,11 +94,25 @@ public:
     void getCurrentTrackPosition(std::function<void(Status, std::chrono::seconds)> cb);
     void getPlaybackState(std::function<void(Status, PlaybackState)> cb);
 
+    Future<void> setTransportItem(const Resource& resource);
+    Future<void> setNextTransportItem(const Resource& resource);
+    Future<void> play();
+    Future<void> pause();
+    Future<void> stop();
+    Future<void> next();
+    Future<void> seekInTrack(std::chrono::seconds position);
+    Future<void> previous();
+    Future<std::chrono::seconds> getCurrentTrackPosition();
+    Future<PlaybackState> getPlaybackState();
+
     std::string getCurrentTrackURI() const;
     std::chrono::seconds getCurrentTrackDuration() const;
 
     void getCurrentTrackInfo(std::function<void(Status, Item)> cb) const;
     void getAvailableActions(std::function<void(Status, std::set<Action>)> cb);
+    Future<Item> getCurrentTrackInfo() const;
+    Future<std::set<Action>> getAvailableActions();
+
     static bool isActionAvailable(const std::set<Action>& actions, Action action);
 
     bool supportsQueueItem() const;
@@ -105,9 +121,13 @@ public:
     // Rendering control
     void setVolume(uint32_t value, std::function<void(Status)> cb);
     void getVolume(std::function<void(Status, uint32_t volume)> cb);
+    Future<void> setVolume(uint32_t value);
+    Future<uint32_t> getVolume();
 
     void activateEvents(std::function<void(Status)> cb);
     void deactivateEvents(std::function<void(Status)> cb);
+    Future<void> activateEvents();
+    Future<void> deactivateEvents();
 
     static const char* actionToString(Action action);
 
@@ -124,6 +144,7 @@ private:
     void resetData();
     std::set<Action> parseAvailableActions(const std::string& actions) const;
     void getProtocolInfo(std::function<void(Status)> cb);
+    Future<void> getProtocolInfo();
 
     void onRenderingControlLastChangeEvent(const std::map<RenderingControl::Variable, std::string>&);
     void onAVTransportLastChangeEvent(const std::map<AVTransport::Variable, std::string>& vars);

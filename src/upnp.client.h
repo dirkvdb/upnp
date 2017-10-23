@@ -46,6 +46,10 @@ public:
                             std::chrono::seconds timeout,
                             std::function<std::function<void(SubscriptionEvent)>(Status status, std::string subId, std::chrono::seconds timeout)> cb) override;
 
+    Future<SubscriptionResponse> subscribeToService(const std::string& publisherUrl,
+                                                    std::chrono::seconds timeout,
+                                                    std::function<void(SubscriptionEvent)> cb) override;
+
     void renewSubscription(const std::string& publisherUrl,
                            const std::string& subscriptionId,
                            std::chrono::seconds timeout,
@@ -54,6 +58,8 @@ public:
     void unsubscribeFromService(const std::string& publisherUrl,
                                 const std::string& subscriptionId,
                                 std::function<void(Status status)> cb) override;
+
+    Future<void> unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId) override;
 
     void sendAction(const Action& action, std::function<void(Status, soap::ActionResult actionResult)> cb) override;
     void getFile(const std::string& url, std::function<void(Status, std::string contents)> cb) override;

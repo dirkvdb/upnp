@@ -92,7 +92,7 @@ protected:
 
     void subscribe()
     {
-        EXPECT_CALL(client, subscribeToService(s_subscriptionUrl, s_defaultTimeout, _))
+        EXPECT_CALL(client, subscribeToService(s_subscriptionUrl, s_defaultTimeout, An<std::function<std::function<void(SubscriptionEvent)>(Status status, std::string subId, std::chrono::seconds timeout)>>()))
             .WillOnce(WithArg<2>(Invoke([&] (auto& cb) {
                 eventCb = cb(Status(), s_subscriptionId, s_defaultTimeout);
             })));

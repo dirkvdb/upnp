@@ -20,6 +20,7 @@
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.action.h"
 #include "upnp/upnp.http.functions.h"
+#include "upnp.enumutils.h"
 #include "upnp.http.client.h"
 #include "upnp.soap.client.h"
 #include "upnp.gena.server.h"
@@ -48,7 +49,7 @@ Status httpStatusToStatus(const std::error_code& error, http::StatusCode status)
     }
     else if (status != http::StatusCode::Ok)
     {
-        return Status(ErrorCode::HttpError, error.value(), error.message());
+        return Status(ErrorCode::HttpError, enum_value(status));
     }
 
     return Status(ErrorCode::Success, error.value());
@@ -161,6 +162,33 @@ void Client::subscribeToService(const std::string& publisherUrl, std::chrono::se
     });
 }
 
+Future<SubscriptionResponse> Client::subscribeToService(const std::string& publisherUrl, std::chrono::seconds timeout, std::function<void(SubscriptionEvent)> cb)
+{
+    if (!m_eventServer)
+    {
+        throw std::runtime_error("UPnP library is not properly initialized");
+    }
+
+    auto addr = m_eventServer->getAddress();
+    auto eventServerUrl = fmt::format("http://{}:{}/", addr.address(), addr.port());
+
+#ifdef DEBUG_UPNP_CLIENT
+    log::debug("Subscribe to service: {}", publisherUrl);
+#endif
+    soap::Client soap(m_io);
+    auto response = co_await soap.subscribe(publisherUrl, eventServerUrl, timeout);
+    auto status = httpStatusToStatus(std::error_code(), response.statusCode);
+    if (cb)
+    {
+        m_eventCallbacks.emplace(response.subId, cb);
+    }
+
+    SubscriptionResponse subResponse;
+    subResponse.subId = response.subId;
+    subResponse.timeout = response.timeout;
+    co_return subResponse;
+}
+
 void Client::renewSubscription(const std::string& publisherUrl,
                                const std::string& subscriptionId,
                                std::chrono::seconds timeout,
@@ -196,6 +224,20 @@ void Client::unsubscribeFromService(const std::string& publisherUrl, const std::
             m_eventCallbacks.erase(subscriptionId);
         });
     });
+}
+
+Future<void> Client::unsubscribeFromService(const std::string& publisherUrl, const std::string& subscriptionId)
+{
+    m_eventCallbacks.erase(subscriptionId);
+
+    soap::Client soap(m_io);
+    auto statusCode = co_await soap.unsubscribe(publisherUrl, subscriptionId);
+    if (statusCode != http::StatusCode::Ok)
+    {
+        throw Status(ErrorCode::HttpError, enum_value(statusCode));
+    }
+
+    co_return;
 }
 
 void Client::sendAction(const Action& action, std::function<void(Status, soap::ActionResult)> cb)

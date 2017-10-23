@@ -55,6 +55,12 @@ void ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev, std::fu
     });
 }
 
+Future<void> ControlPoint::setRendererDevice(const std::shared_ptr<Device>& dev)
+{
+    co_await m_renderer.setDevice(dev);
+    m_renderer.useDefaultConnection();
+}
+
 MediaRenderer& ControlPoint::getActiveRenderer()
 {
     return m_renderer;

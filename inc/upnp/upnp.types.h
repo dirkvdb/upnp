@@ -184,6 +184,12 @@ struct SubscriptionEvent
     uint32_t sequence = 0;
 };
 
+struct SubscriptionResponse
+{
+    std::string subId;
+    std::chrono::seconds timeout;
+};
+
 Property propertyFromString(const char* data, size_t size);
 Property propertyFromString(const std::string& name);
 const char* toString(Property prop) noexcept;
