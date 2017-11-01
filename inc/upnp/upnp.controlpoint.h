@@ -50,25 +50,32 @@ public:
 
     void activate(std::function<void(Status)> cb);
     void deactivate(std::function<void(Status)> cb);
+    Future<void> activate();
+    Future<void> deactivate();
 
     // these items are immediately set as the current item, send play when stopped to
     // actually start playback
     void playItem(MediaServer& server, const Item& item, std::function<void(Status)> cb);
+    Future<void> playItem(MediaServer& server, const Item& item);
     // A playlist file is created from the items and is sent to the renderer as one item
     void playItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items, std::function<void(Status)> cb);
+    Future<void> playItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items);
 
     // these items are queued for playback after the current item, calling queue multiple times
     // will overwrite the previous queue action, you have to wait until the currently queued item
     // has been proccessed before calling queue again
     void queueItem(MediaServer& server, const Item& item, std::function<void(Status)> cb);
+    Future<void> queueItem(MediaServer& server, const Item& item);
     // A playlist file is created from the items and is queued on the renderer as one item
     void queueItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items, std::function<void(Status)> cb);
+    Future<void> queueItemsAsPlaylist(MediaServer& server, const std::vector<Item>& items);
 
 private:
     void prepareConnection(MediaServer& server, const Resource& resource);
 
     void throwOnMissingWebserver();
     void stopPlaybackIfNecessary(std::function<void(Status)> cb);
+    Future<void> stopPlaybackIfNecessary();
     std::string generatePlaylistFilename();
     Item createPlaylistItem(const std::string& filename);
 

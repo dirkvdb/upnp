@@ -73,21 +73,20 @@ public:
         addServiceToDevice(*m_device, { ServiceType::ConnectionManager, 1 }, "CMSCPUrl", "CMCurl");
         addServiceToDevice(*m_device, m_cdSvcType, "CDSCPUrl", "CDCurl");
 
-        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::connectionManagerServiceDescription));
-        EXPECT_CALL(m_client, getFile("CDSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::contentDirectoryServiceDescription));
+        EXPECT_CALL(m_client, getFile("CMSCPUrl")).WillOnce(InvokeWithoutArgs([] () -> Future<std::string> {
+            co_return testxmls::connectionManagerServiceDescription;
+        }));
+        EXPECT_CALL(m_client, getFile("CDSCPUrl")).WillOnce(InvokeWithoutArgs([] () -> Future<std::string> {
+            co_return testxmls::contentDirectoryServiceDescription;
+        }));
 
         InSequence seq;
         Action searchCaps("GetSearchCapabilities", "CDCurl", m_cdSvcType);
         Action sortCaps("GetSortCapabilities", "CDCurl", m_cdSvcType);
-        expectAction(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
-        expectAction(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
+        expectActionCoro(searchCaps, { { "SearchCaps", "upnp:artist,dc:title" } });
+        expectActionCoro(sortCaps, { { "SortCaps", "upnp:artist,dc:title,upnp:genre" } });
 
-        m_server.setDevice(m_device, [&] (Status status) {
-            auto p = std::move(promise);
-            p.set_value(status.getErrorCode());
-        });
-
-        EXPECT_EQ(ErrorCode::Success, fut.get());
+        m_server.setDevice(m_device).get();
     }
 
     void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
@@ -97,6 +96,30 @@ public:
             EXPECT_EQ(expected.toString(), action.toString());
             cb(Status(), wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
         }));
+    }
+
+    void expectActionCoro(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
+    {
+        EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expected, responseVars] (auto& action) -> Future<soap::ActionResult> {
+            EXPECT_EQ(expected.toString(), action.toString());
+            co_return wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars));
+        }));
+    }
+
+    std::vector<Item> getAllInContainer(const std::string& id)
+    {
+        auto fut = std::async(std::launch::any, [&] () -> Future<std::vector<Item>> {
+            std::vector<Item> items;
+            for co_await (const auto& item : m_server.getAllInContainer(id))
+            {
+                items.push_back(item);
+                std::cout << item.getTitle() << std::endl;
+            }
+
+            co_return items;
+        });
+
+        return fut.get().get();
     }
 
     std::function<void(Status)> checkStatusCallback()
@@ -122,9 +145,9 @@ protected:
 
 TEST_F(MediaServerTest, DiscoveredServices)
 {
-    EXPECT_FALSE(m_device->services.end() == m_device->services.find(upnp::ServiceType::ContentDirectory));
-    EXPECT_FALSE(m_device->services.end() == m_device->services.find(upnp::ServiceType::ConnectionManager));
-    EXPECT_TRUE(m_device->services.end() == m_device->services.find(upnp::ServiceType::AVTransport));
+    EXPECT_EQ(1, m_device->services.count(upnp::ServiceType::ContentDirectory));
+    EXPECT_EQ(1, m_device->services.count(upnp::ServiceType::ConnectionManager));
+    EXPECT_EQ(0, m_device->services.count(upnp::ServiceType::AVTransport));
 }
 
 TEST_F(MediaServerTest, SearchCapabilities)
@@ -161,6 +184,24 @@ TEST_F(MediaServerTest, getAllInContainer)
     EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
     EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
+}
+
+TEST_F(MediaServerTest, getAllInContainerCoro)
+{
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return wrapSoap(testxmls::browseResponseContainers);
+    }));
+
+    EXPECT_EQ(2u, getAllInContainer(MediaServer::rootId).size());
 }
 
 TEST_F(MediaServerTest, getAllInContainerMultipleRequests)
@@ -201,6 +242,39 @@ TEST_F(MediaServerTest, getAllInContainerMultipleRequests)
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
 }
 
+TEST_F(MediaServerTest, getAllInContainerMultipleRequestsCoro)
+{
+    Action expectedAction1("Browse", "CDCurl", m_cdSvcType);
+    expectedAction1.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction1.addArgument("Filter", "*");
+    expectedAction1.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction1.addArgument("RequestedCount", "2");
+    expectedAction1.addArgument("SortCriteria", "");
+    expectedAction1.addArgument("StartingIndex", "0");
+
+    Action expectedAction2("Browse", "CDCurl", m_cdSvcType);
+    expectedAction2.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction2.addArgument("Filter", "*");
+    expectedAction2.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction2.addArgument("RequestedCount", "2");
+    expectedAction2.addArgument("SortCriteria", "");
+    expectedAction2.addArgument("StartingIndex", "2");
+
+    EXPECT_CALL(m_client, sendAction(_))
+        .Times(2)
+        .WillOnce(Invoke([&expectedAction1] (auto& action) -> Future<soap::ActionResult> {
+            EXPECT_EQ(expectedAction1.toString(), action.toString());
+            co_return wrapSoap(testxmls::browseResponseContainers);
+        }))
+        .WillOnce(Invoke([&expectedAction2] (auto& action) -> Future<soap::ActionResult> {
+            EXPECT_EQ(expectedAction2.toString(), action.toString());
+            co_return wrapSoap(testxmls::browseResponseContainersPart2);
+        }));
+
+    m_server.setRequestSize(2);
+    EXPECT_EQ(3u, getAllInContainer(MediaServer::rootId).size());
+}
+
 TEST_F(MediaServerTest, getAllInContainerNoResults)
 {
     Action expectedAction("Browse", "CDCurl", m_cdSvcType);
@@ -217,6 +291,24 @@ TEST_F(MediaServerTest, getAllInContainerNoResults)
 
     EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, checkStatusCallback<std::vector<Item>>());
+}
+
+TEST_F(MediaServerTest, getAllInContainerNoResultsCoro)
+{
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse({}, {});
+    }));
+
+    EXPECT_TRUE(getAllInContainer(MediaServer::rootId).empty());
 }
 
 TEST_F(MediaServerTest, getAllInContainerSortAscending)
@@ -240,6 +332,35 @@ TEST_F(MediaServerTest, getAllInContainerSortAscending)
     m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Title, MediaServer::SortMode::Ascending, checkStatusCallback<std::vector<Item>>());
 }
 
+TEST_F(MediaServerTest, getAllInContainerSortAscendingCoro)
+{
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SortCriteria", "+dc:title");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return wrapSoap(testxmls::browseResponseContainers);
+    }));
+
+    auto fut = std::async(std::launch::any, [&] () -> Future<std::vector<Item>> {
+        std::vector<Item> items;
+        for co_await (const auto& item : m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Title, MediaServer::SortMode::Ascending))
+        {
+            items.push_back(item);
+            std::cout << item.getTitle() << std::endl;
+        }
+
+        co_return items;
+    });
+
+    EXPECT_EQ(2u, fut.get().get().size());
+}
+
 TEST_F(MediaServerTest, getAllInContainerSortDescending)
 {
     Action expectedAction("Browse", "CDCurl", m_cdSvcType);
@@ -259,6 +380,35 @@ TEST_F(MediaServerTest, getAllInContainerSortDescending)
     EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(SizeIs(2))));
     EXPECT_CALL(m_statusMock, onStatus(Status(), Matcher<std::vector<Item>>(IsEmpty())));
     m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Genre, MediaServer::SortMode::Descending, checkStatusCallback<std::vector<Item>>());
+}
+
+TEST_F(MediaServerTest, getAllInContainerSortDescendingCoro)
+{
+    Action expectedAction("Browse", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("BrowseFlag", "BrowseDirectChildren");
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SortCriteria", "-upnp:genre");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return wrapSoap(testxmls::browseResponseContainers);
+    }));
+
+    auto fut = std::async(std::launch::any, [&] () -> Future<std::vector<Item>> {
+        std::vector<Item> items;
+        for co_await (const auto& item : m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Genre, MediaServer::SortMode::Descending))
+        {
+            items.push_back(item);
+            std::cout << item.getTitle() << std::endl;
+        }
+
+        co_return items;
+    });
+
+    EXPECT_EQ(2u, fut.get().get().size());
 }
 
 TEST_F(MediaServerTest, SearchRootContainer)
@@ -284,6 +434,36 @@ TEST_F(MediaServerTest, SearchRootContainer)
     m_server.search(MediaServer::rootId, criteria, checkStatusCallback<std::vector<Item>>());
 }
 
+TEST_F(MediaServerTest, SearchRootContainerCoro)
+{
+    std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Artist, "Prince"} };
+
+    Action expectedAction("Search", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SearchCriteria", "dc:title contains \"Video\" and upnp:artist contains \"Prince\"");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse(generateContainers(3, "object.container"), {});
+    }));
+
+    auto fut = std::async(std::launch::any, [&] () -> Future<std::vector<Item>> {
+        std::vector<Item> items;
+        for co_await (const auto& item : m_server.search(MediaServer::rootId, criteria))
+        {
+            items.push_back(item);
+        }
+
+        co_return items;
+    });
+
+    EXPECT_EQ(3u, fut.get().get().size());
+}
+
 TEST_F(MediaServerTest, SearchRootContainerNoResults)
 {
     std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Artist, "Prince"} };
@@ -305,6 +485,37 @@ TEST_F(MediaServerTest, SearchRootContainerNoResults)
     m_server.search(MediaServer::rootId, criteria, checkStatusCallback<std::vector<Item>>());
 }
 
+TEST_F(MediaServerTest, SearchRootContainerNoResultsCoro)
+{
+    std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Artist, "Prince"} };
+
+    Action expectedAction("Search", "CDCurl", m_cdSvcType);
+    expectedAction.addArgument("Filter", "*");
+    expectedAction.addArgument("ObjectID", MediaServer::rootId);
+    expectedAction.addArgument("RequestedCount", "32");
+    expectedAction.addArgument("SearchCriteria", "dc:title contains \"Video\" and upnp:artist contains \"Prince\"");
+    expectedAction.addArgument("SortCriteria", "");
+    expectedAction.addArgument("StartingIndex", "0");
+
+    EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expectedAction] (auto& action) -> Future<soap::ActionResult> {
+        EXPECT_EQ(expectedAction.toString(), action.toString());
+        co_return generateBrowseResponse({}, {});
+    }));
+
+    auto fut = std::async(std::launch::any, [&] () -> Future<std::vector<Item>> {
+        std::vector<Item> items;
+        for co_await (const auto& item : m_server.search(MediaServer::rootId, criteria))
+        {
+            items.push_back(item);
+            std::cout << item.getTitle() << std::endl;
+        }
+
+        co_return items;
+    });
+
+    EXPECT_TRUE(fut.get().get().empty());
+}
+
 TEST_F(MediaServerTest, SupportedActions)
 {
     EXPECT_TRUE(m_server.connectionManager().supportsAction(ConnectionManager::Action::GetProtocolInfo));
@@ -321,10 +532,31 @@ TEST_F(MediaServerTest, SearchOnNotSupportedProperty)
     EXPECT_THROW(m_server.search(MediaServer::rootId, criteria, checkStatusCallback<std::vector<Item>>()), std::runtime_error);
 }
 
+TEST_F(MediaServerTest, SearchOnNotSupportedPropertyCoro)
+{
+    // title, artist are supported search properties (see test setup)
+    std::map<Property, std::string> criteria { {Property::Title, "Video"}, {Property::Genre, "funk"} };
+    EXPECT_THROW(m_server.search(MediaServer::rootId, criteria), std::runtime_error);
+}
+
 TEST_F(MediaServerTest, SortOnNotSupportedProperty)
 {
     // title, artist, genre are supported search properties (see test setup)
     EXPECT_THROW(m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Class, MediaServer::SortMode::Ascending, checkStatusCallback<std::vector<Item>>()), std::runtime_error);
+}
+
+TEST_F(MediaServerTest, SortOnNotSupportedPropertyCoro)
+{
+    // title, artist, genre are supported search properties (see test setup)
+    auto fut = std::async(std::launch::any, [&] () -> Future<void> {
+        for co_await (const auto& item : m_server.getAllInContainer(MediaServer::rootId, 0, 0, Property::Class, MediaServer::SortMode::Ascending))
+        {
+            std::cout << item.getTitle() << std::endl;
+        }
+        co_return;
+    });
+
+    EXPECT_THROW(fut.get().get(), std::runtime_error);
 }
 
 }

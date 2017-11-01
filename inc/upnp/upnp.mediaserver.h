@@ -22,6 +22,7 @@
 #include "upnp/upnp.connectionmanager.client.h"
 #include "upnp/upnp.contentdirectory.client.h"
 #include "upnp/upnp.avtransport.client.h"
+#include "upnp/upnp.asyncgenerator.h"
 
 #include "utils/threadpool.h"
 
@@ -49,6 +50,7 @@ public:
     ~MediaServer();
 
     void setDevice(const std::shared_ptr<Device>& device, std::function<void(Status)> cb);
+    Future<void> setDevice(const std::shared_ptr<Device>& device);
     std::shared_ptr<Device> getDevice();
 
     void abort();
@@ -58,7 +60,8 @@ public:
     void resetConnection();
     void useDefaultConnection();
     bool supportsConnectionPreparation() const;
-    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
+    void prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId, std::function<void(Status)> cb);
+    Future<void> prepareConnection(const Resource& resource, const std::string& peerConnectionManager, uint32_t serverConnectionId);
     uint32_t getConnectionId() const;
 
     // ContentDirectory related methods
@@ -69,15 +72,23 @@ public:
 
     void getItemsInContainer(const std::string& id, const ItemsCb& onItem);
     void getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+    async_generator<Item> getItemsInContainer(const std::string& id);
+    async_generator<Item> getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode);
 
     void getContainersInContainer(const std::string& id, const ItemsCb& onItem);
     void getContainersInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+    async_generator<Item> getContainersInContainer(const std::string& id);
+    async_generator<Item> getContainersInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode);
 
     void getAllInContainer(const std::string& id, const ItemsCb& onItem);
     void getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode, const ItemsCb& onItem);
+    async_generator<Item> getAllInContainer(const std::string& id);
+    async_generator<Item> getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode mode);
 
     void search(const std::string& id, const std::string& criteria, const ItemsCb& onItem);
     void search(const std::string& id, const std::map<Property, std::string>& criteria, const ItemsCb& onItem);
+    async_generator<Item> search(std::string id, std::string criteria);
+    async_generator<Item> search(const std::string& id, const std::map<Property, std::string>& criteria);
 
     // AVTransport related methods
     void setTransportItem(const Resource& resource);
@@ -92,6 +103,7 @@ private:
     void queryCapabilities(std::function<void(Status)> cb);
 
     void performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode, const ItemsCb& onItem);
+    async_generator<Item> performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode);
     void handleSearchResult(const std::string& id,
                             const std::string& criteria,
                             uint32_t offset,

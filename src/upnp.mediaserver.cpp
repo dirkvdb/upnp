@@ -85,6 +85,22 @@ void MediaServer::setDevice(const std::shared_ptr<Device>& device, std::function
     });
 }
 
+Future<void> MediaServer::setDevice(const std::shared_ptr<Device>& device)
+{
+    m_device = device;
+    co_await m_contentDirectory.setDevice(m_device);
+    co_await m_connectionMgr.setDevice(m_device);
+
+    if (m_device->implementsService({ ServiceType::AVTransport, 1}))
+    {
+        m_avTransport = std::make_unique<AVTransport::Client>(m_client);
+        co_await m_avTransport->setDevice(m_device);
+    }
+
+    m_searchCaps = co_await m_contentDirectory.querySearchCapabilities();
+    m_sortCaps = co_await m_contentDirectory.querySortCapabilities();
+}
+
 void MediaServer::queryCapabilities(std::function<void(Status)> cb)
 {
     m_contentDirectory.querySearchCapabilities([this, cb] (Status status, const auto& caps) {
@@ -150,18 +166,28 @@ bool MediaServer::supportsConnectionPreparation() const
     return m_connectionMgr.supportsAction(ConnectionManager::Action::PrepareForConnection);
 }
 
-void MediaServer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t remoteConnectionId)
+void MediaServer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t remoteConnectionId, std::function<void(Status)> cb)
 {
     m_connectionMgr.prepareForConnection(res.getProtocolInfo(),
                                          peerConnectionManager,
                                          remoteConnectionId,
                                          ConnectionManager::Direction::Output,
-                                         [this] (Status status, ConnectionManager::ConnectionInfo info) {
+                                         [this, cb] (Status status, ConnectionManager::ConnectionInfo info) {
         if (status)
         {
             m_connInfo = info;
         }
+
+        cb(status);
     });
+}
+
+Future<void> MediaServer::prepareConnection(const Resource& res, const std::string& peerConnectionManager, uint32_t remoteConnectionId)
+{
+    m_connInfo = co_await m_connectionMgr.prepareForConnection(res.getProtocolInfo(),
+                                                               peerConnectionManager,
+                                                               remoteConnectionId,
+                                                               ConnectionManager::Direction::Output);
 }
 
 uint32_t MediaServer::getConnectionId() const
@@ -203,6 +229,16 @@ void MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, ui
     performBrowseRequest(ContentDirectory::Client::ItemsOnly, id, offset, limit, sort, sortMode, onItems);
 }
 
+async_generator<Item> MediaServer::getItemsInContainer(const std::string& id)
+{
+    return getItemsInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending);
+}
+
+async_generator<Item> MediaServer::getItemsInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+{
+    return performBrowseRequest(ContentDirectory::Client::ItemsOnly, id, offset, limit, sort, sortMode);
+}
+
 void MediaServer::getContainersInContainer(const std::string& id, const ItemsCb& onItems)
 {
     getContainersInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending, onItems);
@@ -213,6 +249,16 @@ void MediaServer::getContainersInContainer(const std::string& id, uint32_t offse
     performBrowseRequest(ContentDirectory::Client::ContainersOnly, id, offset, limit, sort, sortMode, onItems);
 }
 
+async_generator<Item> MediaServer::getContainersInContainer(const std::string& id)
+{
+    return getContainersInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending);
+}
+
+async_generator<Item> MediaServer::getContainersInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+{
+    return performBrowseRequest(ContentDirectory::Client::ContainersOnly, id, offset, limit, sort, sortMode);
+}
+
 void MediaServer::getAllInContainer(const std::string& id, const ItemsCb& onItems)
 {
     getAllInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending, onItems);
@@ -221,6 +267,16 @@ void MediaServer::getAllInContainer(const std::string& id, const ItemsCb& onItem
 void MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode, const ItemsCb& onItems)
 {
     performBrowseRequest(ContentDirectory::Client::All, id, offset, limit, sort, sortMode, onItems);
+}
+
+async_generator<Item> MediaServer::getAllInContainer(const std::string& id)
+{
+    return getAllInContainer(id, 0, 0, Property::Unknown, SortMode::Ascending);
+}
+
+async_generator<Item> MediaServer::getAllInContainer(const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+{
+    return performBrowseRequest(ContentDirectory::Client::All, id, offset, limit, sort, sortMode);
 }
 
 void MediaServer::handleSearchResult(const std::string& id, const std::string& criteria, uint32_t offset, uint32_t requestSize, Status status, const ContentDirectory::ActionResult& result, const ItemsCb& onItems)
@@ -282,6 +338,58 @@ void MediaServer::search(const std::string& id, const std::map<Property, std::st
     }
 
     search(id, critString.str(), onItems);
+}
+
+async_generator<Item> MediaServer::search(std::string id, std::string criteria)
+{
+    m_abort = false;
+    uint32_t offset = 0;
+    auto requestSize = m_requestSize;
+
+    bool itemsLeft = true;
+    while (itemsLeft)
+    {
+        auto searchResult = co_await m_contentDirectory.search(id, criteria, "*", offset, requestSize, "");
+        for (auto& item : searchResult.result)
+        {
+            co_yield item;
+        }
+
+        offset += searchResult.numberReturned;
+        itemsLeft = offset < searchResult.totalMatches ||
+                    (searchResult.totalMatches == 0 && searchResult.numberReturned != 0);
+
+        if (m_abort)
+        {
+            co_return;
+        }
+    }
+}
+
+async_generator<Item> MediaServer::search(const std::string& id, const std::map<Property, std::string>& criteria)
+{
+    bool first = true;
+    std::stringstream critString;
+    for (auto& crit : criteria)
+    {
+        if (first)
+        {
+            first = false;
+        }
+        else
+        {
+            critString << " and ";
+        }
+
+        if (!canSearchForProperty(crit.first))
+        {
+            throw std::runtime_error(fmt::format("The server does not support to search on {}", toString(crit.first)));
+        }
+
+        critString << toString(crit.first) << " contains \"" << crit.second << "\"";
+    }
+
+    return search(id, critString.str());
 }
 
 void MediaServer::setTransportItem(const Resource& resource)
@@ -363,6 +471,56 @@ void MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type
     m_contentDirectory.browseDirectChildren(type, id, "*", offset, requestSize, sortStr, [=] (Status status, const ContentDirectory::ActionResult& res) {
         handleBrowseResult(type, id, offset, limit, sortStr, requestSize, status, res, onItem, 0);
     });
+}
+
+async_generator<Item> MediaServer::performBrowseRequest(ContentDirectory::Client::BrowseType type, const std::string& id, uint32_t offset, uint32_t limit, Property sort, SortMode sortMode)
+{
+    m_abort = false;
+
+    if (sort != Property::Unknown && !canSortOnProperty(sort))
+    {
+        throw std::runtime_error(fmt::format("The server does not support sort on: {}", toString(sort)));
+    }
+
+    std::stringstream ss;
+    if (sort != Property::Unknown)
+    {
+        ss << (sortMode == SortMode::Ascending ? "+" : "-") << toString(sort);
+    }
+
+    auto sortStr = ss.str();
+
+    uint32_t itemsReceived = 0;
+    bool itemsLeft = true;
+
+    while (itemsLeft)
+    {
+        uint32_t requestSize = std::min(m_requestSize, limit == 0 ? m_requestSize : limit - itemsReceived);
+        log::info("Browse: {} {}", offset, requestSize);
+        auto actionResult = co_await m_contentDirectory.browseDirectChildren(type, id, "*", offset, requestSize, sortStr);
+
+        for (auto& item : actionResult.result)
+        {
+            co_yield item;
+        }
+
+        offset += m_requestSize;
+        itemsReceived += actionResult.numberReturned;
+
+        if (limit > 0)
+        {
+            itemsLeft = (actionResult.numberReturned == 0) ? false : itemsReceived < limit;
+        }
+        else
+        {
+            itemsLeft = actionResult.numberReturned == requestSize;
+        }
+
+        if (m_abort)
+        {
+            co_return;
+        }
+    }
 }
 
 ConnectionManager::Client& MediaServer::connectionManager()

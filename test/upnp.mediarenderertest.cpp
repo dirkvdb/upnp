@@ -63,28 +63,28 @@ protected:
         addServiceToDevice(*m_device, { ServiceType::RenderingControl, 1 }, "RCCPUrl", "RCCurl");
         addServiceToDevice(*m_device, { ServiceType::AVTransport, 1 }, "AVTCPUrl", "AVTCurl");
 
-        EXPECT_CALL(m_client, getFile("CMSCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::connectionManagerServiceDescription));
-        EXPECT_CALL(m_client, getFile("RCCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::renderingServiceDescription));
-        EXPECT_CALL(m_client, getFile("AVTCPUrl", _)).WillOnce(InvokeArgument<1>(Status(), testxmls::avtransportServiceDescription));
+        EXPECT_CALL(m_client, getFile("CMSCPUrl")).WillOnce(InvokeWithoutArgs([] () -> Future<std::string> {
+            co_return testxmls::connectionManagerServiceDescription;
+        }));
+        EXPECT_CALL(m_client, getFile("RCCPUrl")).WillOnce(InvokeWithoutArgs([] () -> Future<std::string> {
+            co_return testxmls::renderingServiceDescription;
+        }));
+        EXPECT_CALL(m_client, getFile("AVTCPUrl")).WillOnce(InvokeWithoutArgs([] () -> Future<std::string> {
+            co_return testxmls::avtransportServiceDescription;
+        }));
 
         Action getProtoInfo("GetProtocolInfo", "CMCurl", { ServiceType::ConnectionManager, 1 });
         expectAction(getProtoInfo, { { "Source", "http-get:*:*:*" },
                                      { "Sink", "http-get:*:audio/mpeg:*,http-get:*:audio/mp4:*" } });
 
-        m_renderer.setDevice(m_device, [&] (Status status) {
-            auto p = std::move(promise);
-            p.set_value(status.getErrorCode());
-        });
-
-        EXPECT_EQ(ErrorCode::Success, fut.get());
+        m_renderer.setDevice(m_device).get();
     }
 
     void expectAction(const Action& expected, const std::vector<std::pair<std::string, std::string>>& responseVars = {})
     {
-        using namespace ContentDirectory;
-        EXPECT_CALL(m_client, sendAction(_, _)).WillOnce(Invoke([&, responseVars] (auto& action, auto& cb) {
+        EXPECT_CALL(m_client, sendAction(_)).WillOnce(Invoke([&expected, responseVars] (auto& action) -> Future<soap::ActionResult> {
             EXPECT_EQ(expected.toString(), action.toString());
-            cb(Status(), wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars)));
+            co_return wrapSoap(generateActionResponse(expected.getName(), expected.getServiceType(), responseVars));
         }));
     }
 

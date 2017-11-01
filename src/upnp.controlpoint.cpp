@@ -71,9 +71,19 @@ void ControlPoint::activate(std::function<void(Status)> cb)
     m_renderer.activateEvents(cb);
 }
 
+Future<void> ControlPoint::activate()
+{
+    return m_renderer.activateEvents();
+}
+
 void ControlPoint::deactivate(std::function<void(Status)> cb)
 {
     m_renderer.deactivateEvents(cb);
+}
+
+Future<void> ControlPoint::deactivate()
+{
+    return m_renderer.deactivateEvents();
 }
 
 void ControlPoint::playItem(MediaServer& server, const Item& item, std::function<void(Status)> cb)
@@ -97,6 +107,21 @@ void ControlPoint::playItem(MediaServer& server, const Item& item, std::function
             m_renderer.play(cb);
         });
     });
+}
+
+Future<void> ControlPoint::playItem(MediaServer& server, const Item& item)
+{
+    Resource resource;
+    if (!m_renderer.supportsPlayback(item, resource))
+    {
+        throw std::runtime_error("The requested item is not supported by the renderer");
+    }
+
+    co_await stopPlaybackIfNecessary();
+    prepareConnection(server, resource);
+    server.setTransportItem(resource);
+    co_await m_renderer.setTransportItem(resource);
+    co_await m_renderer.play();
 }
 
 void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vector<Item> &items, std::function<void(Status)> cb)
@@ -129,6 +154,37 @@ void ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vec
     playItem(server, createPlaylistItem(filename), cb);
 }
 
+Future<void> ControlPoint::playItemsAsPlaylist(upnp::MediaServer& server, const std::vector<Item> &items)
+{
+    if (items.empty())
+    {
+        throw std::runtime_error("No items provided for playback");
+    }
+
+    if (items.size() == 1)
+    {
+        co_await playItem(server, items.front());
+        co_return;
+    }
+
+    // create a playlist from the provided items
+    throwOnMissingWebserver();
+
+    std::stringstream playlist;
+    for (auto& item : items)
+    {
+        Resource res;
+        if (m_renderer.supportsPlayback(item, res))
+        {
+            playlist << res.getUrl() << std::endl;
+        }
+    }
+
+    auto filename = generatePlaylistFilename();
+    m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
+    co_await playItem(server, createPlaylistItem(filename));
+}
+
 void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item, std::function<void(Status)> cb)
 {
     Resource resource;
@@ -138,6 +194,17 @@ void ControlPoint::queueItem(MediaServer& /*server*/, const Item& item, std::fun
     }
 
     m_renderer.setNextTransportItem(resource, cb);
+}
+
+Future<void> ControlPoint::queueItem(MediaServer& /*server*/, const Item& item)
+{
+    Resource resource;
+    if (!m_renderer.supportsPlayback(item, resource))
+    {
+        throw std::runtime_error("The requested item is not supported by the renderer");
+    }
+
+    co_await m_renderer.setNextTransportItem(resource);
 }
 
 void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item>& items, std::function<void(Status)> cb)
@@ -170,12 +237,48 @@ void ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::ve
     queueItem(server, createPlaylistItem(filename), cb);
 }
 
+Future<void> ControlPoint::queueItemsAsPlaylist(upnp::MediaServer &server, const std::vector<Item>& items)
+{
+    if (items.empty())
+    {
+        throw std::runtime_error("No items provided for queueing");
+    }
+
+    if (items.size() == 1)
+    {
+        co_await playItem(server, items.front());
+        co_return;
+    }
+
+    // create a playlist from the provided items
+    throwOnMissingWebserver();
+
+    std::stringstream playlist;
+    for (auto& item : items)
+    {
+        Resource res;
+        if (m_renderer.supportsPlayback(item, res))
+        {
+            playlist << res.getUrl() << std::endl;
+        }
+    }
+
+    std::string filename = generatePlaylistFilename();
+    m_pWebServer->addFile(filename, "audio/m3u", playlist.str());
+    co_await queueItem(server, createPlaylistItem(filename));
+}
+
 void ControlPoint::stopPlaybackIfNecessary(std::function<void(Status)> cb)
 {
     //if (m_renderer.isActionAvailable(MediaRenderer::Action::Stop))
     //{
     m_renderer.stop(cb);
     //}
+}
+
+Future<void> ControlPoint::stopPlaybackIfNecessary()
+{
+    return m_renderer.stop();
 }
 
 void ControlPoint::throwOnMissingWebserver()
