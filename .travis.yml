@@ -144,7 +144,7 @@ install:
     fi
 
   - |
-    git clone --single-branch https://github.com/boostorg/beast.git
+    git clone --single-branch --branch v124 https://github.com/boostorg/beast.git
     mkdir -p ${DEPS_DIR}/local/include/boost
     cp -rv ./beast/include/boost/* ${DEPS_DIR}/local/include/boost/
 
