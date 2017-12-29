@@ -16,18 +16,18 @@
 
 #pragma once
 
-#include <string>
-#include <map>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
 #include <cinttypes>
+#include <map>
+#include <string>
 
-#include "utils/log.h"
-#include "utils/stringoperations.h"
 #include "upnp/upnp.actionresponse.h"
 #include "upnp/upnp.rootdeviceinterface.h"
 #include "upnp/upnp.servicefaults.h"
 #include "upnp/upnpservicevariable.h"
+#include "utils/log.h"
+#include "utils/stringoperations.h"
 
 namespace upnp
 {
@@ -46,11 +46,11 @@ public:
     virtual ~DeviceService() = default;
 
     virtual ActionResponse onAction(const std::string& action, const std::string& request) = 0;
-    virtual std::string getSubscriptionResponse() = 0;
+    virtual std::string    getSubscriptionResponse()                                       = 0;
 
     std::map<std::string, std::string> getVariables(uint32_t id) const
     {
-        std::scoped_lock<std::mutex> lock(m_mutex);
+        std::scoped_lock<std::mutex>       lock(m_mutex);
         std::map<std::string, std::string> vars;
         for (auto& var : m_variables.at(id))
         {
@@ -68,7 +68,7 @@ public:
     ServiceVariable getInstanceVariable(uint32_t id, VariableType var) const
     {
         std::scoped_lock<std::mutex> lock(m_mutex);
-        auto vars = m_variables.find(id);
+        auto                         vars = m_variables.find(id);
         if (vars != m_variables.end())
         {
             auto v = vars->second.find(var);
@@ -113,20 +113,20 @@ public:
         m_variables[id][var] = serviceVar;
     }
 
-//    template <typename T>
-//    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
-//    {
-//        m_variables[0][var] = std::to_string(value);
-//    }
-//
-//    template <typename T>
-//    typename std::enable_if<std::is_integral<T>::value, void>::type setInstanceVariable(uint32_t id, VariableType var, const T& value, const std::string& attrName, const std::string& attrValue)
-//    {
-//        ServiceVariable serviceVar(variableToString(var), value);
-//        serviceVar.addAttribute(attrName, attrValue);
-//
-//        m_variables[id][var] = serviceVar;
-//    }
+    //    template <typename T>
+    //    typename std::enable_if<std::is_integral<T>::value, void>::type setVariable(VariableType var, const T& value)
+    //    {
+    //        m_variables[0][var] = std::to_string(value);
+    //    }
+    //
+    //    template <typename T>
+    //    typename std::enable_if<std::is_integral<T>::value, void>::type setInstanceVariable(uint32_t id, VariableType var, const T& value, const std::string& attrName, const std::string& attrValue)
+    //    {
+    //        ServiceVariable serviceVar(variableToString(var), value);
+    //        serviceVar.addAttribute(attrName, attrValue);
+    //
+    //        m_variables[id][var] = serviceVar;
+    //    }
 
 protected:
     virtual const char* variableToString(VariableType type) const = 0;
@@ -136,7 +136,7 @@ protected:
         auto vec = utils::stringops::tokenize(csv, ',');
         for (auto& str : vec)
         {
-            utils::stringops::trim(str);
+            utils::stringops::trim_in_place(str);
         }
         return vec;
     }
@@ -174,10 +174,10 @@ protected:
         return ss.str();
     }
 
-    IRootDevice&                                                    m_rootDevice;
-    ServiceType                                                     m_type;
-    std::map<uint32_t, std::map<VariableType, ServiceVariable>>     m_variables;
-    mutable std::mutex                                              m_mutex;
+    IRootDevice&                                                m_rootDevice;
+    ServiceType                                                 m_type;
+    std::map<uint32_t, std::map<VariableType, ServiceVariable>> m_variables;
+    mutable std::mutex                                          m_mutex;
 };
 
-}
+} // namespace upnp
