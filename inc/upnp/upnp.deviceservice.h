@@ -133,7 +133,7 @@ protected:
 
     static std::vector<std::string> csvToVector(const std::string& csv)
     {
-        auto vec = utils::stringops::tokenize(csv, ',');
+        auto vec = utils::stringops::split(csv, ',');
         for (auto& str : vec)
         {
             utils::stringops::trim_in_place(str);

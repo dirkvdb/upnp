@@ -31,7 +31,7 @@ namespace parseutils
 struct Range
 {
     uint64_t start = 0;
-    uint64_t end = 0;
+    uint64_t end   = 0;
 };
 
 Range parseRange(std::string_view range)
@@ -43,7 +43,7 @@ Range parseRange(std::string_view range)
         throw std::invalid_argument("Invalid range header: " + std::string(range));
     }
 
-    auto split = utils::stringops::tokenize(&range[6], '-');
+    auto split = utils::stringops::split(&range[6], '-');
     if (split.size() > 2)
     {
         throw std::invalid_argument("Invalid range header: " + std::string(range));
@@ -68,8 +68,6 @@ Range parseRange(std::string_view range)
 
     return result;
 }
-
 }
 }
 }
-

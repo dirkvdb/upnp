@@ -56,7 +56,6 @@ void addPropertyToList(const std::string& propertyName, std::vector<Property>& v
 #endif
     }
 }
-
 }
 
 ServiceType::Type ServiceTraits::SvcType = ServiceType::ContentDirectory;
@@ -94,20 +93,19 @@ void Client::abort()
 
 void Client::querySearchCapabilities(std::function<void(Status, std::vector<Property>)> cb)
 {
-    executeAction(Action::GetSearchCapabilities, [this, cb] (Status status, const std::string& response) {
+    executeAction(Action::GetSearchCapabilities, [this, cb](Status status, const std::string& response) {
         parseCapabilities(status, "SearchCaps", response, cb);
     });
 }
 
 void Client::querySortCapabilities(std::function<void(Status, std::vector<Property>)> cb)
 {
-    executeAction(Action::GetSortCapabilities, [this, cb] (Status status, const std::string& response) {
+    executeAction(Action::GetSortCapabilities, [this, cb](Status status, const std::string& response) {
         parseCapabilities(status, "SortCaps", response, cb);
     });
 }
 
-void Client::parseCapabilities(Status status, const std::string& nodeName, const std::string& response,
-                               std::function<void(Status, std::vector<Property>)> cb)
+void Client::parseCapabilities(Status status, const std::string& nodeName, const std::string& response, std::function<void(Status, std::vector<Property>)> cb)
 {
     std::vector<Property> props;
 
@@ -120,7 +118,7 @@ void Client::parseCapabilities(Status status, const std::string& nodeName, const
             auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
 
             // TODO: don't fail if the search caps is an empty list
-            for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+            for (auto& cap : stringops::split(caps.value_string(), ','))
             {
                 addPropertyToList(cap, props);
             }
@@ -136,7 +134,7 @@ void Client::parseCapabilities(Status status, const std::string& nodeName, const
 
 void Client::querySystemUpdateID(std::function<void(Status, std::string)> cb)
 {
-    executeAction(Action::GetSystemUpdateID, [cb] (Status status, const std::string& response) {
+    executeAction(Action::GetSystemUpdateID, [cb](Status status, const std::string& response) {
         std::string sysUpdateId;
 
         if (status)
@@ -159,7 +157,7 @@ void Client::querySystemUpdateID(std::function<void(Status, std::string)> cb)
 
 void Client::browseMetadata(const std::string& objectId, const std::string& filter, const std::function<void(Status, Item)> cb)
 {
-    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [cb] (Status status, const std::string& response) {
+    browseAction(objectId, "BrowseMetadata", filter, 0, 0, "", [cb](Status status, const std::string& response) {
         if (!status)
         {
             cb(status, Item());
@@ -167,16 +165,16 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
         }
 
         ActionResult res;
-        auto browseResult = xml::parseBrowseResult(response, res);
+        auto         browseResult = xml::parseBrowseResult(response, res);
         if (browseResult.empty())
         {
             cb(Status(ErrorCode::Unexpected, "Failed to browse metadata"), Item());
             return;
         }
 
-        #ifdef DEBUG_CONTENT_BROWSING
-            log::debug(browseResult);
-        #endif
+#ifdef DEBUG_CONTENT_BROWSING
+        log::debug(browseResult);
+#endif
 
         cb(status, xml::parseMetaData(browseResult));
     });
@@ -184,7 +182,7 @@ void Client::browseMetadata(const std::string& objectId, const std::string& filt
 
 void Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort, const std::function<void(Status, ActionResult)> cb)
 {
-    browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort, [type, cb] (Status status, const std::string& response) {
+    browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort, [type, cb](Status status, const std::string& response) {
         if (!status)
         {
             cb(status, ActionResult());
@@ -196,14 +194,20 @@ void Client::browseDirectChildren(BrowseType type, const std::string& objectId, 
         try
         {
             auto browseResult = xml::parseBrowseResult(response, res);
-        #ifdef DEBUG_CONTENT_BROWSING
+#ifdef DEBUG_CONTENT_BROWSING
             log::debug(browseResult);
-        #endif
+#endif
 
             if (type == ContainersOnly || type == All)
             {
-                try { res.result = xml::parseContainers(browseResult); }
-                catch (std::exception&e ) { log::warn(e.what()); }
+                try
+                {
+                    res.result = xml::parseContainers(browseResult);
+                }
+                catch (std::exception& e)
+                {
+                    log::warn(e.what());
+                }
             }
 
             if (type == ItemsOnly || type == All)
@@ -216,7 +220,10 @@ void Client::browseDirectChildren(BrowseType type, const std::string& objectId, 
                         res.result.emplace_back(std::move(item));
                     }
                 }
-                catch (std::exception& e) { log::warn(e.what()); }
+                catch (std::exception& e)
+                {
+                    log::warn(e.what());
+                }
             }
         }
         catch (std::exception& e)
@@ -232,12 +239,7 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
 {
     m_abort = false;
 
-    executeAction(Action::Search, { {"ObjectID", objectId},
-                                    {"SearchCriteria", criteria},
-                                    {"Filter", filter},
-                                    {"StartingIndex", numericops::toString(startIndex)},
-                                    {"RequestedCount", numericops::toString(limit)},
-                                    {"SortCriteria", sort} }, [cb] (Status status, const std::string& response) {
+    executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}}, [cb](Status status, const std::string& response) {
         if (!status)
         {
             cb(status, ActionResult());
@@ -250,8 +252,14 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
         {
             auto searchResultDoc = xml::parseBrowseResult(response, searchResult);
 
-            try { searchResult.result = xml::parseContainers(searchResultDoc); }
-            catch (std::exception&e ) { log::warn(e.what()); }
+            try
+            {
+                searchResult.result = xml::parseContainers(searchResultDoc);
+            }
+            catch (std::exception& e)
+            {
+                log::warn(e.what());
+            }
 
             try
             {
@@ -261,7 +269,10 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
                     searchResult.result.emplace_back(std::move(item));
                 }
             }
-            catch (std::exception& e) { log::warn(e.what()); }
+            catch (std::exception& e)
+            {
+                log::warn(e.what());
+            }
         }
         catch (std::exception& e)
         {
@@ -280,24 +291,19 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
 
-    executeAction(Action::Browse, { {"ObjectID", objectId},
-                                    {"BrowseFlag", flag},
-                                    {"Filter", filter},
-                                    {"StartingIndex", numericops::toString(startIndex)},
-                                    {"RequestedCount", numericops::toString(limit)},
-                                    {"SortCriteria", sort} }, cb);
+    executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}}, cb);
 }
 
 Future<std::vector<Property>> Client::querySearchCapabilities()
 {
     auto response = co_await executeAction(Action::GetSearchCapabilities);
-    co_return parseCapabilities("SearchCaps", response);
+    co_return                parseCapabilities("SearchCaps", response);
 }
 
 Future<std::vector<Property>> Client::querySortCapabilities()
 {
     auto response = co_await executeAction(Action::GetSortCapabilities);
-    co_return parseCapabilities("SortCaps", response);
+    co_return                parseCapabilities("SortCaps", response);
 }
 
 std::vector<Property> Client::parseCapabilities(const std::string& nodeName, const std::string& response)
@@ -311,7 +317,7 @@ std::vector<Property> Client::parseCapabilities(const std::string& nodeName, con
         auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
 
         // TODO: don't fail if the search caps is an empty list
-        for (auto& cap : stringops::tokenize(caps.value_string(), ','))
+        for (auto& cap : stringops::split(caps.value_string(), ','))
         {
             addPropertyToList(cap, props);
         }
@@ -327,7 +333,7 @@ std::vector<Property> Client::parseCapabilities(const std::string& nodeName, con
 Future<std::string> Client::querySystemUpdateID()
 {
     auto response = co_await executeAction(Action::GetSystemUpdateID);
-    std::string sysUpdateId;
+    std::string              sysUpdateId;
 
     try
     {
@@ -348,15 +354,15 @@ Future<Item> Client::browseMetadata(const std::string& objectId, const std::stri
     auto response = co_await browseAction(objectId, "BrowseMetadata", filter, 0, 0, "");
 
     ActionResult res;
-    auto browseResult = xml::parseBrowseResult(response, res);
+    auto         browseResult = xml::parseBrowseResult(response, res);
     if (browseResult.empty())
     {
         throw Status(ErrorCode::Unexpected, "Failed to browse metadata");
     }
 
-    #ifdef DEBUG_CONTENT_BROWSING
-        log::debug(browseResult);
-    #endif
+#ifdef DEBUG_CONTENT_BROWSING
+    log::debug(browseResult);
+#endif
 
     co_return xml::parseMetaData(browseResult);
 }
@@ -364,19 +370,25 @@ Future<Item> Client::browseMetadata(const std::string& objectId, const std::stri
 Future<ActionResult> Client::browseDirectChildren(BrowseType type, const std::string& objectId, const std::string& filter, uint32_t startIndex, uint32_t limit, const std::string& sort)
 {
     auto response = co_await browseAction(objectId, "BrowseDirectChildren", filter, startIndex, limit, sort);
-    ActionResult actionResult;
+    ActionResult             actionResult;
 
     try
     {
         auto browseResult = xml::parseBrowseResult(response, actionResult);
-    #ifdef DEBUG_CONTENT_BROWSING
+#ifdef DEBUG_CONTENT_BROWSING
         log::debug(browseResult);
-    #endif
+#endif
 
         if (type == ContainersOnly || type == All)
         {
-            try { actionResult.result = xml::parseContainers(browseResult); }
-            catch (std::exception&e ) { log::warn(e.what()); }
+            try
+            {
+                actionResult.result = xml::parseContainers(browseResult);
+            }
+            catch (std::exception& e)
+            {
+                log::warn(e.what());
+            }
         }
 
         if (type == ItemsOnly || type == All)
@@ -389,7 +401,10 @@ Future<ActionResult> Client::browseDirectChildren(BrowseType type, const std::st
                     actionResult.result.emplace_back(std::move(item));
                 }
             }
-            catch (std::exception& e) { log::warn(e.what()); }
+            catch (std::exception& e)
+            {
+                log::warn(e.what());
+            }
         }
     }
     catch (std::exception& e)
@@ -404,12 +419,7 @@ Future<ActionResult> Client::search(const std::string& objectId, const std::stri
 {
     m_abort = false;
 
-    auto response = co_await executeAction(Action::Search, { {"ObjectID", objectId},
-                                                             {"SearchCriteria", criteria},
-                                                             {"Filter", filter},
-                                                             {"StartingIndex", numericops::toString(startIndex)},
-                                                             {"RequestedCount", numericops::toString(limit)},
-                                                             {"SortCriteria", sort} });
+    auto response = co_await executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}});
 
     ActionResult searchResult;
 
@@ -417,8 +427,14 @@ Future<ActionResult> Client::search(const std::string& objectId, const std::stri
     {
         auto searchResultDoc = xml::parseBrowseResult(response, searchResult);
 
-        try { searchResult.result = xml::parseContainers(searchResultDoc); }
-        catch (std::exception&e ) { log::warn(e.what()); }
+        try
+        {
+            searchResult.result = xml::parseContainers(searchResultDoc);
+        }
+        catch (std::exception& e)
+        {
+            log::warn(e.what());
+        }
 
         try
         {
@@ -428,7 +444,10 @@ Future<ActionResult> Client::search(const std::string& objectId, const std::stri
                 searchResult.result.emplace_back(std::move(item));
             }
         }
-        catch (std::exception& e) { log::warn(e.what()); }
+        catch (std::exception& e)
+        {
+            log::warn(e.what());
+        }
     }
     catch (std::exception& e)
     {
@@ -446,12 +465,7 @@ Future<std::string> Client::browseAction(const std::string& objectId, const std:
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
 
-    return executeAction(Action::Browse, { {"ObjectID", objectId},
-                                           {"BrowseFlag", flag},
-                                           {"Filter", filter},
-                                           {"StartingIndex", numericops::toString(startIndex)},
-                                           {"RequestedCount", numericops::toString(limit)},
-                                           {"SortCriteria", sort} });
+    return executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}});
 }
 
 // void Client::handleUPnPResult(int errorCode)
@@ -487,6 +501,5 @@ std::chrono::seconds Client::getSubscriptionTimeout()
 {
     return s_subscriptionTimeout;
 }
-
 }
 }

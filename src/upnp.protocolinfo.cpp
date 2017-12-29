@@ -26,16 +26,16 @@ namespace upnp
 
 ProtocolInfo::ProtocolInfo(const std::string& protocolString)
 {
-    auto items = utils::stringops::tokenize(protocolString, ":");
+    auto items = utils::stringops::split(protocolString, ':');
     if (items.size() != 4)
     {
         throw std::invalid_argument("Invalid protocol definition: " + protocolString);
     }
 
-    m_protocol          = items[0];
-    m_network           = items[1];
-    m_contentFormat     = items[2];
-    m_additionalInfo    = items[3];
+    m_protocol       = items[0];
+    m_network        = items[1];
+    m_contentFormat  = items[2];
+    m_additionalInfo = items[3];
 }
 
 std::string ProtocolInfo::getProtocol() const noexcept
@@ -61,7 +61,7 @@ std::string ProtocolInfo::getAdditionalInfo() const noexcept
 bool ProtocolInfo::isCompatibleWith(const ProtocolInfo& info) const noexcept
 {
     return (m_protocol == info.m_protocol) &&
-            (m_contentFormat == "*" || m_contentFormat == info.m_contentFormat);
+           (m_contentFormat == "*" || m_contentFormat == info.m_contentFormat);
 }
 
 bool ProtocolInfo::operator==(const ProtocolInfo& other) const noexcept
@@ -79,10 +79,9 @@ std::string ProtocolInfo::toString() const noexcept
 
     return fmt::format("{}:{}:{}:{}", m_protocol, m_network, m_contentFormat, m_additionalInfo);
 }
-
 }
 
-std::ostream& operator<< (std::ostream& os, const upnp::ProtocolInfo& info)
+std::ostream& operator<<(std::ostream& os, const upnp::ProtocolInfo& info)
 {
     return os << info.toString();
 }

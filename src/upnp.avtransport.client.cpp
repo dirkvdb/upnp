@@ -15,8 +15,8 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "upnp/upnp.avtransport.client.h"
-#include "upnp/upnp.utils.h"
 #include "upnp.avtransport.typeconversions.h"
+#include "upnp/upnp.utils.h"
 
 #include "utils/log.h"
 #include "utils/numericoperations.h"
@@ -48,11 +48,10 @@ void invokeCb(Func&& func, Args&&... args)
 
 std::function<void(upnp::Status, std::string)> stripResponse(std::function<void(upnp::Status)> cb)
 {
-    return [cb] (upnp::Status status, const std::string&) {
+    return [cb](upnp::Status status, const std::string&) {
         invokeCb(cb, status);
     };
 }
-
 }
 
 ServiceType::Type ServiceTraits::SvcType = ServiceType::AVTransport;
@@ -84,54 +83,47 @@ Client::Client(IClient& client)
 
 void Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb)
 {
-    executeAction(Action::SetAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
-                                               {"CurrentURI", uri},
-                                               {"CurrentURIMetaData", uriMetaData} }, stripResponse(cb));
+    executeAction(Action::SetAVTransportURI, {{"InstanceID", std::to_string(connectionId)}, {"CurrentURI", uri}, {"CurrentURIMetaData", uriMetaData}}, stripResponse(cb));
 }
 
 void Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData, std::function<void(upnp::Status)> cb)
 {
-    executeAction(Action::SetNextAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
-                                                   {"NextURI", uri},
-                                                   {"NextURIMetaData", uriMetaData} }, stripResponse(cb));
+    executeAction(Action::SetNextAVTransportURI, {{"InstanceID", std::to_string(connectionId)}, {"NextURI", uri}, {"NextURIMetaData", uriMetaData}}, stripResponse(cb));
 }
 
 void Client::play(int32_t connectionId, const std::string& speed, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},
-                                               {"Speed", speed} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Play, {{"InstanceID", std::to_string(connectionId)}, {"Speed", speed}}, stripResponse(cb));
 }
 
 void Client::pause(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Pause, {{"InstanceID", std::to_string(connectionId)}}, stripResponse(cb));
 }
 
 void Client::stop(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Stop, {{"InstanceID", std::to_string(connectionId)}}, stripResponse(cb));
 }
 
 void Client::next(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Next, {{"InstanceID", std::to_string(connectionId)}}, stripResponse(cb));
 }
 
 void Client::previous(int32_t connectionId, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Previous, {{"InstanceID", std::to_string(connectionId)}}, stripResponse(cb));
 }
 
 void Client::seek(int32_t connectionId, SeekMode mode, const std::string& target, std::function<void(upnp::Status)> cb)
 {
-    executeAction(AVTransport::Action::Seek, { {"InstanceID", std::to_string(connectionId)},
-                                               {"Unit", toString(mode)},
-                                               {"Target", target} }, stripResponse(cb));
+    executeAction(AVTransport::Action::Seek, {{"InstanceID", std::to_string(connectionId)}, {"Unit", toString(mode)}, {"Target", target}}, stripResponse(cb));
 }
 
 void Client::getPositionInfo(int32_t connectionId, std::function<void(upnp::Status, PositionInfo)> cb)
 {
-    executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
+    executeAction(Action::GetPositionInfo, {{"InstanceID", std::to_string(connectionId)}}, [cb](upnp::Status status, const std::string& response) {
         PositionInfo info;
         if (status)
         {
@@ -140,16 +132,16 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(upnp::Stat
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
-                info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
+                info.track         = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
                 info.trackDuration = xml::optionalChildValue(responseNode, "TrackDuration");
                 info.trackMetaData = xml::optionalChildValue(responseNode, "TrackMetaData");
-                info.trackURI = xml::optionalChildValue(responseNode, "TrackURI");
-                info.relativeTime = xml::optionalChildValue(responseNode, "RelTime");
-                info.absoluteTime = xml::optionalChildValue(responseNode, "AbsTime");
+                info.trackURI      = xml::optionalChildValue(responseNode, "TrackURI");
+                info.relativeTime  = xml::optionalChildValue(responseNode, "RelTime");
+                info.absoluteTime  = xml::optionalChildValue(responseNode, "AbsTime");
                 info.relativeCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "RelCount"));
                 info.absoluteCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "AbsCount"));
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
@@ -161,7 +153,7 @@ void Client::getPositionInfo(int32_t connectionId, std::function<void(upnp::Stat
 
 void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status, MediaInfo)> cb)
 {
-    executeAction(Action::GetMediaInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
+    executeAction(Action::GetMediaInfo, {{"InstanceID", std::to_string(connectionId)}}, [cb](upnp::Status status, const std::string& response) {
         MediaInfo info;
         if (status)
         {
@@ -171,17 +163,17 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status,
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-                info.numberOfTracks = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
-                info.mediaDuration = xml::optionalChildValue(responseNode, "MediaDuration");
-                info.currentURI = xml::optionalChildValue(responseNode, "CurrentUri");
+                info.numberOfTracks     = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
+                info.mediaDuration      = xml::optionalChildValue(responseNode, "MediaDuration");
+                info.currentURI         = xml::optionalChildValue(responseNode, "CurrentUri");
                 info.currentURIMetaData = xml::optionalChildValue(responseNode, "CurrentUriMetaData");
-                info.nextURI = xml::optionalChildValue(responseNode, "NextURI");
-                info.nextURIMetaData = xml::optionalChildValue(responseNode, "NextURIMetaData");
-                info.playMedium = xml::optionalChildValue(responseNode, "PlayMedium");
-                info.recordMedium = xml::optionalChildValue(responseNode, "RecordMedium");
-                info.writeStatus = xml::optionalChildValue(responseNode, "WriteStatus");
+                info.nextURI            = xml::optionalChildValue(responseNode, "NextURI");
+                info.nextURIMetaData    = xml::optionalChildValue(responseNode, "NextURIMetaData");
+                info.playMedium         = xml::optionalChildValue(responseNode, "PlayMedium");
+                info.recordMedium       = xml::optionalChildValue(responseNode, "RecordMedium");
+                info.writeStatus        = xml::optionalChildValue(responseNode, "WriteStatus");
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
@@ -193,7 +185,7 @@ void Client::getMediaInfo(int32_t connectionId, std::function<void(upnp::Status,
 
 void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Status, TransportInfo)> cb)
 {
-    executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, const std::string& response) {
+    executeAction(Action::GetTransportInfo, {{"InstanceID", std::to_string(connectionId)}}, [cb](upnp::Status status, const std::string& response) {
         TransportInfo info;
         if (status)
         {
@@ -202,7 +194,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Sta
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
-                auto* child = responseNode.first_node("CurrentTransportState");
+                auto* child        = responseNode.first_node("CurrentTransportState");
                 if (child)
                 {
                     info.currentTransportState = stateFromString(child->value_view());
@@ -220,7 +212,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Sta
                     info.currentSpeed = std::string(child->value(), child->value_size());
                 }
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
@@ -232,7 +224,7 @@ void Client::getTransportInfo(int32_t connectionId, std::function<void(upnp::Sta
 
 void Client::getCurrentTransportActions(int32_t connectionId, std::function<void(upnp::Status, std::set<Action>)> cb)
 {
-    executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} }, [cb] (upnp::Status status, std::string response) {
+    executeAction(Action::GetCurrentTransportActions, {{"InstanceID", std::to_string(connectionId)}}, [cb](upnp::Status status, std::string response) {
         std::set<Action> actions;
         if (status)
         {
@@ -241,7 +233,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
                 auto& actionsNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Actions");
-                for (auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+                for (auto& action : stringops::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
                 {
                     try
                     {
@@ -253,7 +245,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                     }
                 }
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = upnp::Status(ErrorCode::Unexpected, e.what());
             }
@@ -265,78 +257,71 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
 
 Future<void> Client::setAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
 {
-    (void) co_await executeAction(Action::SetAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
-                                                               {"CurrentURI", uri},
-                                                               {"CurrentURIMetaData", uriMetaData} });
+    (void)co_await executeAction(Action::SetAVTransportURI, {{"InstanceID", std::to_string(connectionId)}, {"CurrentURI", uri}, {"CurrentURIMetaData", uriMetaData}});
     co_return;
 }
 
 Future<void> Client::setNextAVTransportURI(int32_t connectionId, const std::string& uri, const std::string& uriMetaData)
 {
-    (void)  co_await executeAction(Action::SetNextAVTransportURI, { {"InstanceID", std::to_string(connectionId)},
-                                                                    {"NextURI", uri},
-                                                                    {"NextURIMetaData", uriMetaData} });
+    (void)co_await executeAction(Action::SetNextAVTransportURI, {{"InstanceID", std::to_string(connectionId)}, {"NextURI", uri}, {"NextURIMetaData", uriMetaData}});
     co_return;
 }
 
 Future<void> Client::play(int32_t connectionId, const std::string& speed)
 {
-    (void) co_await executeAction(AVTransport::Action::Play, { {"InstanceID", std::to_string(connectionId)},
-                                                               {"Speed", speed} });
+    (void)co_await executeAction(AVTransport::Action::Play, {{"InstanceID", std::to_string(connectionId)}, {"Speed", speed}});
     co_return;
 }
 
 Future<void> Client::pause(int32_t connectionId)
 {
-    (void) co_await executeAction(AVTransport::Action::Pause, { {"InstanceID", std::to_string(connectionId)} });
+    (void)co_await executeAction(AVTransport::Action::Pause, {{"InstanceID", std::to_string(connectionId)}});
     co_return;
 }
 
 Future<void> Client::stop(int32_t connectionId)
 {
-    (void) co_await executeAction(AVTransport::Action::Stop, { {"InstanceID", std::to_string(connectionId)} });
+    (void)co_await executeAction(AVTransport::Action::Stop, {{"InstanceID", std::to_string(connectionId)}});
     co_return;
 }
 
 Future<void> Client::next(int32_t connectionId)
 {
-    (void) co_await executeAction(AVTransport::Action::Next, { {"InstanceID", std::to_string(connectionId)} });
+    (void)co_await executeAction(AVTransport::Action::Next, {{"InstanceID", std::to_string(connectionId)}});
     co_return;
 }
 
 Future<void> Client::previous(int32_t connectionId)
 {
-    (void) co_await executeAction(AVTransport::Action::Previous, { {"InstanceID", std::to_string(connectionId)} });
+    (void)co_await executeAction(AVTransport::Action::Previous, {{"InstanceID", std::to_string(connectionId)}});
     co_return;
 }
 
 Future<void> Client::seek(int32_t connectionId, SeekMode mode, const std::string& target)
 {
-    (void) co_await executeAction(AVTransport::Action::Seek, { {"InstanceID", std::to_string(connectionId)},
-                                                               {"Unit", toString(mode)},
-                                                               {"Target", target} });
+    (void)co_await executeAction(AVTransport::Action::Seek, {{"InstanceID", std::to_string(connectionId)}, {"Unit", toString(mode)}, {"Target", target}});
     co_return;
 }
 
 Future<PositionInfo> Client::getPositionInfo(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetPositionInfo, { {"InstanceID", std::to_string(connectionId)} });
-    PositionInfo info;
+    auto response = co_await executeAction(Action::GetPositionInfo, {{"InstanceID", std::to_string(connectionId)}});
+    PositionInfo             info;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
         auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
-        info.track = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
+        info.track         = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "Track"));
         info.trackDuration = xml::optionalChildValue(responseNode, "TrackDuration");
         info.trackMetaData = xml::optionalChildValue(responseNode, "TrackMetaData");
-        info.trackURI = xml::optionalChildValue(responseNode, "TrackURI");
-        info.relativeTime = xml::optionalChildValue(responseNode, "RelTime");
-        info.absoluteTime = xml::optionalChildValue(responseNode, "AbsTime");
+        info.trackURI      = xml::optionalChildValue(responseNode, "TrackURI");
+        info.relativeTime  = xml::optionalChildValue(responseNode, "RelTime");
+        info.absoluteTime  = xml::optionalChildValue(responseNode, "AbsTime");
         info.relativeCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "RelCount"));
         info.absoluteCount = xml::optionalStringToUnsignedNumeric<int32_t>(xml::optionalChildValue(responseNode, "AbsCount"));
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw upnp::Status(ErrorCode::Unexpected, e.what());
     }
@@ -346,25 +331,25 @@ Future<PositionInfo> Client::getPositionInfo(int32_t connectionId)
 
 Future<MediaInfo> Client::getMediaInfo(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetMediaInfo, { {"InstanceID", std::to_string(connectionId)} });
-    MediaInfo info;
+    auto response = co_await executeAction(Action::GetMediaInfo, {{"InstanceID", std::to_string(connectionId)}});
+    MediaInfo                info;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
         auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-        info.numberOfTracks = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
-        info.mediaDuration = xml::optionalChildValue(responseNode, "MediaDuration");
-        info.currentURI = xml::optionalChildValue(responseNode, "CurrentUri");
+        info.numberOfTracks     = xml::optionalStringToUnsignedNumeric<uint32_t>(xml::optionalChildValue(responseNode, "NrTracks"));
+        info.mediaDuration      = xml::optionalChildValue(responseNode, "MediaDuration");
+        info.currentURI         = xml::optionalChildValue(responseNode, "CurrentUri");
         info.currentURIMetaData = xml::optionalChildValue(responseNode, "CurrentUriMetaData");
-        info.nextURI = xml::optionalChildValue(responseNode, "NextURI");
-        info.nextURIMetaData = xml::optionalChildValue(responseNode, "NextURIMetaData");
-        info.playMedium = xml::optionalChildValue(responseNode, "PlayMedium");
-        info.recordMedium = xml::optionalChildValue(responseNode, "RecordMedium");
-        info.writeStatus = xml::optionalChildValue(responseNode, "WriteStatus");
+        info.nextURI            = xml::optionalChildValue(responseNode, "NextURI");
+        info.nextURIMetaData    = xml::optionalChildValue(responseNode, "NextURIMetaData");
+        info.playMedium         = xml::optionalChildValue(responseNode, "PlayMedium");
+        info.recordMedium       = xml::optionalChildValue(responseNode, "RecordMedium");
+        info.writeStatus        = xml::optionalChildValue(responseNode, "WriteStatus");
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw upnp::Status(ErrorCode::Unexpected, e.what());
     }
@@ -374,14 +359,14 @@ Future<MediaInfo> Client::getMediaInfo(int32_t connectionId)
 
 Future<TransportInfo> Client::getTransportInfo(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetTransportInfo, { {"InstanceID", std::to_string(connectionId)} });
-    TransportInfo info;
+    auto response = co_await executeAction(Action::GetTransportInfo, {{"InstanceID", std::to_string(connectionId)}});
+    TransportInfo            info;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
         auto& responseNode = doc.first_node_ref().first_node_ref().first_node_ref();
-        auto* child = responseNode.first_node("CurrentTransportState");
+        auto* child        = responseNode.first_node("CurrentTransportState");
         if (child)
         {
             info.currentTransportState = stateFromString(child->value_view());
@@ -399,7 +384,7 @@ Future<TransportInfo> Client::getTransportInfo(int32_t connectionId)
             info.currentSpeed = std::string(child->value(), child->value_size());
         }
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw upnp::Status(ErrorCode::Unexpected, e.what());
     }
@@ -409,14 +394,14 @@ Future<TransportInfo> Client::getTransportInfo(int32_t connectionId)
 
 Future<std::set<Action>> Client::getCurrentTransportActions(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetCurrentTransportActions, { {"InstanceID", std::to_string(connectionId)} });
-    std::set<Action> actions;
+    auto response = co_await executeAction(Action::GetCurrentTransportActions, {{"InstanceID", std::to_string(connectionId)}});
+    std::set<Action>         actions;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(&response.front());
         auto& actionsNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Actions");
-        for (auto& action : stringops::tokenize(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+        for (auto& action : stringops::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
         {
             try
             {
@@ -428,7 +413,7 @@ Future<std::set<Action>> Client::getCurrentTransportActions(int32_t connectionId
             }
         }
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw upnp::Status(ErrorCode::Unexpected, e.what());
     }
@@ -477,6 +462,5 @@ void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std
 //         default: upnp::handleUPnPResult(errorCode);
 //     }
 // }
-
 }
 }

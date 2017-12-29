@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include <string>
-#include <stdexcept>
-#include <sstream>
-#include <iomanip>
 #include <chrono>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include "utils/stringoperations.h"
 
@@ -51,7 +51,7 @@ inline std::string durationToString(std::chrono::seconds duration)
 
 inline std::chrono::seconds durationFromString(const std::string& durationString)
 {
-    auto times = utils::stringops::tokenize(durationString, ":");
+    auto times = utils::stringops::split(durationString, ':');
 
     if (times.size() != 3)
     {
@@ -66,7 +66,7 @@ inline std::chrono::seconds durationFromString(const std::string& durationString
 
     std::chrono::minutes minutes(utils::stringops::toNumeric<uint32_t>(times[1]));
 
-    auto secondsAndFractals = utils::stringops::tokenize(times[2], ".");
+    auto                 secondsAndFractals = utils::stringops::split(times[2], '.');
     std::chrono::seconds seconds(utils::stringops::toNumeric<uint32_t>(secondsAndFractals.front()));
 
     if (secondsAndFractals.size() > 1)
@@ -82,5 +82,4 @@ DestView sv_cast(const SourceView& sv)
 {
     return DestView(sv.data(), sv.size());
 }
-
 }

@@ -14,20 +14,20 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "upnp/upnp.http.types.h"
 #include "upnp/upnp.rootdevice.h"
+#include "upnp/upnp.http.types.h"
 
 #include "utils/log.h"
 
+#include "upnp.http.client.h"
+#include "upnp.http.utils.h"
+#include "upnp.soap.client.h"
 #include "upnp/upnp.asio.h"
 #include "upnp/upnp.http.server.h"
 #include "upnp/upnp.servicefaults.h"
-#include "upnp.soap.client.h"
-#include "upnp.http.client.h"
-#include "upnp.http.utils.h"
 
-#include "upnp.soap.parseutils.h"
 #include "guid.h"
+#include "upnp.soap.parseutils.h"
 
 #include <regex>
 
@@ -116,7 +116,7 @@ std::vector<std::string> parseCallback(const std::string_view& cb)
         return {};
     }
 
-    return stringops::tokenize(cb.substr(1, cb.size() - 2), ',');
+    return stringops::split(cb.substr(1, cb.size() - 2), ',');
 }
 
 std::string faultToString(const soap::Fault& fault)
@@ -142,7 +142,6 @@ std::string createErrorResponse(const soap::Fault& fault)
 {
     return fmt::format(s_htmlErrorResponse, fault.errorCode(), fault.errorDescription());
 }
-
 }
 
 RootDevice::RootDevice(std::chrono::seconds advertiseInterval)
@@ -176,16 +175,16 @@ void RootDevice::initialize(const ip::tcp::endpoint& endPoint)
     m_httpServer = std::make_unique<http::Server>(m_io);
 
     m_httpServer->start(endPoint);
-    m_httpServer->setRequestHandler(http::Method::Subscribe, [this] (const http::Request& request) { return onSubscriptionRequest(request); });
-    m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this] (const http::Request& request) { return onUnsubscriptionRequest(request); });
-    m_httpServer->setRequestHandler(http::Method::Post, [this] (const http::Request& request) { return onActionRequest(request); });
+    m_httpServer->setRequestHandler(http::Method::Subscribe, [this](const http::Request& request) { return onSubscriptionRequest(request); });
+    m_httpServer->setRequestHandler(http::Method::Unsubscribe, [this](const http::Request& request) { return onUnsubscriptionRequest(request); });
+    m_httpServer->setRequestHandler(http::Method::Post, [this](const http::Request& request) { return onActionRequest(request); });
 
     m_ssdpServer = std::make_unique<ssdp::Server>(m_io);
 
     if (m_owningIo)
     {
         // this rootdevice is the owner of the io service, so run it in a thread
-        m_asioThread = std::make_unique<std::thread>([this] () {
+        m_asioThread = std::make_unique<std::thread>([this]() {
             asio::io_service::work work(*m_owningIo);
             m_owningIo->run();
         });
@@ -196,9 +195,9 @@ void RootDevice::uninitialize()
 {
     log::debug("Uninitializing UPnP Root device: {}", m_device.friendlyName);
 
-    m_io.post([this] () {
+    m_io.post([this]() {
         m_httpServer->stop();
-        m_ssdpServer->stop([this] () {
+        m_ssdpServer->stop([this]() {
             m_io.stop();
         });
     });
@@ -220,10 +219,10 @@ std::string RootDevice::getWebrootUrl()
 
 void RootDevice::registerDevice(const std::string& deviceDescriptionXml, const Device& dev)
 {
-    m_io.post([=] () {
+    m_io.post([=]() {
         m_httpServer->addFile(dev.location, "text/xml", deviceDescriptionXml);
 
-        m_device = dev;
+        m_device          = dev;
         m_device.location = getWebrootUrl() + dev.location;
         m_ssdpServer->run(m_device, m_advertiseInterval);
     });
@@ -266,9 +265,9 @@ void RootDevice::notifyEvent(const std::string& serviceId, std::string eventData
         }
 
         auto soapClient = std::make_shared<soap::Client>(m_io);
-        auto data = std::make_shared<std::string>(std::move(eventData));
+        auto data       = std::make_shared<std::string>(std::move(eventData));
         log::debug("Send notification: {} {}", iter->second.deliveryUrls.front(), *data);
-        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, seq, *data, [data, soapClient] (const std::error_code& error, http::StatusCode status) {
+        soapClient->notify(iter->second.deliveryUrls.front(), iter->first, seq, *data, [data, soapClient](const std::error_code& error, http::StatusCode status) {
             if (error)
             {
                 log::warn("Failed to send notification: HTTP {}", error.message());
@@ -289,10 +288,10 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
         if (sid.empty())
         {
             // New subscription request
-            GuidGenerator generator;
+            GuidGenerator       generator;
             SubscriptionRequest request;
-            request.url = httpReq.url();
-            request.sid = fmt::format("uuid:{}", generator.newGuid());
+            request.url     = httpReq.url();
+            request.sid     = fmt::format("uuid:{}", generator.newGuid());
             request.timeout = soap::parseTimeout(httpReq.field("TIMEOUT"));
 
             log::info("Subscription request: timeout {}s CB: {}", request.timeout.count(), httpReq.field("CALLBACK"));
@@ -305,14 +304,14 @@ std::string RootDevice::onSubscriptionRequest(const http::Request& httpReq) noex
                 throw PreconditionFailed();
             }
 
-            auto response = EventSubscriptionRequested(request);
+            auto response       = EventSubscriptionRequested(request);
             data.expirationTime = std::chrono::steady_clock::now() + response.timeout;
             m_subscriptions.emplace(request.sid, std::move(data));
 
             if (!response.initialEvent.empty())
             {
                 // Send the initial event
-                m_io.post([=] () {
+                m_io.post([=]() {
                     notifyEvent(request.sid, response.initialEvent);
                 });
             }
@@ -393,5 +392,4 @@ asio::io_service& RootDevice::ioService() noexcept
 {
     return m_io;
 }
-
 }

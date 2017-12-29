@@ -24,8 +24,8 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnp.item.h"
-#include "upnp/upnp.xml.parseutils.h"
 #include "upnp/upnp.servicefaults.h"
+#include "upnp/upnp.xml.parseutils.h"
 
 #include "rapidxml.hpp"
 
@@ -39,7 +39,7 @@ namespace ContentDirectory
 using namespace rapidxml_ns;
 
 Service::Service(IRootDevice& dev, IContentDirectory& cd)
-: DeviceService(dev, { ServiceType::ContentDirectory, 1 })
+: DeviceService(dev, {ServiceType::ContentDirectory, 1})
 , m_contentDirectory(cd)
 {
 }
@@ -66,8 +66,8 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     xml_document<> doc;
     doc.parse<parse_non_destructive | parse_trim_whitespace>(requestDoc.c_str());
 
-    ActionResponse response(action, { ServiceType::ContentDirectory, 1});
-    auto& request = doc.first_node_ref();
+    ActionResponse response(action, {ServiceType::ContentDirectory, 1});
+    auto&          request = doc.first_node_ref();
 
     switch (actionFromString(action))
     {
@@ -82,21 +82,21 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
         break;
     case Action::Browse:
     {
-        auto id = xml::requiredChildValue(request, "ObjectID");
-        auto browseFlag = xml::requiredChildValue(request, "BrowseFlag");
-        auto flag = browseFlagFromString(browseFlag);
-        auto filterStrings = stringops::tokenize(xml::requiredChildValue(request, "Filter"), ",");
-        auto startIndex = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
-        auto count = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
-        auto sortStrings = stringops::tokenize(xml::requiredChildValue(request, "SortCriteria"), ",");
+        auto id            = xml::requiredChildValue(request, "ObjectID");
+        auto browseFlag    = xml::requiredChildValue(request, "BrowseFlag");
+        auto flag          = browseFlagFromString(browseFlag);
+        auto filterStrings = stringops::split(xml::requiredChildValue(request, "Filter"), ',');
+        auto startIndex    = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
+        auto count         = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
+        auto sortStrings   = stringops::split(xml::requiredChildValue(request, "SortCriteria"), ',');
 
         std::vector<Property> filter;
-        std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
+        std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [](const std::string& prop) {
             return propertyFromString(prop);
         });
 
         std::vector<SortProperty> sort;
-        std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
+        std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [](const std::string& prop) -> SortProperty {
             if (prop.empty())
             {
                 log::warn("Invalid sort property provided");
@@ -115,20 +115,20 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     }
     case Action::Search:
     {
-        auto id = xml::requiredChildValue(request, "ContainerID");
-        auto criteria = xml::requiredChildValue(request, "SearchCriteria");
-        auto filterStrings = stringops::tokenize(xml::requiredChildValue(request, "Filter"), ",");
-        auto startIndex = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
-        auto count = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
-        auto sortStrings = stringops::tokenize(xml::requiredChildValue(request, "SortCriteria"), ",");
+        auto id            = xml::requiredChildValue(request, "ContainerID");
+        auto criteria      = xml::requiredChildValue(request, "SearchCriteria");
+        auto filterStrings = stringops::split(xml::requiredChildValue(request, "Filter"), ',');
+        auto startIndex    = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
+        auto count         = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
+        auto sortStrings   = stringops::split(xml::requiredChildValue(request, "SortCriteria"), ',');
 
         std::vector<Property> filter;
-        std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [] (const std::string& prop) {
+        std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [](const std::string& prop) {
             return propertyFromString(prop);
         });
 
         std::vector<SortProperty> sort;
-        std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [] (const std::string& prop) -> SortProperty {
+        std::transform(sortStrings.begin(), sortStrings.end(), std::back_inserter(sort), [](const std::string& prop) -> SortProperty {
             if (prop.empty())
             {
                 log::warn("Invalid sort property provided");
@@ -156,7 +156,5 @@ const char* Service::variableToString(Variable type) const
 {
     return ContentDirectory::variableToString(type);
 }
-
-
 }
 }

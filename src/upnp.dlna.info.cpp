@@ -18,12 +18,12 @@ namespace upnp
 
 using namespace dlna;
 
-static constexpr EnumMap<ProfileId> s_profileIdNames {{
-    std::make_tuple("JPEG_TN",  ProfileId::JpegThumbnail),
-    std::make_tuple("JPEG_SM",  ProfileId::JpegSmall),
+static constexpr EnumMap<ProfileId> s_profileIdNames{{
+    std::make_tuple("JPEG_TN", ProfileId::JpegThumbnail),
+    std::make_tuple("JPEG_SM", ProfileId::JpegSmall),
     std::make_tuple("JPEG_MED", ProfileId::JpegMedium),
     std::make_tuple("JPEG_LRG", ProfileId::JpegLarge),
-    std::make_tuple("PNG_TN",   ProfileId::PngThumbnail),
+    std::make_tuple("PNG_TN", ProfileId::PngThumbnail),
 }};
 
 ADD_ENUM_MAP(ProfileId, s_profileIdNames)
@@ -46,10 +46,10 @@ const char* dlna::toString(ProfileId profile) noexcept
 Info::Info(const std::string& info)
 : m_profileId(ProfileId::Unknown)
 {
-    auto tokens = utils::stringops::tokenize(info, ';');
+    auto tokens = utils::stringops::split(info, ';');
     for (auto& token : tokens)
     {
-        auto pair = utils::stringops::tokenize(token, '=');
+        auto pair = utils::stringops::split(token, '=');
         if (pair.size() == 2)
         {
             if (pair[0] == "DLNA.ORG_PN")
@@ -64,5 +64,4 @@ ProfileId Info::getProfileId() const
 {
     return m_profileId;
 }
-
 }

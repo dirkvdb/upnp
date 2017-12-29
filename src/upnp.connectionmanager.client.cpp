@@ -65,7 +65,7 @@ Client::Client(IClient& client)
 
 void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo>)> cb)
 {
-    executeAction(Action::GetProtocolInfo, [=] (Status status, std::string response) {
+    executeAction(Action::GetProtocolInfo, [=](Status status, std::string response) {
         std::vector<ProtocolInfo> protocolInfo;
         if (status)
         {
@@ -75,15 +75,15 @@ void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo
                 doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
                 auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
 
-                auto infos = stringops::tokenize(sink.value_string(), ',');
+                auto infos = stringops::split(sink.value_string(), ',');
                 for (auto& info : infos)
                 {
                     try
                     {
                         protocolInfo.push_back(ProtocolInfo(info));
-            #ifdef DEBUG_CONNECTION_MANAGER
+#ifdef DEBUG_CONNECTION_MANAGER
                         log::debug(info);
-            #endif
+#endif
                     }
                     catch (std::exception& e)
                     {
@@ -91,7 +91,7 @@ void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo
                     }
                 }
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = Status(ErrorCode::Unexpected, e.what());
             }
@@ -102,15 +102,12 @@ void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo
 }
 
 void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
-                                  const std::string& peerConnectionManager,
-                                  int32_t peerConnectionId,
-                                  Direction direction,
-                                  std::function<void(Status, ConnectionInfo)> cb)
+    const std::string&                                peerConnectionManager,
+    int32_t                                           peerConnectionId,
+    Direction                                         direction,
+    std::function<void(Status, ConnectionInfo)>       cb)
 {
-    executeAction(Action::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
-                                                  {"PeerConnectionManager", peerConnectionManager},
-                                                  {"PeerConnectionID", std::to_string(peerConnectionId)},
-                                                  {"Direction", toString(direction)} }, [=] (Status status, const std::string& response) {
+    executeAction(Action::PrepareForConnection, {{"RemoteProtocolInfo", protocolInfo.toString()}, {"PeerConnectionManager", peerConnectionManager}, {"PeerConnectionID", std::to_string(peerConnectionId)}, {"Direction", toString(direction)}}, [=](Status status, const std::string& response) {
         ConnectionInfo connInfo;
         if (status)
         {
@@ -120,15 +117,15 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-                connInfo.peerConnectionManager      = peerConnectionManager;
-                connInfo.peerConnectionId           = peerConnectionId;
-                connInfo.protocolInfo               = protocolInfo;
-                connInfo.direction                  = direction;
-                connInfo.connectionId               = std::stoi(rootNode.first_node_ref("ConnectionId").value());
-                connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value());
-                connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value());
+                connInfo.peerConnectionManager     = peerConnectionManager;
+                connInfo.peerConnectionId          = peerConnectionId;
+                connInfo.protocolInfo              = protocolInfo;
+                connInfo.direction                 = direction;
+                connInfo.connectionId              = std::stoi(rootNode.first_node_ref("ConnectionId").value());
+                connInfo.avTransportId             = std::stoi(rootNode.first_node_ref("AVTransportID").value());
+                connInfo.renderingControlServiceId = std::stoi(rootNode.first_node_ref("RcsID").value());
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = Status(ErrorCode::Unexpected, e.what());
             }
@@ -140,14 +137,14 @@ void Client::prepareForConnection(const ProtocolInfo& protocolInfo,
 
 void Client::connectionComplete(const ConnectionInfo& connectionInfo, std::function<void(Status)> cb)
 {
-    executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} }, [cb] (Status status, const std::string&) {
+    executeAction(Action::ConnectionComplete, {{"ConnectionID", std::to_string(connectionInfo.connectionId)}}, [cb](Status status, const std::string&) {
         cb(status);
     });
 }
 
 void Client::getCurrentConnectionIds(std::function<void(Status, std::vector<std::string>)> cb)
 {
-    executeAction(Action::GetCurrentConnectionIDs, [cb] (Status status, const std::string& response) {
+    executeAction(Action::GetCurrentConnectionIDs, [cb](Status status, const std::string& response) {
         std::vector<std::string> ids;
         if (status)
         {
@@ -155,9 +152,9 @@ void Client::getCurrentConnectionIds(std::function<void(Status, std::vector<std:
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                ids = stringops::tokenize(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+                ids = stringops::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = Status(ErrorCode::Unexpected, e.what());
             }
@@ -169,7 +166,7 @@ void Client::getCurrentConnectionIds(std::function<void(Status, std::vector<std:
 
 void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(Status, ConnectionInfo)> cb)
 {
-    executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} }, [=] (Status status, const std::string& response) {
+    executeAction(Action::GetCurrentConnectionInfo, {{"ConnectionID", std::to_string(connectionId)}}, [=](Status status, const std::string& response) {
         ConnectionInfo connInfo;
         if (status)
         {
@@ -179,16 +176,16 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(S
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
                 auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-                connInfo.connectionId               = connectionId;
-                connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
-                connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value_string());
-                connInfo.protocolInfo               = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
-                connInfo.peerConnectionManager      = rootNode.first_node_ref("PeerConnectionManager").value_string();
-                connInfo.peerConnectionId           = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
-                connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_view());
-                connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
+                connInfo.connectionId              = connectionId;
+                connInfo.avTransportId             = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
+                connInfo.renderingControlServiceId = std::stoi(rootNode.first_node_ref("RcsID").value_string());
+                connInfo.protocolInfo              = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
+                connInfo.peerConnectionManager     = rootNode.first_node_ref("PeerConnectionManager").value_string();
+                connInfo.peerConnectionId          = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
+                connInfo.direction                 = directionFromString(rootNode.first_node_ref("Direction").value_view());
+                connInfo.connectionStatus          = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
             }
-            catch(std::exception& e)
+            catch (std::exception& e)
             {
                 status = Status(ErrorCode::Unexpected, e.what());
             }
@@ -200,7 +197,7 @@ void Client::getCurrentConnectionInfo(int32_t connectionId, std::function<void(S
 
 Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
 {
-    auto response = co_await executeAction(Action::GetProtocolInfo);
+    auto response = co_await  executeAction(Action::GetProtocolInfo);
     std::vector<ProtocolInfo> protocolInfo;
     try
     {
@@ -208,15 +205,15 @@ Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
         doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
         auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
 
-        auto infos = stringops::tokenize(sink.value_string(), ',');
+        auto infos = stringops::split(sink.value_string(), ',');
         for (const auto& info : infos)
         {
             try
             {
                 protocolInfo.push_back(ProtocolInfo(info));
-    #ifdef DEBUG_CONNECTION_MANAGER
+#ifdef DEBUG_CONNECTION_MANAGER
                 log::debug(info);
-    #endif
+#endif
             }
             catch (std::exception& e)
             {
@@ -224,7 +221,7 @@ Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
             }
         }
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw Status(ErrorCode::Unexpected, e.what());
     }
@@ -233,30 +230,27 @@ Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
 }
 
 Future<ConnectionInfo> Client::prepareForConnection(const ProtocolInfo& protocolInfo,
-                                                    const std::string& peerConnectionManager,
-                                                    int32_t peerConnectionId,
-                                                    Direction direction)
+    const std::string&                                                  peerConnectionManager,
+    int32_t                                                             peerConnectionId,
+    Direction                                                           direction)
 {
-    auto response = co_await executeAction(Action::PrepareForConnection, { {"RemoteProtocolInfo", protocolInfo.toString()},
-                                                                           {"PeerConnectionManager", peerConnectionManager},
-                                                                           {"PeerConnectionID", std::to_string(peerConnectionId)},
-                                                                           {"Direction", toString(direction)} });
-    ConnectionInfo connInfo;
+    auto response = co_await executeAction(Action::PrepareForConnection, {{"RemoteProtocolInfo", protocolInfo.toString()}, {"PeerConnectionManager", peerConnectionManager}, {"PeerConnectionID", std::to_string(peerConnectionId)}, {"Direction", toString(direction)}});
+    ConnectionInfo           connInfo;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
         auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-        connInfo.peerConnectionManager      = peerConnectionManager;
-        connInfo.peerConnectionId           = peerConnectionId;
-        connInfo.protocolInfo               = protocolInfo;
-        connInfo.direction                  = direction;
-        connInfo.connectionId               = std::stoi(rootNode.first_node_ref("ConnectionId").value());
-        connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value());
-        connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value());
+        connInfo.peerConnectionManager     = peerConnectionManager;
+        connInfo.peerConnectionId          = peerConnectionId;
+        connInfo.protocolInfo              = protocolInfo;
+        connInfo.direction                 = direction;
+        connInfo.connectionId              = std::stoi(rootNode.first_node_ref("ConnectionId").value());
+        connInfo.avTransportId             = std::stoi(rootNode.first_node_ref("AVTransportID").value());
+        connInfo.renderingControlServiceId = std::stoi(rootNode.first_node_ref("RcsID").value());
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw Status(ErrorCode::Unexpected, e.what());
     }
@@ -266,7 +260,7 @@ Future<ConnectionInfo> Client::prepareForConnection(const ProtocolInfo& protocol
 
 Future<void> Client::connectionComplete(const ConnectionInfo& connectionInfo)
 {
-    (void) co_await executeAction(Action::ConnectionComplete, { {"ConnectionID", std::to_string(connectionInfo.connectionId)} });
+    (void)co_await executeAction(Action::ConnectionComplete, {{"ConnectionID", std::to_string(connectionInfo.connectionId)}});
     co_return;
 }
 
@@ -278,9 +272,9 @@ Future<std::vector<std::string>> Client::getCurrentConnectionIds()
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-        ids = stringops::tokenize(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+        ids = stringops::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw Status(ErrorCode::Unexpected, e.what());
     }
@@ -290,24 +284,24 @@ Future<std::vector<std::string>> Client::getCurrentConnectionIds()
 
 Future<ConnectionInfo> Client::getCurrentConnectionInfo(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetCurrentConnectionInfo, { {"ConnectionID", std::to_string(connectionId)} });
-    ConnectionInfo connInfo;
+    auto response = co_await executeAction(Action::GetCurrentConnectionInfo, {{"ConnectionID", std::to_string(connectionId)}});
+    ConnectionInfo           connInfo;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
         auto& rootNode = doc.first_node_ref().first_node_ref().first_node_ref();
 
-        connInfo.connectionId               = connectionId;
-        connInfo.avTransportId              = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
-        connInfo.renderingControlServiceId  = std::stoi(rootNode.first_node_ref("RcsID").value_string());
-        connInfo.protocolInfo               = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
-        connInfo.peerConnectionManager      = rootNode.first_node_ref("PeerConnectionManager").value_string();
-        connInfo.peerConnectionId           = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
-        connInfo.direction                  = directionFromString(rootNode.first_node_ref("Direction").value_view());
-        connInfo.connectionStatus           = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
+        connInfo.connectionId              = connectionId;
+        connInfo.avTransportId             = std::stoi(rootNode.first_node_ref("AVTransportID").value_string());
+        connInfo.renderingControlServiceId = std::stoi(rootNode.first_node_ref("RcsID").value_string());
+        connInfo.protocolInfo              = ProtocolInfo(rootNode.first_node_ref("ProtocolInfo").value_string());
+        connInfo.peerConnectionManager     = rootNode.first_node_ref("PeerConnectionManager").value_string();
+        connInfo.peerConnectionId          = std::stoi(rootNode.first_node_ref("PeerConnectionID").value_string());
+        connInfo.direction                 = directionFromString(rootNode.first_node_ref("Direction").value_view());
+        connInfo.connectionStatus          = connectionStatusFromString(rootNode.first_node_ref("Status").value_view());
     }
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         throw Status(ErrorCode::Unexpected, e.what());
     }
@@ -337,6 +331,5 @@ std::chrono::seconds Client::getSubscriptionTimeout()
 //         default: upnp::handleUPnPResult(errorCode);
 //     }
 // }
-
 }
 }
