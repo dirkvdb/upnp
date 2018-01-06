@@ -118,7 +118,7 @@ void Client::parseCapabilities(Status status, const std::string& nodeName, const
             auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
 
             // TODO: don't fail if the search caps is an empty list
-            for (auto& cap : stringops::split(caps.value_string(), ','))
+            for (auto& cap : str::split(caps.value_string(), ','))
             {
                 addPropertyToList(cap, props);
             }
@@ -317,7 +317,7 @@ std::vector<Property> Client::parseCapabilities(const std::string& nodeName, con
         auto& caps = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref(nodeName.c_str());
 
         // TODO: don't fail if the search caps is an empty list
-        for (auto& cap : stringops::split(caps.value_string(), ','))
+        for (auto& cap : str::split(caps.value_string(), ','))
         {
             addPropertyToList(cap, props);
         }

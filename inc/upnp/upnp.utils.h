@@ -51,7 +51,7 @@ inline std::string durationToString(std::chrono::seconds duration)
 
 inline std::chrono::seconds durationFromString(const std::string& durationString)
 {
-    auto times = utils::stringops::split(durationString, ':');
+    auto times = utils::str::split(durationString, ':');
 
     if (times.size() != 3)
     {
@@ -61,13 +61,13 @@ inline std::chrono::seconds durationFromString(const std::string& durationString
     std::chrono::hours hours(0);
     if (times[0].size() > 0)
     {
-        hours = std::chrono::hours(utils::stringops::toNumeric<uint32_t>(times[0]));
+        hours = std::chrono::hours(utils::str::toNumeric<uint32_t>(times[0]));
     }
 
-    std::chrono::minutes minutes(utils::stringops::toNumeric<uint32_t>(times[1]));
+    std::chrono::minutes minutes(utils::str::toNumeric<uint32_t>(times[1]));
 
-    auto                 secondsAndFractals = utils::stringops::split(times[2], '.');
-    std::chrono::seconds seconds(utils::stringops::toNumeric<uint32_t>(secondsAndFractals.front()));
+    auto                 secondsAndFractals = utils::str::split(times[2], '.');
+    std::chrono::seconds seconds(utils::str::toNumeric<uint32_t>(secondsAndFractals.front()));
 
     if (secondsAndFractals.size() > 1)
     {

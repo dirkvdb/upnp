@@ -116,7 +116,7 @@ std::vector<std::string> parseCallback(const std::string_view& cb)
         return {};
     }
 
-    return stringops::split(cb.substr(1, cb.size() - 2), ',');
+    return str::split(cb.substr(1, cb.size() - 2), ',');
 }
 
 std::string faultToString(const soap::Fault& fault)

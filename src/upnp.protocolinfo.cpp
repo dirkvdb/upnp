@@ -26,7 +26,7 @@ namespace upnp
 
 ProtocolInfo::ProtocolInfo(const std::string& protocolString)
 {
-    auto items = utils::stringops::split(protocolString, ':');
+    auto items = utils::str::split(protocolString, ':');
     if (items.size() != 4)
     {
         throw std::invalid_argument("Invalid protocol definition: " + protocolString);

@@ -46,10 +46,10 @@ const char* dlna::toString(ProfileId profile) noexcept
 Info::Info(const std::string& info)
 : m_profileId(ProfileId::Unknown)
 {
-    auto tokens = utils::stringops::split(info, ';');
+    auto tokens = utils::str::split(info, ';');
     for (auto& token : tokens)
     {
-        auto pair = utils::stringops::split(token, '=');
+        auto pair = utils::str::split(token, '=');
         if (pair.size() == 2)
         {
             if (pair[0] == "DLNA.ORG_PN")

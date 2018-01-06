@@ -85,10 +85,10 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
         auto id            = xml::requiredChildValue(request, "ObjectID");
         auto browseFlag    = xml::requiredChildValue(request, "BrowseFlag");
         auto flag          = browseFlagFromString(browseFlag);
-        auto filterStrings = stringops::split(xml::requiredChildValue(request, "Filter"), ',');
+        auto filterStrings = str::split(xml::requiredChildValue(request, "Filter"), ',');
         auto startIndex    = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
         auto count         = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
-        auto sortStrings   = stringops::split(xml::requiredChildValue(request, "SortCriteria"), ',');
+        auto sortStrings   = str::split(xml::requiredChildValue(request, "SortCriteria"), ',');
 
         std::vector<Property> filter;
         std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [](const std::string& prop) {
@@ -117,10 +117,10 @@ ActionResponse Service::onAction(const std::string& action, const std::string& r
     {
         auto id            = xml::requiredChildValue(request, "ContainerID");
         auto criteria      = xml::requiredChildValue(request, "SearchCriteria");
-        auto filterStrings = stringops::split(xml::requiredChildValue(request, "Filter"), ',');
+        auto filterStrings = str::split(xml::requiredChildValue(request, "Filter"), ',');
         auto startIndex    = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "StartingIndex").c_str()));
         auto count         = static_cast<uint32_t>(std::stoul(xml::requiredChildValue(request, "RequestedCount").c_str()));
-        auto sortStrings   = stringops::split(xml::requiredChildValue(request, "SortCriteria"), ',');
+        auto sortStrings   = str::split(xml::requiredChildValue(request, "SortCriteria"), ',');
 
         std::vector<Property> filter;
         std::transform(filterStrings.begin(), filterStrings.end(), std::back_inserter(filter), [](const std::string& prop) {

@@ -92,7 +92,7 @@ TEST_F(HttpParserTest, ParseDoubleMessage)
     });
 
     auto messageHeaders2 = messageHeaders;
-    utils::stringops::replace(messageHeaders2, "41", "42");
+    utils::str::replace(messageHeaders2, "41", "42");
 
     auto doubleMessage = messageHeaders + messageBody + messageHeaders2 + (messageBody + '!');
     EXPECT_EQ(doubleMessage.size(), parser.parse(doubleMessage));

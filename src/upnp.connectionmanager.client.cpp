@@ -75,7 +75,7 @@ void Client::getProtocolInfo(std::function<void(Status, std::vector<ProtocolInfo
                 doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
                 auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
 
-                auto infos = stringops::split(sink.value_string(), ',');
+                auto infos = str::split(sink.value_string(), ',');
                 for (auto& info : infos)
                 {
                     try
@@ -152,7 +152,7 @@ void Client::getCurrentConnectionIds(std::function<void(Status, std::vector<std:
             {
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-                ids = stringops::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+                ids = str::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
             }
             catch (std::exception& e)
             {
@@ -205,7 +205,7 @@ Future<std::vector<ProtocolInfo>> Client::getProtocolInfo()
         doc.parse<parse_non_destructive | parse_trim_whitespace>(&response.front());
         auto& sink = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Sink");
 
-        auto infos = stringops::split(sink.value_string(), ',');
+        auto infos = str::split(sink.value_string(), ',');
         for (const auto& info : infos)
         {
             try
@@ -272,7 +272,7 @@ Future<std::vector<std::string>> Client::getCurrentConnectionIds()
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(const_cast<char*>(response.c_str()));
-        ids = stringops::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
+        ids = str::split(doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("ConnectionIDs").value_string(), ',');
     }
     catch (std::exception& e)
     {

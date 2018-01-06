@@ -326,12 +326,12 @@ Parser::Range Parser::parseRange(const std::string& range)
 {
     Range result;
 
-    if (!stringops::startsWith(range, "bytes="))
+    if (!str::startsWith(range, "bytes="))
     {
         throw std::invalid_argument("Invalid range header: " + range);
     }
 
-    auto split = stringops::split(&range[6], '-');
+    auto split = str::split(&range[6], '-');
     if (split.size() > 2)
     {
         throw std::invalid_argument("Invalid range header: " + range);

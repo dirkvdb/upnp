@@ -233,7 +233,7 @@ void Client::getCurrentTransportActions(int32_t connectionId, std::function<void
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(&response.front());
                 auto& actionsNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Actions");
-                for (auto& action : stringops::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+                for (auto& action : str::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
                 {
                     try
                     {
@@ -401,7 +401,7 @@ Future<std::set<Action>> Client::getCurrentTransportActions(int32_t connectionId
         xml_document<> doc;
         doc.parse<parse_non_destructive>(&response.front());
         auto& actionsNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("Actions");
-        for (auto& action : stringops::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
+        for (auto& action : str::split(std::string(actionsNode.value(), actionsNode.value_size()), ','))
         {
             try
             {

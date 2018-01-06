@@ -41,13 +41,13 @@ std::chrono::seconds parseDuration(const std::string& duration)
 {
     uint32_t secs = 0u;
 
-    auto split = stringops::split(duration, ':');
+    auto split = str::split(duration, ':');
     if (split.size() == 3)
     {
         secs += std::stoul(split[0]) * 3600;
         secs += std::stoul(split[1]) * 60;
 
-        auto secondsSplit = stringops::split(split[2], '.');
+        auto secondsSplit = str::split(split[2], '.');
         secs += std::stoul(secondsSplit.front());
     }
 
@@ -772,7 +772,7 @@ std::set<MediaRenderer::Action> MediaRenderer::parseAvailableActions(const std::
 {
     std::set<Action> availableActions;
 
-    auto actionsStrings = stringops::split(actions, ',');
+    auto actionsStrings = str::split(actions, ',');
     for (auto& action : actionsStrings)
     {
         try
@@ -795,7 +795,7 @@ void MediaRenderer::onRenderingControlLastChangeEvent(const std::map<RenderingCo
     auto iter = vars.find(RenderingControl::Variable::Volume);
     if (iter != vars.end())
     {
-        VolumeChanged(utils::stringops::toNumeric<uint32_t>(iter->second));
+        VolumeChanged(utils::str::toNumeric<uint32_t>(iter->second));
     }
 }
 

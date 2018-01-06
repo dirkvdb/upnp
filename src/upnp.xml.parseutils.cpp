@@ -75,7 +75,7 @@ T requiredChildValue(const xml_node<char>& node, const char* childName)
         throw std::runtime_error(fmt::format("xml node ({}) child value not present: {}", node.name_string(), childName));
     }
 
-    return stringops::toNumeric<T>(value);
+    return str::toNumeric<T>(value);
 }
 
 template <typename T>
@@ -87,7 +87,7 @@ T optionalChildValue(const xml_node<char>& node, const char* childName, T defaul
         return defaultValue;
     }
 
-    return stringops::toNumeric<T>(child->value_string()); // TODO span
+    return str::toNumeric<T>(child->value_string()); // TODO span
 }
 
 std::string requiredAttributeValue(xml_node<char>& elem, const char* name)
@@ -122,7 +122,7 @@ T optionalAttributeValue(xml_node<char>& elem, const char* name, T defaultValue)
         return defaultValue;
     }
 
-    return stringops::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
+    return str::toNumeric<T>(std::string(attr->value(), attr->value_size())); // TODO span
 }
 
 std::vector<std::string> getActionsFromDescription(xml_document<char>& doc)
@@ -656,15 +656,15 @@ std::string parseBrowseResult(const std::string& response, ContentDirectory::Act
         }
         else if (strncmp("NumberReturned", child->name(), child->name_size()) == 0)
         {
-            result.numberReturned = stringops::toNumeric<uint32_t>(child->value_string());
+            result.numberReturned = str::toNumeric<uint32_t>(child->value_string());
         }
         else if (strncmp("TotalMatches", child->name(), child->name_size()) == 0)
         {
-            result.totalMatches = stringops::toNumeric<uint32_t>(child->value_string());
+            result.totalMatches = str::toNumeric<uint32_t>(child->value_string());
         }
         else if (strncmp("UpdateID", child->name(), child->name_size()) == 0)
         {
-            result.updateId = stringops::toNumeric<uint32_t>(child->value_string());
+            result.updateId = str::toNumeric<uint32_t>(child->value_string());
         }
     }
 

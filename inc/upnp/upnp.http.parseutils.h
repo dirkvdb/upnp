@@ -38,12 +38,12 @@ Range parseRange(std::string_view range)
 {
     Range result;
 
-    if (!utils::stringops::startsWith(range, "bytes="))
+    if (!utils::str::startsWith(range, "bytes="))
     {
         throw std::invalid_argument("Invalid range header: " + std::string(range));
     }
 
-    auto split = utils::stringops::split(&range[6], '-');
+    auto split = utils::str::split(&range[6], '-');
     if (split.size() > 2)
     {
         throw std::invalid_argument("Invalid range header: " + std::string(range));

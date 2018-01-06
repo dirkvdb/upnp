@@ -88,7 +88,7 @@ void Client::getVolume(int32_t connectionId, std::function<void(Status status, u
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(response.c_str());
                 auto& volumeNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("CurrentVolume");
-                volume = stringops::toNumeric<uint32_t>(volumeNode.value_string());
+                volume = str::toNumeric<uint32_t>(volumeNode.value_string());
             }
             catch (std::exception& e)
             {
@@ -120,7 +120,7 @@ Future<uint32_t> Client::getVolume(int32_t connectionId)
         xml_document<> doc;
         doc.parse<parse_non_destructive>(response.c_str());
         auto& volumeNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("CurrentVolume");
-        volume = stringops::toNumeric<uint32_t>(volumeNode.value_string());
+        volume = str::toNumeric<uint32_t>(volumeNode.value_string());
     }
     catch (const std::exception&)
     {
