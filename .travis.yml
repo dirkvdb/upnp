@@ -149,7 +149,7 @@ install:
     cp -rv ./beast/include/boost/* ${DEPS_DIR}/local/include/boost/
 
   - |
-    git clone --single-branch https://github.com/fmtlib/fmt.git --branch 4.0.0
+    git clone --single-branch https://github.com/fmtlib/fmt.git --branch 4.1.0
     cd fmt
     cmake -DFMT_DOC=OFF -DFMT_TEST=OFF -DFMT_INSTALL=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/local
     make install
