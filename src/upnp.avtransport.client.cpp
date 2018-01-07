@@ -19,7 +19,6 @@
 #include "upnp/upnp.utils.h"
 
 #include "utils/log.h"
-#include "utils/numericoperations.h"
 
 #include "rapidxml.hpp"
 

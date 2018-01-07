@@ -16,12 +16,13 @@
 
 #include "upnp/upnp.renderingcontrol.client.h"
 
-#include "upnp/upnp.utils.h"
-#include "upnp/upnp.controlpoint.h"
 #include "upnp.renderingcontrol.typeconversions.h"
+#include "upnp/upnp.controlpoint.h"
+#include "upnp/upnp.utils.h"
 
-#include "utils/numericoperations.h"
 #include "rapidxml.hpp"
+
+#include <algorithm>
 
 namespace upnp
 {
@@ -65,21 +66,18 @@ Client::Client(upnp::IClient& client)
 
 void Client::setVolume(int32_t connectionId, uint32_t value, std::function<void(Status status)> cb)
 {
-    numericops::clip(value, m_minVolume, m_maxVolume);
-    executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                       {"Channel", "Master"},
-                                       {"DesiredVolume", numericops::toString(value)} }, [cb] (Status status, std::string) {
+    value = std::clamp(value, m_minVolume, m_maxVolume);
+    executeAction(Action::SetVolume, {{"InstanceID", std::to_string(connectionId)}, {"Channel", "Master"}, {"DesiredVolume", std::to_string(value)}}, [cb](Status status, std::string) {
         if (cb)
         {
             cb(status);
         }
-   });
+    });
 }
 
 void Client::getVolume(int32_t connectionId, std::function<void(Status status, uint32_t volume)> cb)
 {
-    executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                       {"Channel", "Master"} }, [cb] (Status status, const std::string& response) {
+    executeAction(Action::GetVolume, {{"InstanceID", std::to_string(connectionId)}, {"Channel", "Master"}}, [cb](Status status, const std::string& response) {
         uint32_t volume = 0;
         if (status)
         {
@@ -88,7 +86,7 @@ void Client::getVolume(int32_t connectionId, std::function<void(Status status, u
                 xml_document<> doc;
                 doc.parse<parse_non_destructive>(response.c_str());
                 auto& volumeNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("CurrentVolume");
-                volume = str::toNumeric<uint32_t>(volumeNode.value_string());
+                volume           = str::toNumeric<uint32_t>(volumeNode.value_string());
             }
             catch (std::exception& e)
             {
@@ -102,25 +100,22 @@ void Client::getVolume(int32_t connectionId, std::function<void(Status status, u
 
 Future<void> Client::setVolume(int32_t connectionId, uint32_t value)
 {
-    numericops::clip(value, m_minVolume, m_maxVolume);
-    (void) co_await executeAction(Action::SetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                                     {"Channel", "Master"},
-                                                     {"DesiredVolume", numericops::toString(value)} });
+    value = std::clamp(value, m_minVolume, m_maxVolume);
+    (void)co_await executeAction(Action::SetVolume, {{"InstanceID", std::to_string(connectionId)}, {"Channel", "Master"}, {"DesiredVolume", std::to_string(value)}});
 
     co_return;
 }
 
 Future<uint32_t> Client::getVolume(int32_t connectionId)
 {
-    auto response = co_await executeAction(Action::GetVolume, { {"InstanceID", std::to_string(connectionId)},
-                                                                {"Channel", "Master"} });
-    uint32_t volume = 0;
+    auto response                   = co_await executeAction(Action::GetVolume, {{"InstanceID", std::to_string(connectionId)}, {"Channel", "Master"}});
+    uint32_t                 volume = 0;
     try
     {
         xml_document<> doc;
         doc.parse<parse_non_destructive>(response.c_str());
         auto& volumeNode = doc.first_node_ref().first_node_ref().first_node_ref().first_node_ref("CurrentVolume");
-        volume = str::toNumeric<uint32_t>(volumeNode.value_string());
+        volume           = str::toNumeric<uint32_t>(volumeNode.value_string());
     }
     catch (const std::exception&)
     {
@@ -137,7 +132,7 @@ std::chrono::seconds Client::getSubscriptionTimeout()
 
 void Client::processServiceDescription(const std::string& descriptionUrl, std::function<void(Status)> cb)
 {
-    ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb] (Status status) {
+    ServiceClientBase::processServiceDescription(descriptionUrl, [this, cb](Status status) {
         if (status)
         {
             for (auto& variable : m_stateVariables)
@@ -191,6 +186,5 @@ void Client::handleStateVariableEvent(Variable var, const std::map<Variable, std
 //         default: upnp::handleUPnPResult(errorCode);
 //     }
 // }
-
 }
 }

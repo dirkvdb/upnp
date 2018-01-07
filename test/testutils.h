@@ -19,8 +19,6 @@
 #include "upnp/upnp.item.h"
 #include "upnp/upnp.soap.types.h"
 
-#include "utils/numericoperations.h"
-
 using namespace utils;
 
 namespace upnp
@@ -38,7 +36,6 @@ inline void addResponseFooter(std::ostream& ss, const std::string& action)
 {
     ss << "</u:" << action << "Response>";
 }
-
 }
 
 inline std::string generateActionResponse(const std::string& action, ServiceType type, const std::vector<std::pair<std::string, std::string>>& vars = {})
@@ -101,10 +98,7 @@ inline soap::ActionResult generateBrowseResponse(const std::vector<upnp::Item>& 
 
     ss << "&lt;/DIDL-Lite&gt;";
 
-    return wrapSoap(generateActionResponse("Browse", { ServiceType::ContentDirectory, 1 }, { std::make_pair("Result", ss.str()),
-                                                                                             std::make_pair("NumberReturned", numericops::toString(containers.size() + items.size())),
-                                                                                             std::make_pair("TotalMatches", numericops::toString(containers.size() + items.size())),
-                                                                                             std::make_pair("UpdateID", "1")}));
+    return wrapSoap(generateActionResponse("Browse", {ServiceType::ContentDirectory, 1}, {std::make_pair("Result", ss.str()), std::make_pair("NumberReturned", std::to_string(containers.size() + items.size())), std::make_pair("TotalMatches", std::to_string(containers.size() + items.size())), std::make_pair("UpdateID", "1")}));
 }
 
 inline std::string getIndexString(uint32_t index)
@@ -121,15 +115,15 @@ inline std::vector<Item> generateContainers(uint32_t count, const std::string& u
     for (uint32_t i = 0; i < count; ++i)
     {
         std::string index = getIndexString(i);
-        Item container("Id" + index, "Title" + index);
+        Item        container("Id" + index, "Title" + index);
         container.setParentId("ParentId");
         container.setChildCount(i);
 
-        container.addMetaData(Property::Creator,        "Creator" + index);
-        container.addMetaData(Property::AlbumArt,       "AlbumArt" + index);
-        container.addMetaData(Property::Class,          upnpClass);
-        container.addMetaData(Property::Genre,          "Genre" + index);
-        container.addMetaData(Property::Artist,         "Artist" + index);
+        container.addMetaData(Property::Creator, "Creator" + index);
+        container.addMetaData(Property::AlbumArt, "AlbumArt" + index);
+        container.addMetaData(Property::Class, upnpClass);
+        container.addMetaData(Property::Genre, "Genre" + index);
+        container.addMetaData(Property::Artist, "Artist" + index);
 
         containers.push_back(container);
     }
@@ -144,22 +138,21 @@ inline std::vector<Item> generateItems(uint32_t count, const std::string& upnpCl
     for (uint32_t i = 0; i < count; ++i)
     {
         std::string index = getIndexString(i);
-        Item item("Id" + index, "Title" + index);
+        Item        item("Id" + index, "Title" + index);
         item.setParentId("ParentId");
 
-        item.addMetaData(Property::Actor,           "Actor" + index);
-        item.addMetaData(Property::Album,           "Album" + index);
-        item.addMetaData(Property::AlbumArt,        "AlbumArt" + index);
-        item.addMetaData(Property::Class,           upnpClass);
-        item.addMetaData(Property::Genre,           "Genre" + index);
-        item.addMetaData(Property::Description,     "Description" + index);
-        item.addMetaData(Property::Date,            "01/01/196" + index);
-        item.addMetaData(Property::TrackNumber,     index);
+        item.addMetaData(Property::Actor, "Actor" + index);
+        item.addMetaData(Property::Album, "Album" + index);
+        item.addMetaData(Property::AlbumArt, "AlbumArt" + index);
+        item.addMetaData(Property::Class, upnpClass);
+        item.addMetaData(Property::Genre, "Genre" + index);
+        item.addMetaData(Property::Description, "Description" + index);
+        item.addMetaData(Property::Date, "01/01/196" + index);
+        item.addMetaData(Property::TrackNumber, index);
 
         items.push_back(item);
     }
 
     return items;
 }
-
 }

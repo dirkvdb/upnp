@@ -18,6 +18,7 @@
 #include "upnp/upnp.http.types.h"
 
 #include "utils/log.h"
+#include "utils/stringoperations.h"
 
 #include "upnp.http.client.h"
 #include "upnp.http.utils.h"
@@ -116,7 +117,7 @@ std::vector<std::string> parseCallback(const std::string_view& cb)
         return {};
     }
 
-    return str::split(cb.substr(1, cb.size() - 2), ',');
+    return str::split(cb.substr(1, cb.size() - 2), ',', str::split_opt::no_empty);
 }
 
 std::string faultToString(const soap::Fault& fault)

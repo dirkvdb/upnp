@@ -24,7 +24,6 @@
 #include "rapidxml.hpp"
 
 #include "utils/log.h"
-#include "utils/numericoperations.h"
 #include "utils/stringoperations.h"
 
 using namespace utils;
@@ -239,7 +238,7 @@ void Client::search(const std::string& objectId, const std::string& criteria, co
 {
     m_abort = false;
 
-    executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}}, [cb](Status status, const std::string& response) {
+    executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", std::to_string(startIndex)}, {"RequestedCount", std::to_string(limit)}, {"SortCriteria", sort}}, [cb](Status status, const std::string& response) {
         if (!status)
         {
             cb(status, ActionResult());
@@ -291,7 +290,7 @@ void Client::browseAction(const std::string& objectId, const std::string& flag, 
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
 
-    executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}}, cb);
+    executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", std::to_string(startIndex)}, {"RequestedCount", std::to_string(limit)}, {"SortCriteria", sort}}, cb);
 }
 
 Future<std::vector<Property>> Client::querySearchCapabilities()
@@ -419,7 +418,7 @@ Future<ActionResult> Client::search(const std::string& objectId, const std::stri
 {
     m_abort = false;
 
-    auto response = co_await executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}});
+    auto response = co_await executeAction(Action::Search, {{"ObjectID", objectId}, {"SearchCriteria", criteria}, {"Filter", filter}, {"StartingIndex", std::to_string(startIndex)}, {"RequestedCount", std::to_string(limit)}, {"SortCriteria", sort}});
 
     ActionResult searchResult;
 
@@ -465,7 +464,7 @@ Future<std::string> Client::browseAction(const std::string& objectId, const std:
     log::debug("Browse: {} {} {} {} {} {}", objectId, flag, filter, startIndex, limit, sort);
 #endif
 
-    return executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", numericops::toString(startIndex)}, {"RequestedCount", numericops::toString(limit)}, {"SortCriteria", sort}});
+    return executeAction(Action::Browse, {{"ObjectID", objectId}, {"BrowseFlag", flag}, {"Filter", filter}, {"StartingIndex", std::to_string(startIndex)}, {"RequestedCount", std::to_string(limit)}, {"SortCriteria", sort}});
 }
 
 // void Client::handleUPnPResult(int errorCode)

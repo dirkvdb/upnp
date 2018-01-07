@@ -20,7 +20,6 @@
 #include <cassert>
 
 #include "utils/log.h"
-#include "utils/numericoperations.h"
 #include "utils/stringoperations.h"
 
 #include "upnp/upnp.item.h"
