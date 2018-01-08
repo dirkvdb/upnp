@@ -3,10 +3,11 @@ enable_testing()
 
 set(CMAKE_MODULES_PATH modules)
 
-option(STANDALONE "Not used as a submodule of another project" OFF)
 option(ENABLE_TESTS "build unit tests" ON)
 
-if (STANDALONE)
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_EXTENSIONS OFF)
