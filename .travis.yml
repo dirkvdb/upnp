@@ -1,5 +1,6 @@
 dist: trusty
 language: cpp
+group: travis_latest
 
 matrix:
   include:
@@ -100,53 +101,38 @@ before_install:
   - export LDFLAGS="-L${DEPS_DIR}/local/lib"
 
   ############################################################################
-  # Install a recent CMake
-  ############################################################################
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      CMAKE_URL="http://www.cmake.org/files/v3.9/cmake-3.9.4-Linux-x86_64.tar.gz"
-      mkdir -p ${DEPS_DIR}/cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
-      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-    fi
-
-  ############################################################################
   # Install clang on linux
   ############################################################################
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
-      if [[ "$COMPILER" == "4.0" ]]; then
-        travis_retry wget --quiet -O - http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
-      else
-        travis_retry wget --quiet -O - http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-linux-x86_64-ubuntu14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
-      fi
+  # - |
+  #   if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
+  #     if [[ "$COMPILER" == "4.0" ]]; then
+  #       travis_retry wget --quiet -O - http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
+  #     else
+  #       travis_retry wget --quiet -O - http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-linux-x86_64-ubuntu14.04.tar.xz | tar --strip-components=1 ${TAR_FLAGS} -xJ -C ${DEPS_DIR}/local
+  #     fi
 
-      export PATH=${DEPS_DIR}/local/bin:${PATH}
-      export LDFLAGS="${LDFLAGS} -lc++ -lc++abi -lm"
-      export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
-      export CXX="clang-${COMPILER}" CC="clang-${COMPILER}"
-      ${CXX} -v
-    fi
+  #     export PATH=${DEPS_DIR}/local/bin:${PATH}
+  #     export LDFLAGS="${LDFLAGS} -lc++ -lc++abi -lm"
+  #     export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
+  #     export CXX="clang-${COMPILER}" CC="clang-${COMPILER}"
+  #     ${CXX} -v
+  #   fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
 install:
   - cd ${DEPS_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      wget http://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
-      tar xf boost_1_65_1.tar.bz2
+      travis_retry wget http://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_66_0.tar.bz2
+      tar xf boost_1_66_0.tar.bz2
       echo "Build boost using ${CXX}"
       if [[ "${CXX}" == "clang-${COMPILER}" ]]; then
-        cd boost_1_65_1 && echo "using clang : ${COMPILER} : clang-${COMPILER} : <cxxflags>\"-std=c++14 ${CXXFLAGS}\" ;" > user-config.jam && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
+        cd boost_1_66_0 && echo "using clang : ${COMPILER} : clang-${COMPILER} : <cxxflags>\"-std=c++17 ${CXXFLAGS}\" ;" > user-config.jam && ./bootstrap.sh && ./b2 address-model=64 toolset=clang architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
       else
-        cd boost_1_65_1 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++14\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
+        cd boost_1_66_0 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++17\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
       fi
       cd ..
     fi
-
-  - |
-    git clone --single-branch --branch v124 https://github.com/boostorg/beast.git
-    mkdir -p ${DEPS_DIR}/local/include/boost
-    cp -rv ./beast/include/boost/* ${DEPS_DIR}/local/include/boost/
 
   - |
     git clone --single-branch https://github.com/fmtlib/fmt.git --branch 4.1.0
