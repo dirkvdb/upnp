@@ -123,7 +123,7 @@ install:
   - cd ${DEPS_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      travis_retry wget http://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_66_0.tar.bz2
+      travis_retry wget http://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2
       tar xf boost_1_66_0.tar.bz2
       echo "Build boost using ${CXX}"
       if [[ "${CXX}" == "clang-${COMPILER}" ]]; then
